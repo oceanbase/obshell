@@ -1,0 +1,67 @@
+OBShell
+Copyright (c) 2024 OceanBase.
+
+This product contains software (https://gorm.io) developed
+by Jin Zhu, licensed under the MIT License.
+
+This product contains software (https://github.com/gin-gonic/gin) developed
+by Manuel Martínez-Almeida, licensed under the MIT License.
+
+This product contains software (https://gopkg.in/yaml.v2) developed
+by Manuel Gustavo Niemeyer, licensed under the Apache-2.0 License.
+
+This product contains software (https://github.com/go-resty/resty) developed
+by Jeevanandam M, licensed under the MIT License.
+
+This product contains software (https://pkg.go.dev/gopkg.in/natefinch/lumberjack.v2@v2.2.1) developed
+by Nate Finch, licensed under the MIT License.
+
+This product contains software (https://cs.opensource.google/go) developed
+by Google, licensed under the BSD 3-Clause License.
+
+This product contains software (https://github.com/swaggo/swag) developed
+by Eason Lin, licensed under the MIT License.
+
+This product contains software (https://github.com/spf13/cobra) developed
+by Steve Francia, licensed under the Apache-2.0 License.
+
+This product contains software (https://github.com/spf13/pflag) developed
+by Alex Ogier, licensed under the BSD 3-Clause License.
+
+This product contains software (https://github.com/sirupsen/logrus) developed
+by Simon Eskildsen, licensed under the MIT License.
+
+This product contains software (https://github.com/mattn/go-sqlite3s) developed
+by Yasuhiro MATSUMOTO and G.J.R. Timmer, licensed under the MIT License.
+
+This product contains software (https://github.com/mattn/go-isatty) developed
+by Yasuhiro MATSUMOTO, licensed under the MIT License.
+
+This product contains software (https://github.com/google/uuid) developed
+by Google, licensed under the BSD 3-Clause License.
+
+This product contains software (https://github.com/cavaliergopher/rpm) developed
+by Ryan Armstrong, licensed under the BSD 3-Clause License.
+
+This product contains software (https://github.com/cavaliergopher/cpio) developed
+by Ryan Armstrong, licensed under the BSD 3-Clause License.
+
+This product contains software (https://github.com/briandowns/spinner) developed
+by Brian Downs, licensed under the Apache-2.0 License.
+
+This product contains software (https://github.com/GmSSL/GmSSL-Go) developed
+by Zhi Guan and Simon, licensed under the Apache-2.0 License.
+
+This product contains software (https://github.com/deckarep/golang-set) developed
+by Ralph Caraveo, licensed under the MIT License.
+
+This product contains software (https://github.com/jedib0t/go-pretty) developed
+by jedib0t, licensed under the MIT License.
+
+This product contains software (https://github.com/shirou/gopsutil) developed
+by WAKAYAMA Shirou, licensed under the BSD License.
+
+This product contains software (https://github.com/ulikunitz/xz) developed
+by Ulrich Kunitz, licensed under the BSD 3-Clause License.
+
+See also https://www.apache.org/dev/crypto.html and/or seek legal counsel.

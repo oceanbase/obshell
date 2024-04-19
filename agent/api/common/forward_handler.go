@@ -1,0 +1,110 @@
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package common
+
+import (
+	"fmt"
+	"io"
+	"time"
+
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/oceanbase/obshell/agent/global"
+	libhttp "github.com/oceanbase/obshell/agent/lib/http"
+	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/secure"
+)
+
+const forwardFlag = "forward"
+
+func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, params ...interface{}) {
+	forwardRequest(c, agentInfo, true, params...)
+}
+
+func forwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, transferSecureHeader bool, params ...interface{}) {
+	if !IsLocalRoute(c) && meta.OCS_AGENT.IsFollowerAgent() {
+		SendResponse(c, nil, fmt.Errorf("please send the http request to master node: %s", agentInfo.String()))
+	}
+	startTime := time.Now()
+	ctx := NewContextWithTraceId(c)
+	log.WithContext(ctx).Infof("Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String())
+
+	uri := fmt.Sprintf("%s://%s:%d%s", global.Protocol, agentInfo.GetIp(), agentInfo.GetPort(), c.Request.URL)
+	request := libhttp.NewClient().R()
+
+	var headers map[string]string
+	var body interface{}
+
+	if len(params) > 0 {
+		body = params[0]
+	} else {
+		bytesBody, err := io.ReadAll(c.Request.Body)
+		if err != nil {
+			SendResponse(c, nil, err)
+			return
+		}
+		body = string(bytesBody)
+	}
+
+	body, headers, err := buildForwardBodyAndHeader(agentInfo, c.Request.RequestURI, body)
+	if err != nil {
+		SendResponse(c, nil, err)
+		return
+	}
+	request.SetBody(body)
+
+	for k, v := range headers {
+		request.SetHeader(k, v)
+	}
+
+	response, err := request.Execute(c.Request.Method, uri)
+	if err != nil {
+		SendResponse(c, nil, err)
+		return
+	}
+
+	for k, v := range response.Header() {
+		c.Header(k, v[0])
+	}
+
+	c.Set(forwardFlag, true)
+	c.Status(response.StatusCode())
+	c.Writer.Write(response.Body())
+	duration := time.Since(startTime).Milliseconds()
+	traceId, _ := c.Get(TraceIdKey)
+	log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v]",
+		c.Request.Method, c.Request.URL, c.ClientIP(), traceId, duration, response.StatusCode())
+}
+
+func buildForwardBodyAndHeader(agentInfo meta.AgentInfoInterface, uri string, body interface{}) (interface{}, map[string]string, error) {
+	var headers = map[string]string{}
+
+	for _, route := range secure.GetSkipBodyEncryptRoutes() {
+		if route == uri {
+			headers = secure.BuildHeaderForForward(agentInfo, uri)
+			return body, headers, nil
+		}
+	}
+
+	body, Key, Iv, err := secure.BuildBody(agentInfo, body)
+	if err != nil {
+		return nil, nil, err
+	}
+	headers = secure.BuildHeaderForForward(agentInfo, uri, Key, Iv)
+	return body, headers, nil
+}

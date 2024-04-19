@@ -1,0 +1,480 @@
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package api
+
+import (
+	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
+
+	"github.com/oceanbase/obshell/agent/api/common"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/secure"
+	"github.com/oceanbase/obshell/param"
+)
+
+//	@ID				obclusterConfig
+//	@Summary		put ob cluster configs
+//	@Description	put ob cluster configs
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string						true	"Authorization"
+//	@Param			body			body	param.ObClusterConfigParams	true	"obcluster configs"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/obcluster/config [put]
+//	@Router			/api/v1/obcluster/config [post]
+func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var params param.ObClusterConfigParams
+		if err := c.BindJSON(&params); err != nil {
+			common.SendResponse(c, nil, err)
+			return
+		}
+		if params.ClusterId == nil || *params.ClusterId <= 0 {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "cluster id is invalid"))
+			return
+		}
+		if params.ClusterName == nil || *params.ClusterName == "" {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "cluster name is empty"))
+			return
+		}
+
+		var password string
+		var err error
+		ctx := common.NewContextWithTraceId(c)
+
+		if params.RootPwd != nil && *params.RootPwd != "" {
+			if common.IsLocalRoute(c) {
+				pwd, err := secure.Crypter.Encrypt(*params.RootPwd)
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("request from local route, encrypt password failed")
+					common.SendResponse(c, nil, err)
+					return
+				}
+				password = *params.RootPwd
+				params.RootPwd = &pwd
+			} else {
+				password, err = secure.Crypter.Decrypt(*params.RootPwd)
+				if err != nil {
+					log.WithContext(ctx).WithError(err).Error("request from remote route, decrypt password failed")
+					common.SendResponse(c, nil, err)
+					return
+				}
+			}
+		}
+
+		switch meta.OCS_AGENT.GetIdentity() {
+		case meta.FOLLOWER:
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+				return
+			}
+			if password != "" {
+				if password, err = secure.EncryptForAgent(password, master); err != nil {
+					log.WithContext(ctx).WithError(err).Error("forward request to master, encrypt password failed")
+					common.SendResponse(c, nil, err)
+					return
+				}
+				params.RootPwd = &password
+			}
+			common.ForwardRequest(c, master, params)
+		case meta.CLUSTER_AGENT:
+			if deleteAll {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cluster has already initialized."))
+				return
+			}
+			fallthrough
+		case meta.MASTER:
+			dag, err := ob.CreateUpdateOBClusterConfigDag(params, deleteAll)
+			common.SendResponse(c, dag, err)
+
+		default:
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s agent can not update ob cluster config", meta.OCS_AGENT.GetIdentity()))
+		}
+	}
+}
+
+//	@ID				obServerConfig
+//	@Summary		put observer configs
+//	@Description	put observer configs
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string						true	"Authorization"
+//	@Param			body			body	param.ObServerConfigParams	true	"ob server configs"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/observer/config [put]
+//	@Router			/api/v1/observer/config [post]
+func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
+	return func(c *gin.Context) {
+		var params param.ObServerConfigParams
+		if err := c.BindJSON(&params); err != nil {
+			common.SendResponse(c, nil, err)
+			return
+		}
+		if params.ObServerConfig == nil || len(params.ObServerConfig) == 0 {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "config is empty"))
+			return
+		}
+
+		if err := ob.CheckOBServerConfigParams(params); err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err.Error()))
+			return
+		}
+
+		switch meta.OCS_AGENT.GetIdentity() {
+		case meta.FOLLOWER:
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+				return
+			}
+			common.ForwardRequest(c, master, params)
+		case meta.CLUSTER_AGENT:
+			if deleteAll {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cluster has already initialized."))
+				return
+			}
+			fallthrough
+		case meta.MASTER:
+			if err := ob.IsValidScope(&params.Scope); err != nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+				return
+			}
+			dag, err := ob.CreateUpdateOBServerConfigDag(params, deleteAll)
+			common.SendResponse(c, dag, err)
+		default:
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s agent can not update ob cluster config", meta.OCS_AGENT.GetIdentity()))
+		}
+	}
+}
+
+//	@ID				obInit
+//	@Summary		init ob cluster
+//	@Description	init ob cluster
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/init [post]
+func obInitHandler(c *gin.Context) {
+	switch meta.OCS_AGENT.GetIdentity() {
+	case meta.MASTER:
+		data, err := ob.CreateInitDag()
+		common.SendResponse(c, data, err)
+	case meta.FOLLOWER:
+		master := agentService.GetMasterAgentInfo()
+		if master == nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			return
+		}
+		common.ForwardRequest(c, master)
+	case meta.CLUSTER_AGENT:
+		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Failed to initialize cluster, cluster has already initialized."))
+	default:
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s can not init", meta.OCS_AGENT.GetIdentity()))
+	}
+}
+
+//	@ID				obStop
+//	@Summary		stop observers
+//	@Description	stop observers or the whole cluster, use param to specify
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			body			body	param.ObStopParam	true	"use 'Scope' to specify the servers/zones/cluster, use 'Force'(optional) to specify whether alter system, use 'ForcePassDag'(optional) to force pass the prev stop dag if need"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/stop [post]
+func obStopHandler(c *gin.Context) {
+	var param param.ObStopParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	emergencyMode, err := isEmergencyMode(c, &param.Scope)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	if emergencyMode && param.Force {
+		data, err := ob.EmergencyStop()
+		common.SendResponse(c, data, err)
+	} else {
+		data, err := ob.HandleObStop(param)
+		common.SendResponse(c, data, err)
+	}
+}
+
+//	@ID				obStart
+//	@Summary		start observers
+//	@Description	start observers or the whole cluster, use param to specify
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			body			body	param.StartObParam	true	"use 'Scope' to specify the servers/zones/cluster, use 'ForcePassDag'(optional) to force pass the prev start dag if need"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/start [post]
+func obStartHandler(c *gin.Context) {
+	var param param.StartObParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	emergencyMode, err := isEmergencyMode(c, &param.Scope)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	hasStart, e := ob.HasStarted()
+	if e != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, e))
+		return
+	}
+	if !hasStart {
+		if meta.OCS_AGENT.IsSingleAgent() {
+			err = errors.Occur(errors.ErrKnown, "There is no 'OceanBase' cluster present. Please execute the 'join' operation first.")
+		} else if meta.OCS_AGENT.IsMasterAgent() || meta.OCS_AGENT.IsFollowerAgent() {
+			err = errors.Occur(errors.ErrKnown, "There is no 'OceanBase' cluster present. Please execute the 'init' operation first.")
+		} else {
+			err = errors.Occur(errors.ErrKnown, "Observer has not been previously started. Please initialize the cluster first.")
+		}
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	if emergencyMode {
+		data, err := ob.EmergencyStart()
+		common.SendResponse(c, data, err)
+	} else {
+		data, err := ob.HandleObStart(param)
+		common.SendResponse(c, data, err)
+	}
+}
+
+//	@ID				ScaleOut
+//	@Summary		cluster scale-out
+//	@Description	cluster scale-out
+//	@Tags			ob
+//	@Accept			application/json
+//	@Param			X-OCS-Header	header	string						true	"Authorization"
+//	@Param			body			body	param.ClusterScaleOutParam	true	"scale-out param"
+//	@Produce		application/json
+//	@Success		200	object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		401	object	http.OcsAgentResponse
+//	@Failure		500	object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/scale_out [get]
+func obClusterScaleOutHandler(c *gin.Context) {
+	var param param.ClusterScaleOutParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	data, err := ob.HandleClusterScaleOut(param)
+	common.SendResponse(c, data, err)
+}
+
+//	@ID				GetObInfo
+//	@Summary		get ob and agent info
+//	@Description	get ob and agent info
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Success		200	object	http.OcsAgentResponse{data=param.ObInfoResp}
+//	@Failure		500	object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/info [get]
+func obInfoHandler(c *gin.Context) {
+	data, err := ob.GetObInfo()
+	common.SendResponse(c, data, err)
+}
+
+func isEmergencyMode(c *gin.Context, scope *param.Scope) (res bool, agentErr *errors.OcsAgentError) {
+	if common.IsLocalRoute(c) && ob.ScopeOnlySelf(scope) && !meta.OCS_AGENT.IsClusterAgent() {
+		return true, nil
+	}
+	if err := ob.IsValidScope(scope); err != nil {
+		return false, errors.Occur(errors.ErrIllegalArgument, err)
+	}
+	return false, nil
+}
+
+//	@ID				agentUpgradeCheck
+//	@Summary		check agent upgrade
+//	@Description	check agent upgrade
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			body			body	param.UpgradeCheckParam	true	"agent upgrade check params"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/agent/upgrade/check [post]
+func agentUpgradeCheckHandler(c *gin.Context) {
+	var param param.UpgradeCheckParam
+	c.BindJSON(&param)
+	task, err := ob.AgentUpgradeCheck(param)
+	common.SendResponse(c, task, err)
+}
+
+//	@ID				obUpgradeCheck
+//	@Summary		check ob upgrade
+//	@Description	check ob upgrade
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			body			body	param.UpgradeCheckParam	true	"ob upgrade check params"
+//	@Success		200				object	http.OcsAgentResponse
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/upgrade/check [post]
+func obUpgradeCheckHandler(c *gin.Context) {
+	var param param.UpgradeCheckParam
+	c.BindJSON(&param)
+	task, err := ob.ObUpgradeCheck(param)
+	common.SendResponse(c, task, err)
+}
+
+//	@ID				UpgradePkgUpload
+//	@Summary		upload upgrade package
+//	@Description	upload upgrade package
+//	@Tags			upgrade
+//	@Accept			multipart/form-data
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header		string	true	"Authorization"
+//	@Param			file			formData	file	true	"ob upgrade package"
+//	@Success		200				object		http.OcsAgentResponse{data=oceanbase.UpgradePkgInfo}
+//	@Failure		401				object		http.OcsAgentResponse
+//	@Failure		500				object		http.OcsAgentResponse
+//	@Router			/api/v1/upgrade/package [post]
+func pkgUploadHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to proceed with package upload. Please ensure the 'init' command is executed before attempting to upload."))
+		return
+	}
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+		return
+	}
+	defer file.Close()
+	data, agentErr := ob.UpgradePkgUpload(file)
+	common.SendResponse(c, &data, agentErr)
+}
+
+//	@ID				ParamsBackup
+//	@Summary		backup params
+//	@Description	backup params
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.ObParameters}
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/upgrade/params/backup [post]
+func paramsBackupHandler(c *gin.Context) {
+	data, err := ob.ParamsBackup()
+	common.SendResponse(c, data, err)
+}
+
+//	@ID				ParamsRestore
+//	@Summary		restore params
+//	@Description	restore params
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			body			body	param.RestoreParams	true	"restore params"
+//	@Success		200				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/upgrade/params/restore [post]
+func paramsRestoreHandler(c *gin.Context) {
+	var param param.RestoreParams
+	err := ob.ParamsRestore(param)
+	common.SendResponse(c, nil, err)
+}
+
+//	@ID				agentUpgrade
+//	@Summary		upgrade agent
+//	@Description	upgrade agent
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			body			body	param.UpgradeCheckParam	true	"agent upgrade check params"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/agent/upgrade [post]
+func agentUpgradeHandler(c *gin.Context) {
+	var param param.UpgradeCheckParam
+	c.BindJSON(&param)
+	dag, err := ob.AgentUpgrade(param)
+	common.SendResponse(c, dag, err)
+}
+
+//	@ID				obUpgrade
+//	@Summary		upgrade ob
+//	@Description	upgrade ob
+//	@Tags			upgrade
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			body			body	param.ObUpgradeParam	true	"ob upgrade params"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/ob/upgrade [post]
+func obUpgradeHandler(c *gin.Context) {
+	var param param.ObUpgradeParam
+	c.BindJSON(&param)
+	dag, err := ob.CheckAndUpgradeOb(param)
+	common.SendResponse(c, dag, err)
+}
+
+func obAgentsHandler(c *gin.Context) {
+	data, err := ob.GetObAgents()
+	common.SendResponse(c, data, err)
+}

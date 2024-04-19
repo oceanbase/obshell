@@ -1,0 +1,98 @@
+version: "2.0"
+
+only:
+  triggerType:
+    - pullRequest
+    - tagPush
+    - push
+
+stages:
+  - 合规扫描
+  - 代码检查
+
+
+jobs:
+  Header 扫描:
+    stage: 合规扫描
+    component: shell-with-clone
+    inputs:
+      script: |
+        #!/bin/bash
+        TARGET_DIR="${BASE_WORKSPACE}"
+        echo "$TARGET_DIR"
+
+        COPYRIGHT_TEXT=$'/*\n'
+        COPYRIGHT_TEXT+=$' * Copyright (c) 2024 OceanBase.\n'
+        COPYRIGHT_TEXT+=$' *\n'
+        COPYRIGHT_TEXT+=$' * Licensed under the Apache License, Version 2.0 (the "License");\n'
+        COPYRIGHT_TEXT+=$' * you may not use this file except in compliance with the License.\n'
+        COPYRIGHT_TEXT+=$' * You may obtain a copy of the License at\n'
+        COPYRIGHT_TEXT+=$' *\n'
+        COPYRIGHT_TEXT+=$' *     http://www.apache.org/licenses/LICENSE-2.0\n'
+        COPYRIGHT_TEXT+=$' *\n'
+        COPYRIGHT_TEXT+=$' * Unless required by applicable law or agreed to in writing, software\n'
+        COPYRIGHT_TEXT+=$' * distributed under the License is distributed on an "AS IS" BASIS,\n'
+        COPYRIGHT_TEXT+=$' * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n'
+        COPYRIGHT_TEXT+=$' * See the License for the specific language governing permissions and\n'
+        COPYRIGHT_TEXT+=$' * limitations under the License.\n'
+        COPYRIGHT_TEXT+=$' */'
+
+        non_compliant_files=()
+
+        temp_file=$(mktemp)
+        find "$TARGET_DIR" -type f -name "*.go" > "$temp_file"
+        while IFS= read -r file; do
+            start_of_file=$(head -n 15 "$file") 
+            if [[ "$start_of_file" != "$COPYRIGHT_TEXT" ]]; then
+                non_compliant_files+=("$file")
+            fi
+        done < "$temp_file"
+
+        rm "$temp_file"
+
+        if [ ${#non_compliant_files[@]} -ne 0 ]; then
+            echo -e "\033[31mError: The following files are missing the correct copyright header:\033[0m"
+            for file in "${non_compliant_files[@]}"; do
+                echo -e "\033[31m${file}\033[0m"
+            done
+            exit 1
+        else
+            echo "All files have the correct copyright header."
+        fi
+
+        exit 0
+
+  编译检查:
+    stage: 代码检查
+    component: shell-with-clone
+    inputs:
+      script: |
+        #!/bin/bash
+        if [[ `uname -m` == aarch64 ]]; then
+          wget https://studygolang.com/dl/golang/go1.20.6.linux-arm64.tar.gz
+          rm -rf /usr/local/go 
+          tar -C /usr/local -xzf go1.20.6.linux-arm64.tar.gz
+          cp /usr/local/go/bin/go /usr/local/bin/
+        else
+          wget https://studygolang.com/dl/golang/go1.20.6.linux-amd64.tar.gz
+          rm -rf /usr/local/go 
+          tar -C /usr/local -xzf go1.20.6.linux-amd64.tar.gz
+          cp /usr/local/go/bin/go /usr/local/bin/
+        fi
+        go env -w GOPROXY=https://goproxy.cn GOPATH="/usr/local"
+        go install github.com/go-bindata/go-bindata/...@v3.1.2+incompatible
+        cd "${BASE_WORKSPACE}/codeWorkspace"
+        make pre-build build-with-swagger
+  
+  规范检查:
+    stage: 代码检查
+    component: golang-sast
+    inputs:
+      excludes: 
+        - "**_test.go**"
+    config:
+      execute:
+        timeout: 600
+      afterExecute:
+        checkRule:
+          - ${{outputs.critical}} <= 10

@@ -1,0 +1,32 @@
+BFlow Secret Scan Ignore List              #
+##########################################################
+# Above the segmentation lines there are suspected privacy information #
+# Please use the file name as the first line and the igored information #
+# should be started with tab. #
+# Under the segmentation lines there are the folders which you need to ignore #
+##########################################################
+**
+  https://github.com/*
+  https://goproxy.cn
+  https://open.oceanbase.com
+  http://www.apache.org/licenses/
+--------------------------------------------------------
+# Should use GLOB wildcard to config and analysis the ignored folder
+# The root patch shold start with '/'
+/README.md
+/README-CN.md
+/LICENSE
+/CODE_OF_CONDUCT.md
+/NOTICE
+/COMPILE.md
+/.git/**
+/rpm/obshell.spec
+/go.mod
+/go.sum
+/Makefile.common
+--------------------------------------------------------
+# Config the ignored fold to escape the Chinese scan by GLOB wildcard
+--------------------------------------------------------
+# Set md5 of pemFile string to filter
+# This section must be end up with '--------------------------------------------------------'!!!
+--------------------------------------------------------

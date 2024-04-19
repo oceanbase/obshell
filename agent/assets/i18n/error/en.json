@@ -1,0 +1,11 @@
+{
+  "err.bad.request": "Bad request: %v",
+  "err.illegal.argument": "Illegal argument: %v",
+  "err.unexpected": "Unexpected error: %v",
+  "err.known": "Known error: %v",
+
+  "err.task.create.failed": "Create task failed: %v",
+  "err.task.not.found": "Task not found: %v",
+  "err.obcluster.not.found": "There is no obcluster now. %v"
+
+}

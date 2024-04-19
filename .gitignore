@@ -1,0 +1,22 @@
+src/**/*.pyc
+src/**/build
+
+# go Binary files
+bin/*
+cmd/agent/ocsagent
+go.work
+go.work.sum
+
+# go test files and generated files
+bindata/
+agent/api/docs/*
+vendor
+
+# macOS files
+.DS_Store
+
+
+.idea/*
+*.iml
+.vscode/*
+.OWNERS

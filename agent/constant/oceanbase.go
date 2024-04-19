@@ -1,0 +1,81 @@
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package constant
+
+import "time"
+
+const (
+	PARAM_RPC_PORT   = "rpc_port"
+	PARAM_MYSQL_PORT = "mysql_port"
+)
+
+const (
+	DB_OCEANBASE = "oceanbase"
+	DB_OCS       = "ocs"
+
+	CONFIG_RPC_PORT   = "rpcPort"
+	CONFIG_MYSQL_PORT = "mysqlPort"
+
+	DEFAULT_MYSQL_PORT = 2881
+	DEFAULT_RPC_PORT   = 2882
+
+	CONFIG_HOME_PATH = "homePath"
+	CONFIG_ROOT_PWD  = "rootPwd"
+	CONFIG_DATA_DIR  = "data_dir"
+	CONFIG_REDO_DIR  = "redo_dir"
+	CONFIG_CLOG_DIR  = "clog_dir"
+	CONFIG_SLOG_DIR  = "slog_dir"
+
+	CONFIG_LOCAL_IP  = "local_ip"
+	CONFIG_DEV_NAME  = "devname"
+	CONFIG_LOG_LEVEL = "syslog_level"
+	CONFIG_ZONE      = "zone"
+
+	CONFIG_ROOT_PASSWORD = "rootPwd"
+	CONFIG_RS_LIST       = "rootservice_list"
+	CONFIG_CLUSTER_ID    = "cluster_id"
+	CONFIG_CLUSTER_NAME  = "cluster"
+
+	CONFIG_FILE_LOCAL_IP = "local_ip"
+
+	OB_PARAM_CLUSTER_ID   = "cluster_id"
+	OB_PARAM_CLUSTER_NAME = "cluster"
+
+	// configurable dir
+	OB_DIR_STORE = "store"
+	OB_DIR_CLOG  = "clog"
+	OB_DIR_SLOG  = "slog"
+
+	// unconfigurable dir
+	OB_DIR_ETC     = "etc"
+	OB_DIR_LOG     = "log"
+	OB_DIR_SSTABLE = "store/sstable"
+
+	OB_CONFIG_FILE = "observer.config.bin"
+
+	// env
+	OB_ROOT_PASSWORD = "OB_ROOT_PASSWORD"
+)
+
+const (
+	CHUNK_SIZE uint64 = 1024*1024*16 - 1
+)
+
+const (
+	TICK_INTERVAL_FOR_OB_STATUS_CHECK = 5 * time.Second
+	TICK_NUM_FOR_OB_STATUS_CHECK      = 60
+)

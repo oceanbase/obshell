@@ -1,0 +1,250 @@
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package cluster
+
+import (
+	"fmt"
+	"os"
+	"os/signal"
+	"strings"
+	"syscall"
+
+	"github.com/spf13/cobra"
+
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
+	"github.com/oceanbase/obshell/client/utils/printer"
+	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/ob"
+	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/param"
+)
+
+type ClusterStopFlags struct {
+	scopeFlags
+	stopBehaviorFlags
+	id          string
+	verbose     bool
+	skipConfirm bool
+}
+
+type stopBehaviorFlags struct {
+	force     bool
+	terminate bool
+	immediate bool
+}
+
+func newStopCmd() *cobra.Command {
+	opts := &ClusterStopFlags{}
+	stopCmd := &cobra.Command{
+		Use:     CMD_STOP,
+		Short:   "Stop observers within the specified range.",
+		PreRunE: cmdlib.ValidateArgs,
+		Run: func(cmd *cobra.Command, args []string) {
+			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+			stdio.SetSkipConfirmMode(opts.skipConfirm)
+			stdio.SetVerboseMode(opts.verbose)
+			stdio.SetSilenceMode(false)
+			if err := clusterStop(opts); err != nil {
+				stdio.Error(err.Error())
+			}
+		},
+		Example: stopCmdExample(),
+	}
+
+	stopCmd.Flags().SortFlags = false
+	stopCmd.Flags().StringVarP(&opts.server, FLAG_SERVER, FLAG_SERVER_SH, "", "The operations address of the target server to stop.")
+	stopCmd.Flags().StringVarP(&opts.zone, FLAG_ZONE, FLAG_ZONE_SH, "", "Stop all servers within the specified zone.")
+	stopCmd.Flags().BoolVarP(&opts.global, FLAG_ALL, FLAG_ALL_SH, false, "Stop all servers within the cluster.")
+
+	stopCmd.Flags().BoolVarP(&opts.force, FLAG_FORCE, FLAG_FORCE_SH, false, "Forcefully kill the observer using 'kill -9'")
+	stopCmd.Flags().BoolVarP(&opts.terminate, FLAG_TERMINATE, FLAG_TERMINATE_SH, false, "Trigger a 'MINOR FREEZE' command before forcefully killing the observer with 'kill -9'.")
+	stopCmd.Flags().BoolVarP(&opts.immediate, FLAG_IMMEDIATE, FLAG_IMMEDIATE_SH, false, "Trigger a 'STOP SERVER' command and will not forcefully kill the observer.")
+
+	stopCmd.Flags().StringVarP(&opts.id, FLAG_ID, FLAG_ID_SH, "", "ID of the previous start/stop task. Separated by commas if multiple tasks are specified")
+	stopCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
+	stopCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation of stop operation")
+
+	stopCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
+		printer.PrintHelpFunc(cmd, []string{})
+	})
+	return stopCmd
+}
+
+func clusterStop(flags *ClusterStopFlags) (err error) {
+	if err = validateScopeFlags(&flags.scopeFlags); err != nil {
+		return
+	}
+
+	if err = vaildStopFlags(&flags.stopBehaviorFlags); err != nil {
+		return
+	}
+
+	if err = confirmStop(); err != nil {
+		return
+	}
+
+	agentStatus, err := api.GetMyAgentStatus()
+	if err != nil {
+		return
+	}
+
+	if agentStatus.OBState != oceanbase.STATE_CONNECTION_AVAILABLE && !flags.force {
+		return errors.New("The current observer is not available, please use '-f'.")
+	}
+
+	if flags.server == "" && flags.zone == "" && !flags.global {
+		flags.server = fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.Agent.GetPort())
+	}
+
+	if err = CheckAllAgentMaintenance(); err != nil {
+		return err
+	}
+
+	if err = callStopApi(flags); err != nil {
+		return
+	}
+	return nil
+}
+
+func confirmStop() error {
+	msg := "Please confirm if you need to stop servers, as it will leave the cluster in an unsafe state."
+	res, err := stdio.Confirm(msg)
+	if err != nil {
+		return errors.Wrap(err, "ask for stop confirmation failed")
+	}
+	if !res {
+		return errors.New("stop ob cancelled")
+	}
+	return nil
+}
+
+func callStopApi(flags *ClusterStopFlags) (err error) {
+	stdio.Verbosef("Calling stop API with flags: %+v", flags)
+
+	param := &param.ObStopParam{
+		Scope:             newScopeParam(&flags.scopeFlags),
+		Force:             flags.force,
+		Terminate:         flags.terminate || (!flags.force && !flags.immediate),
+		ForcePassDagParam: *newForcePassIdParam(flags.id),
+	}
+	uri := constant.URI_OB_API_PREFIX + constant.URI_STOP
+	if err = callEmerTypeApi(uri, param); err != nil {
+		return
+	}
+	return nil
+
+}
+
+func callEmerTypeApi(uri string, param interface{}) (err error) {
+	dag, err := api.CallApi(uri, param)
+	if err != nil {
+		return err
+	}
+	dagHandler := api.NewDagHandler(dag)
+
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		sig := <-sigChan
+		stdio.StopLoading()
+		stdio.Printf("\nReceived signal: %v", sig)
+		stdio.Info("try to cancel the task, please wait...")
+		if err := dagHandler.CancelDag(); err != nil {
+			stdio.StopLoading()
+			stdio.Warnf("Failed to cancel the task: %s", err.Error())
+			os.Exit(1)
+		}
+	}()
+
+	if err = dagHandler.PrintDagStage(); err != nil {
+		return err
+	}
+
+	if dagHandler.Dag.IsSucceed() {
+		return nil
+	}
+
+	return handleDagFailed(dagHandler.Dag)
+}
+
+func handleDagFailed(dag *task.DagDetailDTO) (err error) {
+	msg := fmt.Sprintf("Sorry, task '%s' has failed. Due to the failed task, the cluster is currently under maintenance.", dag.Name)
+	stdio.Warn(msg)
+	stdio.StartOrUpdateLoading("Please do not perform any actions. Attempting to automatically release the Maintenance state")
+
+	mainDags, _, err := api.GetAllMainAndMaintainDag()
+	if err != nil {
+		return err
+	}
+
+	if err = autoFinishMainDag(mainDags); err != nil {
+		stdio.LoadFailed("Failed to automatically release the Maintenance state.")
+		return err
+	}
+	stdio.LoadSuccess("Maintenance state released successfully.")
+	return nil
+}
+
+func newScopeParam(flags *scopeFlags) param.Scope {
+	stdio.Verbosef("Creating scope param with flags: %+v", flags)
+	scopeParam := param.Scope{}
+	switch getScopeType(flags) {
+	case ob.SCOPE_SERVER:
+		servers := strings.Split(strings.TrimSpace(flags.server), ",")
+		scopeParam.Type = ob.SCOPE_SERVER
+		scopeParam.Target = servers
+	case ob.SCOPE_ZONE:
+		zones := strings.Split(strings.TrimSpace(flags.zone), ",")
+		scopeParam.Type = ob.SCOPE_ZONE
+		scopeParam.Target = zones
+	case ob.SCOPE_GLOBAL:
+		scopeParam.Type = ob.SCOPE_GLOBAL
+	}
+	stdio.Verbosef("Scope param created: %#+v", scopeParam)
+	return scopeParam
+}
+
+func vaildStopFlags(flags *stopBehaviorFlags) (err error) {
+	stdio.Verbosef("Validating stop flags: %+v", flags)
+	if flags.force && flags.terminate && flags.immediate {
+		return errors.New("Only one of the flags -f, -t, -I can be specified")
+	}
+	if flags.force && flags.terminate {
+		return errors.New("Only one of the flags -f, -t can be specified")
+	}
+	if flags.force && flags.immediate {
+		return errors.New("Only one of the flags -f, -I can be specified")
+	}
+	if flags.terminate && flags.immediate {
+		return errors.New("Only one of the flags -t, -I can be specified")
+	}
+	return nil
+}
+
+func stopCmdExample() string {
+	return `  obshell cluster stop -s 192.168.1.1:2886 -f
+  obshell cluster stop -z zone1,zone2 -t
+  obshell cluster stop -z zone1 -I
+  obshell cluster stop -a -f`
+}
