@@ -291,7 +291,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		}
 
 		// Decrypts the request body on routes where encryption is expected.
-		encryptedBody, _ := io.ReadAll(c.Request.Body)
+		encryptedBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("read body failed, err: %v", err)
 			c.Abort()
