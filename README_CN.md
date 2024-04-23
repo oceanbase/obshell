@@ -103,7 +103,7 @@ OBShell Agent 身份转换的状态机如图所示：
 # License
 
 OBShell 根据 Apache 公共许可证版本 2 获得许可。有关详细信息，请参阅 [LICENSE](LICENSE) 文件。
-![Alt text](image.png)
+
 # 社区
 
 有以下加入社区的方法：
