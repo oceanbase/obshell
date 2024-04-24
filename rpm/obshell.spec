@@ -11,7 +11,7 @@ Version: %(echo $VERSION)
 Release: %(echo $RELEASE)%{?dist}
 URL: https://github.com/oceanbase/obshell
 License: Apache 2.0
-BuildArch: x86_64 aarch64
+BuildArch: x86_64 aarch64 ppc64le
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 Prefix: /home/admin
 
