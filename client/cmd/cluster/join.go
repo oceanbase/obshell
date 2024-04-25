@@ -24,17 +24,17 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/ob"
+	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/path"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/client/utils/printer"
-	"github.com/oceanbase/obshell/agent/config"
-	"github.com/oceanbase/obshell/agent/constant"
-	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/executor/ob"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -51,12 +51,16 @@ func newJoinCmd() *cobra.Command {
 		Use:     CMD_JOIN,
 		Short:   "Join the cluster by specifying the target node before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			if err := agentJoin(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: joinCmdExample(),
 	}

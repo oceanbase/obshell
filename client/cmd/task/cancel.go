@@ -20,15 +20,15 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
+	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/client/utils/printer"
-	"github.com/oceanbase/obshell/agent/config"
-	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 )
 
 type TaskCancelFlags struct {
@@ -44,13 +44,17 @@ func newCancelCmd() *cobra.Command {
 		Aliases: []string{CMD_STOP},
 		Short:   "Cancel a task.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 			if err := taskCancel(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: cancelCmdExample(),
 	}

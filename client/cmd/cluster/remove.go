@@ -19,15 +19,15 @@ package cluster
 import (
 	"github.com/spf13/cobra"
 
+	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/client/utils/printer"
-	"github.com/oceanbase/obshell/agent/config"
-	"github.com/oceanbase/obshell/agent/constant"
-	"github.com/oceanbase/obshell/agent/errors"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 )
 
 type AgentRemoveFlags struct {
@@ -42,13 +42,17 @@ func newRemoveCmd() *cobra.Command {
 		Use:     CMD_REMOVE,
 		Short:   "Remove the specified the target node from cluster before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			if err := agentRemove(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: removeCmdExample(),
 	}

@@ -21,11 +21,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	clientconst "github.com/oceanbase/obshell/client/constant"
-	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/stdio"
-	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -33,6 +28,11 @@ import (
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
+	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -47,13 +47,17 @@ func newShowCmd() *cobra.Command {
 		Use:     CMD_SHOW,
 		Short:   "Show OceanBase cluster info.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := clusterShow(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: showCmdExample(),
 	}

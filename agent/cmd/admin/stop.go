@@ -40,6 +40,7 @@ func newStopCmd() *cobra.Command {
 		Args:   cobra.NoArgs,
 	}
 	stopCmd.RunE = func(c *cobra.Command, args []string) (err error) {
+		c.SilenceUsage = true
 		ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 		admin := NewAdmin(nil)
 		return admin.StopDaemon()

@@ -24,11 +24,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	clientconst "github.com/oceanbase/obshell/client/constant"
-	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/stdio"
-	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -36,6 +31,11 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/global"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
+	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -67,7 +67,9 @@ func newStartCmd() *cobra.Command {
 		Use:     CMD_START,
 		Short:   "Start observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
@@ -78,7 +80,9 @@ func newStartCmd() *cobra.Command {
 				} else {
 					stdio.Error(err.Error())
 				}
+				return err
 			}
+			return nil
 		},
 		Example: startCmdExample(),
 	}

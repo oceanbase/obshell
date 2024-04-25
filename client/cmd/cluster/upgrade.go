@@ -24,6 +24,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
+	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/lib/pkg"
+	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/path"
@@ -32,12 +38,6 @@ import (
 	"github.com/oceanbase/obshell/client/utils/binary"
 	"github.com/oceanbase/obshell/client/utils/printer"
 	rpmutil "github.com/oceanbase/obshell/client/utils/rpm"
-	"github.com/oceanbase/obshell/agent/config"
-	"github.com/oceanbase/obshell/agent/constant"
-	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/executor/ob"
-	"github.com/oceanbase/obshell/agent/lib/pkg"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -59,14 +59,18 @@ func newUpgradeCmd() *cobra.Command {
 		Use:     CMD_UPGRADE,
 		Short:   "Upgrade the OceanBase cluster to the specified version.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := clusterUpgrade(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: upgradeCmdExample(),
 	}

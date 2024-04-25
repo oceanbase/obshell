@@ -25,11 +25,6 @@ import (
 
 	"github.com/spf13/cobra"
 
-	clientconst "github.com/oceanbase/obshell/client/constant"
-	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/stdio"
-	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -37,6 +32,11 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
+	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -60,14 +60,18 @@ func newStopCmd() *cobra.Command {
 		Use:     CMD_STOP,
 		Short:   "Stop observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.SilenceUsage = true
+			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := clusterStop(opts); err != nil {
 				stdio.Error(err.Error())
+				return err
 			}
+			return nil
 		},
 		Example: stopCmdExample(),
 	}
