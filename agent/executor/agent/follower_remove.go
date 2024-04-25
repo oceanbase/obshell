@@ -167,7 +167,7 @@ func (t *SendFollowerRemoveSelfRPCTask) Execute() error {
 		// Send rpc to master agent.
 		resp, err := secure.SendDeleteRequestAndReturnResponse(masterAgent, constant.URI_AGENT_RPC_PREFIX, agent, &dagDTO)
 		if resp != nil && resp.IsError() {
-			return errors.Wrap(resp.Error().(error), "send remove this agent request failed")
+			return errors.Errorf("send remove agent request to %s failed: %v", masterAgent.String(), resp.Error())
 		}
 		if err != nil {
 			t.ExecuteWarnLogf("send remove this agent request failed, err: %v", err)

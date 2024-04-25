@@ -81,7 +81,7 @@ func (t *AgentRemoveFollowerRPCTask) Execute() error {
 		resp, err := secure.SendDeleteRequestAndReturnResponse(&agent, constant.URI_AGENT_RPC_PREFIX, agent, &dagDTO)
 
 		if resp != nil && resp.IsError() {
-			return errors.Wrap(resp.Error().(error), "send remove agent request failed")
+			return errors.Errorf("send remove agent request to %s failed: %v", agent.String(), resp.Error())
 		}
 		if err != nil {
 			t.ExecuteWarnLogf("send remove agent request failed, err: %v", err)
