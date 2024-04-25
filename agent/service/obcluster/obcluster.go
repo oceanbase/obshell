@@ -91,12 +91,12 @@ func (obclusterService *ObclusterService) StopZone(zone string) (err error) {
 	return
 }
 
-func (obclusterService *ObclusterService) GetCurrentTime() (t time.Time, err error) {
+func (obclusterService *ObclusterService) GetUTCTime() (t time.Time, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return t, err
 	}
-	db.Raw("SELECT NOW(6)").Scan(&t)
+	db.Raw("SELECT UTC_TIMESTAMP(6)").Scan(&t)
 	return
 }
 
@@ -128,8 +128,13 @@ func (obclusterService *ObclusterService) IsLsCheckpointAfterTs(server oceanbase
 		return t, err
 	}
 
+	var systemTimeZone string
+	if err = db.Raw("SELECT @@system_time_zone").Scan(&systemTimeZone).Error; err != nil {
+		return
+	}
+
 	// Get checkpoint of target server.
-	sql := fmt.Sprintf("select ADDTIME(scn_to_timestamp(checkpoint_scn), TIMEDIFF(NOW(),UTC_TIMESTAMP)) from oceanbase.__all_virtual_ls_info where svr_ip = '%s' and svr_port = %d order by checkpoint_scn asc limit 1", server.SvrIp, server.SvrPort)
+	sql := fmt.Sprintf("select CONVERT_TZ(scn_to_timestamp(checkpoint_scn), '%s', '+00:00') from oceanbase.__all_virtual_ls_info where svr_ip = '%s' and svr_port = %d order by checkpoint_scn asc limit 1", systemTimeZone, server.SvrIp, server.SvrPort)
 	err = db.Raw(sql).Scan(&t).Error
 	return
 

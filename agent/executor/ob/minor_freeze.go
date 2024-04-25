@@ -85,7 +85,7 @@ func (t *MinorFreezeTask) Execute() error {
 		return errors.Wrap(err, "get all target observers failed")
 	}
 
-	curTs, err := obclusterService.GetCurrentTime()
+	curTs, err := obclusterService.GetUTCTime()
 	if err != nil {
 		return err
 	}
