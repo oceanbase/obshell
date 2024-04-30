@@ -107,3 +107,12 @@ Here are the ways to join the community:
 * [Ask on Stack Overflow](https://stackoverflow.com/questions/tagged/oceanbase)
 * DingTalk Group: 33254054 ([QR Code](img/dingtalk.png))
 * WeChat Group (Add WeChat Assistant: OBCE666)
+* 
+
+Test cla
+Test cla
+Test cla
+Test cla
+Test cla
+Test cla
+Test cla
