@@ -285,7 +285,7 @@ func GetAllAgentLastMaintenanceDag(c *gin.Context) {
 		}
 
 		var dagDetailDTO *task.DagDetailDTO
-		url := fmt.Sprintf("%s%s%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, constant.URI_AGENT_GROUP)
+		url := fmt.Sprintf("%s%s%s%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, constant.URI_MAINTAIN, constant.URI_AGENT_GROUP)
 		err = secure.SendGetRequest(&agent, url, nil, &dagDetailDTO)
 		if err != nil {
 			log.WithContext(common.NewContextWithTraceId(c)).Errorf("get agent last maintenance dag failed: %v", err)
