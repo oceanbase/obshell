@@ -24,10 +24,28 @@ import (
 	"unsafe"
 )
 
+var input *SysStdin
+
 type SysStdin struct {
 	isTTY    bool
 	reader   *bufio.Reader
 	nonBlock bool
+}
+
+func init() {
+	input = NewSysStdin()
+}
+
+func ReadLine(blocked bool) (string, error) {
+	return input.ReadLine(blocked)
+}
+
+func ReadLines(blocked bool) ([]string, error) {
+	return input.ReadLines(blocked)
+}
+
+func IsTTY() bool {
+	return input.IsTTY()
 }
 
 func NewSysStdin() *SysStdin {
