@@ -1,33 +1,35 @@
 #!/bin/sh
 
-# 包含已更改的 Go 文件的列表
+# List of Go files that have been modified
 FILES=$(git diff --cached --name-only --diff-filter=ACMR | grep '\.go$')
 
-# 没有 Go 文件被修改
+# No Go files were modified
 if [ -z "$FILES" ]; then
     echo "No Go files were modified"
     exit 0
 fi
 
-# 标记是否进行了格式化
+# Flag whether formatting was done
 FORMATTED=false
 
-# 遍历并格式化每个 Go 文件
+# Iterate and format each Go file
 for FILE in $FILES; do
+    # Modify swag comment, trigger swag fmt formatting
+    sed -i 's/@Router/ @Router /g' $FILE
     swag fmt $FILE
-    # 检查文件是否被 swag fmt 格式化过
+    # Check if the file has been formatted by swag fmt
     if ! git diff --quiet "$FILE"; then
         FORMATTED=true
-        # 将格式化后的 Go 文件添加到暂存区
+        # Add the formatted Go file to the staging area
         git add "$FILE"
         echo "$FILE was formatted"
     fi
 done
 
 if $FORMATTED; then
-    echo -e "\033[31m[Error] \033[0mSome files have beed formatted. Please commit again"
+    echo -e "\033[31m[Error] \033[0mSome files have been formatted. Please commit again"
     exit 1
 fi
 
-# 如果格式化完成，则继续原始提交
+# If formatting is complete, continue with the original commit
 exit 0
