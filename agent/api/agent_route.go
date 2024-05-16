@@ -25,14 +25,14 @@ import (
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 )
 
-// @title			obshell API
-// @version		1.0
-// @description	This is a set of operation and maintenance management API interfaces developed based on observer.
-// @BasePath		/
-// @contact.name	obshell API Support
-// @contact.url	https://open.oceanbase.com
-// @license.name	Apache - 2.0
-// @license.url	http://www.apache.org/licenses/
+//	@title			obshell API
+//	@version		1.0
+//	@description	This is a set of operation and maintenance management API interfaces developed based on observer.
+//	@BasePath		/
+//	@contact.name	obshell API Support
+//	@contact.url	https://open.oceanbase.com
+//	@license.name	Apache - 2.0
+//	@license.url	http://www.apache.org/licenses/
 func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	if isLocalRoute {
 		r.Use(common.UnixSocketMiddleware())

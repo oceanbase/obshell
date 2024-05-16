@@ -21,6 +21,14 @@ git clone https://github.com/`your-github-name`/obshell
 ```bash
 cd obshell
 ```
+### Install Git Hooks
+
+Before you start developing, we recommend you to install Git Hooks. Git Hooks can help you automate some tasks, such as running tests or checking code format before committing. You can install Git Hooks by running the following command:
+
+```bash
+sh ./git-hooks/init.sh
+```
+
 Create a new branch for your feature or bug fix:
 ```bash
  git checkout -b feature-branch

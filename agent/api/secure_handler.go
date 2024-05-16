@@ -23,14 +23,14 @@ import (
 	"github.com/oceanbase/obshell/agent/secure"
 )
 
-// @ID				getSecret
-// @Summary		get secret
-// @Description	get secret
-// @Tags			v1
-// @Accept			application/json
-// @Produce		application/json
-// @Success		200	object	http.OcsAgentResponse{data=meta.AgentSecret}
-// @Router			/api/v1/secret [get]
+//	@ID				getSecret
+//	@Summary		get secret
+//	@Description	get secret
+//	@Tags			v1
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Success		200	object	http.OcsAgentResponse{data=meta.AgentSecret}
+//	@Router			/api/v1/secret [get]
 func secretHandler(c *gin.Context) {
 	ctx := common.NewContextWithTraceId(c)
 	data := secure.GetSecret(ctx)
