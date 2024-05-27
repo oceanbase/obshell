@@ -163,6 +163,10 @@ func FindShortestUpgradePath(nodeMap map[string]*VersionDep, currentRepo, target
 	for k := range nodeMap {
 		nodeMap[k].Precursor = nil
 	}
+	if len(queue) < 2 {
+		return nil, errors.New("Not found upgrade path, cannot upgrade to target version")
+	}
+
 	for len(queue) > 0 {
 		node := queue[len(queue)-1]
 		queue = queue[0 : len(queue)-1]
@@ -243,17 +247,21 @@ func AddDeprecatedInfo(nodeMap map[string]*VersionDep, res []*VersionDep) []*Ver
 
 func FormatRoute(routes []*VersionDep) []RouteNode {
 	var res []RouteNode
+	preBarrier := routes[0]
 	for _, v := range routes {
 		requireFromBinary := v.RequireFromBinary.Value
 		if len(v.RequireFromBinary.WhenComeFrom) != 0 {
 			var comeFrom bool
 			for _, vv := range v.RequireFromBinary.WhenComeFrom {
-				if vv == routes[0].Version || vv == fmt.Sprintf("%s-%s", routes[0].Version, routes[0].Release) {
+				if vv == preBarrier.Version || vv == fmt.Sprintf("%s-%s", preBarrier.Version, preBarrier.Release) {
 					comeFrom = true
 					break
 				}
 			}
 			requireFromBinary = requireFromBinary && comeFrom
+			if requireFromBinary {
+				preBarrier = v
+			}
 		}
 		node := RouteNode{
 			Version:           v.Version,
@@ -269,15 +277,16 @@ func FormatRoute(routes []*VersionDep) []RouteNode {
 		res = append(res, node)
 	}
 
-	firstRes := []RouteNode{}
-	secondRes := []RouteNode{res[len(res)-1]}
-
-	for _, v := range res[1 : len(res)-1] {
+	// Supported since v4.2.1. Earlier upgrade paths prior to v4.1.0.0 are not required to be considered for compatibility.
+	nodes := []RouteNode{res[len(res)-1]}
+	fmt.Println(nodes)
+	for i := len(res) - 2; i >= 0; i-- {
+		v := res[i]
 		if v.RequireFromBinary {
-			secondRes = append([]RouteNode{v}, secondRes...)
+			nodes = append([]RouteNode{v}, nodes...)
+			fmt.Println(nodes)
 		}
 	}
-	firstRes = append([]RouteNode{res[0]}, firstRes...)
-
-	return append(firstRes, secondRes...)
+	nodes = append([]RouteNode{res[0]}, nodes...)
+	return nodes
 }
