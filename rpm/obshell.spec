@@ -52,14 +52,16 @@ if [ -n "$OBSHELL_RELEASE" ]; then
     RELEASE=$OBSHELL_RELEASE
 fi 
 
-flag="-e VERSION=$VERSION -e RELEASE=$RELEASE -e DIST=%{?dist}"
+OBSHELL_VERSION=${OBSHELL_VERSION:-$VERSION}
+OBSHELL_RELEASE=${OBSHELL_RELEASE:-$RELEASE}
+flag="-e VERSION=$OBSHELL_VERSION -e RELEASE=$OBSHELL_RELEASE -e DIST=%{?dist}"
 if [ "$PROXY" ]; then
     flag="$flag -e PROXY=$PROXY"
 fi
 
 make pre-build build-release $flag
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
-cp bin/obshell $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
+cp -f bin/obshell $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
 
 %files
 %defattr(755,admin,admin)

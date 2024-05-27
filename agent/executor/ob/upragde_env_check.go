@@ -58,24 +58,22 @@ func (t *CheckEnvTask) Execute() (err error) {
 }
 
 func (t *CheckEnvTask) checkEnv() (err error) {
-	t.ExecuteLog("Checking if python2 is installed.")
-	cmd := exec.Command("python2", "-c", "import sys; print(sys.version_info.major)")
+	t.ExecuteLog("Checking if python is installed.")
+	cmd := exec.Command("python", "-c", "import sys; print(sys.version_info.major)")
 
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err = cmd.Run(); err != nil {
-		return errors.Wrap(err, "Please check if python2 is installed.")
+		return errors.Wrap(err, "Please check if python is installed.")
 	}
 	output := strings.TrimSpace(out.String())
 	t.ExecuteLogf("Python major version %s", output)
-	if output != "2" {
-		return errors.New("python2 is not installed.")
-	}
+
 	for _, module := range modules {
-		t.ExecuteLogf("Checking if python2 module '%s' is installed.", module)
-		cmd = exec.Command("python2", "-c", "import "+module)
+		t.ExecuteLogf("Checking if python module '%s' is installed.", module)
+		cmd = exec.Command("python", "-c", "import "+module)
 		if err = cmd.Run(); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("Please check if python2 module '%s' is installed.", module))
+			return errors.Wrap(err, fmt.Sprintf("Please check if python module '%s' is installed.", module))
 		}
 	}
 	return nil

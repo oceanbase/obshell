@@ -82,7 +82,7 @@ func (t *ExecScriptTask) Execute() (err error) {
 		return err
 	}
 	t.ExecuteLogf("execute script '%s' %s", t.scriptFile, t.zone)
-	str := fmt.Sprintf("cd %s; python2 %s -h%s -P%d -uroot", t.rpmDir, t.scriptPath, t.localAgent.Ip, meta.MYSQL_PORT)
+	str := fmt.Sprintf("cd %s; python %s -h%s -P%d -uroot", t.rpmDir, t.scriptPath, t.localAgent.Ip, meta.MYSQL_PORT)
 	if meta.GetOceanbasePwd() != "" {
 		pwd := strings.ReplaceAll(meta.GetOceanbasePwd(), "'", "'\"'\"'")
 		str = fmt.Sprintf("%s -p'%s'", str, pwd)
