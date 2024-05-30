@@ -348,7 +348,10 @@ func isEmergencyMode(c *gin.Context, scope *param.Scope) (res bool, agentErr *er
 //	@Router			/api/v1/agent/upgrade/check [post]
 func agentUpgradeCheckHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
-	c.BindJSON(&param)
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	task, err := ob.AgentUpgradeCheck(param)
 	common.SendResponse(c, task, err)
 }
@@ -368,7 +371,10 @@ func agentUpgradeCheckHandler(c *gin.Context) {
 //	@Router			/api/v1/ob/upgrade/check [post]
 func obUpgradeCheckHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
-	c.BindJSON(&param)
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	task, err := ob.ObUpgradeCheck(param)
 	common.SendResponse(c, task, err)
 }
@@ -449,7 +455,10 @@ func paramsRestoreHandler(c *gin.Context) {
 //	@Router			/api/v1/agent/upgrade [post]
 func agentUpgradeHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
-	c.BindJSON(&param)
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	dag, err := ob.AgentUpgrade(param)
 	common.SendResponse(c, dag, err)
 }
@@ -469,7 +478,10 @@ func agentUpgradeHandler(c *gin.Context) {
 //	@Router			/api/v1/ob/upgrade [post]
 func obUpgradeHandler(c *gin.Context) {
 	var param param.ObUpgradeParam
-	c.BindJSON(&param)
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	dag, err := ob.CheckAndUpgradeOb(param)
 	common.SendResponse(c, dag, err)
 }
