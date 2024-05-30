@@ -252,7 +252,7 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 	}
 
 	currentBuildVersion, e := obclusterService.GetObBuildVersion()
-	if err != nil {
+	if e != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, e)
 	}
 	p = &obUpgradeParams{

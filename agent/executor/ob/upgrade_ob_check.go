@@ -181,9 +181,9 @@ func checkTargetOBVersionSupport(targetBV string) (err error) {
 	if pkg.CompareVersion(targetBV, constant.SUPPORT_MIN_VERSION) < 0 {
 		return fmt.Errorf("unsupported version '%s', the minimum supported version is '%s'", targetBV, constant.SUPPORT_MIN_VERSION)
 	}
-	currentBuildVersion, e := obclusterService.GetObBuildVersion()
+	currentBuildVersion, err := obclusterService.GetObBuildVersion()
 	if err != nil {
-		return errors.Wrap(e, "get current build version failed")
+		return errors.Wrap(err, "get current build version failed")
 	}
 	currentBV := strings.ReplaceAll(currentBuildVersion, "_", "-")
 	log.Info("current build version is ", currentBV)
