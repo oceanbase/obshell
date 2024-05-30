@@ -163,9 +163,6 @@ func FindShortestUpgradePath(nodeMap map[string]*VersionDep, currentRepo, target
 	for k := range nodeMap {
 		nodeMap[k].Precursor = nil
 	}
-	if len(queue) < 2 {
-		return nil, errors.New("Not found upgrade path, cannot upgrade to target version")
-	}
 
 	for len(queue) > 0 {
 		node := queue[len(queue)-1]
