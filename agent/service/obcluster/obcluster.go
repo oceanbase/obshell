@@ -96,7 +96,7 @@ func (obclusterService *ObclusterService) GetUTCTime() (t time.Time, err error) 
 	if err != nil {
 		return t, err
 	}
-	db.Raw("SELECT UTC_TIMESTAMP(6)").Scan(&t)
+	err = db.Raw("SELECT UTC_TIMESTAMP(6)").Scan(&t).Error
 	return
 }
 
