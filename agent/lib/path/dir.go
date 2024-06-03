@@ -27,18 +27,40 @@ var mypath string
 
 func init() {
 	if mypath == "" {
-		execPath, err := os.Executable()
+		var err error
+		mypath, err = getMyPathByArgs()
 		if err != nil {
-			panic(err)
+			if mypath, err = getMyPathByExec(); err != nil {
+				panic(err)
+			}
 		}
-
-		realPath, err := filepath.EvalSymlinks(execPath)
-		if err != nil {
-			panic(err)
-		}
-
-		mypath = realPath
 	}
+}
+
+func getMyPathByArgs() (string, error) {
+	ret, err := filepath.Abs(os.Args[0])
+	if err != nil {
+		return "", err
+	}
+	binDir := filepath.Dir(ret)
+	obPath := filepath.Join(binDir, constant.PROC_OBSERVER)
+	if _, err := os.Stat(obPath); err != nil {
+		return "", err
+	}
+	return ret, nil
+}
+
+func getMyPathByExec() (string, error) {
+	execPath, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	realPath, err := filepath.EvalSymlinks(execPath)
+	if err != nil {
+		return "", err
+	}
+	return realPath, nil
 }
 
 func AgentDir() string {
