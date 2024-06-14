@@ -40,7 +40,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	r.Use(
 		gin.CustomRecovery(common.Recovery), // gin's crash-free middleware
 		common.PostHandlers("/debug/pprof", "/swagger"),
-		common.BodyDecrypt(constant.URI_API_V1+constant.URI_OB_GROUP+constant.URI_INFO), // decrypt request body
+		common.BodyDecrypt(), // decrypt request body
 		common.PreHandlers(constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG),
 		common.SetContentType,
@@ -62,7 +62,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	upgrade := v1.Group(constant.URI_UPGRADE)
 
 	if !isLocalRoute {
-		ob.Use(common.Verify(constant.URI_API_V1 + constant.URI_OB_GROUP + constant.URI_INFO))
+		ob.Use(common.Verify())
 		agent.Use(common.Verify())
 		agents.Use(common.Verify())
 		obcluster.Use(common.Verify())

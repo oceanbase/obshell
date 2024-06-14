@@ -281,8 +281,6 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		}
 		c.Set(constant.OCS_HEADER, header)
 
-		secure.AddSkipBodyEncryptRoutes(skipRoutes...)
-
 		for _, route := range secure.GetSkipBodyEncryptRoutes() {
 			if route == c.Request.RequestURI {
 				c.Next()
