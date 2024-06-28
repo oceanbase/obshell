@@ -117,6 +117,9 @@ func (a *Admin) newDaemonProc() *process.Process {
 
 func (a *Admin) getDaemonArgs() []string {
 	args := []string{constant.PROC_OBSHELL_DAEMON}
+	if a.flags == nil {
+		return args
+	}
 	return append(args, a.flags.GetArgs()...)
 }
 

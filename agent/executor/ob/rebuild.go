@@ -49,6 +49,12 @@ func Rebuild(agentInstance *meta.AgentInstance) error {
 }
 
 func createRebuildDag(agent *meta.AgentInstance) error {
+	isRunning, err := localTaskService.IsRunning()
+	if err != nil {
+		return err
+	} else if isRunning {
+		return nil
+	}
 	log.Infof("create rebuild dag, identity: %s", agent.GetIdentity())
 	templateName := fmt.Sprintf("Rebuild %s", agent.GetIdentity())
 	templateBuilder := task.NewTemplateBuilder(templateName).
