@@ -165,6 +165,14 @@ func (io *IO) Print(msg string) {
 	io.print(NORM, msg)
 }
 
+func (io *IO) PrintWithoutNewline(msg string) {
+	io.print(NORM, msg, "")
+}
+
+func (io *IO) PrintfWithoutNewline(format string, a ...any) {
+	io.PrintWithoutNewline(fmt.Sprintf(format, a...))
+}
+
 func (io *IO) Printf(format string, a ...any) {
 	io.Print(fmt.Sprintf(format, a...))
 }

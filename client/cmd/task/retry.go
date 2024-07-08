@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -37,8 +38,7 @@ type TaskRetryFlags struct {
 
 func newRetryCmd() *cobra.Command {
 	opts := &TaskRetryFlags{}
-	requiredFlags := []string{clientconst.FLAG_ID}
-	retryCmd := &cobra.Command{
+	retryCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_RETRY,
 		Aliases: []string{CMD_RERUN},
 		Short:   "Retry a failed task.",
@@ -56,18 +56,13 @@ func newRetryCmd() *cobra.Command {
 			return nil
 		},
 		Example: retryCmdExample(),
-	}
+	})
 
 	retryCmd.Flags().SortFlags = false
-	retryCmd.Flags().StringVarP(&opts.id, clientconst.FLAG_ID, clientconst.FLAG_ID_SH, "", "Task ID.")
-	retryCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt.")
+	retryCmd.VarsPs(&opts.id, []string{clientconst.FLAG_ID, clientconst.FLAG_ID_SH}, "", "Task ID.", true)
+	retryCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt.", false)
 
-	retryCmd.MarkFlagRequired(clientconst.FLAG_ID)
-
-	retryCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, requiredFlags)
-	})
-	return retryCmd
+	return retryCmd.Command
 }
 
 func taskRetry(flags *TaskRetryFlags) error {

@@ -23,11 +23,11 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 )
 
 type AgentRemoveFlags struct {
@@ -38,7 +38,7 @@ type AgentRemoveFlags struct {
 
 func newRemoveCmd() *cobra.Command {
 	opts := &AgentRemoveFlags{}
-	removeCmd := &cobra.Command{
+	removeCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_REMOVE,
 		Short:   "Remove the specified the target node from cluster before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -55,23 +55,16 @@ func newRemoveCmd() *cobra.Command {
 			return nil
 		},
 		Example: removeCmdExample(),
-	}
+	})
 
 	removeCmd.Flags().SortFlags = false
 	// Setup of required flags for 'remove' command.
-	removeCmd.Flags().StringVarP(&opts.server, FLAG_SERVER, FLAG_SERVER_SH, "", "The target server you intend to remove. If the port is unspecified, it will be 2886.")
-	removeCmd.MarkFlagRequired(FLAG_SERVER)
+	removeCmd.VarsPs(&opts.server, []string{FLAG_SERVER, FLAG_SERVER_SH}, "", "The target server you intend to remove. If the port is unspecified, it will be 2886.", true)
 
-	// Configuration of optional flags for more detailed setup.
-	removeCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation of removing")
-	removeCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
+	removeCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of removing", false)
+	removeCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
-	removeCmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		printer.PrintUsageFunc(cmd)
-		return nil
-	})
-
-	return removeCmd
+	return removeCmd.Command
 }
 
 func agentRemove(flags *AgentRemoveFlags) error {

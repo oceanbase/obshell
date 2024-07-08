@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -37,8 +38,7 @@ type TaskRollbackFlags struct {
 
 func newRollbackCmd() *cobra.Command {
 	opts := &TaskRollbackFlags{}
-	requiredFlags := []string{clientconst.FLAG_ID}
-	rollbackCmd := &cobra.Command{
+	rollbackCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_ROLLBACK,
 		Short:   "Rollback a failed task.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -55,18 +55,13 @@ func newRollbackCmd() *cobra.Command {
 			return nil
 		},
 		Example: rollbackCmdExample(),
-	}
+	})
 
 	rollbackCmd.Flags().SortFlags = false
-	rollbackCmd.Flags().StringVarP(&opts.id, clientconst.FLAG_ID, clientconst.FLAG_ID_SH, "", "Task ID.")
-	rollbackCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt.")
+	rollbackCmd.VarsPs(&opts.id, []string{clientconst.FLAG_ID, clientconst.FLAG_ID_SH}, "", "Task ID.", true)
+	rollbackCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt.", false)
 
-	rollbackCmd.MarkFlagRequired(clientconst.FLAG_ID)
-
-	rollbackCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, requiredFlags)
-	})
-	return rollbackCmd
+	return rollbackCmd.Command
 }
 
 func taskRollback(flags *TaskRollbackFlags) error {

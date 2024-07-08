@@ -21,6 +21,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 const (
@@ -31,13 +32,13 @@ const (
 // admin command is used to start, stop and restart daemon.
 // They are hidden commands, and used by obshell.
 func NewAdminCmd() *cobra.Command {
-	adminCmd := &cobra.Command{
+	adminCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_ADMIN,
 		Hidden: true,
 		Args:   cobra.NoArgs,
-	}
+	})
 	adminCmd.AddCommand(newStartCmd(), newStopCmd(), newRestartCmd())
-	return adminCmd
+	return adminCmd.Command
 }
 
 type Admin struct {

@@ -19,10 +19,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/spf13/cobra"
-
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 const (
@@ -45,15 +44,15 @@ type CommonFlag struct {
 	NeedBeCluster bool
 }
 
-func SetFlags(cmd *cobra.Command, flag *CommonFlag) {
+func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 	cmd.Flags().SortFlags = false
-	cmd.Flags().StringVar(&flag.AgentInfo.Ip, constant.FLAG_IP, "", "The IP address for the agent to bind to")
-	cmd.Flags().IntVarP(&flag.AgentInfo.Port, constant.FLAG_PORT, constant.FLAG_PORT_SH, 0, "The operations port number")
-	cmd.Flags().Int32Var(&flag.OldServerPid, constant.FLAG_PID, 0, "Old obshell pid, only used for upgrade")
+	cmd.VarsPs(&flag.AgentInfo.Ip, []string{constant.FLAG_IP}, "", "The IP address for the agent to bind to", false)
+	cmd.VarsPs(&flag.AgentInfo.Port, []string{constant.FLAG_PORT, constant.FLAG_PORT_SH}, 0, "The operations port number", false)
+	cmd.VarsPs(&flag.OldServerPid, []string{constant.FLAG_PID}, int32(0), "Old obshell pid, only used for upgrade", false)
 	cmd.Flags().MarkHidden(constant.FLAG_PID)
-	cmd.Flags().IntVar(&flag.IsTakeover, constant.FLAG_TAKE_OVER, 1, "If the agent is started for a takeover")
-	cmd.Flags().BoolVar(&flag.NeedStartOB, constant.FLAG_START_OB, false, "If need to start observer")
-	cmd.Flags().BoolVar(&flag.NeedBeCluster, constant.FLAG_NEED_BE_CLUSTER, false, "If need to be a cluster agent")
+	cmd.VarsPs(&flag.IsTakeover, []string{constant.FLAG_TAKE_OVER}, 1, "If the agent is started for a takeover", false)
+	cmd.VarsPs(&flag.NeedStartOB, []string{constant.FLAG_START_OB}, false, "If need to start observer", false)
+	cmd.VarsPs(&flag.NeedBeCluster, []string{constant.FLAG_NEED_BE_CLUSTER}, false, "If need to be a cluster agent", false)
 	cmd.Flags().MarkHidden(constant.FLAG_START_OB)
 }
 

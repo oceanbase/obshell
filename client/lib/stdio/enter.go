@@ -38,6 +38,10 @@ func Printf(format string, a ...any) {
 	std.Printf(format, a...)
 }
 
+func PrintfWithoutNewline(format string, a ...any) {
+	std.PrintfWithoutNewline(format, a...)
+}
+
 func Success(msg string) {
 	std.Success(msg)
 }

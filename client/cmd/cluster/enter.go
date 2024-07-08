@@ -21,12 +21,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	clientconst "github.com/oceanbase/obshell/client/constant"
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/config"
 	agentconst "github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/global"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 const (
@@ -115,7 +116,7 @@ var (
 )
 
 func NewClusterCmd() *cobra.Command {
-	clusterCmd := &cobra.Command{
+	clusterCmd := command.NewCommand(&cobra.Command{
 		Use:   clientconst.CMD_CLUSTER,
 		Short: "Deploy and manage the OceanBase cluster.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
@@ -140,7 +141,7 @@ func NewClusterCmd() *cobra.Command {
 			}
 			return nil
 		},
-	}
+	})
 	clusterCmd.AddCommand(newJoinCmd())
 	clusterCmd.AddCommand(newRemoveCmd())
 	clusterCmd.AddCommand(newInitCmd())
@@ -149,5 +150,5 @@ func NewClusterCmd() *cobra.Command {
 	clusterCmd.AddCommand(NewScaleOutCmd())
 	clusterCmd.AddCommand(newShowCmd())
 	clusterCmd.AddCommand(newStopCmd())
-	return clusterCmd
+	return clusterCmd.Command
 }

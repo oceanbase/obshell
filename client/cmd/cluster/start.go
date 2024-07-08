@@ -31,6 +31,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/global"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -63,7 +64,7 @@ type scopeFlags struct {
 
 func newStartCmd() *cobra.Command {
 	opts := &ClusterStartFlags{}
-	startCmd := &cobra.Command{
+	startCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_START,
 		Short:   "Start observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -85,27 +86,22 @@ func newStartCmd() *cobra.Command {
 			return nil
 		},
 		Example: startCmdExample(),
-	}
+	})
 
 	startCmd.Flags().SortFlags = false
-	startCmd.Flags().StringVarP(&opts.server, FLAG_SERVER, FLAG_SERVER_SH, "", "The operations address of the target server to start. Separated by commas if multiple servers are specified. The format should be ip:port")
-	startCmd.Flags().StringVarP(&opts.zone, FLAG_ZONE, FLAG_ZONE_SH, "", "Start all servers within the specified zone. Separated by commas if multiple zones are specified")
-	startCmd.Flags().BoolVarP(&opts.global, FLAG_ALL, FLAG_ALL_SH, false, "Start all servers within the cluster")
-	startCmd.Flags().StringVarP(&opts.id, FLAG_ID, FLAG_ID_SH, "", "ID of the previous start/stop task. Separated by commas if multiple tasks are specified")
-	startCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
-	startCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation of start operation")
+	startCmd.VarsPs(&opts.server, []string{FLAG_SERVER, FLAG_SERVER_SH}, "", "The operations address of the target server to start. Separated by commas if multiple servers are specified. The format should be ip:port", false)
+	startCmd.VarsPs(&opts.zone, []string{FLAG_ZONE, FLAG_ZONE_SH}, "", "Start all servers within the specified zone. Separated by commas if multiple zones are specified", false)
+	startCmd.VarsPs(&opts.global, []string{FLAG_ALL, FLAG_ALL_SH}, false, "Start all servers within the cluster", false)
+	startCmd.VarsPs(&opts.id, []string{FLAG_ID, FLAG_ID_SH}, "", "ID of the previous start/stop task. Separated by commas if multiple tasks are specified", false)
+	startCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
+	startCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of start operation", false)
+	startCmd.VarsPs(&opts.user, []string{FLAG_SSH_USER}, "", "The user name for the ssh connection.", false)
+	startCmd.VarsPs(&opts.port, []string{FLAG_SSH_PORT}, "", "The port for the ssh connection.", false)
+	startCmd.VarsPs(&opts.password, []string{FLAG_USER_PASSWORD}, "", "The password of the ssh user.", false)
+	startCmd.VarsPs(&opts.keyfile, []string{FLAG_SSH_KEY_FILE}, "", "The private key file for the SSH connection.(only make sense when user_password is empty)", false)
+	startCmd.VarsPs(&opts.passphrase, []string{FLAG_SSH_KEY_PASSPHRASE}, "", "The passphrase for the private key file.", false)
 
-	// Define flags used for configuring SSH connections.
-	startCmd.Flags().StringVarP(&opts.user, FLAG_SSH_USER, "", "", "The user name for the ssh connection.")
-	startCmd.Flags().StringVarP(&opts.port, FLAG_SSH_PORT, "", "", "The port for the ssh connection.")
-	startCmd.Flags().StringVarP(&opts.password, FLAG_USER_PASSWORD, "", "", "The password of the ssh user.")
-	startCmd.Flags().StringVarP(&opts.keyfile, FLAG_SSH_KEY_FILE, "", "", "The private key file for the SSH connection.(only make sense when user_password is empty)")
-	startCmd.Flags().StringVarP(&opts.passphrase, FLAG_SSH_KEY_PASSPHRASE, "", "", "The passphrase for the private key file.")
-
-	startCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, []string{})
-	})
-	return startCmd
+	return startCmd.Command
 }
 
 func clusterStart(flags *ClusterStartFlags) (err error) {

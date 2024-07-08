@@ -19,7 +19,6 @@ package agent
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/global"
@@ -34,9 +33,6 @@ func initRestartCmd(c *cobra.Command) {
 		global.InitGlobalVariable()
 
 	}
-	c.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, []string{})
-	})
 	hideFlags(c, constant.FLAG_PID, constant.FLAG_IP, constant.FLAG_PORT, constant.FLAG_TAKE_OVER)
 	c.Example = restartCmdExample()
 }

@@ -22,14 +22,15 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/client/cmd/agent"
-	"github.com/oceanbase/obshell/client/cmd/cluster"
-	"github.com/oceanbase/obshell/client/cmd/task"
 	agentcmd "github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/cmd/admin"
 	"github.com/oceanbase/obshell/agent/cmd/daemon"
 	"github.com/oceanbase/obshell/agent/cmd/server"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/client/cmd/agent"
+	"github.com/oceanbase/obshell/client/cmd/cluster"
+	"github.com/oceanbase/obshell/client/cmd/task"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func main() {
@@ -52,6 +53,8 @@ func main() {
 	cmds.Run = func(cmd *cobra.Command, args []string) {
 		if showDetailedVersion && cmd.Parent() == nil {
 			agentcmd.HandleVersionFlag()
+		} else {
+			cmd.Help()
 		}
 	}
 
@@ -62,14 +65,14 @@ func main() {
 }
 
 func newCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	cmd := command.NewCommand(&cobra.Command{
 		Use:   constant.PROC_OBSHELL,
 		Short: "obshell is a CLI for OceanBase database management.",
 		CompletionOptions: cobra.CompletionOptions{
 			DisableDefaultCmd: true,
 			DisableNoDescFlag: true,
 		},
-	}
+	})
 	cmd.SetHelpCommand(&cobra.Command{Hidden: true})
-	return cmd
+	return cmd.Command
 }

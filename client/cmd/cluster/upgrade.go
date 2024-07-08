@@ -30,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/path"
@@ -54,8 +55,7 @@ type clusterUpgradeFlags struct {
 
 func newUpgradeCmd() *cobra.Command {
 	opts := &clusterUpgradeFlags{}
-	requiredFlags := []string{FLAG_PKG_DIR}
-	upgradeCmd := &cobra.Command{
+	upgradeCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_UPGRADE,
 		Short:   "Upgrade the OceanBase cluster to the specified version.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -73,22 +73,18 @@ func newUpgradeCmd() *cobra.Command {
 			return nil
 		},
 		Example: upgradeCmdExample(),
-	}
+	})
 
 	upgradeCmd.Flags().SortFlags = false
-	upgradeCmd.Flags().StringVarP(&opts.pkgDir, FLAG_PKG_DIR, FLAG_PKG_DIR_SH, "", "The directory where the package is located")
-	upgradeCmd.MarkFlagRequired(FLAG_PKG_DIR)
+	upgradeCmd.VarsPs(&opts.pkgDir, []string{FLAG_PKG_DIR, FLAG_PKG_DIR_SH}, "", "The directory where the package is located.", true)
 
-	upgradeCmd.Flags().StringVarP(&opts.version, FLAG_VERSION, FLAG_VERSION_SH, "", "Target build version for the OceanBase upgrade")
-	upgradeCmd.Flags().StringVarP(&opts.mode, FLAG_MODE, FLAG_MODE_SH, ob.PARAM_ROLLING_UPGRADE, upgradeFlagUsage)
-	upgradeCmd.Flags().StringVarP(&opts.upgradeDir, FLAG_UPGRADE_DIR, FLAG_UPGRADE_DIR_SH, "", "Temporary directory used by upgrade tasks")
-	upgradeCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt")
-	upgradeCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
+	upgradeCmd.VarsPs(&opts.version, []string{FLAG_VERSION, FLAG_VERSION_SH}, "", "Target build version for the OceanBase upgrade", false)
+	upgradeCmd.VarsPs(&opts.mode, []string{FLAG_MODE, FLAG_MODE_SH}, ob.PARAM_ROLLING_UPGRADE, upgradeFlagUsage, false)
+	upgradeCmd.VarsPs(&opts.upgradeDir, []string{FLAG_UPGRADE_DIR, FLAG_UPGRADE_DIR_SH}, "", "Temporary directory used by upgrade tasks", false)
+	upgradeCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt", false)
+	upgradeCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
-	upgradeCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, requiredFlags)
-	})
-	return upgradeCmd
+	return upgradeCmd.Command
 }
 
 func CheckIdentityForUpgrade() error {

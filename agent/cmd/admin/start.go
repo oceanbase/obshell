@@ -34,11 +34,12 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func newStartCmd() *cobra.Command {
 	opts := &cmd.CommonFlag{}
-	startCmd := &cobra.Command{
+	startCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_START,
 		Hidden: true,
 		Args:   cobra.NoArgs,
@@ -49,9 +50,9 @@ func newStartCmd() *cobra.Command {
 				process.ExitWithFailure(constant.EXIT_CODE_ERROR_ADMIN_START_FAILED, err.Error())
 			}
 		},
-	}
-	cmd.SetFlags(startCmd, opts)
-	return startCmd
+	})
+	cmd.SetCommandFlags(startCmd, opts)
+	return startCmd.Command
 }
 
 func (a *Admin) StartDaemon() (err error) {

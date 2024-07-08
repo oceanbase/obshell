@@ -19,7 +19,6 @@ package agent
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/global"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
@@ -32,9 +31,6 @@ func initStopCmd(c *cobra.Command) {
 		ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 		global.InitGlobalVariable()
 	}
-	c.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, []string{})
-	})
 	c.Example = stopCmdExample()
 }
 

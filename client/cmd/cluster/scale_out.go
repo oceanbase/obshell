@@ -30,10 +30,10 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -63,7 +63,7 @@ type ClusterScaleOutFlags struct {
 
 func NewScaleOutCmd() *cobra.Command {
 	opts := &ClusterScaleOutFlags{}
-	scaleOutCmd := &cobra.Command{
+	scaleOutCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SCALE_OUT,
 		Short: "Add new observer to scale-out OceanBase cluster to improve performance.",
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -80,38 +80,25 @@ func NewScaleOutCmd() *cobra.Command {
 			return nil
 		},
 		Example: scaleOutCmdExample(),
-	}
+	})
 
 	scaleOutCmd.Flags().SortFlags = false
 	// Setup of required flags for 'scale-out' command.
-	scaleOutCmd.Flags().StringVarP(&opts.agent, FLAG_SERVER, FLAG_SERVER_SH, "", "Any server in the cluster. If the port is unspecified, it will be 2886.")
-	scaleOutCmd.Flags().StringVarP(&opts.zone, FLAG_ZONE, FLAG_ZONE_SH, "", "The zone in which you are located")
-	scaleOutCmd.MarkFlagRequired(FLAG_SERVER)
-	scaleOutCmd.MarkFlagRequired(FLAG_ZONE)
+	scaleOutCmd.VarsPs(&opts.agent, []string{FLAG_SERVER_SH, FLAG_SERVER}, "", "Any server in the cluster. If the port is unspecified, it will be 2886.", true)
+	scaleOutCmd.VarsPs(&opts.zone, []string{FLAG_ZONE_SH, FLAG_ZONE}, "", "The zone in which you are located", true)
 
 	// Configuration of optional flags for more detailed setup.
-	scaleOutCmd.Flags().StringVarP(&opts.mysqlPort, FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH, "", "The SQL service port for the current node.")
-	scaleOutCmd.Flags().StringVarP(&opts.rpcPort, FLAG_RPC_PORT, FLAG_RPC_PORT_SH, "", "The remote access port for intra-cluster communication.")
-	scaleOutCmd.Flags().StringVarP(&opts.dataDir, FLAG_DATA_DIR, FLAG_DATA_DIR_SH, "", "The directory for storing the observer's data.")
-	scaleOutCmd.Flags().StringVarP(&opts.redoDir, FLAG_REDO_DIR, FLAG_REDO_DIR_SH, "", "The directory for storing the observer's clogs.")
-	scaleOutCmd.Flags().StringVarP(&opts.logLevel, FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH, "", "The log print level for the observer.")
-	scaleOutCmd.Flags().StringVarP(&opts.optStr, FLAG_OPT_STR, FLAG_OPT_STR_SH, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.")
-	scaleOutCmd.Flags().StringVarP(&opts.password, FLAG_PASSWORD, "", "", "Password for OceanBase root@sys user.")
-	scaleOutCmd.Flags().StringVarP(&opts.password, FLAG_PASSWORD_ALIAS, "", "", "")
-	scaleOutCmd.Flags().Lookup(FLAG_PASSWORD).Annotations = map[string][]string{
-		printer.ANNOTATIONS_ALIAS: {FLAG_PASSWORD_ALIAS},
-	}
-	scaleOutCmd.Flags().MarkHidden(FLAG_PASSWORD_ALIAS)
+	scaleOutCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT_SH, FLAG_MYSQL_PORT}, "", "The SQL service port for the current node.", false)
+	scaleOutCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT_SH, FLAG_RPC_PORT}, "", "The remote access port for intra-cluster communication.", false)
+	scaleOutCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR_SH, FLAG_DATA_DIR}, "", "The directory for storing the observer's data.", false)
+	scaleOutCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR_SH, FLAG_REDO_DIR}, "", "The directory for storing the observer's clogs.", false)
+	scaleOutCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL_SH, FLAG_LOG_LEVEL}, "", "The log print level for the observer.", false)
+	scaleOutCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR_SH, FLAG_OPT_STR}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
+	scaleOutCmd.VarsPs(&opts.password, []string{FLAG_PASSWORD, FLAG_PASSWORD_ALIAS}, "", "Password for OceanBase root@sys user.", false)
+	scaleOutCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt", false)
+	scaleOutCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
-	scaleOutCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt")
-	scaleOutCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
-
-	scaleOutCmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		printer.PrintUsageFunc(cmd)
-		return nil
-	})
-
-	return scaleOutCmd
+	return scaleOutCmd.Command
 }
 
 func clusterScaleOut(flags *ClusterScaleOutFlags) (err error) {

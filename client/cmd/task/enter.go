@@ -19,12 +19,13 @@ package task
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/client/cmd/cluster"
-	clientconst "github.com/oceanbase/obshell/client/constant"
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/global"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/cmd/cluster"
+	"github.com/oceanbase/obshell/client/command"
+	clientconst "github.com/oceanbase/obshell/client/constant"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 const (
@@ -48,7 +49,7 @@ const (
 )
 
 func NewTaskCmd() *cobra.Command {
-	taskCmd := &cobra.Command{
+	taskCmd := command.NewCommand(&cobra.Command{
 		Use:     clientconst.CMD_TASK,
 		Aliases: []string{clientconst.CMD_UTIL},
 		Short:   "Display and manage the OBShell task.",
@@ -63,11 +64,11 @@ func NewTaskCmd() *cobra.Command {
 			}
 			return nil
 		},
-	}
+	})
 	taskCmd.AddCommand(newShowCmd())
 	taskCmd.AddCommand(newCancelCmd())
 	taskCmd.AddCommand(newRollbackCmd())
 	taskCmd.AddCommand(newRetryCmd())
 	taskCmd.AddCommand(newPassCmd())
-	return taskCmd
+	return taskCmd.Command
 }

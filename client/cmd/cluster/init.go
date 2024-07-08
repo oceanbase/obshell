@@ -28,11 +28,10 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
-	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -44,19 +43,9 @@ type ClusterInitFlags struct {
 
 func newInitCmd() *cobra.Command {
 	opts := &ClusterInitFlags{}
-	initCmd := &cobra.Command{
+	initCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_INIT,
 		Short: "Perform one-time-only initialization of a OceanBase cluster.",
-		PreRunE: func(cmd *cobra.Command, args []string) error {
-			if err := cmdlib.ValidateArgs(cmd, args); err != nil {
-				return err
-			}
-			if opts.password == "" {
-				return errors.New("password is required")
-			}
-			return nil
-		},
-
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
@@ -69,42 +58,26 @@ func newInitCmd() *cobra.Command {
 			return nil
 		},
 		Example: initCmdExample(),
-	}
+	})
 
 	initCmd.Flags().SortFlags = false
 	// Setup of required flags for 'init' command.
-	initCmd.Flags().StringVarP(&opts.clusterName, FLAG_CLUSTER_NAME, FLAG_CLUSTER_NAME_SH, "", "Set a name to verify the identity of OceanBase cluster.")
-	initCmd.Flags().StringVar(&opts.password, FLAG_PASSWORD, "", "Password for OceanBase root@sys user.")
-	initCmd.Flags().StringVar(&opts.password, FLAG_PASSWORD_ALIAS, "", "")
-	initCmd.Flags().Lookup(FLAG_PASSWORD).Annotations = map[string][]string{
-		printer.ANNOTATIONS_ALIAS: {FLAG_PASSWORD_ALIAS},
-	}
-	initCmd.Flags().MarkHidden(FLAG_PASSWORD_ALIAS)
-	initCmd.MarkFlagRequired(FLAG_CLUSTER_NAME)
+	initCmd.VarsPs(&opts.clusterName, []string{FLAG_CLUSTER_NAME, FLAG_CLUSTER_NAME_SH}, "", "Set a name to verify the identity of OceanBase cluster.", true)
+	initCmd.VarsPs(&opts.password, []string{FLAG_PASSWORD, FLAG_PASSWORD_ALIAS}, "", "Password for OceanBase root@sys user.", true)
 
 	// Configuration of optional flags for more detailed setup.
-	initCmd.Flags().StringVarP(&opts.clusterId, FLAG_CLUSTER_ID, FLAG_CLUSTER_ID_SH, "", "Set a id to verify the identity of OceanBase cluster.")
-	initCmd.Flags().StringVarP(&opts.mysqlPort, FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH, "", "The SQL service port for the current node.")
-	initCmd.Flags().StringVarP(&opts.rpcPort, FLAG_RPC_PORT, FLAG_RPC_PORT_SH, "", "The remote access port for intra-cluster communication.")
-	initCmd.Flags().StringVarP(&opts.dataDir, FLAG_DATA_DIR, FLAG_DATA_DIR_SH, "", "The directory for storing the observer's data.")
-	initCmd.Flags().StringVarP(&opts.redoDir, FLAG_REDO_DIR, FLAG_REDO_DIR_SH, "", "The directory for storing the observer's clogs.")
-	initCmd.Flags().StringVarP(&opts.logLevel, FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH, "", "The log print level for the observer.")
-	initCmd.Flags().StringVarP(&opts.optStr, FLAG_OPT_STR, FLAG_OPT_STR_SH, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.")
-	initCmd.Flags().StringVarP(&opts.password, FLAG_RS_LIST, "", "", "Root service list.")
-	initCmd.Flags().StringVarP(&opts.password, FLAG_RS_LIST_ALIAS, "", "", "")
-	// Configures root service list flag and its alias, hiding the alias from help display.
-	initCmd.Flags().MarkHidden(FLAG_RS_LIST_ALIAS)
-	initCmd.Flags().Lookup(FLAG_RS_LIST).Annotations = map[string][]string{
-		printer.ANNOTATIONS_ALIAS: {FLAG_RS_LIST_ALIAS},
-	}
-	initCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
+	initCmd.VarsPs(&opts.clusterId, []string{FLAG_CLUSTER_ID, FLAG_CLUSTER_ID_SH}, "", "Set a id to verify the identity of OceanBase cluster.", false)
+	initCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, "", "The SQL service port for the current node.", false)
+	initCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, "", "The remote access port for intra-cluster communication.", false)
+	initCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR, FLAG_DATA_DIR_SH}, "", "The directory for storing the observer's data.", false)
+	initCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR, FLAG_REDO_DIR_SH}, "", "The directory for storing the observer's clogs.", false)
+	initCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
+	initCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR, FLAG_OPT_STR_SH}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
+	initCmd.VarsPs(&opts.rsList, []string{FLAG_RS_LIST, FLAG_RS_LIST_ALIAS}, "", "Root service list", false)
 
-	initCmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		printer.PrintUsageFunc(cmd)
-		return nil
-	})
+	initCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
-	return initCmd
+	return initCmd.Command
 }
 
 func clusterInit(flags *ClusterInitFlags) error {

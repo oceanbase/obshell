@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -37,8 +38,7 @@ type TaskPassFlags struct {
 
 func newPassCmd() *cobra.Command {
 	opts := &TaskPassFlags{}
-	requiredFlags := []string{clientconst.FLAG_ID}
-	passCmd := &cobra.Command{
+	passCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_PASS,
 		Aliases: []string{CMD_SKIP},
 		Short:   "Pass a failed task.",
@@ -56,18 +56,13 @@ func newPassCmd() *cobra.Command {
 			return nil
 		},
 		Example: passCmdExample(),
-	}
+	})
 
 	passCmd.Flags().SortFlags = false
-	passCmd.Flags().StringVarP(&opts.id, clientconst.FLAG_ID, clientconst.FLAG_ID_SH, "", "Task ID.")
-	passCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt.")
+	passCmd.VarsPs(&opts.id, []string{clientconst.FLAG_ID, clientconst.FLAG_ID_SH}, "", "Task ID.", true)
+	passCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt.", false)
 
-	passCmd.MarkFlagRequired(clientconst.FLAG_ID)
-
-	passCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, requiredFlags)
-	})
-	return passCmd
+	return passCmd.Command
 }
 
 func taskPass(flags *TaskPassFlags) error {

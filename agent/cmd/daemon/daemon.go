@@ -36,15 +36,16 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/process"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func NewDaemonCmd() *cobra.Command {
 	opts := &cmd.CommonFlag{}
-	daemonCmd := &cobra.Command{
+	daemonCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_DAEMON,
 		Hidden: true,
 		Args:   cobra.NoArgs,
-	}
+	})
 	daemonCmd.RunE = func(c *cobra.Command, args []string) (err error) {
 		ocsagentlog.InitLogger(config.DefaultDaemonLoggerConifg())
 		global.InitGlobalVariable()
@@ -55,8 +56,8 @@ func NewDaemonCmd() *cobra.Command {
 		daemon.ListenSignal()
 		return
 	}
-	cmd.SetFlags(daemonCmd, opts)
-	return daemonCmd
+	cmd.SetCommandFlags(daemonCmd, opts)
+	return daemonCmd.Command
 }
 
 type Daemon struct {

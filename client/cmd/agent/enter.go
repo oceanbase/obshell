@@ -19,9 +19,9 @@ package agent
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/client/constant"
 	agentcmd "github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/cmd/admin"
+	"github.com/oceanbase/obshell/client/constant"
 )
 
 // Upgrade command configuration constants.

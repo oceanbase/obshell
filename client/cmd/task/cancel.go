@@ -24,6 +24,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -38,8 +39,7 @@ type TaskCancelFlags struct {
 
 func newCancelCmd() *cobra.Command {
 	opts := &TaskCancelFlags{}
-	requiredFlags := []string{clientconst.FLAG_ID}
-	cancelCmd := &cobra.Command{
+	cancelCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_CANCEL,
 		Aliases: []string{CMD_STOP},
 		Short:   "Cancel a task.",
@@ -57,18 +57,13 @@ func newCancelCmd() *cobra.Command {
 			return nil
 		},
 		Example: cancelCmdExample(),
-	}
+	})
 
 	cancelCmd.Flags().SortFlags = false
-	cancelCmd.Flags().StringVarP(&opts.id, clientconst.FLAG_ID, clientconst.FLAG_ID_SH, "", "Task ID.")
-	cancelCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation prompt.")
+	cancelCmd.VarsPs(&opts.id, []string{clientconst.FLAG_ID, clientconst.FLAG_ID_SH}, "", "Task ID.", true)
+	cancelCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt.", false)
 
-	cancelCmd.MarkFlagRequired(clientconst.FLAG_ID)
-
-	cancelCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, requiredFlags)
-	})
-	return cancelCmd
+	return cancelCmd.Command
 }
 
 func taskCancel(flags *TaskCancelFlags) error {

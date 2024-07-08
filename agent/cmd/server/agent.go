@@ -31,15 +31,16 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/process"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/db/sqlite"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func NewServerCmd() *cobra.Command {
 	opts := &cmd.CommonFlag{}
-	serverCmd := &cobra.Command{
+	serverCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_SERVER,
 		Hidden: true,
 		Args:   cobra.NoArgs,
-	}
+	})
 	serverCmd.RunE = func(c *cobra.Command, args []string) (err error) {
 		ocsagentlog.SetDBLoggerLevel(ocsagentlog.Warn)
 		log.SetLevel(log.DebugLevel)
@@ -47,8 +48,8 @@ func NewServerCmd() *cobra.Command {
 		server.start()
 		return nil
 	}
-	cmd.SetFlags(serverCmd, opts)
-	return serverCmd
+	cmd.SetCommandFlags(serverCmd, opts)
+	return serverCmd.Command
 }
 
 type Agent struct {

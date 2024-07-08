@@ -31,21 +31,22 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/process"
 	"github.com/oceanbase/obshell/agent/lib/system"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func newStopCmd() *cobra.Command {
-	stopCmd := &cobra.Command{
+	stopCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_STOP,
 		Hidden: true,
 		Args:   cobra.NoArgs,
-	}
+	})
 	stopCmd.RunE = func(c *cobra.Command, args []string) (err error) {
 		c.SilenceUsage = true
 		ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 		admin := NewAdmin(nil)
 		return admin.StopDaemon()
 	}
-	return stopCmd
+	return stopCmd.Command
 }
 
 func (a *Admin) StopDaemon() (err error) {

@@ -31,11 +31,12 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/process"
 	"github.com/oceanbase/obshell/agent/lib/system"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 )
 
 func newRestartCmd() *cobra.Command {
 	opts := &cmd.CommonFlag{}
-	restartCmd := &cobra.Command{
+	restartCmd := command.NewCommand(&cobra.Command{
 		Use:    cmd.CMD_RESTART,
 		Hidden: true,
 		Args:   cobra.NoArgs,
@@ -45,9 +46,9 @@ func newRestartCmd() *cobra.Command {
 			admin := NewAdmin(opts)
 			return admin.RestartDaemon()
 		},
-	}
-	cmd.SetFlags(restartCmd, opts)
-	return restartCmd
+	})
+	cmd.SetCommandFlags(restartCmd, opts)
+	return restartCmd.Command
 }
 
 func (a *Admin) RestartDaemon() (err error) {

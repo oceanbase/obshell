@@ -29,12 +29,12 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/path"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -47,7 +47,7 @@ type AgentJoinFlags struct {
 
 func newJoinCmd() *cobra.Command {
 	opts := &AgentJoinFlags{}
-	joinCmd := &cobra.Command{
+	joinCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_JOIN,
 		Short:   "Join the cluster by specifying the target node before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -63,30 +63,23 @@ func newJoinCmd() *cobra.Command {
 			return nil
 		},
 		Example: joinCmdExample(),
-	}
+	})
 
 	joinCmd.Flags().SortFlags = false
 	// Setup of required flags for 'join' command.
-	joinCmd.Flags().StringVarP(&opts.server, FLAG_SERVER, FLAG_SERVER_SH, "", "The target server you intend to join. If the port is unspecified, it will be 2886.")
-	joinCmd.Flags().StringVarP(&opts.zone, FLAG_ZONE, FLAG_ZONE_SH, "", "The zone in which you are located.")
-	joinCmd.MarkFlagRequired(FLAG_SERVER)
-	joinCmd.MarkFlagRequired(FLAG_ZONE)
+	joinCmd.VarsPs(&opts.server, []string{FLAG_SERVER_SH, FLAG_SERVER}, "", "The target server you intend to join. If the port is unspecified, it will be 2886.", true)
+	joinCmd.VarsPs(&opts.zone, []string{FLAG_ZONE_SH, FLAG_ZONE}, "", "The zone in which you are located.", true)
 
 	// Configuration of optional flags for more detailed setup.
-	joinCmd.Flags().StringVarP(&opts.mysqlPort, FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH, "", "The SQL service port for the current node.")
-	joinCmd.Flags().StringVarP(&opts.rpcPort, FLAG_RPC_PORT, FLAG_RPC_PORT_SH, "", "The remote access port for intra-cluster communication.")
-	joinCmd.Flags().StringVarP(&opts.dataDir, FLAG_DATA_DIR, FLAG_DATA_DIR_SH, "", "The directory for storing the observer's data.")
-	joinCmd.Flags().StringVarP(&opts.redoDir, FLAG_REDO_DIR, FLAG_REDO_DIR_SH, "", "The directory for storing the observer's clogs.")
-	joinCmd.Flags().StringVarP(&opts.logLevel, FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH, "", "The log print level for the observer.")
-	joinCmd.Flags().StringVarP(&opts.optStr, FLAG_OPT_STR, FLAG_OPT_STR_SH, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.")
-	joinCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
+	joinCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, "", "The SQL service port for the current node.", false)
+	joinCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, "", "The remote access port for intra-cluster communication.", false)
+	joinCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR, FLAG_DATA_DIR_SH}, "", "The directory for storing the observer's data.", false)
+	joinCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR, FLAG_REDO_DIR_SH}, "", "The directory for storing the observer's clogs.", false)
+	joinCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
+	joinCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR, FLAG_OPT_STR_SH}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
+	joinCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
-	joinCmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		printer.PrintUsageFunc(cmd)
-		return nil
-	})
-
-	return joinCmd
+	return joinCmd.Command
 }
 
 func agentJoin(flags *AgentJoinFlags) error {

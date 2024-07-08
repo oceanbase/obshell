@@ -28,6 +28,7 @@ import (
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -43,7 +44,7 @@ type ClusterShowFlags struct {
 
 func newShowCmd() *cobra.Command {
 	opts := &ClusterShowFlags{}
-	showCmd := &cobra.Command{
+	showCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_SHOW,
 		Short:   "Show OceanBase cluster info.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -60,16 +61,12 @@ func newShowCmd() *cobra.Command {
 			return nil
 		},
 		Example: showCmdExample(),
-	}
+	})
 
 	showCmd.Flags().SortFlags = false
-	showCmd.Flags().BoolVarP(&opts.detail, clientconst.FLAG_DETAIL, clientconst.FLAG_DETAIL_SH, false, "Display detailed information.")
-	showCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output.")
-
-	showCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, []string{})
-	})
-	return showCmd
+	showCmd.VarsPs(&opts.detail, []string{clientconst.FLAG_DETAIL, clientconst.FLAG_DETAIL_SH}, false, "Display detailed information.", false)
+	showCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output.", false)
+	return showCmd.Command
 }
 
 func clusterShow(flags *ClusterShowFlags) error {

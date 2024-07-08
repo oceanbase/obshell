@@ -32,11 +32,11 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
-	"github.com/oceanbase/obshell/client/utils/printer"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -56,7 +56,7 @@ type stopBehaviorFlags struct {
 
 func newStopCmd() *cobra.Command {
 	opts := &ClusterStopFlags{}
-	stopCmd := &cobra.Command{
+	stopCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_STOP,
 		Short:   "Stop observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
@@ -74,25 +74,23 @@ func newStopCmd() *cobra.Command {
 			return nil
 		},
 		Example: stopCmdExample(),
-	}
+	})
 
 	stopCmd.Flags().SortFlags = false
-	stopCmd.Flags().StringVarP(&opts.server, FLAG_SERVER, FLAG_SERVER_SH, "", "The operations address of the target server to stop.")
-	stopCmd.Flags().StringVarP(&opts.zone, FLAG_ZONE, FLAG_ZONE_SH, "", "Stop all servers within the specified zone.")
-	stopCmd.Flags().BoolVarP(&opts.global, FLAG_ALL, FLAG_ALL_SH, false, "Stop all servers within the cluster.")
 
-	stopCmd.Flags().BoolVarP(&opts.force, FLAG_FORCE, FLAG_FORCE_SH, false, "Forcefully kill the observer using 'kill -9'")
-	stopCmd.Flags().BoolVarP(&opts.terminate, FLAG_TERMINATE, FLAG_TERMINATE_SH, false, "Trigger a 'MINOR FREEZE' command before forcefully killing the observer with 'kill -9'.")
-	stopCmd.Flags().BoolVarP(&opts.immediate, FLAG_IMMEDIATE, FLAG_IMMEDIATE_SH, false, "Trigger a 'STOP SERVER' command and will not forcefully kill the observer.")
+	stopCmd.VarsPs(&opts.server, []string{FLAG_SERVER, FLAG_SERVER_SH}, "", "The operations address of the target server to stop.", false)
+	stopCmd.VarsPs(&opts.zone, []string{FLAG_ZONE, FLAG_ZONE_SH}, "", "Stop all servers within the specified zone.", false)
+	stopCmd.VarsPs(&opts.global, []string{FLAG_ALL, FLAG_ALL_SH}, false, "Stop all servers within the cluster.", false)
 
-	stopCmd.Flags().StringVarP(&opts.id, FLAG_ID, FLAG_ID_SH, "", "ID of the previous start/stop task. Separated by commas if multiple tasks are specified")
-	stopCmd.Flags().BoolVarP(&opts.verbose, clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH, false, "Activate verbose output")
-	stopCmd.Flags().BoolVarP(&opts.skipConfirm, clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH, false, "Skip the confirmation of stop operation")
+	stopCmd.VarsPs(&opts.force, []string{FLAG_FORCE, FLAG_FORCE_SH}, false, "Forcefully kill the observer using 'kill -9'", false)
+	stopCmd.VarsPs(&opts.terminate, []string{FLAG_TERMINATE, FLAG_TERMINATE_SH}, false, "Trigger a 'MINOR FREEZE' command before forcefully killing the observer with 'kill -9'.", false)
+	stopCmd.VarsPs(&opts.immediate, []string{FLAG_IMMEDIATE, FLAG_IMMEDIATE_SH}, false, "Trigger a 'STOP SERVER' command and will not forcefully kill the observer.", false)
 
-	stopCmd.SetHelpFunc(func(cmd *cobra.Command, args []string) {
-		printer.PrintHelpFunc(cmd, []string{})
-	})
-	return stopCmd
+	stopCmd.VarsPs(&opts.id, []string{FLAG_ID, FLAG_ID_SH}, "", "ID of the previous start/stop task. Separated by commas if multiple tasks are specified", false)
+	stopCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
+	stopCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of stop operation", false)
+
+	return stopCmd.Command
 }
 
 func clusterStop(flags *ClusterStopFlags) (err error) {
