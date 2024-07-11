@@ -52,7 +52,8 @@ func createRebuildDag(agent *meta.AgentInstance) error {
 	isRunning, err := localTaskService.IsRunning()
 	if err != nil {
 		return err
-	} else if isRunning {
+	} else if !isRunning {
+		log.Infof("The agent is already under maintenance.")
 		return nil
 	}
 	log.Infof("create rebuild dag, identity: %s", agent.GetIdentity())

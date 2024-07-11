@@ -71,6 +71,13 @@ func TakeOver() (err error) {
 }
 
 func createTakeOverDag() error {
+	isRunning, err := localTaskService.IsRunning()
+	if err != nil {
+		return err
+	} else if !isRunning {
+		log.Infof("The agent is already under maintenance.")
+		return nil
+	}
 	log.Info("create take over dag")
 	template := task.NewTemplateBuilder(DAG_TAKE_OVER).
 		SetMaintenance(true).
