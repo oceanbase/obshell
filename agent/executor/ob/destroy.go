@@ -42,7 +42,7 @@ func newDestroyTask() *DestroyTask {
 func CreateDestroyDag() (*task.DagDetailDTO, error) {
 	subTask := newDestroyTask()
 	builder := task.NewTemplateBuilder(subTask.GetName())
-	builder.AddTask(subTask, false)
+	builder.AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance())
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext())
 	if err != nil {
 		return nil, err

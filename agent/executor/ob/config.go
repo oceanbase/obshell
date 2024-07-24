@@ -75,7 +75,7 @@ func CheckOBServerConfigParams(params param.ObServerConfigParams) error {
 func CreateUpdateOBServerConfigDag(params param.ObServerConfigParams, deleteAll bool) (*task.DagDetailDTO, error) {
 	subTask := newUpdateOBServerConfigTask()
 	template := task.NewTemplateBuilder(subTask.GetName()).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(subTask, false).
 		Build()
 
@@ -162,7 +162,7 @@ func newUpdateOBClusterConfigTask() *UpdateOBClusterConfigTask {
 func CreateUpdateOBClusterConfigDag(params param.ObClusterConfigParams, deleteAll bool) (*task.DagDetailDTO, error) {
 	subTask := newUpdateOBClusterConfigTask()
 	template := task.NewTemplateBuilder(subTask.GetName()).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(subTask, false).
 		Build()
 	ctx := task.NewTaskContext().SetParam(PARAM_CONFIG, params).SetParam(PARAM_DELETE_ALL, deleteAll)

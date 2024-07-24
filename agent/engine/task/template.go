@@ -17,10 +17,10 @@
 package task
 
 type Template struct {
-	tailNode      *Node
-	nodes         []*Node
-	Name          string
-	isMaintenance bool
+	tailNode    *Node
+	nodes       []*Node
+	Name        string
+	maintenance Maintainer
 }
 
 func (template *Template) AddNode(node *Node) {
@@ -41,7 +41,15 @@ func (template *Template) IsEmpty() bool {
 }
 
 func (template *Template) IsMaintenance() bool {
-	return template.isMaintenance
+	return template.maintenance.IsMaintenance()
+}
+
+func (template *Template) GetMaintenanceType() int {
+	return template.maintenance.GetMaintenanceType()
+}
+
+func (template *Template) GetMaintenanceKey() string {
+	return template.maintenance.GetMaintenanceKey()
 }
 
 type TemplateBuilder struct {
@@ -50,7 +58,7 @@ type TemplateBuilder struct {
 
 func NewTemplateBuilder(name string) *TemplateBuilder {
 	return &TemplateBuilder{Template: &Template{Name: name,
-		isMaintenance: true}}
+		maintenance: UnMaintenance()}}
 }
 
 func (builder *TemplateBuilder) Build() *Template {
@@ -73,11 +81,11 @@ func (builder *TemplateBuilder) AddTemplate(template *Template) *TemplateBuilder
 		node.upStream = nil
 		builder.AddNode(node)
 	}
-	builder.Template.isMaintenance = builder.Template.isMaintenance || template.isMaintenance
+	builder.Template.maintenance = mergeMaintainers(builder.Template.maintenance, template.maintenance)
 	return builder
 }
 
-func (builder *TemplateBuilder) SetMaintenance(isMaintenance bool) *TemplateBuilder {
-	builder.Template.isMaintenance = isMaintenance
+func (builder *TemplateBuilder) SetMaintenance(maintenanceType Maintainer) *TemplateBuilder {
+	builder.Template.maintenance = maintenanceType
 	return builder
 }

@@ -42,6 +42,10 @@ type DagInstance struct {
 }
 
 func (d *DagInstance) ToBO() *bo.DagInstance {
+	MaintenanceType := 0
+	if d.IsMaintenance {
+		MaintenanceType = 2
+	}
 	return &bo.DagInstance{
 		Id:                d.Id,
 		Name:              d.Name,
@@ -52,6 +56,7 @@ func (d *DagInstance) ToBO() *bo.DagInstance {
 		ExecuterAgentIp:   d.ExecuterAgentIp,
 		ExecuterAgentPort: d.ExecuterAgentPort,
 		IsMaintenance:     d.IsMaintenance,
+		MaintenanceType:   MaintenanceType,
 		IsFinished:        d.IsFinished,
 		Context:           d.Context,
 		Operator:          d.Operator,

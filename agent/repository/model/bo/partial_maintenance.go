@@ -14,11 +14,15 @@
  * limitations under the License.
  */
 
-package constant
+package bo
 
-const (
-	// cluster status
-	CLUSTER_NOT_BOOSTRAP = iota
-	CLUSTER_RUNNING
-	CLUSTER_UNDER_MAINTENANCE
-)
+import "time"
+
+type PartialMaintenance struct {
+	Id        int64
+	LockType  int
+	LockName  string
+	DagID     int64
+	Count     int
+	GmtLocked time.Time
+}

@@ -25,17 +25,17 @@ type Dag struct {
 	stage    int
 	maxStage int
 	TaskInfo
-	isMaintenance bool
-	ctx           *TaskContext
+	maintenance Maintainer
+	ctx         *TaskContext
 }
 
-func NewDag(dagId int64, dagName string, dagType string, state int, stage int, maxStage int, operator int, isMaintenance bool, ctx *TaskContext, isLocalTask bool, startTime time.Time, endTime time.Time) *Dag {
+func NewDag(dagId int64, dagName string, dagType string, state int, stage int, maxStage int, operator int, maintenance Maintainer, ctx *TaskContext, isLocalTask bool, startTime time.Time, endTime time.Time) *Dag {
 	return &Dag{
-		dagType:       dagType,
-		stage:         stage,
-		maxStage:      maxStage,
-		isMaintenance: isMaintenance,
-		ctx:           ctx,
+		dagType:     dagType,
+		stage:       stage,
+		maxStage:    maxStage,
+		maintenance: maintenance,
+		ctx:         ctx,
 		TaskInfo: TaskInfo{
 			id:          dagId,
 			name:        dagName,
@@ -73,5 +73,13 @@ func (dag *Dag) SetStage(stage int) {
 }
 
 func (dag *Dag) IsMaintenance() bool {
-	return dag.isMaintenance
+	return dag.maintenance.IsMaintenance()
+}
+
+func (dag *Dag) GetMaintenanceType() int {
+	return dag.maintenance.GetMaintenanceType()
+}
+
+func (dag *Dag) GetMaintenanceKey() string {
+	return dag.maintenance.GetMaintenanceKey()
 }

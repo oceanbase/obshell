@@ -59,7 +59,7 @@ func createRebuildDag(agent *meta.AgentInstance) error {
 	log.Infof("create rebuild dag, identity: %s", agent.GetIdentity())
 	templateName := fmt.Sprintf("Rebuild %s", agent.GetIdentity())
 	templateBuilder := task.NewTemplateBuilder(templateName).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newAgentSyncTask(), false)
 
 	if agent.IsMasterAgent() || agent.IsTakeOverMasterAgent() {

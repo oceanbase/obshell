@@ -80,7 +80,7 @@ func createTakeOverDag() error {
 	}
 	log.Info("create take over dag")
 	template := task.NewTemplateBuilder(DAG_TAKE_OVER).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newAgentSyncTask(), false).
 		AddTemplate(newConvertClusterTemplate()).
 		AddTask(newAgentSyncTask(), true).

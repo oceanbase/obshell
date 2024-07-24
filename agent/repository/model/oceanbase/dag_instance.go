@@ -32,6 +32,8 @@ type DagInstance struct {
 	ExecuterAgentIp   string    `gorm:"type:varchar(64);not null"`
 	ExecuterAgentPort int       `gorm:"type:int;not null"`
 	IsMaintenance     bool      `gorm:"not null"`
+	MaintenanceType   int       `gorm:"not null;default:1"`
+	MaintenanceKey    string    `gorm:"type:varchar(128);default:''"`
 	IsFinished        bool      `gorm:"not null"`
 	Context           []byte    `gorm:"type:text"`
 	Operator          int       `gorm:"not null"`
@@ -42,6 +44,10 @@ type DagInstance struct {
 }
 
 func (d *DagInstance) ToBO() *bo.DagInstance {
+	MaintenanceType := d.MaintenanceType
+	if d.IsMaintenance && MaintenanceType == 0 {
+		MaintenanceType = 2
+	}
 	return &bo.DagInstance{
 		Id:                d.Id,
 		Name:              d.Name,
@@ -52,6 +58,8 @@ func (d *DagInstance) ToBO() *bo.DagInstance {
 		ExecuterAgentIp:   d.ExecuterAgentIp,
 		ExecuterAgentPort: d.ExecuterAgentPort,
 		IsMaintenance:     d.IsMaintenance,
+		MaintenanceType:   MaintenanceType,
+		MaintenanceKey:    d.MaintenanceKey,
 		IsFinished:        d.IsFinished,
 		Context:           d.Context,
 		Operator:          d.Operator,
@@ -73,6 +81,8 @@ func ConvertDagInstanceBOToDO(d *bo.DagInstance) *DagInstance {
 		ExecuterAgentIp:   d.ExecuterAgentIp,
 		ExecuterAgentPort: d.ExecuterAgentPort,
 		IsMaintenance:     d.IsMaintenance,
+		MaintenanceType:   d.MaintenanceType,
+		MaintenanceKey:    d.MaintenanceKey,
 		IsFinished:        d.IsFinished,
 		Context:           d.Context,
 		Operator:          d.Operator,

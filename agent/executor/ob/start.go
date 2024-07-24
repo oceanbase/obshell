@@ -71,7 +71,7 @@ func buildStartObclusterTaskContext(param param.StartObParam, startOwnObsvr bool
 
 func buildStartObclusterTemplate(t string) *task.Template {
 	task := task.NewTemplateBuilder(DAG_START_OB).
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCreateSubStartDagTask(), true).
 		AddTask(newCheckSubStartDagReadyTask(), false).
 		AddTask(newRetrySubStartDagTask(), false).

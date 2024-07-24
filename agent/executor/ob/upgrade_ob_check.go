@@ -85,7 +85,7 @@ func buildObUpgradeCheckTemplate(param param.UpgradeCheckParam) *task.Template {
 	name := fmt.Sprintf("%s %s-%s", DAG_UPGRADE_CHECK_OB, param.Version, param.Release)
 	obUpgradeCheckTemplateBuilder := task.NewTemplateBuilder(name)
 	obUpgradeCheckTemplateBuilder.
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCheckEnvTask(), true).
 		AddTask(newCreateUpgradeDirTask(), true).
 		AddTask(newGetAllRequiredPkgsTask(), true).

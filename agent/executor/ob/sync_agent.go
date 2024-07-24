@@ -47,7 +47,7 @@ func CreateAgentSyncDag(rootPWD string) (*task.DagDetailDTO, error) {
 		return nil, err
 	}
 	subTask := newAgentSyncTask()
-	template := task.NewTemplateBuilder(subTask.GetName()).AddTask(subTask, false).Build()
+	template := task.NewTemplateBuilder(subTask.GetName()).AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance()).Build()
 	ctx := task.NewTaskContext().SetData(PARAM_ROOT_PWD, rootPWD)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {

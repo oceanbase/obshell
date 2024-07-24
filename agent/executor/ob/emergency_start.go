@@ -29,7 +29,7 @@ import (
 
 func EmergencyStart() (*task.DagDetailDTO, *errors.OcsAgentError) {
 	template := task.NewTemplateBuilder(DAG_EMERGENCY_START).
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCheckObserverForStartTask(), false).
 		AddTask(newStartObServerTask(), false).
 		AddTask(newGetConnForEStartTask(), false)

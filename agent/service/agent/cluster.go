@@ -21,7 +21,7 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
@@ -91,7 +91,7 @@ func (s *AgentService) initializeClusterStatus(tx *gorm.DB) error {
 	if clusterStatus.Id == 0 {
 		return tx.Model(&oceanbase.ClusterStatus{}).Create(&oceanbase.ClusterStatus{
 			Id:     1,
-			Status: constant.CLUSTER_RUNNING,
+			Status: task.NOT_UNDER_MAINTENANCE,
 		}).Error
 	}
 	return nil

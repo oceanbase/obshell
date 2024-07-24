@@ -135,7 +135,7 @@ func buildAgentUpgradeCheckTemplate(param param.UpgradeCheckParam) *task.Templat
 	name := fmt.Sprintf("%s %s-%s", DAG_UPGRADE_CHECK_OBSHELL, param.Version, param.Release)
 	agentUpgradeCheckTemplateBuilder := task.NewTemplateBuilder(name)
 	agentUpgradeCheckTemplateBuilder.
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCreateUpgradeDirTask(), true).
 		AddTask(newGetAllRequiredPkgsTask(), true).
 		AddTask(newCheckAllRequiredPkgsTask(), true).

@@ -43,8 +43,9 @@ type TaskServiceInterface interface {
 }
 
 type StatusMaintainerInterface interface {
-	StartMaintenance(*gorm.DB) error
-	StopMaintenance(*gorm.DB) error
+	StartMaintenance(*gorm.DB, task.Maintainer) error
+	UpdateMaintenanceTask(*gorm.DB, *task.Dag) error
+	StopMaintenance(*gorm.DB, task.Maintainer) error
 	IsRunning() (bool, error)
 	IsInited() (bool, error)
 }

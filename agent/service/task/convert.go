@@ -37,7 +37,9 @@ func (s *taskService) convertDagInstance(bo *bo.DagInstance) (*task.Dag, error) 
 	if err := json.Unmarshal(bo.Context, &ctx); err != nil {
 		return nil, err
 	}
-	return task.NewDag(bo.Id, bo.Name, bo.Type, bo.State, bo.Stage, bo.MaxStage, bo.Operator, bo.IsMaintenance, &ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
+
+	maintenance := task.NewMaintenance(bo.MaintenanceType, bo.MaintenanceKey)
+	return task.NewDag(bo.Id, bo.Name, bo.Type, bo.State, bo.Stage, bo.MaxStage, bo.Operator, maintenance, &ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
 }
 
 // convertNodeInstance converts NodeInstance to task.TaskNode.

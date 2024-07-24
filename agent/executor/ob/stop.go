@@ -79,7 +79,7 @@ func buildStopTaskContext(param param.ObStopParam) (*task.TaskContext, error) {
 
 func buildStopTemplate(force bool, terminate bool) *task.Template {
 	task := task.NewTemplateBuilder(DAG_STOP_OB).
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCreateSubStopDagTask(), true).
 		AddTask(newCheckSubStopDagReadyTask(), false)
 	if terminate {

@@ -66,7 +66,7 @@ func CreateRemoveAllAgentsDag() (dag *task.Dag, err error) {
 	}
 	builder.AddTask(removeMasterTask, false)
 
-	builder.SetMaintenance(true)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	template := builder.Build()
 	ctx := task.NewTaskContext()
 	return localTaskService.CreateDagInstanceByTemplate(template, ctx)

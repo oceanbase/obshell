@@ -174,7 +174,7 @@ func buildClusterScaleOutTaskTemplate(param param.ClusterScaleOutParam, isNewZon
 		AddTask(newAddAgentTask(), false).
 		AddTask(newFinishTask(), false)
 
-	return templateBuild.SetMaintenance(true).Build()
+	return templateBuild.SetMaintenance(task.GlobalMaintenance()).Build()
 }
 
 func buildLocalScaleOutTaskTemplate(param param.LocalScaleOutParam) *task.Template {
@@ -186,7 +186,7 @@ func buildLocalScaleOutTaskTemplate(param param.LocalScaleOutParam) *task.Templa
 		AddTask(newStartObServerTask(), false).
 		AddTask(newWatchDagTask(), false).
 		AddTask(newSyncFromOB(), false).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		Build()
 }
 

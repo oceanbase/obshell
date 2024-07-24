@@ -51,7 +51,7 @@ func newStopObserverTask() *StopObserverTask {
 func CreateStopSelfDag() (*task.DagDetailDTO, error) {
 	subTask := newStopObserverTask()
 	builder := task.NewTemplateBuilder(subTask.GetName())
-	builder.AddTask(subTask, false)
+	builder.AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance())
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext())
 	if err != nil {
 		return nil, err
@@ -124,7 +124,7 @@ func buildSubStopTaskCtx(param CreateSubDagParam) *task.TaskContext {
 func buildSubStopTemplate(param CreateSubDagParam) (stage int, t *task.Template) {
 	stage = MAIN_STOP_DAG_EXPECTED_SUB_NEXT_STAGE
 	template := task.NewTemplateBuilder(DAG_STOP_OBSERVER).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newCheckDagStageTask(), false)
 	if param.NeedExecCmd {
 		template.AddTask(newStopObserverTask(), false)

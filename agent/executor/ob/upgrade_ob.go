@@ -99,7 +99,7 @@ func buildCheckAndUpgradeObTemplate(p *obUpgradeParams) *task.Template {
 
 func buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p *obUpgradeParams) *task.Template {
 	name := fmt.Sprintf("%s %s-%s", DAG_OB_STOP_SVC_UPGRADE, p.RequestParam.Version, p.RequestParam.Release)
-	builder := task.NewTemplateBuilder(name).SetMaintenance(true).
+	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance()).
 		AddTemplate(newCheckAndUpgradeAgentTemplate())
 	for i := 0; i < len(p.upgradeRoute); i++ {
 		builder.AddTemplate(newStopServiceUpgradeProcessTemplate(i, p))
@@ -131,7 +131,7 @@ func newCheckAndUpgradeAgentTemplate() *task.Template {
 
 func buildObClusterCrossVeriosnRollingUpgradeTemplate(p *obUpgradeParams) *task.Template {
 	name := fmt.Sprintf("%s %s-%s", DAG_OB_ROLLING_UPGRADE, p.RequestParam.Version, p.RequestParam.Release)
-	builder := task.NewTemplateBuilder(name).SetMaintenance(true).
+	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance()).
 		AddTemplate(newCheckAndUpgradeAgentTemplate())
 	for i := 0; i < len(p.upgradeRoute); i++ {
 		builder.AddTemplate(newRollingUpgradeProcessTemplate(i, p))

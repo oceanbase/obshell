@@ -62,7 +62,7 @@ func newStartObServerTask() *StartObserverTask {
 func CreateStartSelfDag(config map[string]string) (*task.DagDetailDTO, error) {
 	subTask := newStartObServerTask()
 	builder := task.NewTemplateBuilder(subTask.GetName())
-	builder.AddTask(subTask, false)
+	builder.AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance())
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetAgentData(meta.OCS_AGENT, PARAM_CONFIG, config))
 	if err != nil {
 		return nil, err
@@ -275,7 +275,7 @@ func CreateStartDag(params CreateSubDagParam) (*CreateSubDagResp, *errors.OcsAge
 	}
 
 	template := task.NewTemplateBuilder(DAG_START_OBSERVER).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newCheckDagStageTask(), false)
 	if params.NeedExecCmd {
 		// If not need start, then skip start observer.

@@ -35,7 +35,7 @@ func CreateJoinSelfDag(zone string) (*task.Dag, error) {
 	newTask.SetCanContinue()
 	builder.AddTask(newTask, false)
 
-	builder.SetMaintenance(true)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	template := builder.Build()
 
 	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone)

@@ -52,7 +52,7 @@ func CreateJoinMasterDag(masterAgent meta.AgentInfo, zone string) (*task.Dag, er
 	beFollowerAgent.SetCanContinue()
 	builder.AddTask(beFollowerAgent, false)
 
-	builder.SetMaintenance(true)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	template := builder.Build()
 	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone).SetParam(PARAM_MASTER_AGENT, masterAgent)
 	return localTaskService.CreateDagInstanceByTemplate(template, ctx)

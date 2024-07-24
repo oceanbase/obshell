@@ -16,7 +16,9 @@
 
 package ob
 
-import "github.com/oceanbase/obshell/agent/engine/task"
+import (
+	"github.com/oceanbase/obshell/agent/engine/task"
+)
 
 func CreateInitDag() (*task.DagDetailDTO, error) {
 	agents, err := agentService.GetAllAgentsInfo()
@@ -25,7 +27,7 @@ func CreateInitDag() (*task.DagDetailDTO, error) {
 	}
 
 	template := task.NewTemplateBuilder(DAG_INIT_CLUSTER).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newIntegrateObConfigTask(), false).
 		AddTask(newDeployTask(), true).
 		AddTask(newStartObServerTask(), true).

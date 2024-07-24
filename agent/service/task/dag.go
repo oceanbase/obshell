@@ -183,15 +183,25 @@ func (s *taskService) CreateDagInstanceByTemplate(template *task.Template, ctx *
 	if err != nil {
 		return nil, err
 	}
+	var dag *task.Dag
 	err = db.Transaction(func(tx *gorm.DB) error {
 		if template.IsMaintenance() {
-			if err := s.StartMaintenance(tx); err != nil {
+			if err := s.StartMaintenance(tx, template); err != nil {
 				return err
 			}
 		}
 
 		dagInstanceBO, err = s.insertNewDag(tx, dagInstanceBO)
 		if err != nil {
+			return err
+		}
+
+		dag, err = s.convertDagInstance(dagInstanceBO)
+		if err != nil {
+			return err
+		}
+
+		if err := s.UpdateMaintenanceTask(tx, dag); err != nil {
 			return err
 		}
 
@@ -215,7 +225,7 @@ func (s *taskService) CreateDagInstanceByTemplate(template *task.Template, ctx *
 	if err != nil {
 		return nil, err
 	}
-	return s.convertDagInstance(dagInstanceBO)
+	return dag, nil
 }
 
 // insertNewDag creates a new dag based on BO in the transaction.
@@ -234,13 +244,15 @@ func (s *taskService) newDagInstanceBO(template *task.Template, ctx *task.TaskCo
 		return nil, err
 	}
 	return &bo.DagInstance{
-		Name:          template.Name,
-		Stage:         1,
-		MaxStage:      len(template.GetNodes()),
-		State:         task.READY,
-		Operator:      task.RUN,
-		IsMaintenance: template.IsMaintenance(),
-		Context:       ctxJsonStr,
+		Name:            template.Name,
+		Stage:           1,
+		MaxStage:        len(template.GetNodes()),
+		State:           task.READY,
+		Operator:        task.RUN,
+		IsMaintenance:   template.IsMaintenance(),
+		MaintenanceType: template.GetMaintenanceType(),
+		MaintenanceKey:  template.GetMaintenanceKey(),
+		Context:         ctxJsonStr,
 	}, nil
 }
 
@@ -386,6 +398,15 @@ func (s *taskService) txForRollbackDag(dag *task.Dag, rollbackNodes []*task.Node
 		return err
 	}
 	return db.Transaction(func(tx *gorm.DB) error {
+		if dag.IsMaintenance() && dag.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+			if err := s.StartMaintenance(tx, dag); err != nil {
+				return err
+			}
+			if err := s.UpdateMaintenanceTask(tx, dag); err != nil {
+				return err
+			}
+		}
+
 		// Update dag state & operator
 		if err := s.updateDagOperator(tx, dag, task.ROLLBACK); err != nil {
 			return errors.Wrap(err, "failed to set dag rollback")
@@ -465,7 +486,7 @@ func (s *taskService) txForPassDag(dag *task.Dag, nodes []*task.Node) error {
 			}
 		}
 		if dag.IsMaintenance() {
-			if err := s.StopMaintenance(tx); err != nil {
+			if err := s.StopMaintenance(tx, dag); err != nil {
 				return err
 			}
 		}
@@ -509,7 +530,16 @@ func (s *taskService) FinishDagAsFailed(dag *task.Dag) error {
 	if err != nil {
 		return err
 	}
-	return s.updateDagState(db, dag, task.FAILED)
+	return db.Transaction(func(tx *gorm.DB) error {
+		if err := s.updateDagState(tx, dag, task.FAILED); err != nil {
+			return err
+		}
+
+		if dag.IsMaintenance() && dag.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+			return s.StopMaintenance(tx, dag)
+		}
+		return nil
+	})
 }
 
 func (s *taskService) FinishDagAsSucceed(dag *task.Dag) error {
@@ -522,7 +552,7 @@ func (s *taskService) FinishDagAsSucceed(dag *task.Dag) error {
 			return err
 		}
 		if dag.IsMaintenance() {
-			return s.StopMaintenance(tx)
+			return s.StopMaintenance(tx, dag)
 		}
 		return nil
 	})

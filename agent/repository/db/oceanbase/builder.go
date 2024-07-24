@@ -46,6 +46,7 @@ var table_list = []interface{}{
 	oceanbase.UpgradePkgInfo{},
 	oceanbase.UpgradePkgChunk{},
 	oceanbase.ClusterStatus{},
+	oceanbase.PartialMaintenance{},
 }
 
 // createGormDbByConfig will create an ob db instance according to the configuration and

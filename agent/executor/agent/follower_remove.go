@@ -55,7 +55,7 @@ func CreaetFollowerRemoveSelfDag() (*task.Dag, error) {
 	newTask.SetCanContinue()
 	builder.AddTask(newTask, false)
 
-	builder.SetMaintenance(true)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	return localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext())
 
 }
@@ -69,7 +69,7 @@ func CreateToSingleDag() (*task.Dag, error) {
 	newTask.SetCanContinue()
 	builder.AddTask(newTask, false)
 
-	builder.SetMaintenance(true)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	return localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext())
 }
 
@@ -88,7 +88,7 @@ func CreateRemoveFollowerAgentDag(agent meta.AgentInfo, fromAPI bool) (*task.Dag
 	newTask.SetCanContinue()
 	builder.AddTask(newTask, false)
 
-	builder.SetMaintenance(false)
+	builder.SetMaintenance(task.GlobalMaintenance())
 	template := builder.Build()
 	ctx := task.NewTaskContext().SetParam(PARAM_AGENT, agent)
 	return localTaskService.CreateDagInstanceByTemplate(template, ctx)

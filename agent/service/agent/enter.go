@@ -24,6 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/meta"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
@@ -95,7 +96,7 @@ func (agentService *AgentService) InitializeAgentStatus() (err error) {
 	if err != nil {
 		return
 	}
-	if err = db.Create(&sqlite.OcsInfo{Name: constant.OCS_INFO_STATUS, Value: strconv.Itoa(constant.AGENT_RUNNING)}).Error; err != nil {
+	if err = db.Create(&sqlite.OcsInfo{Name: constant.OCS_INFO_STATUS, Value: strconv.Itoa(task.NOT_UNDER_MAINTENANCE)}).Error; err != nil {
 		sqliteErr, ok := err.(sqlite3.Error)
 		if ok && sqliteErr.Code == sqlite3.ErrConstraint {
 			return nil

@@ -28,6 +28,8 @@ type DagInstance struct {
 	ExecuterAgentIp   string
 	ExecuterAgentPort int
 	IsMaintenance     bool
+	MaintenanceType   int
+	MaintenanceKey    string
 	IsFinished        bool
 	Context           []byte
 	Operator          int

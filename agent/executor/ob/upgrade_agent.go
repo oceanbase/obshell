@@ -48,7 +48,7 @@ func AgentUpgrade(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.Oc
 
 func buildAgentCheckAndUpgradeTemplate() *task.Template {
 	return task.NewTemplateBuilder(DAG_CHECK_AND_UPGRADE_OBSHELL).
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newCreateUpgradeDirTask(), true).
 		AddTask(newGetAllRequiredPkgsTask(), true).
 		AddTask(newCheckAllRequiredPkgsTask(), true).

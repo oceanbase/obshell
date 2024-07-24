@@ -47,7 +47,7 @@ func CreateDeploySelfDag(dirs map[string]string) (*task.DagDetailDTO, error) {
 	}
 	subTask := newDeployTask()
 	builder := task.NewTemplateBuilder(subTask.GetName())
-	builder.AddTask(subTask, false)
+	builder.AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance())
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetAgentData(meta.OCS_AGENT, PARAM_DIRS, dirs))
 	if err != nil {
 		return nil, err

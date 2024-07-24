@@ -51,12 +51,6 @@ const (
 	AGENT_START_TIMEOUT = 600
 )
 
-// status of agent
-const (
-	AGENT_RUNNING = iota + 1
-	AGENT_UNDER_MAINTENANCE
-)
-
 // command flag
 const (
 	FLAG_IP        = "ip"

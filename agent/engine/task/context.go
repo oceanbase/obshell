@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	EXECUTE_AGENTS = "execute_agents"
+	EXECUTE_AGENTS           = "execute_agents"
+	FAILURE_EXIT_MAINTENANCE = "failure_exit_maintenance"
 )
 
 type TaskContext struct {

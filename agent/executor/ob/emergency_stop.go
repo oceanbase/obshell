@@ -23,7 +23,7 @@ import (
 
 func EmergencyStop() (*task.DagDetailDTO, *errors.OcsAgentError) {
 	template := task.NewTemplateBuilder(DAG_EMERGENCY_STOP).
-		SetMaintenance(false).
+		SetMaintenance(task.UnMaintenance()).
 		AddTask(newStopObserverTask(), false)
 
 	taskCtx := task.NewTaskContext()

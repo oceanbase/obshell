@@ -25,6 +25,7 @@ import (
 	"gorm.io/gorm/clause"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -132,7 +133,7 @@ func (s *AgentService) UpdateAgentInfo(agentInfo meta.AgentInfoInterface) error 
 		if err = tx.Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", constant.OCS_INFO_STATUS).Scan(&status).Error; err != nil {
 			return err
 		}
-		if status == constant.AGENT_UNDER_MAINTENANCE {
+		if status == task.GLOBAL_MAINTENANCE {
 			return errors.New("agent is under maintenance, can not update agent info")
 		}
 		return s.updateAgentInfo(tx, agentInfo)

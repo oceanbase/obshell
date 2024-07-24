@@ -50,7 +50,7 @@ func newConvertMasterToClusterAgentTask() *ConvertMasterToClusterAgentTask {
 
 func newConvertClusterTemplate() *task.Template {
 	return task.NewTemplateBuilder("").
-		SetMaintenance(true).
+		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newConvertFollowerToClusterAgentTask(), false).
 		AddTask(newAgentSyncTask(), true).
 		AddTask(newConvertMasterToClusterAgentTask(), false).
