@@ -217,9 +217,9 @@ func (t *RemoteExecutableTask) request() error {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		break
+		return nil
 	}
-	return nil
+	return errors.Errorf("retry %d times, request %s failed", t.maxRetry, t.uri)
 }
 
 func (t *RemoteExecutableTask) watchRemoteDag() error {
