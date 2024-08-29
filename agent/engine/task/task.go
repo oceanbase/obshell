@@ -124,6 +124,7 @@ type Executable interface {
 	Execute() error
 	SetLogChannel(logChan chan<- TaskExecuteLogDTO)
 	GetTimeout() time.Duration
+	TimeoutCheck()
 	CanPass() bool
 	GetResult() TaskResult
 	GetContext() *TaskContext
@@ -284,6 +285,13 @@ func (task *Task) SetLogChannel(logChan chan<- TaskExecuteLogDTO) {
 	task.logChan = logChan
 }
 
+func (task *Task) TimeoutCheck() {
+	if task.logChan == nil {
+		log.Warningf("task %d Interrupted", task.id)
+		runtime.Goexit()
+	}
+}
+
 func (task *Task) executeLog(level log.Level, text string) {
 	logContext := fmt.Sprintf("task %d %s execute log: %s", task.id, task.name, text)
 	switch level {
@@ -294,10 +302,9 @@ func (task *Task) executeLog(level log.Level, text string) {
 	default:
 		log.Info(logContext)
 	}
-	if task.logChan == nil {
-		log.Warningf("task %d Interrupted", task.id)
-		runtime.Goexit()
-	}
+
+	task.TimeoutCheck()
+
 	task.logChan <- TaskExecuteLogDTO{
 		TaskId:       task.id,
 		ExecuteTimes: task.executeTimes,
