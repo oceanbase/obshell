@@ -58,9 +58,7 @@ func VerifyAuth(pwd string, ts string) error {
 				return err
 			}
 		} else {
-			if meta.OCEANBASE_PWD != "" {
-				return errors.New("no oceanbase instance")
-			}
+			return errors.New("access denied")
 		}
 	}
 	return nil
