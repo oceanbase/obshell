@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package path
+package utils
 
 import (
 	"fmt"
@@ -37,7 +37,7 @@ import (
 //  3. does not lead to directory traversal issues when joined with a generated parent path.
 func CheckPathValid(path string) error {
 	if !strings.HasPrefix(path, "/") {
-		return errors.Errorf("path %s should start with /", path)
+		return errors.Errorf("path '%s' should start with '/'", path)
 	}
 	pattern := "^[a-zA-Z0-9\u4e00-\u9fa5\\-_:@/\\.]*$"
 	match, err := regexp.MatchString(pattern, path)
@@ -58,10 +58,10 @@ func CheckPathValid(path string) error {
 	return nil
 }
 
-// CheckPathExistAndVaild checks if the provided filesystem path exists and is valid.
+// CheckPathExistAndValid checks if the provided filesystem path exists and is valid.
 // It returns an error if the path does not exist or if the path is invalid according to the
 // CheckPathValid function's criteria.
-func CheckPathExistAndVaild(path string) error {
+func CheckPathExistAndValid(path string) error {
 	if _, err := os.Stat(path); err != nil {
 		return errors.Wrapf(err, "path %s not exist", path)
 	}

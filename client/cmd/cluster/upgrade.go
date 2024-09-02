@@ -33,13 +33,13 @@ import (
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/path"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/client/utils/binary"
 	"github.com/oceanbase/obshell/client/utils/printer"
 	rpmutil "github.com/oceanbase/obshell/client/utils/rpm"
 	"github.com/oceanbase/obshell/param"
+	"github.com/oceanbase/obshell/utils"
 )
 
 var upgradeFlagUsage = fmt.Sprintf("Cluster upgrade mode: '%s' or '%s'", ob.PARAM_ROLLING_UPGRADE, ob.PARAM_STOP_SERVICE_UPGRADE)
@@ -145,8 +145,15 @@ func clusterUpgrade(opts *clusterUpgradeFlags) (err error) {
 
 func checkFlagsForUpgrade(opts *clusterUpgradeFlags) (err error) {
 	stdio.Verbosef("Checking if %s is a valid directory.", opts.pkgDir)
-	if err = path.CheckPathExistAndVaild(opts.pkgDir); err != nil {
+	if err = utils.CheckPathExistAndValid(opts.pkgDir); err != nil {
 		return err
+	}
+
+	if opts.upgradeDir != "" {
+		stdio.Verbosef("Checking if %s is a valid directory.", opts.upgradeDir)
+		if err = utils.CheckPathValid(opts.upgradeDir); err != nil {
+			return err
+		}
 	}
 
 	stdio.Verbosef("Checking if %s is a valid mode.", opts.mode)

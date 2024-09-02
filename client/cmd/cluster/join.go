@@ -32,10 +32,10 @@ import (
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/path"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/param"
+	"github.com/oceanbase/obshell/utils"
 )
 
 type AgentJoinFlags struct {
@@ -247,11 +247,11 @@ func checkServerConfigFlags(flags *ObserverConfigFlags) error {
 
 	// Check the validity of the data directory path and redo log directory path.
 	stdio.Verbosef("Check data directory: %s", flags.dataDir)
-	if flags.dataDir != "" && path.CheckPathValid(flags.dataDir) != nil {
+	if flags.dataDir != "" && utils.CheckPathValid(flags.dataDir) != nil {
 		return errors.Errorf("Invalid data directory: %s", flags.dataDir)
 	}
 	stdio.Verbosef("Check redo directory: %s", flags.redoDir)
-	if flags.redoDir != "" && path.CheckPathValid(flags.redoDir) != nil {
+	if flags.redoDir != "" && utils.CheckPathValid(flags.redoDir) != nil {
 		return errors.Errorf("Invalid redo directory: %s", flags.redoDir)
 	}
 	return nil

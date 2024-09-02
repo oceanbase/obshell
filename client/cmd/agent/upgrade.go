@@ -33,12 +33,12 @@ import (
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
-	"github.com/oceanbase/obshell/client/lib/path"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/client/utils/printer"
 	rpmutil "github.com/oceanbase/obshell/client/utils/rpm"
 	"github.com/oceanbase/obshell/param"
+	"github.com/oceanbase/obshell/utils"
 )
 
 type agentUpgradeFlags struct {
@@ -95,8 +95,15 @@ func agentUpgrade(opts *agentUpgradeFlags) (err error) {
 	stdio.Verbosef("The specified params is %#+v", opts)
 
 	stdio.Verbosef("Checking if %s is a valid directory.", opts.pkgDir)
-	if err = path.CheckPathExistAndVaild(opts.pkgDir); err != nil {
+	if err = utils.CheckPathExistAndValid(opts.pkgDir); err != nil {
 		return err
+	}
+
+	if opts.upgradeDir != "" {
+		stdio.Verbosef("Checking if %s is a valid directory.", opts.upgradeDir)
+		if err = utils.CheckPathValid(opts.upgradeDir); err != nil {
+			return err
+		}
 	}
 
 	// check if the cluster is under maintenance

@@ -18,13 +18,10 @@ package ob
 
 import (
 	"fmt"
-	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -33,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/param"
+	"github.com/oceanbase/obshell/utils"
 )
 
 func AgentUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
@@ -153,21 +151,5 @@ func checkUpgradeDir(path *string) (err error) {
 		return nil
 	}
 
-	pattern := "^[a-zA-Z0-9\u4e00-\u9fa5\\-_:@/\\.]*$"
-	match, err := regexp.MatchString(pattern, str)
-	if err != nil {
-		return errors.Wrapf(err, "match pattern %s failed", pattern)
-	}
-	if !match {
-		return fmt.Errorf("%s is not matched", str)
-	}
-
-	parentPath := fmt.Sprintf("/%s", uuid.New().String())
-	absolutePath := filepath.Join(parentPath, *path)
-	normalizedPath := filepath.Clean(absolutePath)
-	if !strings.HasPrefix(normalizedPath, parentPath) {
-		log.Errorf("'%s' is not a valid path, absolutePath is %s, normalizedPath is %s", *path, absolutePath, normalizedPath)
-		return fmt.Errorf("%s is not a valid path", *path)
-	}
-	return nil
+	return utils.CheckPathValid(str)
 }
