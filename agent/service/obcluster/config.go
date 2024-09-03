@@ -122,6 +122,13 @@ func (s *ObclusterService) UpdateClusterConfig(config map[string]string, deleteA
 
 		configs := make([]*sqlite.ObGlobalConfig, 0)
 		for name, value := range config {
+			if name == constant.CONFIG_ROOT_PWD {
+				encryptedPwd, err := secure.Encrypt(value)
+				if err != nil {
+					return errors.Wrap(err, "encrypt root password failed")
+				}
+				value = encryptedPwd
+			}
 			configs = append(configs, &sqlite.ObGlobalConfig{
 				Name:      name,
 				IsCluster: true,
@@ -133,7 +140,11 @@ func (s *ObclusterService) UpdateClusterConfig(config map[string]string, deleteA
 		}
 
 		if value, ok := config[constant.CONFIG_ROOT_PWD]; ok {
-			if err = secure.UpdateObPasswordInTransaction(tx, value); err != nil {
+			encryptedPwd, err := secure.Encrypt(value)
+			if err != nil {
+				return err
+			}
+			if err = secure.UpdateObPasswordInTransaction(tx, encryptedPwd); err != nil {
 				return errors.Wrap(err, "secure dump root password failed")
 			}
 		}

@@ -121,6 +121,7 @@ func getPrivateKey() (key string, err error) {
 	return
 }
 
+// UpdateObPassword recieve a encrypted password
 func UpdateObPassword(password string) (err error) {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
@@ -129,6 +130,7 @@ func UpdateObPassword(password string) (err error) {
 	return UpdateObPasswordInTransaction(db, password)
 }
 
+// UpdateObPasswordInTransaction recieve a encrypted password
 func UpdateObPasswordInTransaction(tx *gorm.DB, password string) (err error) {
 	val, err := Decrypt(password)
 	if err != nil {

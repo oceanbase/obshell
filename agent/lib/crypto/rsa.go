@@ -24,20 +24,7 @@ import (
 	"errors"
 )
 
-func RSAEncrypt(raw []byte, pk string) (string, error) {
-	pkix, err := base64.StdEncoding.DecodeString(pk)
-	if err != nil {
-		return "", err
-	}
-	pub, err := x509.ParsePKCS1PublicKey(pkix)
-	if err != nil {
-		return "", err
-	}
-	if len(raw) == 0 {
-		b, err := rsa.EncryptPKCS1v15(rand.Reader, pub, raw)
-		return base64.StdEncoding.EncodeToString(b), err
-	}
-
+func sectionalEncrypt(raw []byte, pub *rsa.PublicKey) (string, error) {
 	// Sectional encryption.
 	blockSize := KEY_SIZE/8 - 11
 	numBlocks := (len(raw) + blockSize - 1) / blockSize
@@ -54,7 +41,24 @@ func RSAEncrypt(raw []byte, pk string) (string, error) {
 		}
 		ciphertext = append(ciphertext, encrypted...)
 	}
-	return base64.StdEncoding.EncodeToString(ciphertext), err
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+func RSAEncrypt(raw []byte, pk string) (string, error) {
+	pkix, err := base64.StdEncoding.DecodeString(pk)
+	if err != nil {
+		return "", err
+	}
+	pub, err := x509.ParsePKCS1PublicKey(pkix)
+	if err != nil {
+		return "", err
+	}
+	if len(raw) == 0 {
+		b, err := rsa.EncryptPKCS1v15(rand.Reader, pub, raw)
+		return base64.StdEncoding.EncodeToString(b), err
+	}
+
+	return sectionalEncrypt(raw, pub)
 }
 
 type RSACrypto struct {
@@ -104,8 +108,7 @@ func (r *RSACrypto) Encrypt(raw string) (string, error) {
 	if r == nil || r.pk == nil {
 		return "", errors.New(ERR_NO_INIT)
 	}
-	b, err := rsa.EncryptPKCS1v15(rand.Reader, &r.pk.PublicKey, []byte(raw))
-	return base64.StdEncoding.EncodeToString(b), err
+	return sectionalEncrypt([]byte(raw), &r.pk.PublicKey)
 }
 
 func (r *RSACrypto) DecryptAndReturnBytes(raw string) ([]byte, error) {

@@ -30,7 +30,10 @@ import (
 	"github.com/oceanbase/obshell/agent/secure"
 )
 
-const forwardFlag = "forward"
+const (
+	forwardFlag     = "forward"   // forwardFlag marks whether the current request should be forwarded
+	IsForwardedFlag = "IsForward" // IsForwardedFlag marks whether the current request is forwarded
+)
 
 func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, params ...interface{}) {
 	forwardRequest(c, agentInfo, true, params...)

@@ -85,12 +85,6 @@ func restoreSecure() (err error) {
 			if !meta.OCS_AGENT.IsClusterAgent() {
 				process.ExitWithFailure(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, "check password in sqlite failed: not cluster agent")
 			}
-			log.Info("check password in sqlite failed; fetch password from other agents")
-			if err = secure.FetchPasswordFromOtherAgents(); err != nil {
-				log.WithError(err).Info("fetch password from other agents failed")
-			} else {
-				log.Info("fetch password from other agents successed")
-			}
 		} else {
 			log.Info("check password in sqlite successed")
 		}

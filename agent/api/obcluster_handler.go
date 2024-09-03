@@ -18,15 +18,34 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/lib/crypto"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/param"
 )
+
+// When the pwd is shorter than encrypted pwd, return directly. Otherwise decrypt the pwd:
+// 1. decrypt failed: if isForward, return error; otherwise return the original pwd.
+// 2. decrypt success: return the decrypted pwd.
+func parseRootPwd(pwd string, isForward bool) (string, error) {
+	strSize := (crypto.KEY_SIZE/8 + 2) / 3 * 4
+	if len(pwd) >= strSize {
+		// Try decode pwd.
+		parsedPwd, err := secure.Crypter.Decrypt(pwd)
+		if err != nil {
+			if isForward {
+				return "", errors.New("Please don't encrypt the password, and send /api/v1/obcluster/config to master agent.")
+			}
+			return pwd, nil
+		}
+		return parsedPwd, nil
+	}
+	return pwd, nil
+}
 
 //	@ID				obclusterConfig
 //	@Summary		put ob cluster configs
@@ -58,44 +77,12 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 			return
 		}
 
-		var password string
-		var err error
-		ctx := common.NewContextWithTraceId(c)
-
-		if params.RootPwd != nil && *params.RootPwd != "" {
-			if common.IsLocalRoute(c) {
-				pwd, err := secure.Crypter.Encrypt(*params.RootPwd)
-				if err != nil {
-					log.WithContext(ctx).WithError(err).Error("request from local route, encrypt password failed")
-					common.SendResponse(c, nil, err)
-					return
-				}
-				password = *params.RootPwd
-				params.RootPwd = &pwd
-			} else {
-				password, err = secure.Crypter.Decrypt(*params.RootPwd)
-				if err != nil {
-					log.WithContext(ctx).WithError(err).Error("request from remote route, decrypt password failed")
-					common.SendResponse(c, nil, err)
-					return
-				}
-			}
-		}
-
 		switch meta.OCS_AGENT.GetIdentity() {
 		case meta.FOLLOWER:
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
 				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
 				return
-			}
-			if password != "" {
-				if password, err = secure.EncryptForAgent(password, master); err != nil {
-					log.WithContext(ctx).WithError(err).Error("forward request to master, encrypt password failed")
-					common.SendResponse(c, nil, err)
-					return
-				}
-				params.RootPwd = &password
 			}
 			common.ForwardRequest(c, master, params)
 		case meta.CLUSTER_AGENT:
@@ -105,6 +92,15 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 			}
 			fallthrough
 		case meta.MASTER:
+			_, isForward := c.Get(common.IsForwardedFlag)
+			if params.RootPwd != nil && *params.RootPwd != "" {
+				var err error
+				*params.RootPwd, err = parseRootPwd(*params.RootPwd, isForward)
+				if err != nil {
+					common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+					return
+				}
+			}
 			dag, err := ob.CreateUpdateOBClusterConfigDag(params, deleteAll)
 			common.SendResponse(c, dag, err)
 

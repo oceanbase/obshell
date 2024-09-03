@@ -349,6 +349,7 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 				if err == nil {
 					pass = true
 				}
+				c.Set(IsForwardedFlag, true)
 				break
 			}
 			fallthrough
