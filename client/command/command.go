@@ -127,7 +127,7 @@ type Command struct {
 	optionalFlag []*Flag
 	globalFlag   []*Flag
 	helpStart    int
-	_preRunE     func(cmd *cobra.Command, args []string) error
+	originalPreRunE     func(cmd *cobra.Command, args []string) error
 }
 
 func NewCommand(cmd *cobra.Command) *Command {
@@ -137,8 +137,15 @@ func NewCommand(cmd *cobra.Command) *Command {
 		flags:   []*Flag{},
 		flagMap: map[string]*Flag{},
 	}
-	t._preRunE = cmd.PreRunE
+	t.originalPreRunE = cmd.PreRunE
 	cmd.PreRunE = t.preRunE
+
+	// Override the flag error function to customize error handling.
+	cmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
+		stdio.Error(err.Error())
+		c.SilenceErrors = true
+		return err
+	})
 
 	cmd.SetUsageFunc(t.PrintUsageFunc)
 	cmd.SetHelpFunc(t.PrintHelpFunc)
@@ -341,13 +348,18 @@ func (cmd *Command) printExample() {
 
 func (cmd *Command) preRunE(ccmd *cobra.Command, args []string) error {
 	if err := cmd.flagCheck(); err != nil {
+		stdio.Error(err.Error())
+		ccmd.SilenceErrors = true
 		return err
 	}
-	if cmd.PreRun != nil {
-		cmd.PreRun(cmd.Command, nil)
-	}
-	if cmd._preRunE != nil {
-		return cmd._preRunE(cmd.Command, nil)
+	if cmd.originalPreRunE != nil {
+		if err := cmd.originalPreRunE(cmd.Command, args); err != nil {
+			stdio.Error(err.Error())
+			cmd.SilenceErrors = true
+			return err
+		}
+	} else if cmd.PreRun != nil {
+		cmd.PreRun(ccmd, args)
 	}
 	return nil
 }
