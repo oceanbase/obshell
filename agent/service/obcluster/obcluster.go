@@ -111,12 +111,7 @@ func (obclusterService *ObclusterService) MinorFreeze(servers []oceanbase.OBServ
 		targetCmd = append(targetCmd, fmt.Sprintf("'%s:%d'", server.SvrIp, server.SvrPort))
 	}
 	serverList := strings.Join(targetCmd, ",")
-	sql := fmt.Sprintf(
-		"alter system minor freeze tenant sys server = (%[1]s); "+
-			"alter system minor freeze tenant all_user server = (%[1]s); "+
-			"alter system minor freeze tenant all_meta server = (%[1]s); ",
-		serverList,
-	)
+	sql := fmt.Sprintf("alter system minor freeze server = (%[1]s);", serverList)
 
 	return db.Exec(sql).Error
 }
