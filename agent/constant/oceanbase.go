@@ -67,6 +67,7 @@ const (
 	OB_DIR_SSTABLE = "store/sstable"
 
 	OB_CONFIG_FILE = "observer.config.bin"
+	OB_BLOCK_FILE  = "block_file"
 
 	// env
 	OB_ROOT_PASSWORD = "OB_ROOT_PASSWORD"

@@ -27,7 +27,8 @@ type DeployTaskParams struct {
 }
 
 type StartTaskParams struct {
-	Config map[string]string `json:"config" binding:"required"`
+	Config      map[string]string `json:"config" binding:"required"`
+	HealthCheck bool              `json:"healthCheck"`
 }
 
 type StopTaskParams struct {

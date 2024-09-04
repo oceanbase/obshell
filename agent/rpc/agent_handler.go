@@ -164,7 +164,7 @@ func obStartHandler(c *gin.Context) {
 			return
 		}
 
-		dag, err := ob.CreateStartSelfDag(config.Config)
+		dag, err := ob.CreateStartSelfDag(config.Config, config.HealthCheck)
 		if err != nil {
 			common.SendResponse(c, nil, err)
 			return

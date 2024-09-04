@@ -198,7 +198,8 @@ func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone 
 		SetParam(PARAM_ZONE, param.Zone).
 		SetParam(PARAM_IS_NEW_ZONE, isNewZone).
 		SetParam(PARAM_AGENT_INFO, param.AgentInfo).
-		SetParam(PARAM_CONFIG, param.ObConfigs)
+		SetParam(PARAM_CONFIG, param.ObConfigs).
+		SetParam(PARAM_HEALTH_CHECK, true)
 	return context
 }
 

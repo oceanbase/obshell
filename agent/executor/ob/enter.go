@@ -59,6 +59,7 @@ const (
 	PARAM_START_OWN_OBSVR        = "startOwnObsvr"
 	PARAM_EXPECT_MAIN_NEXT_STAGE = "expectedMainNextStage"
 	PARAM_URI                    = "uri"
+	PARAM_HEALTH_CHECK           = "healthCheck"
 	// scale out
 	PARAM_EXPECT_DEPLOY_NEXT_STAGE   = "expectedDeployNextStage"
 	PARAM_EXPECT_START_NEXT_STAGE    = "expectedStartNextStage"

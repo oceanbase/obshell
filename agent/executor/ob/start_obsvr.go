@@ -27,11 +27,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/http"
+	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -41,9 +43,10 @@ import (
 
 type StartObserverTask struct {
 	RemoteExecutableTask
-	config    map[string]string
-	mysqlPort int
-	rpcPort   int
+	config          map[string]string
+	mysqlPort       int
+	rpcPort         int
+	needHealthCheck bool
 }
 
 func newStartObServerTask() *StartObserverTask {
@@ -59,11 +62,11 @@ func newStartObServerTask() *StartObserverTask {
 	return newTask
 }
 
-func CreateStartSelfDag(config map[string]string) (*task.DagDetailDTO, error) {
+func CreateStartSelfDag(config map[string]string, healthCheck bool) (*task.DagDetailDTO, error) {
 	subTask := newStartObServerTask()
 	builder := task.NewTemplateBuilder(subTask.GetName())
 	builder.AddTask(subTask, false).SetMaintenance(task.GlobalMaintenance())
-	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetAgentData(meta.OCS_AGENT, PARAM_CONFIG, config))
+	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetAgentData(meta.OCS_AGENT, PARAM_CONFIG, config).SetParam(PARAM_HEALTH_CHECK, healthCheck))
 	if err != nil {
 		return nil, err
 	}
@@ -75,6 +78,9 @@ func (t *StartObserverTask) Execute() error {
 		t.ExecuteLog("observer started.")
 		return nil
 	}
+
+	// t.needHealthCheck defaults to false, so we ignore the error here.
+	t.GetContext().GetParamWithValue(PARAM_HEALTH_CHECK, &t.needHealthCheck)
 
 	agent := t.GetExecuteAgent()
 	t.ExecuteLog("start observer")
@@ -97,7 +103,53 @@ func (t *StartObserverTask) Execute() error {
 	if err := startObserver(t, t.config); err != nil {
 		return err
 	}
+
+	if t.needHealthCheck {
+		if err := t.observerHealthCheck(t.mysqlPort); err != nil {
+			return errors.Wrap(err, "observer health check failed")
+		}
+	}
 	return t.updatePort()
+}
+
+func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
+	dsConfig := config.NewObDataSourceConfig().
+		SetTryTimes(1).
+		SetDBName("").
+		SetTimeout(10).
+		SetPort(mysqlPort)
+
+	const (
+		maxRetries    = 300
+		retryInterval = 2 * time.Second
+	)
+
+	for retryCount := 1; retryCount <= maxRetries; retryCount++ {
+		time.Sleep(retryInterval)
+		t.ExecuteLogf("observer health check, retry [%d/%d]", retryCount, maxRetries)
+
+		// Check if the observer process exists
+		if exist, err := process.CheckObserverProcess(); !exist || err != nil {
+			return fmt.Errorf("check observer process exist: %v, %v,", exist, err)
+		}
+
+		// Check if the SSTable file exists
+		_, err := os.Stat(path.ObBlockFilePath())
+		if os.IsNotExist(err) {
+			continue
+		}
+
+		// Attempt to connect to the OceanBase instance for testing
+		if err := oceanbase.LoadOceanbaseInstanceForTest(dsConfig); err != nil {
+			continue // Connection failed, retry
+		}
+
+		// All checks passed, exit the loop
+		return nil
+	}
+
+	// If retries run out, return a timeout error
+	return errors.New("observer health check timeout")
 }
 
 func (t *StartObserverTask) setPort() (err error) {
@@ -140,7 +192,7 @@ func (t *StartObserverTask) Rollback() error {
 }
 
 func (t *StartObserverTask) remoteStart() error {
-	t.initial(constant.URI_OB_RPC_PREFIX+constant.URI_START, http.POST, param.StartTaskParams{Config: t.config})
+	t.initial(constant.URI_OB_RPC_PREFIX+constant.URI_START, http.POST, param.StartTaskParams{Config: t.config, HealthCheck: t.needHealthCheck})
 	if err := t.retmoteExecute(); err != nil {
 		return err
 	}

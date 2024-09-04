@@ -28,6 +28,10 @@ func ObConfigPath() string {
 	return filepath.Join(EtcDir(), constant.OB_CONFIG_FILE)
 }
 
+func ObBlockFilePath() string {
+	return filepath.Join(SstableDir(), constant.OB_BLOCK_FILE)
+}
+
 func IsEtcDirExist() bool {
 	_, err := os.Stat(EtcDir())
 	return err == nil

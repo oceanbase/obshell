@@ -84,6 +84,10 @@ func EtcDir() string {
 	return filepath.Join(AgentDir(), constant.OB_DIR_ETC)
 }
 
+func SstableDir() string {
+	return filepath.Join(AgentDir(), constant.OB_DIR_SSTABLE)
+}
+
 func CertificateDir() string {
 	return filepath.Join(AgentDir(), constant.DIR_CA)
 }
