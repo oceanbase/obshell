@@ -849,15 +849,26 @@ func (t *WaitRemoteDeployTaskFinish) Execute() error {
 		if err != nil {
 			return errors.Wrap(err, "get remote dag failed")
 		}
-		if dag.Nodes[expectStage+1].IsSucceed() {
-			t.ExecuteInfoLog("remote deploy task is succeed")
-			return nil
-		} else if dag.Nodes[expectStage+1].IsFailed() {
-			return errors.New("wait remote deploy task finish failed")
+		node := dag.Nodes[expectStage+1]
+		if node.IsFinished() {
+			return t.getMessage(dag, node)
 		}
 		time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
 	}
 	return errors.New("wait remote deploy task finish failed")
+}
+
+func (t *scaleCoordinateTask) getMessage(dag *task.DagDetailDTO, node *task.NodeDetailDTO) error {
+	var log string
+	for _, task := range node.SubTasks {
+		for _, log = range task.TaskLogs {
+			t.ExecuteLogf("task %s: %s", task.Name, log)
+		}
+	}
+	if node.State == task.FAILED_STR {
+		return fmt.Errorf("dag %s %s failed: [%s] %s", dag.GenericID, dag.Name, node.Name, log)
+	}
+	return nil
 }
 
 func (t *WaitRemoteDeployTaskFinish) Rollback() error {
@@ -908,11 +919,9 @@ func (t *WaitRemoteStartTaskFinish) Execute() error {
 		if err != nil {
 			return errors.Wrap(err, "get remote dag failed")
 		}
-		if dag.Nodes[expectStage+1].IsSucceed() {
-			t.ExecuteInfoLog("remote start observer task is succeed")
-			return nil
-		} else if dag.Nodes[expectStage+1].IsFailed() {
-			return errors.New("remote start observer task failed")
+		node := dag.Nodes[expectStage+1]
+		if node.IsFinished() {
+			return t.getMessage(dag, node)
 		}
 		time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
 	}
@@ -1142,6 +1151,7 @@ func newAddAgentTask() *AddAgentTask {
 	newTask.SetCanContinue().SetCanRetry().SetCanRollback()
 	return newTask
 }
+
 func (t *AddAgentTask) Execute() error {
 	var agentInfo meta.AgentInfo
 	ctx := t.GetContext()

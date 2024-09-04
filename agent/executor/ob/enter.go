@@ -162,10 +162,10 @@ const (
 	TASK_NAME_WAIT_REMOTE_DEPLOY_FINISH          = "Wait remote deploy finish"
 	TASK_NAME_WAIT_REMOTE_START_FINISH           = "Wait remote start finish"
 	TASK_NAME_PREV_CHECK                         = "Prev check for scale_out"
-	TASK_NAME_ADD_NEW_ZONE                       = "Add new zone  for scale_out"
-	TASK_NAME_START_NEW_ZONE                     = "Start new zone  for scale_out"
+	TASK_NAME_ADD_NEW_ZONE                       = "Add new zone for scale_out"
+	TASK_NAME_START_NEW_ZONE                     = "Start new zone for scale_out"
 	TASK_NAME_ADD_SERVER                         = "Add server for scale_out"
-	TASK_NAME_ADD_AGENT                          = "Add agent  for scale_out"
+	TASK_NAME_ADD_AGENT                          = "Add agent for scale_out"
 	TASK_NAME_FINISH                             = "Check cluster scale_out whether finished"
 	TASK_NAME_MINOR_FREEZE                       = "Minor freeze before stop server"
 
