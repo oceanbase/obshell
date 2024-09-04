@@ -26,6 +26,7 @@ import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/global"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -61,8 +62,9 @@ func TimeHandler(c *gin.Context) {
 //	@Router			/api/v1/info [get]
 func InfoHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath)
-		common.SendResponse(c, agentStatus, nil)
+		obVersion, err := binary.GetMyOBVersion()
+		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion)
+		common.SendResponse(c, agentStatus, err)
 	}
 }
 

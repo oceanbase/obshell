@@ -24,7 +24,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/agent"
-	ocsagent "github.com/oceanbase/obshell/agent/executor/agent"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	agentservice "github.com/oceanbase/obshell/agent/service/agent"
@@ -63,15 +63,30 @@ func agentJoinHandler(c *gin.Context) {
 	if meta.OCS_AGENT.Equal(&param.AgentInfo) {
 		dag, err = agent.CreateJoinSelfDag(param.ZoneName)
 	} else {
-		var agentStatus http.AgentStatus
-		if err = http.SendGetRequest(&param.AgentInfo, constant.URI_API_V1+constant.URI_STATUS, nil, &agentStatus); err != nil {
+		var agentStatus meta.AgentStatus
+		if err = http.SendGetRequest(&param.AgentInfo, constant.URI_API_V1+constant.URI_INFO, nil, &agentStatus); err != nil {
 			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "get agent info failed: %s", err.Error()))
 			return
-		} else if !agentStatus.Agent.IsMasterAgent() {
+		} else if !agentStatus.AgentInstance.IsMasterAgent() {
 			common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not master agent", param.AgentInfo.String()))
 			return
 		}
-		dag, err = ocsagent.CreateJoinMasterDag(param.AgentInfo, param.ZoneName)
+
+		// check version consistent
+		if agentStatus.Version != constant.VERSION_RELEASE {
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "obshell version is not consistent between %s(%s) and %s(%s)",
+				param.AgentInfo.String(), agentStatus.Version, meta.OCS_AGENT.String(), constant.VERSION_RELEASE))
+			return
+		}
+		if obVersion, err := binary.GetMyOBVersion(); err != nil {
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error()))
+			return
+		} else if obVersion != agentStatus.OBVersion {
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "ob version is not consistent between %s(%s) and %s(%s)",
+				param.AgentInfo.String(), agentStatus.OBVersion, meta.OCS_AGENT.String(), obVersion))
+			return
+		}
+		dag, err = agent.CreateJoinMasterDag(param.AgentInfo, param.ZoneName)
 	}
 
 	if err != nil {
@@ -138,7 +153,7 @@ func agentRemoveHandler(c *gin.Context) {
 			if err != nil {
 				err = errors.Errorf("agent %s is not exists", param.String())
 			} else {
-				dag, err = ocsagent.CreateRemoveFollowerAgentDag(param, true)
+				dag, err = agent.CreateRemoveFollowerAgentDag(param, true)
 			}
 		}
 	case meta.SINGLE:

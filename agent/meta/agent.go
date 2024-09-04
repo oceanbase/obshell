@@ -122,10 +122,11 @@ type AgentInstance struct {
 }
 
 type AgentStatus struct {
-	Pid      int    `json:"pid"`
-	State    int32  `json:"state"`
-	StartAt  int64  `json:"startAt"`
-	HomePath string `json:"homePath"`
+	Pid       int    `json:"pid"`
+	State     int32  `json:"state"`
+	StartAt   int64  `json:"startAt"`
+	HomePath  string `json:"homePath"`
+	OBVersion string `json:"obVersion"`
 	AgentInstance
 }
 
@@ -295,12 +296,13 @@ func NewAgentSecretByAgentInfo(agent AgentInfoInterface, publicKey string) *Agen
 	}
 }
 
-func NewAgentStatus(agent Agent, pid int, state int32, startAt int64, homePath string) *AgentStatus {
+func NewAgentStatus(agent Agent, pid int, state int32, startAt int64, homePath string, obVersion string) *AgentStatus {
 	return &AgentStatus{
 		Pid:           pid,
 		State:         state,
 		StartAt:       startAt,
 		HomePath:      homePath,
+		OBVersion:     obVersion,
 		AgentInstance: *NewAgentInstanceByAgent(agent),
 	}
 }
