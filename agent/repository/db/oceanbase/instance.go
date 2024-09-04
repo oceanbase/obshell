@@ -47,6 +47,10 @@ func GetInstance() (db *gorm.DB, err error) {
 	return getSqlExecutableInstance(TEST_OCEANBASE_SQL)
 }
 
+func ClearInstance() {
+	dbInstance = nil
+}
+
 // GetRestrictedInstance will return the connection which not specify any database
 // and this connection can only execute the SQL command 'SELECT 1'.
 func GetRestrictedInstance() (db *gorm.DB, err error) {

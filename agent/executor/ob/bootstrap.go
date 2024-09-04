@@ -62,6 +62,12 @@ func (t *ClusterBoostrapTask) Execute() error {
 	return t.addServers()
 }
 
+func (t *ClusterBoostrapTask) Rollback() error {
+	t.ExecuteLog("clear db Instance")
+	oceanbase.ClearInstance()
+	return nil
+}
+
 func (t *ClusterBoostrapTask) getParams() (err error) {
 	ctx := t.GetContext()
 	if err = ctx.GetDataWithValue(PARAM_ZONE_ORDER, &t.zoneOrder); err != nil {

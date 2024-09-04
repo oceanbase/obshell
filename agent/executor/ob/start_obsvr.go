@@ -127,10 +127,15 @@ func (t *StartObserverTask) updatePort() error {
 }
 
 func (t *StartObserverTask) Rollback() error {
+	if _, ok := t.GetContext().GetData(DATA_SKIP_START_TASK).(bool); ok {
+		return nil
+	}
+
 	agent := t.GetExecuteAgent()
 	if !agent.Equal(meta.OCS_AGENT) {
 		return t.remoteStop()
 	}
+
 	return stopObserver(t)
 }
 
