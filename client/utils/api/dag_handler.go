@@ -117,37 +117,38 @@ func (dh *DagHandler) PrintDagStage() (err error) {
 	stdio.Verbosef("Dag max stage is %d", dh.Dag.MaxStage)
 	var failed bool
 	dh.ctx, dh.cancel = context.WithCancel(context.Background())
-	for i := 1; i <= dh.Dag.MaxStage; i++ {
-		dh.currentStage = i
-		failed, err = dh.waitDagFinishCurrStage()
+	for i := 1; i <= dh.Dag.MaxStage && !dh.Dag.IsSucceed(); i = dh.Dag.Stage {
+		failed, err = dh.waitDagFinishStage(i)
 		if err != nil || failed {
 			return
 		}
-
 	}
 	return
 }
 
-func (dh *DagHandler) waitDagFinishCurrStage() (failed bool, err error) {
-	stdio.Verbosef("Wait for stage %d", dh.Dag.Stage)
+// waitDagFinishStage will wait for the dag to finish the stage.
+func (dh *DagHandler) waitDagFinishStage(stage int) (failed bool, err error) {
 	for {
 		select {
 		case <-dh.ctx.Done():
 			err = dh.waitDagFinished()
 			return dh.Dag.IsFailed(), err
 		case <-time.After(1 * time.Second):
-			if finishCurrentStage, err := dh.handleCurrentStage(); err != nil {
+			if finished, err := dh.chaseToLatestStage(stage); err != nil {
 				return false, err
-			} else if finishCurrentStage {
+			} else if finished {
 				return dh.Dag.IsFailed(), nil
 			}
 		}
 	}
 }
 
-func (dh *DagHandler) handleCurrentStage() (finished bool, err error) {
+// chaseToLatestStage will chase the dag to the latest stage, and return whether the prevStage is finished.
+// When exiting the function, the current print must be the latest stage.
+// when prevStage finished, return true, else return false.
+func (dh *DagHandler) chaseToLatestStage(prevStage int) (finished bool, err error) {
 	var msg string
-	stage := dh.currentStage
+	stage := prevStage
 	_, err = dh.GetDag()
 	if err != nil {
 		if dh.retryTimes > 0 {
@@ -159,13 +160,23 @@ func (dh *DagHandler) handleCurrentStage() (finished bool, err error) {
 		return false, err
 	}
 
+	if stage == 1 {
+		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[0].Name, dh.Dag.Stage, dh.Dag.MaxStage)
+		stdio.StartOrUpdateLoading(msg)
+	}
+
+	for ; stage+1 < dh.Dag.Stage; stage++ {
+		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
+		stdio.LoadStageSuccess(msg)
+		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage].Name, stage+1, dh.Dag.MaxStage)
+		stdio.StartOrUpdateLoading(msg)
+	}
+
 	if dh.Dag.Stage > stage {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, dh.Dag.Stage-1, dh.Dag.MaxStage)
-		if stdio.IsBusy() {
-			stdio.LoadSuccess(msg)
-		} else {
-			stdio.Success(msg)
-		}
+		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
+		stdio.LoadStageSuccess(msg)
+		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage].Name, dh.Dag.Stage, dh.Dag.MaxStage)
+		stdio.StartOrUpdateLoading(msg)
 		return true, nil
 	}
 
@@ -183,11 +194,6 @@ func (dh *DagHandler) handleCurrentStage() (finished bool, err error) {
 			stdio.Error(log)
 		}
 		return true, fmt.Errorf("Sorry, task '%s' failed", dh.Dag.Name)
-	}
-
-	if dh.Dag.IsRunning() {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, dh.Dag.Stage, dh.Dag.MaxStage)
-		stdio.StartOrUpdateLoading(msg)
 	}
 	return false, nil
 }
