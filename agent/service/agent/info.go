@@ -338,6 +338,9 @@ func (s *AgentService) SyncAgentData() (err error) {
 			if err = s.addAgent(tx, agentInstance, agent.HomePath, agent.Os, agent.Architecture, agent.PublicKey); err != nil {
 				return
 			}
+			if err = s.UpdateAgentOBPortWithTx(tx, agentInstance, agent.MysqlPort, agent.RpcPort); err != nil {
+				return
+			}
 			if ocsAgent.Equal(agentInstance) {
 				if err = s.updateIdentity(tx, agentInstance.GetIdentity()); err != nil {
 					return

@@ -254,6 +254,16 @@ func (s *AgentService) UpdateAgentOBPort(agent meta.AgentInfoInterface, mysqlPor
 	return db.Updates(&allAgentDO).Error
 }
 
+func (s *AgentService) UpdateAgentOBPortWithTx(tx *gorm.DB, agent meta.AgentInfoInterface, mysqlPort, rpcPort int) error {
+	allAgentDO := sqlite.AllAgent{
+		Ip:        agent.GetIp(),
+		Port:      agent.GetPort(),
+		RpcPort:   rpcPort,
+		MysqlPort: mysqlPort,
+	}
+	return tx.Updates(&allAgentDO).Error
+}
+
 func (s *AgentService) updateAgent(db *gorm.DB, agentInstance meta.Agent, homePath string, os string, arch string, publicKey string) error {
 	agent := &sqlite.AllAgent{
 		Ip:           agentInstance.GetIp(),
