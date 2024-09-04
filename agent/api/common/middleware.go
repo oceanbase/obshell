@@ -48,6 +48,9 @@ const (
 	statusURI = constant.URI_API_V1 + constant.URI_STATUS
 
 	localRouteKey = "localRoute"
+	apiRouteKey   = "apiRoute"
+
+	originalBody = "ORIGINAL_BODY"
 )
 
 var (
@@ -59,6 +62,13 @@ func SetLocalRouteFlag(c *gin.Context) {
 	ctx := NewContextWithTraceId(c)
 	log.WithContext(ctx).Debug("set local route flag")
 	c.Set(localRouteKey, true)
+	c.Next()
+}
+
+func SetApiFlag(c *gin.Context) {
+	ctx := NewContextWithTraceId(c)
+	log.WithContext(ctx).Debug("set api flag")
+	c.Set(apiRouteKey, true)
 	c.Next()
 }
 
@@ -210,7 +220,7 @@ func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 
 		c.Next()
 
-		if _, ok := c.Get(forwardFlag); ok {
+		if _, ok := c.Get(needForwardedFlag); ok {
 			return
 		}
 
@@ -309,6 +319,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		}
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
 
+		c.Set(originalBody, string(encryptedBody))
 		c.Next()
 	}
 }
@@ -331,27 +342,43 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 			return
 		}
 		pass := false
-		header = headerByte.(secure.HttpHeader)
+
+		header, ok := headerByte.(secure.HttpHeader)
+		if !ok {
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+			return
+		}
 
 		switch meta.OCS_AGENT.GetIdentity() {
 		case meta.SINGLE:
 			pass = true
 		case meta.FOLLOWER:
-			// If the agent identity is FOLLOWER, verify the request using only the provided token.
+			if IsApiRoute(c) && header.ForwardType != secure.AutoForward {
+				// If the request is api and is not auto-forwarded, auto-forward it.
+				autoForward(c)
+				c.Abort()
+				return
+			}
+
+			// The request must be forwarded either by the master or from an RPC.
+			// Therefore, only the token needs to be verified.
 			if secure.VerifyToken(header.Token) == nil {
 				pass = true
 			}
 		case meta.MASTER:
-			// Verify that the ForwardAgent and the provided token are registered and match.
-			// This step ensures that only requests with valid credentials are allowed to be forwarded.
-			if header.IsForword {
+			if header.ForwardType == secure.ManualForward {
+				// When a request is manually forwarded, it must have a valid follower token.
 				err := secure.VerifyTokenByAgentInfo(header.Token, header.ForwardAgent)
 				if err == nil {
 					pass = true
 				}
-				c.Set(IsForwardedFlag, true)
 				break
+			} else if header.ForwardType == secure.AutoForward {
+				// If the request is auto-forwarded, set IsAutoForwardedFlag to true for parse password.
+				c.Set(IsAutoForwardedFlag, true)
 			}
+
 			fallthrough
 		default:
 			if secure.VerifyAuth(header.Auth, header.Ts) == nil {

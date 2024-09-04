@@ -66,8 +66,17 @@ func GetDagDetail(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
-		// forward request to agent
-		common.ForwardRequest(c, agent)
+		if meta.OCS_AGENT.IsFollowerAgent() {
+			// forward request to master
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				return
+			}
+			common.ForwardRequest(c, master)
+		} else {
+			common.ForwardRequest(c, agent)
+		}
 		return
 	}
 
@@ -161,7 +170,17 @@ func DagHandler(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
-		common.ForwardRequest(c, agent, dagOperator)
+		if meta.OCS_AGENT.IsFollowerAgent() {
+			// forward request to master
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				return
+			}
+			common.ForwardRequest(c, master)
+		} else {
+			common.ForwardRequest(c, agent)
+		}
 		return
 	}
 
@@ -283,7 +302,6 @@ func GetAllAgentLastMaintenanceDag(c *gin.Context) {
 		if agent.Equal(meta.OCS_AGENT) {
 			continue
 		}
-
 		var dagDetailDTO *task.DagDetailDTO
 		url := fmt.Sprintf("%s%s%s%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, constant.URI_MAINTAIN, constant.URI_AGENT_GROUP)
 		err = secure.SendGetRequest(&agent, url, nil, &dagDetailDTO)

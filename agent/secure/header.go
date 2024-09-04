@@ -24,8 +24,15 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/crypto"
 	"github.com/oceanbase/obshell/agent/meta"
+)
+
+const (
+	NotForward = iota
+	AutoForward
+	ManualForward
 )
 
 type HttpHeader struct {
@@ -34,7 +41,7 @@ type HttpHeader struct {
 	Token        string
 	Uri          string
 	Keys         []byte
-	IsForword    bool
+	ForwardType  int
 	ForwardAgent meta.AgentInfo
 }
 
@@ -66,8 +73,9 @@ func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, 
 		Uri:   uri,
 		Keys:  aesKeys,
 	}
+
 	if isForword {
-		header.IsForword = true
+		header.ForwardType = ManualForward
 		header.ForwardAgent = meta.OCS_AGENT.GetAgentInfo()
 	}
 
@@ -91,6 +99,35 @@ func DecryptHeader(ciphertext string) (HttpHeader, error) {
 	err := json.Unmarshal(decHeader, &headers)
 	if err != nil {
 		return headers, err
+	}
+	return headers, nil
+}
+
+func RepackageHeaderForAutoForward(header *HttpHeader, agentInfo meta.AgentInfoInterface) (headers map[string]string, err error) {
+	err = errors.Occur(errors.ErrUnauthorized)
+
+	header.ForwardType = AutoForward
+	// encrypt for master
+	pk := GetAgentPublicKey(agentInfo)
+	if pk == "" {
+		log.Warnf("no key for agent: %s", agentInfo.String())
+		return
+	}
+
+	mHeader, err := json.Marshal(header)
+	if err != nil {
+		log.WithError(err).Error("json marshal failed")
+		return
+	}
+
+	encryptedHeader, err := crypto.RSAEncrypt(mHeader, pk)
+	if err != nil {
+		log.WithError(err).Error("rsa encrypt failed")
+		return
+	}
+
+	headers = map[string]string{
+		constant.OCS_HEADER: string(encryptedHeader),
 	}
 	return headers, nil
 }

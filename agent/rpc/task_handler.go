@@ -35,10 +35,10 @@ var (
 )
 
 func InitTaskRoutes(r *gin.RouterGroup) {
-	task := r.Group("/task")
-	task.POST(constant.URI_SUB_TASK, StartTask)
-	task.PATCH(constant.URI_SUB_TASK, UpdateTask)
-	task.POST(constant.URI_LOG, SyncLog)
+	group := r.Group("/task")
+	group.POST(constant.URI_SUB_TASK, StartTask)
+	group.PATCH(constant.URI_SUB_TASK, UpdateTask)
+	group.POST(constant.URI_LOG, SyncLog)
 }
 
 // StartTask will start remote subtask and create local subtask instance by remote subtask if not exist.

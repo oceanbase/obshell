@@ -54,6 +54,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	// groups
 	v1 := r.Group(constant.URI_API_V1)
+	v1.Use(common.SetApiFlag)
+
 	ob := v1.Group(constant.URI_OB_GROUP)
 	agent := v1.Group(constant.URI_AGENT_GROUP)
 	agents := v1.Group(constant.URI_AGENTS_GROUP)

@@ -59,7 +59,17 @@ func GetSubTaskDetail(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
-		common.ForwardRequest(c, agent)
+		if meta.OCS_AGENT.IsFollowerAgent() {
+			// forward request to master
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				return
+			}
+			common.ForwardRequest(c, master)
+		} else {
+			common.ForwardRequest(c, agent)
+		}
 		return
 	}
 

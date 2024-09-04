@@ -56,3 +56,8 @@ func IsLocalRoute(c *gin.Context) bool {
 	_, isLocalRoute := c.Get(localRouteKey)
 	return isLocalRoute
 }
+
+func IsApiRoute(c *gin.Context) bool {
+	_, isApiRoute := c.Get(apiRouteKey)
+	return isApiRoute
+}

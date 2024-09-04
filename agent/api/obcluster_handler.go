@@ -92,7 +92,7 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 			}
 			fallthrough
 		case meta.MASTER:
-			_, isForward := c.Get(common.IsForwardedFlag)
+			_, isForward := c.Get(common.IsAutoForwardedFlag)
 			if params.RootPwd != nil && *params.RootPwd != "" {
 				var err error
 				*params.RootPwd, err = parseRootPwd(*params.RootPwd, isForward)

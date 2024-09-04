@@ -17,66 +17,101 @@
 package common
 
 import (
+	"context"
 	"fmt"
-	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	libhttp "github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
+	agentservice "github.com/oceanbase/obshell/agent/service/agent"
 )
 
 const (
-	forwardFlag     = "forward"   // forwardFlag marks whether the current request should be forwarded
-	IsForwardedFlag = "IsForward" // IsForwardedFlag marks whether the current request is forwarded
+	needForwardedFlag   = "forward"       // needForwardedFlag marks whether the current request should be forwarded
+	IsAutoForwardedFlag = "IsAutoForward" // IsAutoForwardedFlag marks whether the current request is auto forwarded
 )
 
-func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, params ...interface{}) {
-	forwardRequest(c, agentInfo, true, params...)
+// autoForward is used by middleware to forward the request to master agent.
+func autoForward(c *gin.Context) {
+	agentService := agentservice.AgentService{}
+	master := agentService.GetMasterAgentInfo()
+	if master == nil {
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		return
+	}
+
+	ctx := NewContextWithTraceId(c)
+	log.WithContext(ctx).Infof("Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), master.String())
+
+	// OriginalBody only would be set in api request
+	// Follower agent forward request to master agent, use the original encrypted body.
+	// Repackage the request header
+	var headers map[string]string
+	var body interface{}
+	if originalBody, exist := c.Get(originalBody); exist {
+		body = originalBody
+	}
+
+	headerByte, exist := c.Get(constant.OCS_HEADER)
+	if headerByte == nil || !exist {
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		return
+	}
+
+	header, ok := headerByte.(secure.HttpHeader)
+	if !ok {
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		return
+	}
+
+	headers, err := secure.RepackageHeaderForAutoForward(&header, master)
+	if err != nil {
+		SendResponse(c, nil, err)
+		return
+	}
+
+	sendRequsetForForward(c, ctx, master, headers, body)
 }
 
-func forwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, transferSecureHeader bool, params ...interface{}) {
-	if !IsLocalRoute(c) && meta.OCS_AGENT.IsFollowerAgent() {
-		SendResponse(c, nil, fmt.Errorf("please send the http request to master node: %s", agentInfo.String()))
-	}
-	startTime := time.Now()
+// ForwardRequest is used by handler to forward the request to other agent.
+func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, param ...interface{}) {
 	ctx := NewContextWithTraceId(c)
 	log.WithContext(ctx).Infof("Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String())
 
-	uri := fmt.Sprintf("%s://%s:%d%s", global.Protocol, agentInfo.GetIp(), agentInfo.GetPort(), c.Request.URL)
-	request := libhttp.NewClient().R()
-
-	var headers map[string]string
 	var body interface{}
-
-	if len(params) > 0 {
-		body = params[0]
-	} else {
-		bytesBody, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			SendResponse(c, nil, err)
-			return
-		}
-		body = string(bytesBody)
+	if len(param) > 0 {
+		body = param[0]
 	}
 
+	// forward for local route or cluster agent
 	body, headers, err := buildForwardBodyAndHeader(agentInfo, c.Request.RequestURI, body)
 	if err != nil {
 		SendResponse(c, nil, err)
 		return
 	}
-	request.SetBody(body)
 
+	sendRequsetForForward(c, ctx, agentInfo, headers, body)
+}
+
+func sendRequsetForForward(c *gin.Context, ctx context.Context, agentInfo meta.AgentInfoInterface, headers map[string]string, body interface{}) {
+	startTime := time.Now()
+	request := libhttp.NewClient().R()
 	for k, v := range headers {
 		request.SetHeader(k, v)
 	}
+	request.SetBody(body)
 
+	uri := fmt.Sprintf("%s://%s:%d%s", global.Protocol, agentInfo.GetIp(), agentInfo.GetPort(), c.Request.URL)
 	response, err := request.Execute(c.Request.Method, uri)
 	if err != nil {
+		log.WithError(err).Errorf("API response failed : [%v %v, client=%v, agent=%v]", c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String())
 		SendResponse(c, nil, err)
 		return
 	}
@@ -85,13 +120,13 @@ func forwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, transferS
 		c.Header(k, v[0])
 	}
 
-	c.Set(forwardFlag, true)
+	c.Set(needForwardedFlag, true)
 	c.Status(response.StatusCode())
 	c.Writer.Write(response.Body())
 	duration := time.Since(startTime).Milliseconds()
 	traceId, _ := c.Get(TraceIdKey)
-	log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v]",
-		c.Request.Method, c.Request.URL, c.ClientIP(), traceId, duration, response.StatusCode())
+	log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, agent=%v, traceId=%v, duration=%v, status=%v]",
+		c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String(), traceId, duration, response.StatusCode())
 }
 
 func buildForwardBodyAndHeader(agentInfo meta.AgentInfoInterface, uri string, body interface{}) (interface{}, map[string]string, error) {
