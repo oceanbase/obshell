@@ -50,6 +50,7 @@ func newPassCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 			if err := taskPass(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

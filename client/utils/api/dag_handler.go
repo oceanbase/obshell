@@ -178,7 +178,7 @@ func (dh *DagHandler) handleCurrentStage() (finished bool, err error) {
 	}
 
 	if dh.Dag.IsFailed() {
-		stdio.LoadFailed(msg)
+		stdio.LoadFailedWithoutMsg()
 		for _, log := range GetFailedDagLastLog(dh.Dag) {
 			stdio.Error(log)
 		}

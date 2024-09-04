@@ -49,6 +49,7 @@ func newRemoveCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			if err := agentRemove(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

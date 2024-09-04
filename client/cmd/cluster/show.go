@@ -55,6 +55,7 @@ func newShowCmd() *cobra.Command {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := clusterShow(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

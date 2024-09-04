@@ -50,6 +50,7 @@ func newShowCmd() *cobra.Command {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := taskShow(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

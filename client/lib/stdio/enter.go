@@ -146,6 +146,12 @@ func LoadFailed(msg string) {
 	std.LoadFailed(msg)
 }
 
+func LoadFailedWithoutMsg() {
+	if std.spinner != nil && std.spinner.spinner != nil {
+		std.stopLoading(FailedSymbol, std.spinner.spinner.Prefix)
+	}
+}
+
 func LoadFailedf(format string, a ...any) {
 	std.LoadFailedf(format, a...)
 }

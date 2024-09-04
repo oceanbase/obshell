@@ -57,6 +57,7 @@ func newJoinCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			if err := agentJoin(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

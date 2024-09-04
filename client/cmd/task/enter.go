@@ -58,7 +58,7 @@ func NewTaskCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			global.InitGlobalVariable()
 			if err := cluster.CheckAndStartDaemon(); err != nil {
-				stdio.StopLoading()
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return nil
 			}

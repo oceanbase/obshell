@@ -50,6 +50,7 @@ func newRetryCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 			if err := taskRetry(opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
