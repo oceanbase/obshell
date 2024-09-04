@@ -70,8 +70,11 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 		return nil, errors.Occurf(errors.ErrKnown, "%s is not single agent", param.AgentInfo.String())
 	}
 	param.ObConfigs[constant.CONFIG_HOME_PATH] = agent.HomePath
-	paramToConfig(param.ObConfigs)
+	if err := paramToConfig(param.ObConfigs); err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
 
+	// Create Cluster Scale Out Dag
 	dag, err := CreateClusterScaleOutDag(param)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())

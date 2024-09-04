@@ -261,9 +261,22 @@ func parseConfig(flags *ObserverConfigFlags) error {
 	stdio.Verbose("Parse observer config")
 	config := stringToMap(flags.optStr)
 
+	// Check if both mysql_porth and mysqlPort are set.
+	for k, v := range constant.OB_CONFIG_COMPATIBLE_MAP {
+		if val, ok := config[k]; ok {
+			if val2, ok2 := config[v]; ok2 && val != val2 {
+				return errors.Errorf("You cannot set both %s and %s, use %s instead.", k, v, k)
+			}
+			delete(config, v)
+		} else if val, ok := config[v]; ok {
+			config[k] = val
+			delete(config, v)
+		}
+	}
+
 	flagConfigs := map[string]string{
-		constant.PARAM_MYSQL_PORT:    flags.mysqlPort,
-		constant.PARAM_RPC_PORT:      flags.rpcPort,
+		constant.CONFIG_MYSQL_PORT:   flags.mysqlPort,
+		constant.CONFIG_RPC_PORT:     flags.rpcPort,
 		constant.CONFIG_DATA_DIR:     flags.dataDir,
 		constant.CONFIG_REDO_DIR:     flags.redoDir,
 		constant.CONFIG_LOG_LEVEL:    flags.logLevel,
@@ -274,7 +287,7 @@ func parseConfig(flags *ObserverConfigFlags) error {
 	}
 	for k, v := range flagConfigs {
 		if v != "" {
-			if _, ok := config[k]; ok {
+			if val, ok := config[k]; ok && v != val {
 				return errors.Errorf("Duplicate observer config: %s", k)
 			} else {
 				config[k] = strings.TrimSpace(v)

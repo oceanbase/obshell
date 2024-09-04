@@ -34,7 +34,12 @@ func (s *ObserverService) GetObConfigByName(name string) (config sqlite.ObConfig
 	if err != nil {
 		return
 	}
-	err = db.Model(&sqlite.ObConfig{}).Where("name=?", name).Find(&config).Error
+	err = db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", name).First(&config).Error
+	if err == gorm.ErrRecordNotFound {
+		if old, exist := constant.OB_CONFIG_COMPATIBLE_MAP[name]; exist {
+			err = db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", old).First(&config).Error
+		}
+	}
 	return
 }
 

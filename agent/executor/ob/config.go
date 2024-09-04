@@ -79,7 +79,10 @@ func CreateUpdateOBServerConfigDag(params param.ObServerConfigParams, deleteAll 
 		AddTask(subTask, false).
 		Build()
 
-	paramToConfig(params.ObServerConfig)
+	if err := paramToConfig(params.ObServerConfig); err != nil {
+		return nil, err
+	}
+
 	ctx := task.NewTaskContext().SetParam(PARAM_CONFIG, params).SetParam(PARAM_DELETE_ALL, deleteAll)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
@@ -88,16 +91,19 @@ func CreateUpdateOBServerConfigDag(params param.ObServerConfigParams, deleteAll 
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func paramToConfig(obServerConfig map[string]string) {
-	if val, ok := obServerConfig[constant.PARAM_MYSQL_PORT]; ok {
-		obServerConfig[constant.CONFIG_MYSQL_PORT] = val
-		delete(obServerConfig, constant.PARAM_MYSQL_PORT)
+func paramToConfig(obServerConfig map[string]string) error {
+	// Check if both mysql_porth and mysqlPort are set.
+	for k, v := range constant.OB_CONFIG_COMPATIBLE_MAP {
+		if val, ok := obServerConfig[k]; ok {
+			if val2, ok2 := obServerConfig[v]; ok2 && val != val2 {
+				return errors.Errorf("You cannot set both %s and %s, use %s instead.", k, v, k)
+			}
+		} else if val, ok := obServerConfig[v]; ok {
+			obServerConfig[k] = val
+		}
+		delete(obServerConfig, v)
 	}
-
-	if val, ok := obServerConfig[constant.PARAM_RPC_PORT]; ok {
-		obServerConfig[constant.CONFIG_RPC_PORT] = val
-		delete(obServerConfig, constant.PARAM_RPC_PORT)
-	}
+	return nil
 }
 
 func (t *UpdateOBServerConfigTask) Execute() error {

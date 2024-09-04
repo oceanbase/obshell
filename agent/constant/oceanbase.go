@@ -18,17 +18,18 @@ package constant
 
 import "time"
 
-const (
-	PARAM_RPC_PORT   = "rpc_port"
-	PARAM_MYSQL_PORT = "mysql_port"
-)
+// Compatible with OBShell which version prior to 4.2.3
+var OB_CONFIG_COMPATIBLE_MAP = map[string]string{
+	CONFIG_RPC_PORT:   "rpcPort",
+	CONFIG_MYSQL_PORT: "mysqlPort",
+}
 
 const (
 	DB_OCEANBASE = "oceanbase"
 	DB_OCS       = "ocs"
 
-	CONFIG_RPC_PORT   = "rpcPort"
-	CONFIG_MYSQL_PORT = "mysqlPort"
+	CONFIG_RPC_PORT   = "rpc_port"
+	CONFIG_MYSQL_PORT = "mysql_port"
 
 	DEFAULT_MYSQL_PORT = 2881
 	DEFAULT_RPC_PORT   = 2882
