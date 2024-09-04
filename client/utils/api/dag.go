@@ -18,9 +18,7 @@ package api
 
 import (
 	"fmt"
-	"strings"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -30,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 func CallApiAndPrintStage(uri string, param interface{}) (dag *task.DagDetailDTO, err error) {
@@ -74,12 +73,11 @@ func CallApiViaTCP(agentInfo meta.AgentInfoInterface, uri string, param interfac
 	return callApiHelper(sendRequest, uri, param)
 }
 
-func GetFailedDagLastLog(currentDag *task.DagDetailDTO) (res string) {
+func GetFailedDagLastLog(currentDag *task.DagDetailDTO) (res []string) {
 	nodes := currentDag.Nodes
 
 	var subTask *task.TaskDetailDTO
 	var currentNode *task.NodeDetailDTO
-	var logs []string
 	for i := 0; i < len(nodes); i++ {
 		currentNode = nodes[i]
 		if !currentNode.IsFailed() {
@@ -87,19 +85,19 @@ func GetFailedDagLastLog(currentDag *task.DagDetailDTO) (res string) {
 		}
 
 		if currentNode.Operator == task.OPERATOR_MAP[task.CANCEL] {
-			return fmt.Sprintf("Sorry, Task '%s' was cancelled", currentDag.Name)
+			return append(res, fmt.Sprintf("Sorry, Task '%s' was cancelled", currentDag.Name))
 		}
 
 		for j := 0; j < len(currentNode.SubTasks); j++ {
 			subTask = currentNode.SubTasks[j]
 			if subTask.IsFailed() {
 				lastLog := subTask.TaskLogs[len(subTask.TaskLogs)-1]
-				logs = append(logs, fmt.Sprintf("%s %s", subTask.ExecuteAgent.String(), lastLog))
+				res = append(res, fmt.Sprintf("%s %s", subTask.ExecuteAgent.String(), lastLog))
 			}
 		}
-		return strings.Join(logs, " ")
+		return
 	}
-	return "No failed task log found, please check the task details"
+	return append(res, "No failed task log found, please check the task details")
 }
 
 func GetDagDetail(id string) (res *task.DagDetailDTO, err error) {

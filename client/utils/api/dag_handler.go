@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 type DagHandler struct {
@@ -179,7 +179,9 @@ func (dh *DagHandler) handleCurrentStage() (finished bool, err error) {
 
 	if dh.Dag.IsFailed() {
 		stdio.LoadFailed(msg)
-		stdio.Error(GetFailedDagLastLog(dh.Dag))
+		for _, log := range GetFailedDagLastLog(dh.Dag) {
+			stdio.Error(log)
+		}
 		return true, fmt.Errorf("Sorry, task '%s' failed", dh.Dag.Name)
 	}
 
