@@ -87,9 +87,12 @@ func agentJoin(flags *AgentJoinFlags) error {
 	if err := checkFlagsForJoinCmd(flags); err != nil {
 		return err
 	}
+	// check status
+	stdio.StartLoading("Check agent status for agent join")
 	if err := checkStatus(); err != nil {
 		return err
 	}
+	stdio.StopLoading()
 
 	targetAgent, err := NewAgentByString(flags.server)
 	if err != nil {
@@ -140,7 +143,7 @@ func buildObServerConfigParams(flags *AgentJoinFlags) (obParams param.ObServerCo
 }
 
 func checkStatus() error {
-	stdio.Verbose("Check status for join")
+	stdio.Verbose("Get my agent status")
 	agentStatus, err := api.GetMyAgentStatus()
 	if err != nil {
 		return err
@@ -208,16 +211,17 @@ func isValidLogLevel(level string) bool {
 
 func checkFlagsForJoinCmd(flags *AgentJoinFlags) error {
 	stdio.Verbose("Check flags for join command")
-	return parseConfig(&flags.ObserverConfigFlags)
+	return parseObserverConfigFlags(&flags.ObserverConfigFlags)
 }
 
 func checkServerConfigFlags(flags *ObserverConfigFlags) error {
 	// Validate the MySQL port and RPC port.
-	stdio.Verbose("Check observer config flags")
+	stdio.Verbose("Check whether the configs is valid")
 	stdio.Verbosef("Check mysql port: %s", flags.mysqlPort)
 	if !isValidPort(flags.mysqlPort) {
 		return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", flags.mysqlPort)
 	}
+
 	stdio.Verbosef("Check rpc port: %s", flags.rpcPort)
 	if !isValidPort(flags.rpcPort) {
 		return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", flags.rpcPort)
@@ -258,8 +262,8 @@ func checkServerConfigFlags(flags *ObserverConfigFlags) error {
 	return nil
 }
 
-func parseConfig(flags *ObserverConfigFlags) error {
-	stdio.Verbose("Parse observer config")
+func parseObserverConfigFlags(flags *ObserverConfigFlags) error {
+	stdio.Verbose("Parse observer config flags")
 	config := stringToMap(flags.optStr)
 
 	// Check if both mysql_porth and mysqlPort are set.

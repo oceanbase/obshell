@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"time"
 
 	resty "github.com/go-resty/resty/v2"
 
@@ -35,6 +36,8 @@ const (
 	POST   = "POST"   // http post method
 	PATCH  = "PATCH"  // http patch method
 	DELETE = "DELETE" // http delete method
+
+	TCP_DEFAULT_TIME_OUT = 3 * time.Minute // default timeout
 )
 
 // SendGetRequest will send http get request to the agent.
@@ -124,7 +127,7 @@ func SendRequestAndBuildReturn(agentInfo meta.AgentInfoInterface, uri string, me
 }
 
 func NewClient() *resty.Client {
-	client := resty.New()
+	client := resty.New().SetTimeout(TCP_DEFAULT_TIME_OUT)
 
 	if global.EnableHTTPS {
 		tlsConfig := &tls.Config{

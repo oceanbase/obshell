@@ -75,19 +75,24 @@ func taskShow(flags *TaskShowFlags) (err error) {
 	}
 
 	if id != "" {
+		stdio.StartLoadingf("Get task %s detail", id)
 		dag, err := api.GetDagDetail(id)
 		if err != nil {
+			stdio.LoadErrorf("Failed to get task %s detail", id)
 			return err
 		}
+		stdio.StopLoading()
 		printer.PrintDagStruct(dag, flags.detail)
 		return nil
 	}
 
 	// Query all unfinished tasks and display them.
+	stdio.StartLoading("Get all unfinished tasks")
 	dags, err := api.GetAllUnfinishedDags()
 	if err != nil {
 		return err
 	}
+	stdio.StopLoading()
 	if len(dags) == 0 {
 		stdio.Info("No unfinished task found. If you want to show a specific task, please use '-i'")
 		return nil

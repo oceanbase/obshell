@@ -103,7 +103,7 @@ func NewScaleOutCmd() *cobra.Command {
 }
 
 func clusterScaleOut(flags *ClusterScaleOutFlags) (err error) {
-	if err := parseConfig(&flags.ObserverConfigFlags); err != nil {
+	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 
@@ -147,10 +147,13 @@ func callScaleOutApi(agent meta.AgentInfoInterface, param interface{}) (*task.Da
 }
 
 func buildScaleOutParam(flags *ClusterScaleOutFlags) (*param.ScaleOutParam, error) {
+	stdio.StartLoading("Get my agent info")
 	myAgent, err := api.GetMyAgentInfo()
 	if err != nil {
+		stdio.LoadFailedWithoutMsg()
 		return nil, err
 	}
+	stdio.StopLoading()
 
 	stdio.Verbosef("My agent is %s", myAgent.GetIdentity())
 	if !myAgent.IsSingleAgent() {

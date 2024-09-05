@@ -72,19 +72,23 @@ func taskRetry(flags *TaskRetryFlags) error {
 		return err
 	}
 
+	stdio.StartLoadingf("Get task %s detail", id)
 	dag, err := api.GetDagDetail(id)
 	if err != nil {
+		stdio.LoadFailedf("Sorry! The get of task (ID: %s) detail has failed: %v", id, err)
 		return err
 	}
+	stdio.StopLoading()
 	printer.PrintDagStruct(dag, false)
 
 	dagHandler := api.NewDagHandler(dag)
+	stdio.StartLoadingf("Trying to retry task %s", id)
 	err = dagHandler.Retry()
 	if err != nil {
-		stdio.Failedf("Sorry! The retry of task (ID: %s) has failed: %v", id, err)
+		stdio.LoadFailedf("Sorry! The retry of task (ID: %s) has failed: %v", id, err)
 		log.Errorf("task operation failed, err: %s", err)
 	} else {
-		stdio.Successf("Congratulations! Task with ID %s has been successfully retried.", id)
+		stdio.LoadSuccessf("Congratulations! Task with ID %s has been successfully retried.", id)
 	}
 	return nil
 }

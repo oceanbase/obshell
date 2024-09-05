@@ -71,19 +71,22 @@ func taskRollback(flags *TaskRollbackFlags) error {
 		return err
 	}
 
+	stdio.StartLoadingf("Get task %s detail", id)
 	dag, err := api.GetDagDetail(id)
 	if err != nil {
+		stdio.LoadFailedf("Sorry! The task (ID: %s) does not exist.", id)
 		return err
 	}
 	printer.PrintDagStruct(dag, false)
 
 	dagHandler := api.NewDagHandler(dag)
+	stdio.StartLoadingf("Try to rollback task %s", id)
 	err = dagHandler.Rollback()
 	if err != nil {
-		stdio.Failedf("Sorry! The rollback of task (ID: %s) has failed: %v", id, err)
+		stdio.LoadFailedf("Sorry! The rollback of task (ID: %s) has failed: %v", id, err)
 		log.Errorf("task operation failed, err: %s", err)
 	} else {
-		stdio.Successf("Congratulations! Task with ID %s has been successfully rolled back.", id)
+		stdio.LoadSuccessf("Congratulations! Task with ID %s has been successfully rolled back.", id)
 	}
 	return nil
 }

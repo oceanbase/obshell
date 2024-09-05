@@ -57,10 +57,11 @@ func NewTaskCmd() *cobra.Command {
 			defer stdio.StopLoading()
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			global.InitGlobalVariable()
+			stdio.StartLoading("Check and start obshell daemon")
 			if err := cluster.CheckAndStartDaemon(); err != nil {
 				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
-				return nil
+				return err
 			}
 			return nil
 		},

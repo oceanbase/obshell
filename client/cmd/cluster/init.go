@@ -85,9 +85,13 @@ func clusterInit(flags *ClusterInitFlags) error {
 	if err := checkFlagsForInitCmd(flags); err != nil {
 		return err
 	}
+	// check status
+	stdio.StartLoading("Check agent status for init")
 	if err := checkInitStatus(); err != nil {
 		return err
 	}
+	stdio.StopLoading()
+	// config obcluster
 	if err := callObclusterConfig(flags); err != nil {
 		return errors.Wrap(err, "set obcluster config failed")
 	}
@@ -165,11 +169,11 @@ func callInit() error {
 }
 
 func checkFlagsForInitCmd(flags *ClusterInitFlags) error {
-	return parseConfig(&flags.ObserverConfigFlags)
+	return parseObserverConfigFlags(&flags.ObserverConfigFlags)
 }
 
 func checkInitStatus() error {
-	stdio.Verbose("Check status for init")
+	stdio.Verbose("Get my agent status")
 	agentStatus, err := api.GetMyAgentStatus()
 	if err != nil {
 		return err

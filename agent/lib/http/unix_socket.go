@@ -28,6 +28,8 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 )
 
+const UNIX_SOCKET_DEFAULT_TIME_OUT = 30 * time.Second
+
 func SendGetRequestViaUnixSocket(socketPath string, uri string, param, ret interface{}) error {
 	return SendRequestAndBuildReturnViaUnixSocket(socketPath, uri, GET, param, ret, nil)
 }
@@ -119,7 +121,7 @@ func sendRequestViaUnixSocket(socketPath, uri, method string, param, ret interfa
 	}
 
 	client := resty.New()
-	client.SetTransport(&transport).SetScheme("http").SetBaseURL("localhost")
+	client.SetTransport(&transport).SetScheme("http").SetBaseURL("localhost").SetTimeout(UNIX_SOCKET_DEFAULT_TIME_OUT)
 	request := client.R()
 	if ret != nil {
 		request.SetResult(&agentResp)

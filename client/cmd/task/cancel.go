@@ -22,7 +22,6 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -73,19 +72,23 @@ func taskCancel(flags *TaskCancelFlags) error {
 		return err
 	}
 
+	stdio.StartLoadingf("Get task %s detail", id)
 	dag, err := api.GetDagDetail(id)
 	if err != nil {
-		return errors.Wrapf(err, "alling dag detail API failed (ID: %s)", id)
+		stdio.LoadFailedf("Sorry! Failed to get the task (ID: %s) detail: %v", id, err)
+		return err
 	}
+	stdio.StopLoading()
 	printer.PrintDagStruct(dag, false)
 
 	dagHandler := api.NewDagHandler(dag)
+	stdio.StartLoadingf("Trying to cancel the task %s", id)
 	err = dagHandler.CancelDag()
 	if err != nil {
-		stdio.Failedf("Sorry! The cancellation of task (ID: %s) has failed: %v", id, err)
+		stdio.LoadFailedf("Sorry! The cancellation of task (ID: %s) has failed: %v", id, err)
 		log.Errorf("task operation failed, err: %s", err)
 	} else {
-		stdio.Successf("Congratulations! Task with ID %s has been successfully cancelled.", id)
+		stdio.LoadSuccessf("Congratulations! Task with ID %s has been successfully cancelled.", id)
 	}
 	return nil
 }

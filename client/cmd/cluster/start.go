@@ -212,6 +212,7 @@ func autoFinishMainDag(dags []*task.DagDetailDTO) error {
 		stdio.StartLoadingf("Auto finish task '%s'", dag.GenericID)
 		currDag, err := api.GetDagDetail(dag.GenericID)
 		if err != nil {
+			stdio.LoadErrorf("Sorry, get task '%s' failed", dag.GenericID)
 			return err
 		}
 		if currDag.IsSucceed() {

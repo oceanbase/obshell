@@ -82,9 +82,11 @@ func agentRemove(flags *AgentRemoveFlags) error {
 		return nil
 	}
 
+	stdio.StartLoading("Check agent status for agent remove")
 	if err := checkRemoveStatus(); err != nil {
 		return err
 	}
+	stdio.StopLoading()
 
 	_, err = api.CallApiAndPrintStage(constant.URI_AGENT_API_PREFIX+constant.URI_REMOVE, targetAgent)
 	return err
@@ -98,7 +100,7 @@ func checkRemoveStatus() error {
 	}
 	stdio.Verbosef("My agent is %s", agentStatus.Agent.GetIdentity())
 	if !agentStatus.Agent.IsFollowerAgent() && !agentStatus.Agent.IsMasterAgent() {
-		return errors.Errorf("%s cannot remove from the cluster.", string(agentStatus.Agent.Identity))
+		return errors.Errorf("%s cannot remove agent from the cluster.", string(agentStatus.Agent.Identity))
 	}
 	stdio.Verbosef("My agent is under maintenance %v", agentStatus.UnderMaintenance)
 	if agentStatus.UnderMaintenance {

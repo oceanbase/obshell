@@ -71,15 +71,19 @@ func newShowCmd() *cobra.Command {
 }
 
 func clusterShow(flags *ClusterShowFlags) error {
+	stdio.StartLoading("Get ob info")
 	obInfo, err := api.GetObInfo()
 	if err != nil {
 		return err
 	}
+	stdio.StopLoading()
 
+	stdio.StartLoading("Get agent status")
 	agentStatus, err := api.GetMyAgentStatus()
 	if err != nil {
 		return err
 	}
+	stdio.StopLoading()
 
 	buildVersionConsistent := checkBuildVersion(obInfo)
 	agentVersionConsistent := checkAgentVersion(obInfo)
@@ -132,10 +136,13 @@ func makeRowData(obInfo *param.ObInfoResp, detail bool) (agent2row map[meta.Agen
 	}
 
 	if detail {
+		stdio.StartLoading("Getting all agents status")
 		agentsStatus, err := api.GetAllAgentsStatus()
 		if err != nil {
+			stdio.LoadFailedWithoutMsg()
 			stdio.Verbosef("get all agents status failed %s", err)
 		}
+		stdio.StopLoading()
 		for key, status := range agentsStatus {
 			aKey := *meta.NewAgentInfoByString(key)
 			row, ok := agent2row[aKey]
@@ -201,6 +208,8 @@ func checkAgentVersion(obInfo *param.ObInfoResp) (res bool) {
 }
 
 func checkOceanbaseMaintenance() bool {
+	defer stdio.StopLoading()
+	stdio.StartLoading("Checking oceanbase maintenance")
 	dag, err := api.GetObLastMaintenanceDag()
 	if err != nil {
 		if errors.IsTaskNotFoundErr(err) {
@@ -210,6 +219,7 @@ func checkOceanbaseMaintenance() bool {
 		stdio.Verbosef("check oceanbase maintenance failed, err: %s", err)
 		return false
 	}
+
 	return !dag.IsSucceed()
 }
 

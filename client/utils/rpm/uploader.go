@@ -19,11 +19,11 @@ package rpm
 import (
 	"path/filepath"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 func CallUploadPkgAndPrint(pkgDir, fileName string) (err error) {

@@ -72,19 +72,23 @@ func taskPass(flags *TaskPassFlags) error {
 		return err
 	}
 
+	stdio.StartLoadingf("Get task %s detail", id)
 	dag, err := api.GetDagDetail(id)
 	if err != nil {
+		stdio.LoadFailedf("Sorry! The get of task (ID: %s) detail has failed: %v", id, err)
 		return err
 	}
+	stdio.StopLoading()
 	printer.PrintDagStruct(dag, false)
 
 	dagHandler := api.NewDagHandler(dag)
+	stdio.StartLoadingf("Trying to pass task %s", id)
 	err = dagHandler.PassDag()
 	if err != nil {
-		stdio.Failedf("Sorry! The pass of task (ID: %s) has failed: %v", id, err)
+		stdio.LoadFailedf("Sorry! The pass of task (ID: %s) has failed: %v", id, err)
 		log.Errorf("task operation failed, err: %s", err)
 	} else {
-		stdio.Successf("Congratulations! Task with ID %s has been successfully passed.", id)
+		stdio.LoadSuccessf("Congratulations! Task with ID %s has been successfully passed.", id)
 	}
 	return nil
 }

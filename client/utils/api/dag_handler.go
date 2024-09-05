@@ -114,7 +114,6 @@ func (dh *DagHandler) waitDagFinished() error {
 }
 
 func (dh *DagHandler) PrintDagStage() (err error) {
-	stdio.Verbosef("Dag max stage is %d", dh.Dag.MaxStage)
 	var failed bool
 	dh.ctx, dh.cancel = context.WithCancel(context.Background())
 	for i := 1; i <= dh.Dag.MaxStage && !dh.Dag.IsSucceed(); i = dh.Dag.Stage {
