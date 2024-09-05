@@ -354,8 +354,8 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 		case meta.SINGLE:
 			pass = true
 		case meta.FOLLOWER:
-			if IsApiRoute(c) && header.ForwardType != secure.AutoForward {
-				// If the request is api and is not auto-forwarded, auto-forward it.
+			if IsApiRoute(c) && header.ForwardType != secure.ManualForward {
+				// If the request is api and is not manual forwarded, auto forward it.
 				autoForward(c)
 				c.Abort()
 				return

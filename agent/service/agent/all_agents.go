@@ -73,6 +73,15 @@ func (s *AgentService) GetAllAgentsInfoFromOB() (agents []meta.AgentInfo, err er
 	return
 }
 
+func (s *AgentService) GetAllActiveServerAgentsFromOB() (agent []meta.AgentInfo, err error) {
+	db, err := oceanbasedb.GetOcsInstance()
+	if err != nil {
+		return
+	}
+	err = db.Raw("SELECT * FROM oceanbase.DBA_OB_SERVERS a JOIN ocs.all_agent b ON a.svr_ip = b.ip AND a.svr_port = b.rpc_port WHERE a.status = 'ACTIVE'").Scan(&agent).Error
+	return
+}
+
 func (s *AgentService) GetTakeOverMasterAgent() (agent *meta.AgentInfo, err error) {
 	db, err := oceanbasedb.GetOcsInstance()
 	if err != nil {

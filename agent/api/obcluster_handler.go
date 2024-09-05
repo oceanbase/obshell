@@ -18,6 +18,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -100,6 +101,15 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 					common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
 					return
 				}
+				// encrypt root pwd
+				pwd, err := secure.Crypter.Encrypt(*params.RootPwd)
+				if err != nil {
+					log.WithContext(common.NewContextWithTraceId(c)).WithError(err).Error("request from local route, encrypt password failed")
+					common.SendResponse(c, nil, err)
+					return
+				}
+				params.RootPwd = &pwd
+
 			}
 			dag, err := ob.CreateUpdateOBClusterConfigDag(params, deleteAll)
 			common.SendResponse(c, dag, err)

@@ -19,6 +19,7 @@ package ob
 import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/secure"
@@ -62,9 +63,11 @@ func newConvertClusterContext() (*task.TaskContext, error) {
 	if err != nil {
 		return nil, err
 	}
-	agents, err := agentService.GetAllAgentsInfoFromOB()
+	agents, err := agentService.GetAllActiveServerAgentsFromOB()
 	if err != nil {
 		return nil, err
+	} else if len(agents) == 0 {
+		return nil, errors.New("no agent which has active server found")
 	}
 	return task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetData(PARAM_ROOT_PWD, password), nil
 }
