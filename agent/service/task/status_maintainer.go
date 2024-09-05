@@ -84,9 +84,10 @@ func (maintainer *clusterStatusMaintainer) holdPartialLock(tx *gorm.DB, dag task
 				// If there is a unique key conflict (error number 1062), get the lock for update
 				if err1 := maintainer.getPartialLockForUpdate(tx, &paritialLock); err1 != nil {
 					return err1
-				} else if !paritialLock.GmtLocked.After(ZERO_TIME) {
-					return nil
+				} else if paritialLock.GmtLocked.After(ZERO_TIME) {
+					return fmt.Errorf("failed to start maintenance: %s is already under maintenance", paritialLock.LockName)
 				}
+				return nil
 			}
 		}
 		return err
