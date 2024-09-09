@@ -260,7 +260,7 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 		if _, isAutoForwarded := c.Get(common.IsAutoForwardedFlag); isAutoForwarded {
 			if followerAgent, exist := c.Get(common.FollowerAgentOfForward); exist {
 				targetAgent := followerAgent.(meta.AgentInfo)
-				common.ForwardRequest(c, &targetAgent)
+				common.ForwardRequest(c, &targetAgent, nil)
 			} else {
 				common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, "Get agent last maintenance dag failed"))
 			}
