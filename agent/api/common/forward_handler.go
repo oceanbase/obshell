@@ -34,8 +34,9 @@ import (
 )
 
 const (
-	needForwardedFlag   = "forward"       // needForwardedFlag marks whether the current request should be forwarded
-	IsAutoForwardedFlag = "IsAutoForward" // IsAutoForwardedFlag marks whether the current request is auto forwarded
+	needForwardedFlag      = "forward"                // needForwardedFlag marks whether the current request should be forwarded
+	IsAutoForwardedFlag    = "IsAutoForward"          // IsAutoForwardedFlag marks whether the current request is auto forwarded
+	FollowerAgentOfForward = "FollowerAgentOfForward" // FollowerAgentOfForward is where the request is auto forwarded from
 )
 
 // autoForward is used by middleware to forward the request to master agent.

@@ -107,6 +107,7 @@ func RepackageHeaderForAutoForward(header *HttpHeader, agentInfo meta.AgentInfoI
 	err = errors.Occur(errors.ErrUnauthorized)
 
 	header.ForwardType = AutoForward
+	header.ForwardAgent = meta.OCS_AGENT.GetAgentInfo()
 	// encrypt for master
 	pk := GetAgentPublicKey(agentInfo)
 	if pk == "" {

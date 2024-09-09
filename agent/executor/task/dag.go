@@ -256,6 +256,16 @@ func GetObLastMaintenanceDag(c *gin.Context) {
 // @Router			/api/v1/task/dag/maintain/agent [get]
 func GetAgentLastMaintenanceDag(c *gin.Context) {
 	param := getTaskQueryParams(c)
+	if meta.OCS_AGENT.IsMasterAgent() {
+		if _, isAutoForwarded := c.Get(common.IsAutoForwardedFlag); isAutoForwarded {
+			if followerAgent, exist := c.Get(common.FollowerAgentOfForward); exist {
+				targetAgent := followerAgent.(meta.AgentInfo)
+				common.ForwardRequest(c, &targetAgent)
+			} else {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, "Get agent last maintenance dag failed"))
+			}
+		}
+	}
 	dag, err := localTaskService.FindLastMaintenanceDag()
 	if err != nil {
 		common.SendResponse(c, nil, err)

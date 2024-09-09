@@ -354,31 +354,29 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 		case meta.SINGLE:
 			pass = true
 		case meta.FOLLOWER:
-			if IsApiRoute(c) && header.ForwardType != secure.ManualForward {
-				// If the request is api and is not manual forwarded, auto forward it.
-				autoForward(c)
-				c.Abort()
-				return
-			}
-
-			// The request must be forwarded either by the master or from an RPC.
-			// Therefore, only the token needs to be verified.
+			// Follower verify token only.
 			if secure.VerifyToken(header.Token) == nil {
 				pass = true
+			} else {
+				if IsApiRoute(c) && header.ForwardType != secure.ManualForward {
+					// If the request is api and is not manual forwarded, auto forward it.
+					autoForward(c)
+					c.Abort()
+					return
+				}
 			}
 		case meta.MASTER:
 			if header.ForwardType == secure.ManualForward {
 				// When a request is manually forwarded, it must have a valid follower token.
-				err := secure.VerifyTokenByAgentInfo(header.Token, header.ForwardAgent)
-				if err == nil {
+				if err := secure.VerifyTokenByAgentInfo(header.Token, header.ForwardAgent); err == nil {
 					pass = true
 				}
 				break
 			} else if header.ForwardType == secure.AutoForward {
 				// If the request is auto-forwarded, set IsAutoForwardedFlag to true for parse password.
 				c.Set(IsAutoForwardedFlag, true)
+				c.Set(FollowerAgentOfForward, header.ForwardAgent)
 			}
-
 			fallthrough
 		default:
 			if secure.VerifyAuth(header.Auth, header.Ts) == nil {
