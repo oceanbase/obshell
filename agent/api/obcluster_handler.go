@@ -201,7 +201,7 @@ func obInitHandler(c *gin.Context) {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
 			return
 		}
-		common.ForwardRequest(c, master)
+		common.ForwardRequest(c, master, nil)
 	case meta.CLUSTER_AGENT:
 		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Failed to initialize cluster, cluster has already initialized."))
 	default:

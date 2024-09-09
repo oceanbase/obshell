@@ -81,17 +81,12 @@ func autoForward(c *gin.Context) {
 }
 
 // ForwardRequest is used by handler to forward the request to other agent.
-func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, param ...interface{}) {
+func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, param interface{}) {
 	ctx := NewContextWithTraceId(c)
 	log.WithContext(ctx).Infof("Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String())
 
-	var body interface{}
-	if len(param) > 0 {
-		body = param[0]
-	}
-
 	// forward for local route or cluster agent
-	body, headers, err := buildForwardBodyAndHeader(agentInfo, c.Request.RequestURI, body)
+	body, headers, err := buildForwardBodyAndHeader(agentInfo, c.Request.RequestURI, param)
 	if err != nil {
 		SendResponse(c, nil, err)
 		return

@@ -66,9 +66,9 @@ func GetSubTaskDetail(c *gin.Context) {
 				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
 				return
 			}
-			common.ForwardRequest(c, master)
+			common.ForwardRequest(c, master, nil)
 		} else {
-			common.ForwardRequest(c, agent)
+			common.ForwardRequest(c, agent, nil)
 		}
 		return
 	}

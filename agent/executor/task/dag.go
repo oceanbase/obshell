@@ -73,9 +73,9 @@ func GetDagDetail(c *gin.Context) {
 				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
 				return
 			}
-			common.ForwardRequest(c, master)
+			common.ForwardRequest(c, master, nil)
 		} else {
-			common.ForwardRequest(c, agent)
+			common.ForwardRequest(c, agent, nil)
 		}
 		return
 	}
@@ -177,9 +177,9 @@ func DagHandler(c *gin.Context) {
 				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
 				return
 			}
-			common.ForwardRequest(c, master)
+			common.ForwardRequest(c, master, dagOperator)
 		} else {
-			common.ForwardRequest(c, agent)
+			common.ForwardRequest(c, agent, dagOperator)
 		}
 		return
 	}
@@ -334,7 +334,7 @@ func GetUnfinishedDags(c *gin.Context) {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
 			return
 		}
-		common.ForwardRequest(c, master)
+		common.ForwardRequest(c, master, nil)
 	case meta.CLUSTER_AGENT:
 		param := getTaskQueryParams(c)
 		agentsDags, errs := getAllAgentUnfinishDags(param)
