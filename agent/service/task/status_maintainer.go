@@ -118,6 +118,12 @@ func (maintainer *clusterStatusMaintainer) UpdateMaintenanceTask(tx *gorm.DB, da
 		return err
 	}
 
+	if lock.DagID > 0 && dag.IsFail() && dag.GetID() != lock.DagID {
+		gid := task.ConvertIDToGenericID(dag.GetID(), false)
+		oldGid := task.ConvertIDToGenericID(lock.DagID, false)
+		return fmt.Errorf("%s has already executed task %s. '%s: %s' cannot be executed. Please submit a new request", lock.LockName, oldGid, gid, dag.GetName())
+	}
+
 	lock.DagID = dag.GetID()
 	lock.Count += 1
 	return tx.Model(&lock).Where("id=?", lock.Id).Updates(&lock).Error
