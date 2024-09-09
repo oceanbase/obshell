@@ -235,6 +235,8 @@ func (a *Agent) initTask() {
 	ob.RegisterObInitTask()
 	ob.RegisterObScaleOutTask()
 	ob.RegisterUpgradeTask()
+	ob.RegisterBackupTask()
+	ob.RegisterRestoreTask()
 	agent.RegisterAgentTask()
 }
 

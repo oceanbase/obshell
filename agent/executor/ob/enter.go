@@ -22,6 +22,7 @@ import (
 	"github.com/oceanbase/obshell/agent/service/agent"
 	"github.com/oceanbase/obshell/agent/service/obcluster"
 	taskservice "github.com/oceanbase/obshell/agent/service/task"
+	"github.com/oceanbase/obshell/agent/service/tenant"
 )
 
 const (
@@ -89,6 +90,29 @@ const (
 	PARAM_CLUSTER_ID             = "cluster_id"
 
 	PARAM_TARGET_AGENT_BUILD_VERSION = "targetAgentBuildVersion"
+
+	// for backup
+	PARAM_NEED_BACKUP_TENANT  = "needBackupTenants"
+	PARAM_ALL_TENANTS         = "allTenants"
+	PARAM_BACKUP_CONFIG       = "backupConfig"
+	PARAM_ARCHIVE_PATH_MAP    = "archivePathMap"
+	PARAM_DATA_PATH_MAP       = "dataPathMap"
+	PARAM_BACKUP_MODE         = "backupMode"
+	PARAM_BACKUP_ENCRYPTION   = "backupEncryption"
+	PARAM_BACKUP_PLUS_ARCHIVE = "backupPlusArchive"
+
+	// for restore
+	PARAM_RESTORE              = "restoreParam"
+	PARAM_TENANT_NAME          = "tenantName"
+	PARAM_UNIT_CONFIG_NAME     = "unitConfigName"
+	PARAM_UNIT_NUM             = "unitNum"
+	PARAM_ZONE_LIST            = "zoneList"
+	PARAM_KMS_ENCRYPT_INFO     = "kmsEncryptInfo"
+	PARAM_POOL_NAME            = "poolName"
+	PARAM_POOLS_NAME           = "poolsName"
+	PARAM_HA_HIGH_THREAD_SCORE = "haHighThreadScore"
+	PARAM_RESTORE_SCN          = "restoreScn"
+	PARAM_NEED_DELETE_RP       = "needDeleteRp"
 
 	DATA_ALL_AGENT_DAG_MAP = "allAgentDagMap"
 	DATA_SKIP_START_TASK   = "skipStartTask"
@@ -169,23 +193,46 @@ const (
 	TASK_NAME_FINISH                             = "Check cluster scale_out whether finished"
 	TASK_NAME_MINOR_FREEZE                       = "Minor freeze before stop server"
 
+	// task name for backup
+	TASK_CHECK_BACKUP_CONFIG = "Check backup config"
+	TASK_SET_BACKUP_CONFIG   = "Set backup config"
+	TASK_CHECK_DEST          = "Check destination"
+	TASK_OPEN_ARCHIVE_LOG    = "Open archive log"
+	TASK_START_BACKUP        = "Start backup"
+	TASK_WAIT_BACKUP         = "Wait backup Finish"
+
+	// task name for restore
+	TASK_PRE_RESTORE_CHECK   = "Pre restore check"
+	TASK_CREATE_RESOURCE     = "Create resource for restore"
+	TASK_RESTORE             = "Start restore"
+	TASK_WAIT_RESTORE_FINISH = "Wait restore task finish"
+	TASK_ACTIVE_TENANT       = "Active tenant"
+	TASK_UPGRADE_TENANT      = "Upgrade tenant"
+	TASK_CANCEL_RESTORE      = "Cancel restore"
+	TASK_DROP_RESOURCE_POOL  = "Drop resource pool"
+
 	// dag name
-	DAG_EMERGENCY_START           = "Start local observer"
-	DAG_EMERGENCY_STOP            = "Stop local observer"
-	DAG_INIT_CLUSTER              = "Initialize cluster"
-	DAG_START_OBSERVER            = "Start observer"
-	DAG_START_OB                  = "Start OB"
-	DAG_STOP_OBSERVER             = "Stop observer"
-	DAG_STOP_OB                   = "Stop OB"
-	DAG_TAKE_OVER                 = "Take over"
-	DAG_CHECK_AND_UPGRADE_OBSHELL = "Check and upgrade obshell"
-	DAG_UPGRADE_OBSHELL           = "Upgrade obshell"
-	DAG_UPGRADE_CHECK_OBSHELL     = "Upgrade check obshell"
-	DAG_UPGRADE_CHECK_OB          = "Upgrade check OB"
-	DAG_OB_STOP_SVC_UPGRADE       = "OB stop service upgrade"
-	DAG_OB_ROLLING_UPGRADE        = "OB rolling upgrade"
-	DAG_NAME_LOCAL_SCALE_OUT      = "Local scale out"
-	DAG_NAME_CLUSTER_SCALE_OUT    = "Cluster scale out"
+	DAG_EMERGENCY_START                  = "Start local observer"
+	DAG_EMERGENCY_STOP                   = "Stop local observer"
+	DAG_INIT_CLUSTER                     = "Initialize cluster"
+	DAG_START_OBSERVER                   = "Start observer"
+	DAG_START_OB                         = "Start OB"
+	DAG_STOP_OBSERVER                    = "Stop observer"
+	DAG_STOP_OB                          = "Stop OB"
+	DAG_TAKE_OVER                        = "Take over"
+	DAG_CHECK_AND_UPGRADE_OBSHELL        = "Check and upgrade obshell"
+	DAG_UPGRADE_OBSHELL                  = "Upgrade obshell"
+	DAG_UPGRADE_CHECK_OBSHELL            = "Upgrade check obshell"
+	DAG_UPGRADE_CHECK_OB                 = "Upgrade check OB"
+	DAG_OB_STOP_SVC_UPGRADE              = "OB stop service upgrade"
+	DAG_OB_ROLLING_UPGRADE               = "OB rolling upgrade"
+	DAG_NAME_LOCAL_SCALE_OUT             = "Local scale out"
+	DAG_NAME_CLUSTER_SCALE_OUT           = "Cluster scale out"
+	DAG_SET_BACKUP_CONFIG                = "Set obcluster backup config"
+	DAG_OBCLUSTER_START_FULL_BACKUP      = "Obcluster start full backup"
+	DAG_OBCLUSTER_START_INCREMENT_BACKUP = "Obcluster start increment backup"
+	DAG_RESTORE_BACKUP                   = "Restore backup"
+	DAG_CANCEL_RESTORE                   = "Cancel restore"
 
 	// rpc retry times
 	MAX_RETRY_RPC_TIMES = 3
@@ -196,8 +243,9 @@ const (
 	STOP_OB_MAX_RETRY_INTERVAL = 5
 
 	// additional key
-	ADDL_KEY_SUB_DAGS    = "sub_dags"
-	ADDL_KEY_MAIN_DAG_ID = "main_dag_id"
+	ADDL_KEY_SUB_DAGS       = "sub_dags"
+	ADDL_KEY_MAIN_DAG_ID    = "main_dag_id"
+	ADDL_KEY_RESTORE_JOB_ID = "restore_job_id"
 )
 
 var (
@@ -282,6 +330,7 @@ var (
 	localTaskService   = taskservice.NewLocalTaskService()
 	clusterTaskService = taskservice.NewClusterTaskService()
 	taskService        = taskservice.NewClusterTaskService()
+	tenantService      = tenant.TenantService{}
 )
 
 func RegisterObInitTask() {
@@ -371,4 +420,24 @@ func RegisterUpgradeTask() {
 	task.RegisterTaskType(ReinstallAndRestartObTask{})
 	task.RegisterTaskType(StartOneZoneTask{})
 	task.RegisterTaskType(RestoreParametersTask{})
+}
+
+func RegisterBackupTask() {
+	task.RegisterTaskType(SetBackupConfigTask{})
+	task.RegisterTaskType(CheckBackupConfigTask{})
+	task.RegisterTaskType(CheckDestTask{})
+	task.RegisterTaskType(OpenArchiveLogTask{})
+	task.RegisterTaskType(StartBackupTask{})
+	task.RegisterTaskType(WaitBackupTaskFinish{})
+}
+
+func RegisterRestoreTask() {
+	task.RegisterTaskType(PreRestoreCheckTask{})
+	task.RegisterTaskType(CreateResourceTask{})
+	task.RegisterTaskType(RestoreTask{})
+	task.RegisterTaskType(WaitRestoreFinshTask{})
+	task.RegisterTaskType(ActiveTenantTask{})
+	task.RegisterTaskType(UpgradeTenantTask{})
+	task.RegisterTaskType(CancelRestoreTask{})
+	task.RegisterTaskType(DropResourcePoolTask{})
 }

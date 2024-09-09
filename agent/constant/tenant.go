@@ -14,37 +14,15 @@
  * limitations under the License.
  */
 
-package path
+package constant
 
-import (
-	"os"
-	"path/filepath"
-	"syscall"
+const (
+	TENANT_STATUS_NORMAL = "NORMAL"
 
-	"github.com/oceanbase/obshell/agent/constant"
+	TENANT_ROLE_PRIMARY = "PRIMARY"
+
+	TENANT_TYPE_USER = "USER"
+	TENANT_TYPE_META = "META"
+
+	TENANT_SYS = "sys"
 )
-
-func ObConfigPath() string {
-	return filepath.Join(EtcDir(), constant.OB_CONFIG_FILE)
-}
-
-func ObBlockFilePath() string {
-	return filepath.Join(SstableDir(), constant.OB_BLOCK_FILE)
-}
-
-func IsEtcDirExist() bool {
-	_, err := os.Stat(EtcDir())
-	return err == nil
-}
-
-func EtcDirOwnerUid() (uint32, error) {
-	fi, err := os.Stat(EtcDir())
-	if err != nil {
-		return 0, err
-	}
-	return fi.Sys().(*syscall.Stat_t).Uid, nil
-}
-
-func OBAdmin() string {
-	return filepath.Join(BinDir(), constant.OB_ADMIN)
-}

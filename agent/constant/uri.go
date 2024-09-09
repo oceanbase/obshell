@@ -26,6 +26,7 @@ const (
 	URI_OB_GROUP        = "/ob"
 	URI_OBCLUSTER_GROUP = "/obcluster"
 	URI_OBSERVER_GROUP  = "/observer"
+	URI_TENANT_GROUP    = "/tenant"
 
 	URI_INFO     = "/info"
 	URI_TIME     = "/time"
@@ -62,6 +63,13 @@ const (
 	URI_PARAMS  = "/params"
 	URI_BACKUP  = "/backup"
 	URI_RESTORE = "/restore"
+
+	// Used for backup
+	URI_OVERVIEW = "/overview"
+	URI_ARCHIVE  = "/log"
+
+	// Used for tenant
+	URI_TENANT = "/tenant"
 
 	URI_TASK_API_PREFIX   = URI_API_V1 + URI_TASK_GROUP
 	URI_AGENT_API_PREFIX  = URI_API_V1 + URI_AGENT_GROUP

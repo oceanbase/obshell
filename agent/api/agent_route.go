@@ -25,14 +25,14 @@ import (
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 )
 
-//	@title			obshell API
-//	@version		1.0
-//	@description	This is a set of operation and maintenance management API interfaces developed based on observer.
-//	@BasePath		/
-//	@contact.name	obshell API Support
-//	@contact.url	https://open.oceanbase.com
-//	@license.name	Apache - 2.0
-//	@license.url	http://www.apache.org/licenses/
+// @title			obshell API
+// @version		1.0
+// @description	This is a set of operation and maintenance management API interfaces developed based on observer.
+// @BasePath		/
+// @contact.name	obshell API Support
+// @contact.url	https://open.oceanbase.com
+// @license.name	Apache - 2.0
+// @license.url	http://www.apache.org/licenses/
 func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	if isLocalRoute {
 		r.Use(common.UnixSocketMiddleware())
@@ -41,8 +41,13 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 		gin.CustomRecovery(common.Recovery), // gin's crash-free middleware
 		common.PostHandlers("/debug/pprof", "/swagger"),
 		common.BodyDecrypt(), // decrypt request body
-		common.PreHandlers(constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
-			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG),
+		common.PreHandlers(
+			constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
+			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG,
+			constant.URI_API_V1+constant.URI_TENANT_GROUP+tenantNameURIPattern+constant.URI_BACKUP+constant.URI_CONFIG,
+			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_BACKUP+constant.URI_CONFIG,
+			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_RESTORE,
+		),
 		common.SetContentType,
 	)
 
@@ -80,6 +85,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	v1.GET(constant.URI_SECRET, secretHandler)
 
 	InitTaskRoutes(v1, isLocalRoute)
+	InitBackupRoutes(v1, isLocalRoute)
+	InitRestoreRoutes(v1, isLocalRoute)
 
 	// ob routes
 	ob.POST(constant.URI_INIT, obInitHandler)
