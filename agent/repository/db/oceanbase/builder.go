@@ -32,7 +32,6 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
-	logconfig "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
@@ -56,7 +55,7 @@ func createGormDbByConfig(datasourceConfig *config.ObDataSourceConfig) (db *gorm
 	defer atomic.AddInt32(&connectingCount, -1)
 	dsn := datasourceConfig.GetDSN()
 	gormConfig := gorm.Config{
-		Logger: logger.Default.LogMode(logger.LogLevel(logconfig.GetDBLoggerLevel())),
+		Logger: logger.Default.LogMode(datasourceConfig.GetLoggerLevel()),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		}}

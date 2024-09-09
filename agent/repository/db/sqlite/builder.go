@@ -32,7 +32,6 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
-	logconfig "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
@@ -49,7 +48,7 @@ func createGormDbByConfig(datasourceConfig config.SqliteDataSourceConfig) (*gorm
 	}
 	dsn := GenerateSqliteDsn(datasourceConfig)
 	db, err := gorm.Open(sqliteDriver.Open(dsn), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.LogLevel(logconfig.GetDBLoggerLevel())),
+		Logger: logger.Default.LogMode(datasourceConfig.GetLoggerLevel()),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		},

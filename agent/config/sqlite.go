@@ -32,6 +32,9 @@ type SqliteDataSourceConfig struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime int
+
+	// logger config
+	LoggerConfig
 }
 
 func DefaultSqliteDataSourceConfig() SqliteDataSourceConfig {

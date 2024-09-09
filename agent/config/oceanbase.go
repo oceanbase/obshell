@@ -58,6 +58,9 @@ type ObDataSourceConfig struct {
 	timeout      int  // second
 	tryTimes     int  // second, if tryTime <= 0, try forever
 	skipPwdCheck bool // skip password check
+
+	// logger config
+	LoggerConfig
 }
 
 func (config *ObDataSourceConfig) SetUsername(username string) *ObDataSourceConfig {

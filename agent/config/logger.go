@@ -17,6 +17,8 @@
 package config
 
 import (
+	"gorm.io/gorm/logger"
+
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/log"
 )
@@ -55,4 +57,20 @@ func defaultLoggerConfig() *log.LoggerConfig {
 		LocalTime:  true,
 		Compress:   false,
 	}
+}
+
+type LoggerConfig struct {
+	loggerLevel *logger.LogLevel
+}
+
+func (config *LoggerConfig) SetLoggerLevel(loggerLevel logger.LogLevel) *LoggerConfig {
+	config.loggerLevel = &loggerLevel
+	return config
+}
+
+func (config *LoggerConfig) GetLoggerLevel() logger.LogLevel {
+	if config.loggerLevel == nil {
+		return logger.LogLevel(log.GetDBLoggerLevel())
+	}
+	return *config.loggerLevel
 }
