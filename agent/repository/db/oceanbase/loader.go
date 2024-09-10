@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	mysqlDriver "gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
@@ -110,6 +111,26 @@ func loadOceanbaseUntilSucc() {
 		log.Info("init oceanbase instance")
 		time.Sleep(time.Second)
 	}
+}
+
+// LoadTmpInstanceWithTenant creates a db instance according to the configuration.
+func LoadGormWithTenant(tenant string, password string) (*gorm.DB, error) {
+	dsConfig := config.NewObDataSourceConfig().
+		SetPassword(password).
+		SetParseTime(true).
+		SetUsername("root@" + tenant).
+		SetDBName("").
+		SetTryTimes(10)
+	dsConfig.SetLoggerLevel(logger.Silent)
+	if err := fillConfigPort(dsConfig); err != nil {
+		return nil, errors.Wrap(err, "get port failed")
+	}
+	db, err := createGormDbByConfig(dsConfig)
+	if err != nil {
+		return nil, errors.Wrapf(err, "Get instance with tenant %s failed", tenant)
+	}
+	log.Infof("load oceanbase instance for tenant '%s' successfully", tenant)
+	return db, nil
 }
 
 // LoadOceanbaseInstance creates a db instance according to the configuration.

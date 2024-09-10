@@ -30,9 +30,12 @@ import (
 	"github.com/oceanbase/obshell/client/cmd/agent"
 	"github.com/oceanbase/obshell/client/cmd/backup"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
+	"github.com/oceanbase/obshell/client/cmd/pool"
+	"github.com/oceanbase/obshell/client/cmd/recyclebin"
 	"github.com/oceanbase/obshell/client/cmd/restore"
 	"github.com/oceanbase/obshell/client/cmd/task"
 	"github.com/oceanbase/obshell/client/cmd/tenant"
+	"github.com/oceanbase/obshell/client/cmd/unit"
 	"github.com/oceanbase/obshell/client/command"
 )
 
@@ -47,9 +50,12 @@ func main() {
 	cmds.AddCommand(agentcmd.NewInfoIpCmd())
 
 	cmds.AddCommand(cluster.NewClusterCmd())
-	cmds.AddCommand(tenant.NewTenantCmd())
 	cmds.AddCommand(agent.NewAgentCmd())
 	cmds.AddCommand(task.NewTaskCmd())
+	cmds.AddCommand(tenant.NewTenantCmd())
+	cmds.AddCommand(unit.NewUnitCommand())
+	cmds.AddCommand(pool.NewPoolCommand())
+	cmds.AddCommand(recyclebin.NewRecyclebinCmd())
 	cmds.AddCommand(backup.NewBackupCmd())
 	cmds.AddCommand(restore.NewRestoreCmd())
 

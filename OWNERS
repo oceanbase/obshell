@@ -1,5 +1,5 @@
 # 评审人, 会作为合并请求的默认评审人员, 必须为合法的 gitlab 可登陆账号
-reviewers: ["rongfeng.frf", "alv.dj"]
+reviewers: ["rongfeng.frf", "alv.dj", "ganquan.gq"]
 
 # 阈值，配置的评审人中间，至少有1人通过
 threshold: 1

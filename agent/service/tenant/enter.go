@@ -16,16 +16,20 @@
 
 package tenant
 
+import "strings"
+
 type TenantService struct{}
 
 const (
-	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
-
 	DBA_OB_TENANTS               = "oceanbase.DBA_OB_TENANTS"
-	DBA_OB_UNIT_CONFIGS          = "oceanbase.DBA_OB_UNIT_CONFIGS"
+	DBA_OB_UNITS                 = "oceanbase.DBA_OB_UNITS"
 	DBA_OB_RESOURCE_POOLS        = "oceanbase.DBA_OB_RESOURCE_POOLS"
+	DBA_OB_TENANT_JOBS           = "oceanbase.DBA_OB_TENANT_JOBS"
+	DBA_OB_UNIT_CONFIGS          = "oceanbase.DBA_OB_UNIT_CONFIGS"
 	DBA_OB_CLUSTER_EVENT_HISTORY = "oceanbase.DBA_OB_CLUSTER_EVENT_HISTORY"
+	DBA_RECYCLEBIN               = "oceanbase.DBA_RECYCLEBIN"
 
+	CDB_OB_SYS_VARIABLES        = "oceanbase.CDB_OB_SYS_VARIABLES"
 	CDB_OB_ARCHIVELOG           = "oceanbase.CDB_OB_ARCHIVELOG"
 	CDB_OB_BACKUP_DELETE_POLICY = "oceanbase.CDB_OB_BACKUP_DELETE_POLICY"
 	CDB_OB_BACKUP_JOBS          = "oceanbase.CDB_OB_BACKUP_JOBS"
@@ -35,4 +39,49 @@ const (
 	CDB_OB_BACKUP_TASK_HISTORY  = "oceanbase.CDB_OB_BACKUP_TASK_HISTORY"
 	CDB_OB_RESTORE_PROGRESS     = "oceanbase.CDB_OB_RESTORE_PROGRESS"
 	CDB_OB_RESTORE_HISTORY      = "oceanbase.CDB_OB_RESTORE_HISTORY"
+
+	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
+	GV_OB_SERVERS    = "oceanbase.GV$OB_SERVERS"
+
+	MYSQL_TIME_ZONE = "mysql.time_zone"
 )
+
+const (
+	// tenant sql
+	SQL_CREATE_TENANT_BASIC = "CREATE TENANT `%s` resource_pool_list=(%s)"
+	SQL_DROP_TENANT         = "DROP TENANT IF EXISTS `%s` PURGE"
+	SQL_RECYCLE_TENANT      = "set session recyclebin=1; DROP TENANT `%s`"
+	SQL_RENAME_TENANT       = "ALTER TENANT `%s` RENAME GLOBAL_NAME TO `%s`"
+	SQL_FLASHBACK_TENANT    = "FLASHBACK TENANT `%s` TO BEFORE DROP RENAME TO `%s`"
+	SQL_PURGE_TENANT        = "PURGE TENANT `%s`"
+
+	SQL_ALTER_RESOURCE_LIST        = "ALTER TENANT `%s` RESOURCE_POOL_LIST=(%s)"
+	SQL_ALTER_TENANT_LOCALITY      = "ALTER TENANT `%s` LOCALITY = \"%s\""
+	SQL_ALTER_TENANT_UNIT_NUM      = "ALTER RESOURCE TENANT `%s` UNIT_NUM = %d"
+	SQL_ALTER_TENANT_PRIMARY_ZONE  = "ALTER TENANT `%s` PRIMARY_ZONE = `%s`"
+	SQL_ALTER_TENANT_ROOT_PASSWORD = "ALTER USER root@'%%' IDENTIFIED BY \"%s\""
+
+	SQL_LOCK_TENANT   = "ALTER TENANT `%s` LOCK"
+	SQL_UNLOCK_TENANT = "ALTER TENANT `%s` UNLOCK"
+
+	SQL_SET_TENANT_PARAMETER_BASIC = "ALTER SYSTEM SET "
+	SQL_SET_TENANT_VARIABLE_BASIC  = "ALTER TENANT `%s` SET VARIABLES "
+
+	// resource pool sql
+	SQL_CREATE_RESOURCE_POOL = "CREATE RESOURCE POOL `%s` UNIT = `%s`, UNIT_NUM = %d, ZONE_LIST = ('%s')"
+
+	SQL_DROP_RESOURCE_POOL_IF_EXISTS = "DROP RESOURCE POOL IF EXISTS `%s`"
+	SQL_DROP_RESOURCE_POOL           = "DROP RESOURCE POOL `%s`"
+
+	SQL_ALTER_RESOURCE_POOL_SPLIT       = "ALTER RESOURCE POOL `%s` SPLIT INTO (%s) ON (%s)"
+	SQL_ALTER_RESOURCE_POOL_UNIT_CONFIG = "ALTER RESOURCE POOL `%s` UNIT = `%s`"
+
+	// parameters and variables
+	SQL_ALTER_TENANT_WHITELIST = "ALTER TENANT `%s` SET VARIABLES ob_tcp_invited_nodes = `%s`"
+)
+
+func transfer(str string) string {
+	str = strings.ReplaceAll(str, "\\", "\\\\")
+	str = strings.ReplaceAll(str, "\"", "\\\"")
+	return str
+}

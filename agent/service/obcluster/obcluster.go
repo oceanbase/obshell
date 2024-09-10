@@ -38,6 +38,14 @@ import (
 
 type ObclusterService struct{}
 
+const (
+	COLLATIONS       = "information_schema.collations"
+	DBA_OB_SERVERS   = "oceanbase.DBA_OB_SERVERS"
+	DBA_OB_ZONES     = "oceanbase.DBA_OB_ZONES"
+	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
+	DBA_OB_UNITS     = "oceanbase.DBA_OB_UNITS"
+)
+
 func (obclusterService *ObclusterService) ExecuteSql(sql string) (err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -579,5 +587,51 @@ func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []str
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (ObclusterService *ObclusterService) GetAllZonesWithRegion() (zones []oceanbase.DbaObZones, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(DBA_OB_ZONES).Scan(&zones).Error
+	return
+}
+
+func (obclusterService *ObclusterService) GetServerByZone(name string) (servers []oceanbase.OBServer, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(DBA_OB_SERVERS).Where("ZONE = ?", name).Scan(&servers).Error
+	return
+}
+
+func (obclusterService *ObclusterService) GetCharsetAndCollation(charset string, collation string) (*oceanbase.Collations, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var charsetInfo *oceanbase.Collations
+	if collation == "" {
+		err = oceanbaseDb.Table(COLLATIONS).Select("CHARACTER_SET_NAME, COLLATION_NAME").Where("CHARACTER_SET_NAME = ?", charset).Scan(&charsetInfo).Error
+		return charsetInfo, err
+	} else if charset == "" {
+		err = oceanbaseDb.Table(COLLATIONS).Select("CHARACTER_SET_NAME, COLLATION_NAME").Where("COLLATION_NAME = ?", collation).Scan(&charsetInfo).Error
+		return charsetInfo, err
+	} else {
+		err = oceanbaseDb.Table(COLLATIONS).Select("CHARACTER_SET_NAME, COLLATION_NAME").Where("CHARACTER_SET_NAME = ? AND COLLATION_NAME = ?", charset, collation).Scan(&charsetInfo).Error
+		return charsetInfo, err
+	}
+}
+
+func (ObclusterService *ObclusterService) GetObUnitsOnServer(svrIp string, svrPort int) (units []oceanbase.DbaObUnit, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(DBA_OB_UNITS).Where("SVR_IP = ? AND SVR_PORT = ?", svrIp, svrPort).Scan(&units).Error
 	return
 }

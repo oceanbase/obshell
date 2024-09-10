@@ -89,6 +89,8 @@ const (
 	PARAM_CLUSTER_NAME           = "cluster"
 	PARAM_CLUSTER_ID             = "cluster_id"
 
+	PARAM_TENANT_NAME = "tenantName"
+
 	PARAM_TARGET_AGENT_BUILD_VERSION = "targetAgentBuildVersion"
 
 	// for backup
@@ -103,7 +105,6 @@ const (
 
 	// for restore
 	PARAM_RESTORE              = "restoreParam"
-	PARAM_TENANT_NAME          = "tenantName"
 	PARAM_UNIT_CONFIG_NAME     = "unitConfigName"
 	PARAM_UNIT_NUM             = "unitNum"
 	PARAM_ZONE_LIST            = "zoneList"

@@ -17,7 +17,9 @@
 package ob
 
 import (
+	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/executor/script"
 )
 
 func CreateInitDag() (*task.DagDetailDTO, error) {
@@ -36,10 +38,11 @@ func CreateInitDag() (*task.DagDetailDTO, error) {
 		AddTask(newModifyPwdTask(), false).
 		AddTask(newMigrateDataTask(), false).
 		AddTemplate(newConvertClusterTemplate()).
+		AddNode(script.NewImportScriptForTenantNode(false)).
 		AddTask(newAgentSyncTask(), true).
 		Build()
 
-	ctx := task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetParam(PARAM_HEALTH_CHECK, true)
+	ctx := task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetParam(PARAM_HEALTH_CHECK, true).SetParam(PARAM_TENANT_NAME, constant.SYS_TENANT)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
 		return nil, err

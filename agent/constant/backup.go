@@ -73,8 +73,6 @@ const (
 	BACKUP_MODE_INCREMENTAL = "incremental"
 
 	BACKUP_CANCELED = "canceled"
-
-	PRIMARY_ZONE_RANDOM = "random"
 )
 
 const (

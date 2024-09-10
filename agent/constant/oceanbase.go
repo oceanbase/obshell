@@ -70,6 +70,11 @@ const (
 	OB_ADMIN       = "ob_admin"
 	OB_BLOCK_FILE  = "block_file"
 
+	OB_IMPORT_TIME_ZONE_INFO_SCRIPT = "import_time_zone_info.py"
+	OB_IMPORT_SRS_DATA_SCRIPT       = "import_srs_data.py"
+	OB_IMPORT_TIME_ZONE_INFO_FILE   = "timezone_V1.log"
+	OB_IMPORT_SRS_DATA_FILE         = "default_srs_data_mysql.sql"
+
 	// env
 	OB_ROOT_PASSWORD = "OB_ROOT_PASSWORD"
 )

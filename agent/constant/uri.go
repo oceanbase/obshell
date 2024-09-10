@@ -20,13 +20,19 @@ const (
 	URI_RPC_V1 = "/rpc/v1"
 	URI_API_V1 = "/api/v1"
 
-	URI_TASK_GROUP      = "/task"
-	URI_AGENT_GROUP     = "/agent"
-	URI_AGENTS_GROUP    = "/agents"
-	URI_OB_GROUP        = "/ob"
-	URI_OBCLUSTER_GROUP = "/obcluster"
-	URI_OBSERVER_GROUP  = "/observer"
-	URI_TENANT_GROUP    = "/tenant"
+	URI_TASK_GROUP       = "/task"
+	URI_AGENT_GROUP      = "/agent"
+	URI_AGENTS_GROUP     = "/agents"
+	URI_OB_GROUP         = "/ob"
+	URI_OBCLUSTER_GROUP  = "/obcluster"
+	URI_OBSERVER_GROUP   = "/observer"
+	URI_TENANT_GROUP     = "/tenant"
+	URI_TENANTS_GROUP    = "/tenants"
+	URI_UNIT_GROUP       = "/unit/config"
+	URI_UNITS_GROUP      = "/units/config"
+	URI_POOL_GROUP       = "/resource-pool"
+	URI_POOLS_GROUP      = "/resource-pools"
+	URI_RECYCLEBIN_GROUP = "/recyclebin"
 
 	URI_INFO     = "/info"
 	URI_TIME     = "/time"
@@ -64,12 +70,33 @@ const (
 	URI_BACKUP  = "/backup"
 	URI_RESTORE = "/restore"
 
-	// Used for backup
-	URI_OVERVIEW = "/overview"
-	URI_ARCHIVE  = "/log"
-
 	// Used for tenant
-	URI_TENANT = "/tenant"
+	URI_TENANTS      = "/tenants"
+	URI_LOCK         = "/lock"
+	URI_NAME         = "/name"
+	URI_REPLICAS     = "/replicas"
+	URI_PRIMARYZONE  = "/primary-zone"
+	URI_ROOTPASSWORD = "/password"
+	URI_WHITELIST    = "/whitelist"
+	URI_PARAMETERS   = "/parameters"
+	URI_VARIABLES    = "/variables"
+	URI_VARIABLE     = "/variable"
+	URI_PARAMETER    = "/parameter"
+	URI_OVERVIEW     = "/overview"
+	URI_TENANT       = "/tenant"
+
+	URI_PATH_PARAM_NAME = "/:name"
+	URI_PARAM_NAME      = "name"
+	URI_PATH_PARAM_VAR  = "/:variable"
+	URI_PARAM_VAR       = "variable"
+	URI_PATH_PARAM_PARA = "/:parameter"
+	URI_PARAM_PARA      = "parameter"
+
+	// Used for backup
+	URI_ARCHIVE = "/log"
+
+	URI_POOL_API_PREFIX   = URI_API_V1 + URI_POOL_GROUP
+	URI_UNIT_GROUP_PREFIX = URI_API_V1 + URI_UNIT_GROUP
 
 	URI_TASK_API_PREFIX      = URI_API_V1 + URI_TASK_GROUP
 	URI_AGENT_API_PREFIX     = URI_API_V1 + URI_AGENT_GROUP

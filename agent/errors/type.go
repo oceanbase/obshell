@@ -23,3 +23,7 @@ import (
 func IsTaskNotFoundErr(err error) bool {
 	return strings.Contains(err.Error(), "Task not found")
 }
+
+func IsUnkonwnTimeZoneErr(err error) bool {
+	return strings.Contains(err.Error(), "Unknown or incorrect time zone")
+}

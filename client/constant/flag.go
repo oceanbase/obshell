@@ -31,4 +31,6 @@ const (
 
 	FLAG_DETAIL    = "show_detail"
 	FLAG_DETAIL_SH = "d"
+
+	ANNOTATION_ARGS = "args"
 )

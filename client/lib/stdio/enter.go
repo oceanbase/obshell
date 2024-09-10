@@ -90,6 +90,10 @@ func Confirmf(format string, a ...any) (bool, error) {
 	return std.Confirmf(format, a...)
 }
 
+func InputPassword(msg string) (string, error) {
+	return std.InputPassword(msg)
+}
+
 func StartLoading(msg string) {
 	std.StartLoading(msg)
 }

@@ -17,11 +17,14 @@
 package constant
 
 const (
-	CMD_CLUSTER = "cluster"
-	CMD_TASK    = "task"
-	CMD_UTIL    = "utilities"
-	CMD_AGENT   = "agent"
-	CMD_TENANT  = "tenant"
-	CMD_BACKUP  = "backup"
-	CMD_RESTORE = "restore"
+	CMD_CLUSTER    = "cluster"
+	CMD_TASK       = "task"
+	CMD_UTIL       = "utilities"
+	CMD_AGENT      = "agent"
+	CMD_TENANT     = "tenant"
+	CMD_UNIT       = "unit"
+	CMD_POOL       = "rp"
+	CMD_RECYCLEBIN = "recyclebin"
+	CMD_BACKUP     = "backup"
+	CMD_RESTORE    = "restore"
 )

@@ -99,6 +99,14 @@ func ObshellTmpSocketPath() string {
 	return filepath.Join(RunDir(), fmt.Sprintf("%s.sock.tmp", constant.PROC_OBSHELL))
 }
 
+func ObshellDefaultParameterPath() string {
+	return filepath.Join(EtcDir(), "default_parameter.json")
+}
+
+func ObshellDefaultVariablePath() string {
+	return filepath.Join(EtcDir(), "default_system_variable.json")
+}
+
 func ObshellCertificateAndKeyPaths() (key string, cert string) {
 	keys := scanFiles(filepath.Join(CertificateDir(), "*.key"))
 	for _, key := range keys {

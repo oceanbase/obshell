@@ -150,7 +150,7 @@ func (t *CreateResourceTask) Execute() (err error) {
 		return err
 	}
 
-	pool, err := tenantService.GetResourcePoolByName(t.poolName)
+	pool, err := tenantService.GetResourcePoolsByName(t.poolName)
 	if err != nil {
 		return errors.Wrapf(err, "get resource pool")
 	}
@@ -183,7 +183,7 @@ func (t *CreateResourceTask) Rollback() (err error) {
 		return err
 	}
 
-	pool, err := tenantService.GetResourcePoolByName(t.poolName)
+	pool, err := tenantService.GetResourcePoolsByName(t.poolName)
 	if err != nil {
 		return errors.Wrapf(err, "get resource pool")
 	}
@@ -252,7 +252,7 @@ func (t *RestoreTask) Execute() (err error) {
 
 	if restoreJob == nil {
 		// If there is no running restore task and the tenant does not exist, restore the tenant. Otherwise, skip the restore
-		tenant, err := tenantService.GetTenantByName(t.tenantName)
+		tenant, err := tenantService.GetTenantsByName(t.tenantName)
 		if err != nil {
 			return errors.Wrapf(err, "get tenant")
 		}
@@ -305,7 +305,7 @@ func (t *RestoreTask) Rollback() (err error) {
 	t.ExecuteLogf("Try cancel restore job")
 	if err = tenantService.CancelRestore(t.tenantName); err != nil {
 		t.ExecuteLog("Cancel restore job failed, try to get tenant")
-		tenant, err := tenantService.GetTenantByName(t.tenantName)
+		tenant, err := tenantService.GetTenantsByName(t.tenantName)
 		if err != nil {
 			return errors.Wrapf(err, "get tenant")
 		}

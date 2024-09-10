@@ -236,6 +236,10 @@ func (io *IO) Confirm(msg string) (bool, error) {
 		var input string
 		_, err := fmt.Fscanln(io.inputStream, &input)
 		if err != nil {
+			if err.Error() == "unexpected newline" {
+				io.print(NORM, msg+" [Y/N]: ", "")
+				continue
+			}
 			return false, err
 		}
 		switch input {
@@ -251,6 +255,19 @@ func (io *IO) Confirm(msg string) (bool, error) {
 
 func (io *IO) Confirmf(format string, a ...any) (bool, error) {
 	return io.Confirm(fmt.Sprintf(format, a...))
+}
+
+func (io *IO) InputPassword(msg string) (string, error) {
+	if io.IsBusy() {
+		return "", errors.New("stdio is busy")
+	}
+
+	io.print(NORM, msg, "")
+	input, err := term.ReadPassword(int(io.inputStream.(*os.File).Fd()))
+	if err != nil {
+		return "", err
+	}
+	return string(input), nil
 }
 
 func (io *IO) NewSubIO() *IO {

@@ -126,7 +126,6 @@ type Command struct {
 	requireFlag     []*Flag
 	optionalFlag    []*Flag
 	globalFlag      []*Flag
-	helpStart       int
 	originalPreRunE func(cmd *cobra.Command, args []string) error
 }
 
@@ -186,7 +185,7 @@ func (c *Command) printFlag(flag *Flag) {
 	if flag != nil && !flag.isHidden {
 		pFlag := c.Flags().Lookup(flag.longName)
 		var help = flag.introduction
-		if !isBoolFlag(pFlag) && flag.value != "" && flag.value != 0 {
+		if !isBoolFlag(pFlag) && flag.value != "" && flag.value != 0 && flag.value != float64(0) {
 			help = help + ". Default: " + fmt.Sprint(flag.value)
 		}
 		stdio.PrintfWithoutNewline("%*s%-*s%*s%s", BEGIN_GAP, " ", c.maxFlagLen, flag.usage, PRINT_GAP, " ", c.strFormat(help, max(c.maxFlagLen+BEGIN_GAP+PRINT_GAP, 11)))
@@ -214,7 +213,6 @@ func sortFlags(flags []*Flag) {
 }
 
 func (c *Command) printFlags() {
-	c.initFlags()
 	c.initFlagsUsage()
 	if c.Flags().SortFlags {
 		sortFlags(c.requireFlag)
@@ -271,13 +269,24 @@ func (c *Command) PrintHelpFunc(cmd *cobra.Command, args []string) {
 	if cmd.Short != "" {
 		stdio.Print(cmd.Short + "\n")
 	}
-
+	c.initFlags()
 	// print usage./
 	stdio.Print("Usage:")
 	if cmd.HasAvailableSubCommands() {
 		stdio.Printf("  %s [command]", GetCmdParentsName(cmd))
-	} else if cmd.Flags().HasFlags() {
-		stdio.Printf("  %s [flags]", GetCmdParentsName(cmd))
+	}
+
+	usageArgs := cmd.Annotations[constant.ANNOTATION_ARGS]
+	if usageArgs != "" {
+		if len(c.requireFlag) > 0 || len(c.optionalFlag) > 0 {
+			stdio.Printf("  %s %s [flags]", GetCmdParentsName(cmd), usageArgs)
+		} else {
+			stdio.Printf("  %s %s", GetCmdParentsName(cmd), usageArgs)
+		}
+	} else {
+		if len(c.requireFlag) > 0 || len(c.optionalFlag) > 0 {
+			stdio.Printf("  %s [flags]", GetCmdParentsName(cmd))
+		}
 	}
 
 	c.printAliases()
@@ -335,7 +344,6 @@ func (cmd *Command) initFlags() {
 			f.isHidden = true
 		}
 	})
-
 }
 
 func (cmd *Command) printExample() {

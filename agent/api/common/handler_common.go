@@ -18,10 +18,11 @@ package common
 
 import (
 	"context"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/oceanbase/obshell/agent/lib/http"
+	libhttp "github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/log"
 )
 
@@ -48,8 +49,18 @@ func NewContextWithTraceId(c *gin.Context) context.Context {
 // SendResponse constructs a standardized response object and attaches it to the Gin context.
 // It is typically used to ensure that all HTTP responses have a consistent format.
 func SendResponse(c *gin.Context, data interface{}, err error) {
-	resp := http.BuildResponse(data, err)
+	var resp libhttp.OcsAgentResponse
+	if c.Writer.Status() == http.StatusNoContent {
+		resp = libhttp.BuildNoContentResponse()
+	} else {
+		resp = libhttp.BuildResponse(data, err)
+	}
 	c.Set(OcsAgentResponseKey, resp)
+}
+
+func SendNoContentResponse(c *gin.Context, err error) {
+	c.Status(http.StatusNoContent)
+	SendResponse(c, nil, err)
 }
 
 func IsLocalRoute(c *gin.Context) bool {

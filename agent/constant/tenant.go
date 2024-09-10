@@ -16,7 +16,14 @@
 
 package constant
 
+import "time"
+
 const (
+	MYSQL_MODE  = "MYSQL"
+	ORACAL_MODE = "ORACLE"
+
+	SYS_TENANT           = "sys"
+	SYS_TENANT_ID        = 1
 	TENANT_STATUS_NORMAL = "NORMAL"
 
 	TENANT_ROLE_PRIMARY = "PRIMARY"
@@ -25,4 +32,26 @@ const (
 	TENANT_TYPE_META = "META"
 
 	TENANT_SYS = "sys"
+
+	FULL_REPLICA     = "FULL"
+	READONLY_REPLICA = "READONLY"
+
+	PRIMARY_ZONE_RANDOM = "RANDOM"
+
+	CHECK_JOB_RETRY_TIMES         = 360
+	CHECK_JOB_INTERVAL            = 10 * time.Second
+	CHECK_TENANT_EXIST_INTERVAL   = 5 * time.Second
+	RESOURCE_UNIT_CONFIG_CPU_MINE = 1
+
+	// not support tenant name since ob4.2.1
+	TENANT_ALL      = "all"
+	TENANT_ALL_USER = "all_user"
+	TENANT_ALL_META = "all_meta"
+
+	VARIABLE_TIME_ZONE            = "time_zone"
+	VARIABLE_OB_TCP_INVITED_NODES = "ob_tcp_invited_nodes"
+
+	ALTER_RESOURCE_TENANT_UNIT_NUM = "ALTER_RESOURCE_TENANT_UNIT_NUM"
+	ALTER_TENANT_LOCALITY          = "ALTER_TENANT_LOCALITY"
+	ALTER_TENANT_PRIMARY_ZONE      = "ALTER_TENANT_PRIMARY_ZONE"
 )

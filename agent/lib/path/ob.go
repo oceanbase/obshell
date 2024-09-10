@@ -45,6 +45,22 @@ func EtcDirOwnerUid() (uint32, error) {
 	return fi.Sys().(*syscall.Stat_t).Uid, nil
 }
 
+func ImportTimeZoneInfoScriptPath() string {
+	return filepath.Join(BinDir(), constant.OB_IMPORT_TIME_ZONE_INFO_SCRIPT)
+}
+
+func ImportTimeZoneInfoFilePath() string {
+	return filepath.Join(EtcDir(), constant.OB_IMPORT_TIME_ZONE_INFO_FILE)
+}
+
+func ImportSrsDataScriptPath() string {
+	return filepath.Join(BinDir(), constant.OB_IMPORT_SRS_DATA_SCRIPT)
+}
+
+func ImportSrsDataFilePath() string {
+	return filepath.Join(EtcDir(), constant.OB_IMPORT_SRS_DATA_FILE)
+}
+
 func OBAdmin() string {
 	return filepath.Join(BinDir(), constant.OB_ADMIN)
 }

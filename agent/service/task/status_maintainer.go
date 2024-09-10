@@ -124,9 +124,12 @@ func (maintainer *clusterStatusMaintainer) UpdateMaintenanceTask(tx *gorm.DB, da
 		return fmt.Errorf("%s has already executed task %s. '%s: %s' cannot be executed. Please submit a new request", lock.LockName, oldGid, gid, dag.GetName())
 	}
 
-	lock.DagID = dag.GetID()
-	lock.Count += 1
-	return tx.Model(&lock).Where("id=?", lock.Id).Updates(&lock).Error
+	lockDo := oceanbase.PartialMaintenance{
+		Id:    lock.Id,
+		DagID: dag.GetID(),
+		Count: lock.Count + 1,
+	}
+	return tx.Model(&lockDo).Where("id=?", lock.Id).Updates(&lockDo).Error
 }
 
 func (maintainer *clusterStatusMaintainer) StopMaintenance(tx *gorm.DB, dag task.Maintainer) error {

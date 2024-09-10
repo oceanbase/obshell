@@ -24,6 +24,7 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"github.com/oceanbase/obshell/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
 )
@@ -110,15 +111,6 @@ func NewSSHClient(host, user, sshPort string) (*SSHClient, error) {
 	return client, nil
 }
 
-func ContainsString(arr []string, str string) bool {
-	for _, a := range arr {
-		if a == str {
-			return true
-		}
-	}
-	return false
-}
-
 func loadDefaultPrivateKeys() ([]ssh.Signer, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -135,7 +127,7 @@ func loadDefaultPrivateKeys() ([]ssh.Signer, error) {
 		if file.IsDir() {
 			continue
 		}
-		if ContainsString(excludeFile, file.Name()) {
+		if utils.ContainsString(excludeFile, file.Name()) {
 			continue
 		}
 		keyPath := filepath.Join(defaultDir, file.Name())

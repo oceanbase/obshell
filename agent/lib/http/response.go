@@ -18,6 +18,7 @@ package http
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"time"
 
@@ -80,6 +81,10 @@ func BuildResponse(data interface{}, err error) OcsAgentResponse {
 	return *response
 }
 
+func BuildNoContentResponse() OcsAgentResponse {
+	return buildNoContentResponse()
+}
+
 func buildErrorResponse(err error, response *OcsAgentResponse) *OcsAgentResponse {
 	agenterr, ok := err.(*errors.OcsAgentError)
 	if !ok && err != nil {
@@ -100,6 +105,16 @@ func buildSuccessResponse() *OcsAgentResponse {
 		Successful: true,
 		Timestamp:  time.Now(),
 		Status:     200,
+		Error:      nil,
+	}
+}
+
+func buildNoContentResponse() OcsAgentResponse {
+	return OcsAgentResponse{
+		Successful: true,
+		Timestamp:  time.Now(),
+		Status:     http.StatusNoContent,
+		Data:       nil,
 		Error:      nil,
 	}
 }

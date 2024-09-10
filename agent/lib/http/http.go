@@ -20,6 +20,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"reflect"
 	"time"
 
@@ -191,7 +192,7 @@ func buildRequestReturn(agentResponse ocsAgentResponse, ret interface{}) error {
 
 // buildReturn is used to deserialize the response Data into the specified Ret
 func buildReturn(agentResponse ocsAgentResponse, ret interface{}) error {
-	if ret != nil {
+	if ret != nil && agentResponse.response.StatusCode() != http.StatusNoContent {
 		if agentResponse.agentResp.Data == nil {
 			return errors.New("response data is nil")
 		}

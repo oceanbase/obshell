@@ -27,9 +27,14 @@ import (
 	"github.com/oceanbase/obshell/agent/api/web"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/agent"
 	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/executor/pool"
+	"github.com/oceanbase/obshell/agent/executor/recyclebin"
+	"github.com/oceanbase/obshell/agent/executor/script"
+	"github.com/oceanbase/obshell/agent/executor/tenant"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
@@ -238,6 +243,10 @@ func (a *Agent) initTask() {
 	ob.RegisterBackupTask()
 	ob.RegisterRestoreTask()
 	agent.RegisterAgentTask()
+	tenant.RegisterTenantTask()
+	recyclebin.RegisterRecyclebinTask()
+	task.RegisterTaskType(script.ImportScriptForTenantTask{})
+	pool.RegisterPoolTask()
 }
 
 // Check if the ob config file exists.

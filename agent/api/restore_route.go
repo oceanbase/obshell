@@ -83,7 +83,7 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 	}
 
 	log.Infof("check tenant %s", p.TenantName)
-	tenant, err := tenantService.GetTenantByName(p.TenantName)
+	tenant, err := tenantService.GetTenantsByName(p.TenantName)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err)
 	}

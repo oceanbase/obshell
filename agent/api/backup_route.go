@@ -197,7 +197,7 @@ func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaOBTenants, *errors.Ocs
 		return nil, errors.Occurf(errors.ErrIllegalArgument, "tenant %s is system tenant, cannot backup", tenantName)
 	}
 
-	tenant, err := tenantService.GetTenantByName(tenantName)
+	tenant, err := tenantService.GetTenantsByName(tenantName)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err)
 	}

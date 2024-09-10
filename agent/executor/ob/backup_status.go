@@ -65,7 +65,7 @@ func PatchTenantBackup(tenantName string, p *param.BackupStatusParam) *errors.Oc
 		return errors.Occur(errors.ErrIllegalArgument, err)
 	}
 
-	tenant, err := tenantService.GetTenantByName(tenantName)
+	tenant, err := tenantService.GetTenantsByName(tenantName)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err)
 	}
@@ -162,7 +162,7 @@ func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) *e
 		return errors.Occur(errors.ErrIllegalArgument, err)
 	}
 
-	tenant, err := tenantService.GetTenantByName(tenantName)
+	tenant, err := tenantService.GetTenantsByName(tenantName)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err)
 	}
@@ -202,7 +202,7 @@ func GetObclusterBackupOverview() (*param.BackupOverview, *errors.OcsAgentError)
 }
 
 func GetTenantBackupOverview(name string) (*param.TenantBackupOverview, *errors.OcsAgentError) {
-	tenant, err := tenantService.GetTenantByName(name)
+	tenant, err := tenantService.GetTenantsByName(name)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err)
 	}

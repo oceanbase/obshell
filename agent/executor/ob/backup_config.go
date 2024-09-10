@@ -513,7 +513,7 @@ func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaOBTenants, 
 		if err := ctx.GetParamWithValue(PARAM_NEED_BACKUP_TENANT, &tenantName); err != nil {
 			return nil, errors.Wrap(err, "get need backup tenant")
 		}
-		tenant, err := tenantService.GetTenantByName(tenantName)
+		tenant, err := tenantService.GetTenantsByName(tenantName)
 		if err != nil {
 			return nil, errors.Wrap(err, "get tenant by name")
 		}

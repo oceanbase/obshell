@@ -103,14 +103,14 @@ func UploadFileViaUnixSocket(socketPath, uri, filePath string, ret interface{}) 
 // If the response is wrong, response-related error will be returned.
 // If an error occurred in the parsing process, parsing-related error will be returned only if the request err is nil.
 func buildRequestReturnForUnixSocket(agentResponse ocsAgentResponse, ret interface{}) error {
-	buildRetErr := buildReturn(agentResponse, ret)
 	if agentResponse.response.IsError() {
 		return fmt.Errorf("%s", agentResponse.agentResp.Error.Message)
 	}
+	buildRetErr := buildReturn(agentResponse, ret)
 	return buildRetErr
 }
 
-func sendRequestViaUnixSocket(socketPath, uri, method string, param, ret interface{}, headers map[string]string) (agentResponse ocsAgentResponse, err error) {
+func sendRequestViaUnixSocket(socketPath, uri, method string, param interface{}, ret interface{}, headers map[string]string) (agentResponse ocsAgentResponse, err error) {
 	var agentResp OcsAgentResponse
 	var response *resty.Response
 	transport := http.Transport{
@@ -128,8 +128,19 @@ func sendRequestViaUnixSocket(socketPath, uri, method string, param, ret interfa
 	}
 	request.
 		SetHeader("Content-Type", "application/json").
-		SetBody(param).
 		SetError(&agentResp)
+
+	if method != GET {
+		request.SetBody(param)
+	}
+	if method == GET {
+		query_params, ok := param.(map[string]string)
+		if ok {
+			for k, v := range query_params {
+				request.SetQueryParam(k, v)
+			}
+		}
+	}
 
 	for k, v := range headers {
 		request.SetHeader(k, v)

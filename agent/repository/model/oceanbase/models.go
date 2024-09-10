@@ -16,7 +16,9 @@
 
 package oceanbase
 
-import "time"
+import (
+	"time"
+)
 
 type ObParameters struct {
 	SvrIp      string `gorm:"column:SVR_IP"`
@@ -32,6 +34,7 @@ type ObParameters struct {
 type DbaObZones struct {
 	Zone   string `gorm:"column:ZONE"`
 	Status string `gorm:"column:STATUS"`
+	Region string `gorm:"column:REGION"`
 }
 
 type OBServer struct {
