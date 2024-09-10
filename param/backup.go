@@ -30,14 +30,14 @@ import (
 type ClusterBackupConfigParam struct {
 	BackupBaseUri *string `json:"backup_base_uri"`
 	LogArchiveDestConf
-	baseBackupConfigParam
+	BaseBackupConfigParam
 }
 
 func NewBackupConfigParamForCluster(p *ClusterBackupConfigParam) *BackupConfigParam {
 	return &BackupConfigParam{
 		BackupBaseUri:         p.BackupBaseUri,
 		LogArchiveDestConf:    p.LogArchiveDestConf,
-		baseBackupConfigParam: p.baseBackupConfigParam,
+		BaseBackupConfigParam: p.BaseBackupConfigParam,
 	}
 }
 
@@ -46,7 +46,7 @@ func NewBackupConfigParamForTenant(p *TenantBackupConfigParam) *BackupConfigPara
 		DataBaseUri:           p.DataBaseUri,
 		ArchiveBaseUri:        p.ArchiveBaseUri,
 		LogArchiveDestConf:    p.LogArchiveDestConf,
-		baseBackupConfigParam: p.baseBackupConfigParam,
+		BaseBackupConfigParam: p.BaseBackupConfigParam,
 	}
 }
 
@@ -54,10 +54,10 @@ type TenantBackupConfigParam struct {
 	DataBaseUri    *string `json:"data_base_uri"`
 	ArchiveBaseUri *string `json:"archive_base_uri"`
 	LogArchiveDestConf
-	baseBackupConfigParam
+	BaseBackupConfigParam
 }
 
-type baseBackupConfigParam struct {
+type BaseBackupConfigParam struct {
 	LogArchiveConcurrency *int                `json:"log_archive_concurrency"`
 	ArchiveLagTarget      *string             `json:"archive_lag_target"`
 	HaLowThreadScore      *int                `json:"ha_low_thread_score"`
@@ -70,7 +70,7 @@ type BackupConfigParam struct {
 	DataBaseUri    *string
 
 	LogArchiveDestConf
-	baseBackupConfigParam
+	BaseBackupConfigParam
 }
 
 type LogArchiveDestConf struct {
