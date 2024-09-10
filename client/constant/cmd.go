@@ -21,4 +21,7 @@ const (
 	CMD_TASK    = "task"
 	CMD_UTIL    = "utilities"
 	CMD_AGENT   = "agent"
+	CMD_TENANT  = "tenant"
+	CMD_BACKUP  = "backup"
+	CMD_RESTORE = "restore"
 )

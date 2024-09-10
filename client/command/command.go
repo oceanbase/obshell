@@ -119,15 +119,15 @@ func termSize() int {
 
 type Command struct {
 	*cobra.Command
-	val          reflect.Value
-	flags        []*Flag
-	flagMap      map[string]*Flag
-	maxFlagLen   int
-	requireFlag  []*Flag
-	optionalFlag []*Flag
-	globalFlag   []*Flag
-	helpStart    int
-	originalPreRunE     func(cmd *cobra.Command, args []string) error
+	val             reflect.Value
+	flags           []*Flag
+	flagMap         map[string]*Flag
+	maxFlagLen      int
+	requireFlag     []*Flag
+	optionalFlag    []*Flag
+	globalFlag      []*Flag
+	helpStart       int
+	originalPreRunE func(cmd *cobra.Command, args []string) error
 }
 
 func NewCommand(cmd *cobra.Command) *Command {

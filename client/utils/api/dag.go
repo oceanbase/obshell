@@ -31,6 +31,49 @@ import (
 	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
+func CallDeleteApiAndPrintStage(uri string, param interface{}) (dag *task.DagDetailDTO, err error) {
+	dag, err = CallDeleteApi(uri, param)
+	if err != nil {
+		return
+	}
+	if dag == nil {
+		stdio.Info("There is no task to cancel")
+		return nil, nil
+	}
+
+	dagHandler := NewDagHandler(dag)
+	if err = dagHandler.PrintDagStage(); err != nil {
+		return
+	}
+	return dag, nil
+}
+
+func CallDeleteApi(uri string, param interface{}) (*task.DagDetailDTO, error) {
+	sendRequest := func(uri string, param interface{}, res interface{}) error {
+		return http.SendDeleteRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
+	}
+	return callApiHelper(sendRequest, uri, param)
+}
+
+func CallPatchApiAndPrintStage(uri string, param interface{}) (dag *task.DagDetailDTO, err error) {
+	dag, err = CallPatchApi(uri, param)
+	if err != nil {
+		return
+	}
+	dagHandler := NewDagHandler(dag)
+	if err = dagHandler.PrintDagStage(); err != nil {
+		return
+	}
+	return dag, nil
+}
+
+func CallPatchApi(uri string, param interface{}) (*task.DagDetailDTO, error) {
+	sendRequest := func(uri string, param interface{}, res interface{}) error {
+		return http.SendPatchRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
+	}
+	return callApiHelper(sendRequest, uri, param)
+}
+
 func CallApiAndPrintStage(uri string, param interface{}) (dag *task.DagDetailDTO, err error) {
 	dag, err = CallApi(uri, param)
 	if err != nil {
@@ -52,6 +95,10 @@ func callApiHelper(sendRequest func(uri string, param interface{}, res interface
 	if err != nil {
 		stdio.Verbosef("Call API %s failed, error is %s", uri, err)
 		return nil, err
+	}
+
+	if res == nil || res.DagDetail == nil {
+		return nil, nil
 	}
 
 	stdio.Printf("Task '%s' has been created successfully.", res.Name)

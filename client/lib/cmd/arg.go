@@ -17,9 +17,14 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
+)
+
+const (
+	CMD_ARG_COUNT = 1
 )
 
 func ValidateArgs(cmd *cobra.Command, args []string) error {
@@ -27,4 +32,14 @@ func ValidateArgs(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unspecified arguments: %v", args)
 	}
 	return nil
+}
+
+func ValidateArgTenantName(cmd *cobra.Command, args []string) (err error) {
+	length := len(args)
+	if length == 0 {
+		err = errors.New("please specify the tenant name")
+	} else if length > CMD_ARG_COUNT {
+		err = fmt.Errorf("too many arguments, expected %d, got %d", CMD_ARG_COUNT, length)
+	}
+	return err
 }

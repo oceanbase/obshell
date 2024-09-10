@@ -28,8 +28,11 @@ import (
 	"github.com/oceanbase/obshell/agent/cmd/server"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/client/cmd/agent"
+	"github.com/oceanbase/obshell/client/cmd/backup"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
+	"github.com/oceanbase/obshell/client/cmd/restore"
 	"github.com/oceanbase/obshell/client/cmd/task"
+	"github.com/oceanbase/obshell/client/cmd/tenant"
 	"github.com/oceanbase/obshell/client/command"
 )
 
@@ -44,8 +47,11 @@ func main() {
 	cmds.AddCommand(agentcmd.NewInfoIpCmd())
 
 	cmds.AddCommand(cluster.NewClusterCmd())
+	cmds.AddCommand(tenant.NewTenantCmd())
 	cmds.AddCommand(agent.NewAgentCmd())
 	cmds.AddCommand(task.NewTaskCmd())
+	cmds.AddCommand(backup.NewBackupCmd())
+	cmds.AddCommand(restore.NewRestoreCmd())
 
 	var showDetailedVersion bool
 	cmds.Flags().BoolVarP(&showDetailedVersion, agentcmd.CMD_VERSION, agentcmd.CMD_V, false, "Display version for obshell and exit")

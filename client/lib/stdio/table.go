@@ -29,7 +29,9 @@ func newTableRow(items []string) (tableRow table.Row) {
 
 func (io *IO) newTable(header []string, data [][]string) table.Writer {
 	table := table.NewWriter()
-	table.AppendHeader(newTableRow(header))
+	if header != nil {
+		table.AppendHeader(newTableRow(header))
+	}
 	for _, row := range data {
 		table.AppendRow(newTableRow(row))
 	}

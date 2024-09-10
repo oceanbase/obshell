@@ -108,6 +108,32 @@ const (
 
 	// CMD_SHOW represents the "show" command used to display information about the cluster status.
 	CMD_SHOW = "show"
+
+	// CMD_BACKUP represents the "backup" command used to backup the cluster.
+	CMD_BACKUP = "backup"
+	// Flags for the "backup" command.
+	FLAG_PATH                       = "backup_base_uri"
+	FLAG_PATH_SH                    = "u"
+	FLAG_BACKUP_MODE                = "backup_mode"
+	FLAG_BACKUP_MODE_SH             = "m"
+	FLAG_LOG_ARCHIVE_CONCURRENCY    = "log_archive_concurrency"
+	FLAG_LOG_ARCHIVE_CONCURRENCY_SH = "c"
+	FLAG_BINDING                    = "binding"
+	FLAG_BINDING_SH                 = "b"
+	FLAG_ENCRYPTION                 = "encryption"
+	FLAG_ENCRYPTION_SH              = "e"
+	FLAG_HA_LOW_THREAD_SCORE        = "ha_low_thread_score"
+	FLAG_HA_LOW_THREAD_SCORE_SH     = "s"
+	FLAG_PIECE_SWITCH_INTERVAL      = "piece_switch_interval"
+	FLAG_PIECE_SWITCH_INTERVAL_SH   = "i"
+	FLAG_DELETE_POLICY              = "delete_policy"
+	FLAG_DELETE_POLICY_SH           = "D"
+	FLAG_RECOVERY_WINDOW            = "delete_recovery_window"
+	FLAG_RECOVERY_WINDOW_SH         = "r"
+	FLAG_ARCHIVE_LAG_TARGET         = "archive_lag_target"
+	FLAG_ARCHIVE_LAG_TARGET_SH      = "l"
+	FLAG_PLUS_ARCHIVE               = "plus_archive"
+	FLAG_PLUS_ARCHIVE_SH            = "P"
 )
 
 var (
@@ -150,5 +176,6 @@ func NewClusterCmd() *cobra.Command {
 	clusterCmd.AddCommand(NewScaleOutCmd())
 	clusterCmd.AddCommand(newShowCmd())
 	clusterCmd.AddCommand(newStopCmd())
+	clusterCmd.AddCommand(newBackupCmd())
 	return clusterCmd.Command
 }
