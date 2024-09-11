@@ -59,7 +59,7 @@ func poolDropHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.DbaOBResourcePool}
+//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.DbaObResourcePool}
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		401				object	http.OcsAgentResponse
 //	@Failure		500				object	http.OcsAgentResponse

@@ -518,7 +518,7 @@ func (s *TenantService) IsMetaTenantStatusNormal(tenantName string) (bool, error
 	return strings.ToUpper(status) == constant.TENANT_STATUS_NORMAL, err
 }
 
-func (s *TenantService) GetUnitConfigByName(name string) (res *oceanbase.DbaObUnitConfigs, err error) {
+func (s *TenantService) GetUnitConfigByName(name string) (res *oceanbase.DbaObUnitConfig, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -536,7 +536,7 @@ func (s *TenantService) DeleteTenant(name string) (err error) {
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) GetResourcePoolsByName(poolName string) (res *oceanbase.DbaObResourcePools, err error) {
+func (s *TenantService) GetResourcePoolsByName(poolName string) (res *oceanbase.DbaObResourcePool, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -545,7 +545,7 @@ func (s *TenantService) GetResourcePoolsByName(poolName string) (res *oceanbase.
 	return
 }
 
-func (s *TenantService) GetResourcePoolsByTenantID(tenantID int) (res []oceanbase.DbaObResourcePools, err error) {
+func (s *TenantService) GetResourcePoolsByTenantID(tenantID int) (res []oceanbase.DbaObResourcePool, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err

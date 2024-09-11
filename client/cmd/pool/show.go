@@ -60,7 +60,7 @@ func newShowCmd() *cobra.Command {
 
 func rpShow(name ...string) error {
 	data := make([][]string, 0)
-	rps := make([]oceanbase.DbaOBResourcePool, 0)
+	rps := make([]oceanbase.DbaObResourcePool, 0)
 	// show all
 	err := api.CallApiWithMethod(http.GET, constant.URI_API_V1+constant.URI_POOLS_GROUP, nil, &rps)
 	if err != nil {
@@ -70,12 +70,12 @@ func rpShow(name ...string) error {
 	if len(name) != 0 {
 		for _, rp := range rps {
 			if rp.Name == name[0] {
-				data = append(data, []string{rp.Name, fmt.Sprint(rp.Id), rp.ZoneList, rp.ReplicaType, fmt.Sprint(rp.UnitNum), fmt.Sprint(rp.UnitConfigId), fmt.Sprint(rp.TenantId)})
+				data = append(data, []string{rp.Name, fmt.Sprint(rp.ResourcePoolID), rp.ZoneList, rp.ReplicaType, fmt.Sprint(rp.UnitNum), fmt.Sprint(rp.UnitConfigId), fmt.Sprint(rp.TenantId)})
 			}
 		}
 	} else {
 		for _, rp := range rps {
-			data = append(data, []string{rp.Name, fmt.Sprint(rp.Id), rp.ZoneList, rp.ReplicaType, fmt.Sprint(rp.UnitNum), fmt.Sprint(rp.UnitConfigId), fmt.Sprint(rp.TenantId)})
+			data = append(data, []string{rp.Name, fmt.Sprint(rp.ResourcePoolID), rp.ZoneList, rp.ReplicaType, fmt.Sprint(rp.UnitNum), fmt.Sprint(rp.UnitConfigId), fmt.Sprint(rp.TenantId)})
 		}
 	}
 	if len(data) == 0 {

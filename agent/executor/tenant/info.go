@@ -57,7 +57,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		}
 		poolWithUnit := bo.ResourcePoolWithUnit{
 			Name:     poolInfo.Name,
-			Id:       poolInfo.Id,
+			Id:       poolInfo.ResourcePoolID,
 			ZoneList: poolInfo.ZoneList,
 			UnitNum:  poolInfo.UnitNum,
 			Unit:     oceanbase.ConvertDbaObUnitConfigToObUnit(unitConfig),

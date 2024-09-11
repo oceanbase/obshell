@@ -78,7 +78,7 @@ func (t *TenantService) CheckTenantHasPoolOnZone(tenantId int, zoneName string) 
 	return count > 0, err
 }
 
-func (t *TenantService) GetTenantResourcePool(tenantId int) (pools []model.DbaOBResourcePool, err error) {
+func (t *TenantService) GetTenantResourcePool(tenantId int) (pools []model.DbaObResourcePool, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {
 		return nil, err
@@ -87,7 +87,7 @@ func (t *TenantService) GetTenantResourcePool(tenantId int) (pools []model.DbaOB
 	return
 }
 
-func (t *TenantService) GetResourcePoolByName(name string) (pool *model.DbaOBResourcePool, err error) {
+func (t *TenantService) GetResourcePoolByName(name string) (pool *model.DbaObResourcePool, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {
 		return nil, err
@@ -96,7 +96,7 @@ func (t *TenantService) GetResourcePoolByName(name string) (pool *model.DbaOBRes
 	return
 }
 
-func (t *TenantService) GetAllResourcePool() (pools []model.DbaOBResourcePool, err error) {
+func (t *TenantService) GetAllResourcePool() (pools []model.DbaObResourcePool, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {
 		return nil, err

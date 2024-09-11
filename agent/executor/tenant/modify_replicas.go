@@ -105,7 +105,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 	return nil
 }
 
-func getUnitName(zoneName string, poolList []oceanbase.DbaOBResourcePool) (string, error) {
+func getUnitName(zoneName string, poolList []oceanbase.DbaObResourcePool) (string, error) {
 	for _, pool := range poolList {
 		zones := buildZoneList(pool.ZoneList)
 		if utils.ContainsString(zones, zoneName) {

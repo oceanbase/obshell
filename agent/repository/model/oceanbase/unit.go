@@ -23,8 +23,6 @@ import (
 )
 
 type DbaObUnitConfig struct {
-	GmtCreate    time.Time `gorm:"column:create_time" json:"create_time"`
-	GmtModified  time.Time `gorm:"column:modify_time" json:"modify_time"`
 	UnitConfigId int       `gorm:"column:unit_config_id" json:"unit_config_id"`
 	Name         string    `gorm:"column:name" json:"name"`
 	MaxCpu       float64   `gorm:"column:max_cpu" json:"max_cpu"`
@@ -33,6 +31,8 @@ type DbaObUnitConfig struct {
 	LogDiskSize  int       `gorm:"column:log_disk_size" json:"log_disk_size"`
 	MaxIops      int       `gorm:"column:max_iops" json:"max_iops"`
 	MinIops      int       `gorm:"column:min_iops" json:"min_iops"`
+	GmtCreate    time.Time `gorm:"column:create_time" json:"create_time"`
+	GmtModified  time.Time `gorm:"column:modify_time" json:"modify_time"`
 }
 
 func ConvertDbaObUnitConfigToObUnit(unit *DbaObUnitConfig) *bo.ObUnitConfig {

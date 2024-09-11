@@ -52,29 +52,3 @@ type OBServer struct {
 func (OBServer) TableName() string {
 	return "oceanbase.DBA_OB_SERVERS"
 }
-
-type DbaObUnitConfigs struct {
-	UnitConfigID int64     `gorm:"column:UNIT_CONFIG_ID"`
-	Name         string    `gorm:"column:NAME"`
-	CreateTime   time.Time `gorm:"column:CREATE_TIME"`
-	ModifyTime   time.Time `gorm:"column:MODIFY_TIME"`
-	MaxCpu       float64   `gorm:"column:MAX_CPU"`
-	MinCpu       float64   `gorm:"column:MIN_CPU"`
-	MemorySize   int64     `gorm:"column:MEMORY_SIZE"`
-	LogDiskSize  int64     `gorm:"column:LOG_DISK_SIZE"`
-	MaxIops      int64     `gorm:"column:MAX_IOPS"`
-	MinIops      int64     `gorm:"column:MIN_IOPS"`
-	IopsWeight   int64     `gorm:"column:IOPS_WEIGHT"`
-}
-
-type DbaObResourcePools struct {
-	ResourcePoolID int64     `gorm:"column:RESOURCE_POOL_ID"`
-	Name           string    `gorm:"column:NAME"`
-	TenantID       int64     `gorm:"column:TENANT_ID"`
-	CreateTime     time.Time `gorm:"column:CREATE_TIME"`
-	ModifyTime     time.Time `gorm:"column:MODIFY_TIME"`
-	UnitCount      int64     `gorm:"column:UNIT_COUNT"`
-	UnitConfigID   int64     `gorm:"column:UNIT_CONFIG_ID"`
-	ZoneList       string    `gorm:"column:ZONE_LIST"`
-	ReplicaType    string    `gorm:"column:REPLICA_TYPE"`
-}

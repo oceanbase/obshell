@@ -39,7 +39,7 @@ func DropResourcePool(poolName string) *errors.OcsAgentError {
 	return nil
 }
 
-func GetAllResourcePools() ([]oceanbase.DbaOBResourcePool, *errors.OcsAgentError) {
+func GetAllResourcePools() ([]oceanbase.DbaObResourcePool, *errors.OcsAgentError) {
 	pools, err := tenantService.GetAllResourcePool()
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "Get all resource pool failed: %s", err.Error())

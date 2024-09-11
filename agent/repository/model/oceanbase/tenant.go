@@ -21,46 +21,49 @@ import (
 )
 
 type DbaObTenant struct {
-	TenantID     int       `gorm:"column:TENANT_ID"`
-	TenantName   string    `gorm:"column:TENANT_NAME"`
-	Mode         string    `gorm:"column:COMPATIBILITY_MODE"`
-	Status       string    `gorm:"column:STATUS"`
-	Locked       string    `gorm:"column:LOCKED"`
-	PrimaryZone  string    `gorm:"column:PRIMARY_ZONE"`
-	Locality     string    `gorm:"column:LOCALITY"`
-	InRecyclebin string    `gorm:"column:IN_RECYCLEBIN"`
-	CreatedTime  time.Time `gorm:"column:CREATE_TIME"`
+	TenantID     int       `gorm:"column:TENANT_ID" json:"tenant_id"`
+	TenantName   string    `gorm:"column:TENANT_NAME" json:"tenant_name"`
+	Mode         string    `gorm:"column:COMPATIBILITY_MODE" json:"mode"`
+	Status       string    `gorm:"column:STATUS" json:"status"`
+	Locked       string    `gorm:"column:LOCKED" json:"locked"`
+	PrimaryZone  string    `gorm:"column:PRIMARY_ZONE" json:"primary_zone"`
+	Locality     string    `gorm:"column:LOCALITY" json:"locality"`
+	InRecyclebin string    `gorm:"column:IN_RECYCLEBIN" json:"in_recyclebin"`
+	CreatedTime  time.Time `gorm:"column:CREATE_TIME" json:"created_time"`
 }
 
-type DbaOBResourcePool struct {
-	Name         string `gorm:"column:NAME"`
-	Id           int    `gorm:"column:RESOURCE_POOL_ID"`
-	ZoneList     string `gorm:"column:ZONE_LIST"`
-	UnitNum      int    `gorm:"column:UNIT_COUNT"`
-	UnitConfigId int    `gorm:"column:UNIT_CONFIG_ID"`
-	TenantId     int    `gorm:"column:TENANT_ID"`
-	ReplicaType  string `gorm:"column:REPLICA_TYPE"`
+type DbaObResourcePool struct {
+	ResourcePoolID int       `gorm:"column:RESOURCE_POOL_ID" json:"id"`
+	Name           string    `gorm:"column:NAME" json:"name"`
+	ZoneList       string    `gorm:"column:ZONE_LIST" json:"zone_list"`
+	UnitNum        int       `gorm:"column:UNIT_COUNT" json:"unit_num"`
+	UnitCount      int       `gorm:"column:UNIT_COUNT"`
+	UnitConfigId   int       `gorm:"column:UNIT_CONFIG_ID" json:"unit_config_id"`
+	TenantId       int       `gorm:"column:TENANT_ID" json:"tenant_id"`
+	ReplicaType    string    `gorm:"column:REPLICA_TYPE" json:"replica_type"`
+	CreateTime     time.Time `gorm:"column:CREATE_TIME"`
+	ModifyTime     time.Time `gorm:"column:MODIFY_TIME"`
 }
 
 type CdbObSysVariable struct {
-	Name  string `gorm:"column:NAME"`
-	Value string `gorm:"column:VALUE"`
-	Info  string `gorm:"column:INFO"`
+	Name  string `gorm:"column:NAME" json:"name"`
+	Value string `gorm:"column:VALUE" json:"value"`
+	Info  string `gorm:"column:INFO" json:"info"`
 }
 
 type GvObParameter struct {
-	Name      string `gorm:"column:NAME"`
-	Value     string `gorm:"column:VALUE"`
-	DataType  string `gorm:"column:DATA_TYPE"`
-	Info      string `gorm:"column:INFO"`
-	EditLevel string `gorm:"column:EDIT_LEVEL"`
+	Name      string `gorm:"column:NAME" json:"name"`
+	Value     string `gorm:"column:VALUE" json:"value"`
+	DataType  string `gorm:"column:DATA_TYPE" json:"data_type"`
+	Info      string `gorm:"column:INFO" json:"info"`
+	EditLevel string `gorm:"column:EDIT_LEVEL" json:"edit_level"`
 }
 
 type DbaRecyclebin struct {
-	Name         string `gorm:"column:OBJECT_NAME"`
-	OriginalName string `gorm:"column:ORIGINAL_NAME"`
-	CanUndrop    string `gorm:"column:CAN_UNDROP"`
-	CanPurge     string `gorm:"column:CAN_PURGE"`
+	Name         string `gorm:"column:OBJECT_NAME" json:"object_name"`
+	OriginalName string `gorm:"column:ORIGINAL_NAME" json:"original_tenant_name"`
+	CanUndrop    string `gorm:"column:CAN_UNDROP" json:"can_undrop"`
+	CanPurge     string `gorm:"column:CAN_PURGE" json:"can_purge"`
 }
 
 // select * from information_schema.collations
@@ -70,14 +73,14 @@ type Collations struct {
 }
 
 type ObServerCapacity struct {
-	Zone            string  `gorm:"column:ZONE"`
-	SvrIp           string  `gorm:"column:SVR_IP"`
-	SvrPort         int     `gorm:"column:SVR_PORT"`
-	SqlPort         int     `gorm:"column:SQL_PORT"`
-	CpuCapacity     float64 `gorm:"column:CPU_CAPACITY"`
-	CpuCapacityMax  float64 `gorm:"column:CPU_CAPACITY_MAX"`
-	MemCapacity     int     `gorm:"column:MEM_CAPACITY"`
-	LogDiskCapacity int     `gorm:"column:LOG_DISK_CAPACITY"`
+	Zone            string  `gorm:"column:ZONE" json:"zone"`
+	SvrIp           string  `gorm:"column:SVR_IP" json:"svr_ip"`
+	SvrPort         int     `gorm:"column:SVR_PORT" json:"svr_port"`
+	SqlPort         int     `gorm:"column:SQL_PORT" json:"sql_port"`
+	CpuCapacity     float64 `gorm:"column:CPU_CAPACITY" json:"cpu_capacity"`
+	CpuCapacityMax  float64 `gorm:"column:CPU_CAPACITY_MAX" json:"cpu_capacity_max"`
+	MemCapacity     int     `gorm:"column:MEM_CAPACITY" json:"mem_capacity"`
+	LogDiskCapacity int     `gorm:"column:LOG_DISK_CAPACITY" json:"log_disk_capacity"`
 }
 
 func (ObServerCapacity) TableName() string {
@@ -85,20 +88,20 @@ func (ObServerCapacity) TableName() string {
 }
 
 type DbaObUnit struct {
-	UnitId         int     `gorm:"column:UNIT_ID"`
-	TenantId       int     `gorm:"column:TENANT_ID"`
-	Status         string  `gorm:"column:STATUS"`
-	ResourcePoolId int     `gorm:"column:RESOURCE_POOL_ID"`
-	Zone           string  `gorm:"column:ZONE"`
-	SvrIp          string  `gorm:"column:SVR_IP"`
-	SvrPort        int     `gorm:"column:SVR_PORT"`
-	UnitConfigId   int     `gorm:"column:UNIT_CONFIG_ID"`
-	MaxCpu         float64 `gorm:"column:MAX_CPU"`
-	MinCpu         float64 `gorm:"column:MIN_CPU"`
-	MemorySize     int     `gorm:"column:MEMORY_SIZE"`
-	LogDiskSize    int     `gorm:"column:LOG_DISK_SIZE"`
-	MaxIops        int     `gorm:"column:MAX_IOPS"`
-	MinIops        int     `gorm:"column:MIN_IOPS"`
+	UnitId         int     `gorm:"column:UNIT_ID" json:"unit_id"`
+	TenantId       int     `gorm:"column:TENANT_ID" json:"tenant_id"`
+	Status         string  `gorm:"column:STATUS" json:"status"`
+	ResourcePoolId int     `gorm:"column:RESOURCE_POOL_ID" json:"resource_pool_id"`
+	Zone           string  `gorm:"column:ZONE" json:"zone"`
+	SvrIp          string  `gorm:"column:SVR_IP" json:"svr_ip"`
+	SvrPort        int     `gorm:"column:SVR_PORT" json:"svr_port"`
+	UnitConfigId   int     `gorm:"column:UNIT_CONFIG_ID" json:"unit_config_id"`
+	MaxCpu         float64 `gorm:"column:MAX_CPU" json:"max_cpu"`
+	MinCpu         float64 `gorm:"column:MIN_CPU" json:"min_cpu"`
+	MemorySize     int     `gorm:"column:MEMORY_SIZE" json:"memory_size"`
+	LogDiskSize    int     `gorm:"column:LOG_DISK_SIZE" json:"log_disk_size"`
+	MaxIops        int     `gorm:"column:MAX_IOPS" json:"max_iops"`
+	MinIops        int     `gorm:"column:MIN_IOPS" json:"min_iops"`
 }
 
 type DbaObTenantJob struct {
