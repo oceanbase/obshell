@@ -194,10 +194,9 @@ func (t *BatchCreateResourcePoolTask) Execute() error {
 		if err := tenantService.AlterResourcePoolList(t.tenantId, targetPoolList); err != nil {
 			// detach and drop
 			if err := t.detachResourcePools(); err != nil {
-				return errors.Wrap(err, "Detach resource pool failed.")
-			}
-			if err := pool.DropFreeResourcePools(t.Task, t.createResourcePoolParam); err != nil {
-				return errors.Wrap(err, "Drop created resource pool failed.")
+				t.ExecuteWarnLog(errors.Wrap(err, "Detach resource pool failed."))
+			} else if err := pool.DropFreeResourcePools(t.Task, t.createResourcePoolParam); err != nil {
+				t.ExecuteWarnLog(errors.Wrap(err, "Drop created resource pool failed."))
 			}
 			return errors.Wrap(err, "Modify tenant resource pool failed.")
 		}

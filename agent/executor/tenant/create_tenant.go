@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -31,7 +33,6 @@ import (
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
-	log "github.com/sirupsen/logrus"
 )
 
 func checkReplicaType(localityType string) error {
@@ -286,6 +287,9 @@ func renderZoneParams(zoneList []param.ZoneParam) {
 		} else {
 			zoneList[i].ReplicaType = strings.ToUpper(zoneList[i].ReplicaType)
 		}
+		if zoneList[i].UnitNum == 0 {
+			zoneList[i].UnitNum = 1
+		}
 	}
 }
 
@@ -409,6 +413,7 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 	}
 
 	var validServer int
+	var checkErr error
 	for _, server := range source {
 		gatheredUnitInfo, err := gatherAllUnitsOnServer(server.SvrIp, server.SvrPort)
 		if err != nil {
@@ -417,15 +422,15 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 		log.Infof("server %s:%d used resource: %v", server.SvrIp, server.SvrPort, gatheredUnitInfo)
 		if server.CpuCapacity-gatheredUnitInfo.MinCpu < unit.MinCpu ||
 			server.CpuCapacityMax-gatheredUnitInfo.MaxCpu < unit.MaxCpu {
-			err = errors.Errorf("server %s:%d CPU resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s:%d CPU resource not enough", server.SvrIp, server.SvrPort)
 			continue
 		}
 		if server.MemCapacity-gatheredUnitInfo.MemorySize < unit.MemorySize {
-			err = errors.Errorf("server %s:%d MEMORY_SIZE resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s:%d MEMORY_SIZE resource not enough", server.SvrIp, server.SvrPort)
 			continue
 		}
 		if server.LogDiskCapacity-gatheredUnitInfo.LogDiskSize < unit.LogDiskSize {
-			err = errors.Errorf("server %s:%d LOG_DISK_SIZE resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s:%d LOG_DISK_SIZE resource not enough", server.SvrIp, server.SvrPort)
 			continue
 		}
 		validServer += 1
@@ -433,7 +438,7 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 	if validServer >= unitNum {
 		return nil
 	}
-	return err
+	return checkErr
 }
 
 type gatheredUnitInfo struct {
@@ -648,10 +653,10 @@ func (t *CreateTenantTask) Execute() error {
 		return errors.Wrapf(err, "Get timestamp failed")
 	}
 
-	var createdResourcePool []param.CreateResourcePoolTaskParam
 	t.createResourcePoolParam = buildCreateResourcePoolTaskParam(*t.CreateTenantParam.Name, t.CreateTenantParam.ZoneList, t.timestamp)
-
-	pool.CreatePools(t.Task, t.createResourcePoolParam)
+	if err := pool.CreatePools(t.Task, t.createResourcePoolParam); err != nil {
+		return err
+	}
 
 	var poolList []string
 	for _, poolParam := range t.createResourcePoolParam {
@@ -662,7 +667,9 @@ func (t *CreateTenantTask) Execute() error {
 	t.ExecuteLogf("Create tenant sql: %s", sql)
 	if err := tenantService.TryExecute(sql); err != nil {
 		// drop all created resource pool
-		pool.DropFreeResourcePools(t.Task, createdResourcePool)
+		if err := pool.DropFreeResourcePools(t.Task, t.createResourcePoolParam); err != nil {
+			t.ExecuteWarnLog(errors.Wrap(err, "Drop created resource pool failed."))
+		}
 		return err
 	}
 	// get tenant id

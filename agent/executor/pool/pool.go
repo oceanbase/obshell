@@ -79,13 +79,13 @@ func CreatePools(t task.Task, poolParam []param.CreateResourcePoolTaskParam) err
 	for _, p := range poolParam {
 		t.ExecuteLogf("Create resource pool: %v", p)
 		if err := tenantService.CreateResourcePool(p.PoolName, p.UnitConfigName, p.UnitNum, []string{p.ZoneName}); err != nil {
-			// check if there is a resource pool with the same name
-			if exist, _ := tenantService.IsResourcePoolExistAndFreed(p.PoolName, p.UnitConfigName, p.UnitNum, p.ZoneName); !exist {
-				// drop all created resource pool
-				DropFreeResourcePools(t, createdResourcePool)
-				return errors.Wrap(err, "Create resource pool failed")
+			// drop all created resource pool
+			if err := DropFreeResourcePools(t, createdResourcePool); err != nil {
+				t.ExecuteWarnLog(errors.Wrapf(err, "Drop created resource pool failed"))
 			}
+			return errors.Wrapf(err, "Create resource pool %s failed", p.PoolName)
 		}
+		t.ExecuteLogf("Create resource pool %s success", p.PoolName)
 		createdResourcePool = append(createdResourcePool, p)
 	}
 	return nil
