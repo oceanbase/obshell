@@ -100,7 +100,7 @@ func (s *AgentService) getOBConifg(db *gorm.DB, name string, value interface{}) 
 	err := db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", name).First(value).Error
 	if err == gorm.ErrRecordNotFound {
 		if old, exist := constant.OB_CONFIG_COMPATIBLE_MAP[name]; exist {
-			return db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", old).First(value).Error
+			return db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", old).Scan(value).Error
 		}
 	}
 	return err
