@@ -85,6 +85,7 @@ func newRestoreCmd() *cobra.Command {
 	})
 
 	restoreCmd.Flags().SortFlags = false
+	restoreCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
 	restoreCmd.VarsPs(&opts.DataBackupUri, []string{FLAG_DATA_BACKUP_URI, FLAG_DATA_BACKUP_URI_SH}, "", "The directory path where the backups are stored.", true)
 	restoreCmd.VarsPs(&opts.UnitConfigName, []string{FLAG_UNIT_CONFIG_NAME, FLAG_UNIT_CONFIG_NAME_SH}, "", "The name of the unit configuration to be used for the restore operation.", true)
 	restoreCmd.VarsPs(&opts.ZoneList, []string{FLAG_ZONE_LIST, FLAG_ZONE_LIST_SH}, "", "The list of zones to restore the tenant to. Desperate by comma.", true)
