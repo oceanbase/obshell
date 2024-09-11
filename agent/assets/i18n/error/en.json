@@ -10,5 +10,5 @@
   "err.obcluster.not.found": "There is no obcluster now. %v",
 
   "err.user.permission.denied": "Permission denied: %v",
-  "err.unauthorized":  "Verification failed: %v"
+  "err.unauthorized":  "Verification failed"
 }
