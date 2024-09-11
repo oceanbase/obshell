@@ -64,6 +64,7 @@ func newCancelCmd() *cobra.Command {
 	})
 
 	cancelCmd.Flags().SortFlags = false
+	cancelCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
 	cancelCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output.", false)
 	cancelCmd.VarsPs(&opts.skipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation prompt.", false)
 

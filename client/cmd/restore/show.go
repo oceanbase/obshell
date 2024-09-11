@@ -21,7 +21,6 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
-	"github.com/oceanbase/obshell/client/cmd/tenant"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -41,13 +40,15 @@ func newShowCmd() *cobra.Command {
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_SHOW,
 		Short:   "Displays the restore status for the specific tenant.",
-		PreRunE: cmdlib.ValidateArgs,
+		PreRunE: cmdlib.ValidateArgTenantName,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceUsage = true
 			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
+
+			opts.TenantName = args[0]
 			if err := show(opts); err != nil {
 				stdio.Error(err.Error())
 				return err
@@ -58,7 +59,7 @@ func newShowCmd() *cobra.Command {
 	})
 
 	showCmd.Flags().SortFlags = false
-	showCmd.VarsPs(&opts.TenantName, []string{tenant.FLAG_TENANT_NAME, tenant.FLAG_TENANT_NAME_SH}, "", "The name of the tenant to show backup jobs.", true)
+	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
 	showCmd.VarsPs(&opts.detail, []string{clientconst.FLAG_DETAIL, clientconst.FLAG_DETAIL_SH}, false, "Display detailed information.", false)
 	showCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output.", false)
 
@@ -83,6 +84,6 @@ func show(opts *ShowFlags) error {
 }
 
 func showCmdExample() string {
-	return `  obshell restore show -t tenant1
+	return `  obshell restore show tenant1
 `
 }
