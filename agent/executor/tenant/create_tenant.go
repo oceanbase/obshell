@@ -172,7 +172,11 @@ func checkScenario(scenario string) error {
 	if scenario == "" {
 		return nil
 	}
+
 	scenarios := getAllSupportedScenarios()
+	if len(scenarios) == 0 {
+		return errors.New("current observer does not support scenario")
+	}
 	if utils.ContainsString(scenarios, strings.ToLower(scenario)) {
 		return nil
 	}
