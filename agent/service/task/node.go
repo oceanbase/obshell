@@ -17,12 +17,12 @@
 package task
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
 
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"

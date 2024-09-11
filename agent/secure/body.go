@@ -18,12 +18,12 @@ package secure
 
 import (
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/lib/crypto"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 

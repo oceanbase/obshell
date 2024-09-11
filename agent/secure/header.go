@@ -17,9 +17,10 @@
 package secure
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/oceanbase/obshell/agent/lib/json"
 
 	log "github.com/sirupsen/logrus"
 

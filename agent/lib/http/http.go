@@ -18,7 +18,6 @@ package http
 
 import (
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -137,6 +137,7 @@ func NewClient() *resty.Client {
 		}
 		client.SetTLSClientConfig(tlsConfig)
 	}
+	client.JSONUnmarshal = json.Unmarshal
 	return client
 }
 

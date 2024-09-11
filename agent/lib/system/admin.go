@@ -19,16 +19,15 @@ package system
 import (
 	"bufio"
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os/exec"
 	"regexp"
-	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
 
@@ -138,7 +137,7 @@ func checkRestoreTime(clogCtx, dataCtx string, scn int64) (bool, error) {
 	return false, nil
 }
 
-func CheckRestoreTime(dataURI, logURI, scn string) (err error) {
+func CheckRestoreTime(dataURI, logURI string, scn int64) (err error) {
 	log.Info("Get archive log context")
 	archiveLogCtx, err := getOBAdminCtxByURI(logURI)
 	if err != nil {
@@ -151,12 +150,7 @@ func CheckRestoreTime(dataURI, logURI, scn string) (err error) {
 		return errors.Wrapf(err, "execute data backup command failed")
 	}
 
-	scnInt, err := strconv.ParseInt(scn, 10, 64)
-	if err != nil {
-		return errors.Wrapf(err, "parse scn")
-	}
-
-	canRestore, err := checkRestoreTime(archiveLogCtx, dataCtx, scnInt)
+	canRestore, err := checkRestoreTime(archiveLogCtx, dataCtx, scn)
 	if err != nil {
 		return errors.Wrapf(err, "check restore time")
 	}

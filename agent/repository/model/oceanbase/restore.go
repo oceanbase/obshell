@@ -17,8 +17,6 @@
 package oceanbase
 
 import (
-	"strconv"
-
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -32,7 +30,7 @@ type RestoreInfo struct {
 	BackupClusterName string `json:"backup_cluster_name" gorm:"column:BACKUP_CLUSTER_NAME"`
 
 	RestoreOption     string `json:"restore_option" gorm:"column:RESTORE_OPTION"`
-	RestoreScn        string `json:"restore_scn" gorm:"column:RESTORE_SCN"`
+	RestoreScn        int64  `json:"restore_scn" gorm:"column:RESTORE_SCN"`
 	RestoreScnDisplay string `json:"restore_scn_display" gorm:"column:RESTORE_SCN_DISPLAY"`
 
 	Status         string `json:"status" gorm:"column:STATUS"`
@@ -62,6 +60,7 @@ func (i *RestoreInfo) ToBO() *bo.RestoreInfo {
 
 		RestoreOption:     i.RestoreOption,
 		RestoreScnDisplay: i.RestoreScnDisplay,
+		RestoreScn:        i.RestoreScn,
 
 		Status:         i.Status,
 		StartTimestamp: i.StartTimestamp,
@@ -77,7 +76,6 @@ func (i *RestoreInfo) ToBO() *bo.RestoreInfo {
 		FinishBytesDisplay: i.FinishBytesDisplay,
 		Description:        i.Description,
 	}
-	res.RestoreScn, _ = strconv.ParseInt(i.RestoreScn, 10, 64)
 	return res
 }
 

@@ -74,10 +74,8 @@ func buildRestoreTaskContext(p *param.RestoreParam) *task.TaskContext {
 		ctx.SetParam(PARAM_KMS_ENCRYPT_INFO, *p.KmsEncryptInfo)
 	}
 
-	var scn string
 	if p.SCN != nil && *p.SCN != 0 {
-		scn = fmt.Sprint(*p.SCN)
-		ctx.SetParam(PARAM_RESTORE_SCN, scn)
+		ctx.SetParam(PARAM_RESTORE_SCN, *p.SCN)
 	}
 	return ctx
 }
@@ -85,7 +83,7 @@ func buildRestoreTaskContext(p *param.RestoreParam) *task.TaskContext {
 type PreRestoreCheckTask struct {
 	task.Task
 	param *param.RestoreParam
-	scn   string
+	scn   int64
 }
 
 func newPreRestoreCheckTask() *PreRestoreCheckTask {
@@ -106,16 +104,16 @@ func (t *PreRestoreCheckTask) Execute() (err error) {
 		}
 	}
 
-	if !system.IsFileExist(path.OBAdmin()) || (t.scn == "" && t.param.Timestamp == nil) {
+	if !system.IsFileExist(path.OBAdmin()) || (t.scn == 0 && t.param.Timestamp == nil) {
 		t.ExecuteLog("Not need to check ob_admin")
 		return
 	}
 
 	if t.param.Timestamp != nil {
 		t.ExecuteLogf("Check restore time '%s'", t.param.Timestamp.Format("2006-01-02 15:04:05.00"))
-		t.scn = fmt.Sprint((*(t.param.Timestamp)).UnixNano())
+		t.scn = t.param.Timestamp.UnixNano()
 	} else {
-		t.ExecuteLogf("Check restore time '%s'", t.scn)
+		t.ExecuteLogf("Check restore time '%d'", t.scn)
 	}
 
 	if err = system.CheckRestoreTime(t.param.DataBackupUri, *t.param.ArchiveLogUri, t.scn); err != nil {
@@ -203,7 +201,7 @@ type RestoreTask struct {
 	task.Task
 	tenantName        string
 	poolName          string
-	restoreScn        string
+	restoreScn        int64
 	param             *param.RestoreParam
 	jobID             int64
 	haHighThreadScore int

@@ -18,7 +18,6 @@ package unit
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -83,7 +82,7 @@ func unitConfigShow(name ...string) error {
 		}
 		stdio.LoadSuccess("Get all unit configs")
 		for _, unitConfig := range unitConfigs {
-			data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), strconv.Itoa(unitConfig.MaxIops), strconv.Itoa(unitConfig.MinIops)})
+			data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), fmt.Sprint(unitConfig.MaxIops), fmt.Sprint(unitConfig.MinIops)})
 		}
 	} else {
 		var unitConfig oceanbase.DbaObUnitConfig
@@ -93,7 +92,7 @@ func unitConfigShow(name ...string) error {
 			return err
 		}
 		stdio.LoadSuccessf("Get unit config %s", name[0])
-		data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), strconv.Itoa(unitConfig.MaxIops), strconv.Itoa(unitConfig.MinIops)})
+		data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), fmt.Sprint(unitConfig.MaxIops), fmt.Sprint(unitConfig.MinIops)})
 	}
 	stdio.PrintTable(header, data)
 	return nil

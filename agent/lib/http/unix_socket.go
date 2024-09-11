@@ -26,6 +26,7 @@ import (
 	resty "github.com/go-resty/resty/v2"
 
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/json"
 )
 
 const UNIX_SOCKET_DEFAULT_TIME_OUT = 30 * time.Second
@@ -82,6 +83,7 @@ func UploadFileViaUnixSocket(socketPath, uri, filePath string, ret interface{}) 
 
 	client := resty.New()
 	client.SetTransport(&transport).SetScheme("http").SetBaseURL("localhost")
+	client.JSONUnmarshal = json.Unmarshal
 	request := client.R()
 	if ret != nil {
 		request.SetResult(&agentResp)
@@ -122,6 +124,7 @@ func sendRequestViaUnixSocket(socketPath, uri, method string, param interface{},
 
 	client := resty.New()
 	client.SetTransport(&transport).SetScheme("http").SetBaseURL("localhost").SetTimeout(UNIX_SOCKET_DEFAULT_TIME_OUT)
+	client.JSONUnmarshal = json.Unmarshal
 	request := client.R()
 	if ret != nil {
 		request.SetResult(&agentResp)

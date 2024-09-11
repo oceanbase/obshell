@@ -17,7 +17,6 @@
 package task
 
 import (
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -25,6 +24,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 

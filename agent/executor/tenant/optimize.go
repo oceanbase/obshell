@@ -17,12 +17,12 @@
 package tenant
 
 import (
-	"encoding/json"
 	"io"
 	"os"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/param"
 )

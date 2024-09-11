@@ -17,10 +17,10 @@
 package task
 
 import (
-	"encoding/json"
 	"fmt"
 
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 

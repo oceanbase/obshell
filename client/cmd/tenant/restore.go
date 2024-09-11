@@ -46,7 +46,7 @@ type TenantRestoreFlags struct {
 	UnitNum        string
 
 	Timestamp           string `json:"timestamp" time_format:"2006-01-02T15:04:05.000Z07:00"`
-	SCN                 string
+	SCN                 int64
 	ZoneList            string
 	PrimaryZone         string
 	Locality            string
@@ -91,7 +91,7 @@ func newRestoreCmd() *cobra.Command {
 	restoreCmd.VarsPs(&opts.ZoneList, []string{FLAG_ZONE_LIST, FLAG_ZONE_LIST_SH}, "", "The list of zones to restore the tenant to. Desperate by comma.", true)
 
 	restoreCmd.VarsPs(&opts.Timestamp, []string{FLAG_TIMESTAMP, FLAG_TIMESTAMP_SH}, "", "The timestamp to restore to.", false)
-	restoreCmd.VarsPs(&opts.SCN, []string{FLAG_SCN, FLAG_SCN_SH}, "", "The SCN to restore to.", false)
+	restoreCmd.VarsPs(&opts.SCN, []string{FLAG_SCN, FLAG_SCN_SH}, int64(0), "The SCN to restore to.", false)
 	restoreCmd.VarsPs(&opts.UnitNum, []string{FLAG_UNIT_NUM, FLAG_UNIT_NUM_SH}, "", "The number of units to be restored.", false)
 	restoreCmd.VarsPs(&opts.ArchiveLogUri, []string{FLAG_ARCHIVE_LOG_URI, FLAG_ARCHIVE_LOG_URI_SH}, "", "The directory path where the archive logs are stored.", false)
 	restoreCmd.VarsPs(&opts.HaHighThreadScore, []string{FLAG_HA_HIGH_THREAD_SCORE, FLAG_HA_HIGH_THREAD_SCORE_SH}, "", "The high thread score for HA. Range: [0, 100]", false)
@@ -155,12 +155,8 @@ func (f *TenantRestoreFlags) toRestoreParam() (*param.RestoreParam, error) {
 		restoreParam.Timestamp = &timestamp
 	}
 
-	if f.SCN != "" {
-		scn, err := strconv.ParseInt(f.SCN, 10, 64)
-		if err != nil {
-			return nil, errors.Wrap(err, "Invalid SCN")
-		}
-		restoreParam.SCN = &scn
+	if f.SCN != 0 {
+		restoreParam.SCN = &f.SCN
 	}
 
 	if f.UnitNum != "" {

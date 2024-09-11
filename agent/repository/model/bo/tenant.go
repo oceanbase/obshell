@@ -96,8 +96,8 @@ type ObUnitConfig struct {
 	MinCpu       float64   `json:"min_cpu"`
 	MemorySize   int       `json:"memory_size"`
 	LogDiskSize  int       `json:"log_disk_size"`
-	MaxIops      int       `json:"max_iops"`
-	MinIops      int       `json:"min_iops"`
+	MaxIops      uint      `json:"max_iops"`
+	MinIops      uint      `json:"min_iops"`
 }
 
 type ResourcePoolWithUnit struct {
