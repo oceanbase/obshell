@@ -130,7 +130,7 @@ func (t *ImportScriptForTenantTask) Execute() error {
 	}
 
 	/* import srs data */
-	if t.tenantName == constant.SYS_TENANT {
+	if t.tenantName == constant.TENANT_SYS {
 		return nil
 	}
 	t.ExecuteLog("Importing srs data.")

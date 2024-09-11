@@ -22,8 +22,6 @@ const (
 	MYSQL_MODE  = "MYSQL"
 	ORACAL_MODE = "ORACLE"
 
-	SYS_TENANT           = "sys"
-	SYS_TENANT_ID        = 1
 	TENANT_STATUS_NORMAL = "NORMAL"
 
 	TENANT_ROLE_PRIMARY = "PRIMARY"
@@ -31,22 +29,23 @@ const (
 	TENANT_TYPE_USER = "USER"
 	TENANT_TYPE_META = "META"
 
-	TENANT_SYS = "sys"
+	TENANT_SYS    = "sys"
+	TENANT_SYS_ID = 1
 
-	FULL_REPLICA     = "FULL"
-	READONLY_REPLICA = "READONLY"
+	REPLICA_TYPE_FULL     = "FULL"
+	REPLICA_TYPE_READONLY = "READONLY"
 
 	PRIMARY_ZONE_RANDOM = "RANDOM"
-
-	CHECK_JOB_RETRY_TIMES         = 360
-	CHECK_JOB_INTERVAL            = 10 * time.Second
-	CHECK_TENANT_EXIST_INTERVAL   = 5 * time.Second
-	RESOURCE_UNIT_CONFIG_CPU_MINE = 1
 
 	// not support tenant name since ob4.2.1
 	TENANT_ALL      = "all"
 	TENANT_ALL_USER = "all_user"
 	TENANT_ALL_META = "all_meta"
+
+	CHECK_JOB_RETRY_TIMES         = 360
+	CHECK_JOB_INTERVAL            = 10 * time.Second
+	CHECK_TENANT_EXIST_INTERVAL   = 5 * time.Second
+	RESOURCE_UNIT_CONFIG_CPU_MINE = 1
 
 	VARIABLE_TIME_ZONE            = "time_zone"
 	VARIABLE_OB_TCP_INVITED_NODES = "ob_tcp_invited_nodes"

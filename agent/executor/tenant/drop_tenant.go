@@ -25,7 +25,7 @@ import (
 )
 
 func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	if param.Name == constant.SYS_TENANT {
+	if param.Name == constant.TENANT_SYS {
 		return nil, errors.Occur(errors.ErrIllegalArgument, "Can't drop sys tenant.")
 	}
 

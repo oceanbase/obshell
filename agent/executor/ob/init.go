@@ -42,7 +42,7 @@ func CreateInitDag() (*task.DagDetailDTO, error) {
 		AddTask(newAgentSyncTask(), true).
 		Build()
 
-	ctx := task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetParam(PARAM_HEALTH_CHECK, true).SetParam(PARAM_TENANT_NAME, constant.SYS_TENANT)
+	ctx := task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetParam(PARAM_HEALTH_CHECK, true).SetParam(PARAM_TENANT_NAME, constant.TENANT_SYS)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
 		return nil, err

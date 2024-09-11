@@ -87,7 +87,7 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 		cmd.SilenceUsage = false
 		return errors.New("need specify --new-password when --old-password is specified")
 	}
-	if (cmd.Flags().Changed(FLAG_NEW_PASSWORD) || opts.interactivelyChangePassowrd || cmd.Flags().Changed(FLAG_OLD_PASSWORD)) && tenantName == constant.SYS_TENANT {
+	if (cmd.Flags().Changed(FLAG_NEW_PASSWORD) || opts.interactivelyChangePassowrd || cmd.Flags().Changed(FLAG_OLD_PASSWORD)) && tenantName == constant.TENANT_SYS {
 		return errors.New("could not change password of sys tenant")
 	}
 	if cmd.Flags().Changed(FLAG_NEW_PASSWORD) {

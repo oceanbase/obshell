@@ -240,16 +240,16 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 func checkModifyLocalityValid(replicaInfoMap map[string]string, zoneList []param.ModifyReplicaZoneParam) error {
 	var curPaxosNum, prePaxosNum int
 	for _, replicaType := range replicaInfoMap {
-		if replicaType == constant.FULL_REPLICA {
+		if replicaType == constant.REPLICA_TYPE_FULL {
 			prePaxosNum++
 		}
 	}
 	curPaxosNum = prePaxosNum
 	for _, zone := range zoneList {
 		if zone.ReplicaType != nil {
-			if *zone.ReplicaType == constant.FULL_REPLICA && replicaInfoMap[zone.Name] != constant.FULL_REPLICA { // replicaInfoMap must contain zone.Name, has been checked
+			if *zone.ReplicaType == constant.REPLICA_TYPE_FULL && replicaInfoMap[zone.Name] != constant.REPLICA_TYPE_FULL { // replicaInfoMap must contain zone.Name, has been checked
 				curPaxosNum++
-			} else if *zone.ReplicaType == constant.READONLY_REPLICA && replicaInfoMap[zone.Name] == constant.FULL_REPLICA {
+			} else if *zone.ReplicaType == constant.REPLICA_TYPE_READONLY && replicaInfoMap[zone.Name] == constant.REPLICA_TYPE_FULL {
 				curPaxosNum--
 			}
 		}
@@ -309,13 +309,13 @@ func buildModifyReplicaTemplate(tenant *oceanbase.DbaObTenant, options *ModifyRe
 	if options.replicaTypeChanged != nil && len(options.replicaTypeChanged) != 0 {
 		// Modify 'FULL' replica to 'READONLY' replica firstly.
 		for zone, replicaType := range options.replicaTypeChanged {
-			if replicaType == constant.FULL_REPLICA {
+			if replicaType == constant.REPLICA_TYPE_FULL {
 				templateBuilder.AddNode(newAlterLocalityNode(tenant.Id, MODIFY_REPLICA_TYPE, zone, replicaType))
 			}
 		}
 		// Modify 'READONLY' replica to 'FULL' replica secondly.
 		for zone, replicaType := range options.replicaTypeChanged {
-			if replicaType == constant.READONLY_REPLICA {
+			if replicaType == constant.REPLICA_TYPE_READONLY {
 				templateBuilder.AddNode(newAlterLocalityNode(tenant.Id, MODIFY_REPLICA_TYPE, zone, replicaType))
 			}
 		}

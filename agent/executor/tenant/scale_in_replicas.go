@@ -76,7 +76,7 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 func checkScaleInLocalityValid(replicaInfoMap map[string]string, zoneList []string) error {
 	var curPaxosNum, prePaxosNum int
 	for zone, replicaType := range replicaInfoMap {
-		if replicaType == constant.FULL_REPLICA {
+		if replicaType == constant.REPLICA_TYPE_FULL {
 			prePaxosNum++
 			if !utils.ContainsString(zoneList, zone) {
 				curPaxosNum++

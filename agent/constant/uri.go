@@ -85,12 +85,12 @@ const (
 	URI_OVERVIEW     = "/overview"
 	URI_TENANT       = "/tenant"
 
-	URI_PATH_PARAM_NAME = "/:name"
 	URI_PARAM_NAME      = "name"
-	URI_PATH_PARAM_VAR  = "/:variable"
+	URI_PATH_PARAM_NAME = "/:" + URI_PARAM_NAME
 	URI_PARAM_VAR       = "variable"
-	URI_PATH_PARAM_PARA = "/:parameter"
+	URI_PATH_PARAM_VAR  = "/:" + URI_PARAM_VAR
 	URI_PARAM_PARA      = "parameter"
+	URI_PATH_PARAM_PARA = "/:" + URI_PARAM_PARA
 
 	// Used for backup
 	URI_ARCHIVE = "/log"

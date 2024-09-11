@@ -35,7 +35,7 @@ import (
 )
 
 func checkReplicaType(localityType string) error {
-	if localityType != constant.FULL_REPLICA && localityType != constant.READONLY_REPLICA && localityType != "" {
+	if localityType != constant.REPLICA_TYPE_FULL && localityType != constant.REPLICA_TYPE_READONLY && localityType != "" {
 		return errors.New("ReplicaType should be 'FULL' or 'READONLY'")
 	}
 	return nil
@@ -113,7 +113,7 @@ func checkPrimaryZoneAndLocality(primaryZone string, locality map[string]string)
 	for zone, replicaType := range locality {
 		if zoneToRegionMap[zone] == firstPriorityRegion {
 			arr := strings.Split(replicaType, "{")
-			if arr[0] == constant.FULL_REPLICA || arr[0] == "F" || arr[0] == "" {
+			if arr[0] == constant.REPLICA_TYPE_FULL || arr[0] == "F" || arr[0] == "" {
 				fullReplicaNum++
 			}
 		}
@@ -158,7 +158,7 @@ func checkParameters(parameters map[string]interface{}) error {
 
 	for k := range parameters {
 		// Check whether the parameter is exist.
-		if param, err := tenantService.GetTenantParameter(constant.SYS_TENANT_ID, k); err != nil {
+		if param, err := tenantService.GetTenantParameter(constant.TENANT_SYS_ID, k); err != nil {
 			return errors.Wrap(err, "Get tenant parameter failed.")
 		} else if param == nil {
 			return errors.Errorf("Parameter '%s' is not exist.", k)
@@ -237,7 +237,7 @@ func checkZoneParams(zoneList []param.ZoneParam) error {
 
 func checkAtLeastOnePaxosReplica(zoneList []param.ZoneParam) error {
 	for _, zone := range zoneList {
-		if zone.ReplicaType == constant.FULL_REPLICA {
+		if zone.ReplicaType == constant.REPLICA_TYPE_FULL {
 			return nil
 		}
 	}
@@ -278,7 +278,7 @@ func staticCheckForZoneParams(zoneList []param.ZoneParam) error {
 func renderZoneParams(zoneList []param.ZoneParam) {
 	for i := range zoneList {
 		if zoneList[i].ReplicaType == "" {
-			zoneList[i].ReplicaType = constant.FULL_REPLICA
+			zoneList[i].ReplicaType = constant.REPLICA_TYPE_FULL
 		} else {
 			zoneList[i].ReplicaType = strings.ToUpper(zoneList[i].ReplicaType)
 		}
@@ -586,7 +586,7 @@ func buildCreateTenantSql(param param.CreateTenantParam, poolList []string) (str
 	var localityList []string
 	for _, zone := range param.ZoneList {
 		if zone.ReplicaType == "" {
-			localityList = append(localityList, strings.Join([]string{constant.FULL_REPLICA, zone.Name}, "@"))
+			localityList = append(localityList, strings.Join([]string{constant.REPLICA_TYPE_FULL, zone.Name}, "@"))
 		} else {
 			localityList = append(localityList, strings.Join([]string{zone.ReplicaType, zone.Name}, "@"))
 		}

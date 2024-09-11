@@ -40,23 +40,23 @@ func InitRestoreRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	}
 
 	tenantGroup.POST(constant.URI_RESTORE, tenantRestoreHandler)
-	tenantGroup.DELETE(tenantNameURIPattern+constant.URI_RESTORE, cancelRestoreTaskHandler)
-	tenantGroup.GET(tenantNameURIPattern+constant.URI_RESTORE+constant.URI_OVERVIEW, getRestoreOverviewHandler)
+	tenantGroup.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_RESTORE, cancelRestoreTaskHandler)
+	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_RESTORE+constant.URI_OVERVIEW, getRestoreOverviewHandler)
 
 }
 
-// @ID			tenantRestore
-// @Summary	Restore tenant
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string				true	"Authorization"
-// @Param		body			body	param.RestoreParam	true	"Restore tenant"
-// @Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/restore [post]
+//	@ID			tenantRestore
+//	@Summary	Restore tenant
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string				true	"Authorization"
+//	@Param		body			body	param.RestoreParam	true	"Restore tenant"
+//	@Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/restore [post]
 func tenantRestoreHandler(c *gin.Context) {
 	var p param.RestoreParam
 	if err := c.BindJSON(&p); err != nil {
@@ -141,25 +141,25 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 	return nil
 }
 
-// @ID			cancelRestoreTask
-// @Summary	Get restore task id
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string	true	"Authorization"
-// @Param		tenantName		path	string	true	"Tenant name"
-// @Success	200				object	http.OcsAgentResponse{data=string}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/:tenantName/restore [delete]
+//	@ID			cancelRestoreTask
+//	@Summary	Get restore task id
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string	true	"Authorization"
+//	@Param		tenantName		path	string	true	"Tenant name"
+//	@Success	200				object	http.OcsAgentResponse{data=string}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/:tenantName/restore [delete]
 func cancelRestoreTaskHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "agent identity is %s.", meta.OCS_AGENT.GetIdentity()))
 		return
 	}
 
-	tenantName := c.Param(tenantNameURI)
+	tenantName := c.Param(constant.URI_PARAM_NAME)
 	if tenantName == "" {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "tenant name is empty"))
 		return
@@ -173,18 +173,18 @@ func cancelRestoreTaskHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-// @ID			getRestoreOverview
-// @Summary	Get restore overview
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string	true	"Authorization"
-// @Param		tenantName		path	string	true	"Tenant name"
-// @Success	200				object	http.OcsAgentResponse{data=param.RestoreOverview}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/:tenantName/restore/overview [get]
+//	@ID			getRestoreOverview
+//	@Summary	Get restore overview
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string	true	"Authorization"
+//	@Param		tenantName		path	string	true	"Tenant name"
+//	@Success	200				object	http.OcsAgentResponse{data=param.RestoreOverview}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/:tenantName/restore/overview [get]
 func getRestoreOverviewHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {

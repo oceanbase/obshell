@@ -56,7 +56,7 @@ func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return err, false
 	}
-	if tenantName == constant.SYS_TENANT {
+	if tenantName == constant.TENANT_SYS {
 		return errors.Occur(errors.ErrIllegalArgument, "Can not modify root password for sys tenant."), false
 	}
 	executeAgent, err := getExecuteAgentForSetTenantRootPwd(tenantName)
