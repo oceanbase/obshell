@@ -108,7 +108,7 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 			continue
 		}
 		t.ExecuteLogf("Unpack '%s'", rpmPkgInfo.RpmPkgPath)
-		if err = installRpmPkgInPlace(rpmPkgInfo.RpmPkgPath); err != nil {
+		if err = InstallRpmPkgInPlace(rpmPkgInfo.RpmPkgPath); err != nil {
 			success = false
 			continue
 		}
@@ -155,13 +155,14 @@ func (t *InstallAllRequiredPkgsTask) getAgentVersion(rpmPkgInfo *rpmPacakgeInsta
 	return nil
 }
 
-func installRpmPkgInPlace(path string) (err error) {
+func InstallRpmPkgInPlace(path string) (err error) {
 	log.Infof("InstallRpmPkg: %s", path)
 	f, err := os.Open(path)
 	if err != nil {
 		return
 	}
 	defer f.Close()
+
 	pkg, err := rpm.Read(f)
 	if err != nil {
 		return
@@ -169,12 +170,14 @@ func installRpmPkgInPlace(path string) (err error) {
 	if err = checkCompressAndFormat(pkg); err != nil {
 		return
 	}
+
 	xzReader, err := xz.NewReader(f)
 	if err != nil {
 		return
 	}
 	installPath := filepath.Dir(path)
 	cpioReader := cpio.NewReader(xzReader)
+
 	for {
 		hdr, err := cpioReader.Next()
 		if err == io.EOF {
@@ -183,32 +186,58 @@ func installRpmPkgInPlace(path string) (err error) {
 		if err != nil {
 			return err
 		}
-		if !hdr.Mode.IsRegular() {
-			continue
-		}
-		if dirName := filepath.Dir(hdr.Name); dirName != "" {
-			dest := filepath.Join(installPath, dirName)
+
+		m := hdr.Mode
+		if m.IsDir() {
+			dest := filepath.Join(installPath, hdr.Name)
+			log.Infof("%s is a directory, creating %s", hdr.Name, dest)
 			if err := os.MkdirAll(dest, 0755); err != nil {
-				log.WithError(err).Error("mkdir failed")
+				return errors.Wrapf(err, "mkdir failed %s", hdr.Name)
+			}
+
+		} else if m.IsRegular() {
+			if err := handleRegularFile(hdr, cpioReader, installPath); err != nil {
 				return err
 			}
+
+		} else if hdr.Linkname != "" {
+			if err := handleSymlink(hdr, installPath); err != nil {
+				return err
+			}
+		} else {
+			log.Infof("Skipping unsupported file %s type: %v", hdr.Name, m)
 		}
-		dest := filepath.Join(installPath, hdr.Name)
-		if err = os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
-			log.WithError(err).Error("mkdir failed")
-			return err
-		}
-		outFile, err := os.Create(dest)
-		if err != nil {
-			return err
-		}
-		log.Infof("Extracting %s", hdr.Name)
-		if _, err := io.Copy(outFile, cpioReader); err != nil {
-			outFile.Close()
-			return err
-		}
-		outFile.Close()
 	}
+
+	return nil
+}
+
+func handleRegularFile(hdr *cpio.Header, cpioReader *cpio.Reader, installPath string) error {
+	dest := filepath.Join(installPath, hdr.Name)
+	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
+		log.WithError(err).Error("mkdir failed")
+		return err
+	}
+
+	outFile, err := os.Create(dest)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	log.Infof("Extracting %s", hdr.Name)
+	if _, err := io.Copy(outFile, cpioReader); err != nil {
+		return err
+	}
+	return nil
+}
+
+func handleSymlink(hdr *cpio.Header, installPath string) error {
+	dest := filepath.Join(installPath, hdr.Name)
+	if err := os.Symlink(hdr.Linkname, dest); err != nil {
+		return errors.Wrapf(err, "create symlink failed %s -> %s", dest, hdr.Linkname)
+	}
+	log.Infof("Creating symlink %s -> %s", dest, hdr.Linkname)
 	return nil
 }
 
