@@ -178,7 +178,7 @@ func patchTenantBackupConfigHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaOBTenants, *errors.OcsAgentError) {
+func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaObTenant, *errors.OcsAgentError) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return nil, errors.Occurf(errors.ErrKnown, "agent identity is %s.", meta.OCS_AGENT.GetIdentity())
 	}
@@ -192,7 +192,7 @@ func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaOBTenants, *errors.Ocs
 		return nil, errors.Occurf(errors.ErrIllegalArgument, "tenant %s is system tenant, cannot backup", tenantName)
 	}
 
-	tenant, err := tenantService.GetTenantsByName(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err)
 	}

@@ -21,12 +21,11 @@ import (
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/meta"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
@@ -334,15 +333,6 @@ func (s *TenantService) GetTenantByName(name string) (res *oceanbase.DbaObTenant
 	return
 }
 
-func (s *TenantService) GetTenantsByName(name string) (res *oceanbase.DbaOBTenants, err error) {
-	oceanbaseDb, err := oceanbasedb.GetInstance()
-	if err != nil {
-		return nil, err
-	}
-	err = oceanbaseDb.Table(DBA_OB_TENANTS).Where("tenant_name = ? and TENANT_TYPE = ? ", name, constant.TENANT_TYPE_USER).Scan(&res).Error
-	return
-}
-
 func (t *TenantService) GetTenantsOverView() (overviews []oceanbase.DbaObTenant, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -492,7 +482,7 @@ func (t *TenantService) GetTenantReplicaInfoMap(tenantId int) (map[string]string
 	return parseLocalityToReplicaInfoMap(locality)
 }
 
-func (s *TenantService) GetAllUserTenants() (res []oceanbase.DbaOBTenants, err error) {
+func (s *TenantService) GetAllUserTenants() (res []oceanbase.DbaObTenant, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -501,7 +491,7 @@ func (s *TenantService) GetAllUserTenants() (res []oceanbase.DbaOBTenants, err e
 	return
 }
 
-func (s *TenantService) GetTenantByID(id int) (res *oceanbase.DbaOBTenants, err error) {
+func (s *TenantService) GetTenantByID(id int) (res *oceanbase.DbaObTenant, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -555,7 +545,7 @@ func (s *TenantService) GetResourcePoolsByName(poolName string) (res *oceanbase.
 	return
 }
 
-func (s *TenantService) GetResourcePoolsByTenantID(tenantID int64) (res []oceanbase.DbaObResourcePools, err error) {
+func (s *TenantService) GetResourcePoolsByTenantID(tenantID int) (res []oceanbase.DbaObResourcePools, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -564,7 +554,7 @@ func (s *TenantService) GetResourcePoolsByTenantID(tenantID int64) (res []oceanb
 	return
 }
 
-func (s *TenantService) GetResourcePoolsNameByTenantID(tenantID int64) (res []string, err error) {
+func (s *TenantService) GetResourcePoolsNameByTenantID(tenantID int) (res []string, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err

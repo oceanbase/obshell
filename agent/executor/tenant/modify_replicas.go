@@ -25,7 +25,6 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
-
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
@@ -86,13 +85,13 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 		return errors.New("Could not modify unit num partially.")
 	}
 
-	currentUnitNum, err := tenantService.GetTenantUnitNum(tenant.Id)
+	currentUnitNum, err := tenantService.GetTenantUnitNum(tenant.TenantID)
 	if err != nil {
 		return err
 	}
 	if unitNum != 0 && unitNum != currentUnitNum {
 		// Check if enable_rebalance is true.
-		if enableRebalance, err := tenantService.GetTenantParameter(tenant.Id, "enable_rebalance"); err != nil {
+		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, "enable_rebalance"); err != nil {
 			return err
 		} else {
 			if enableRebalance == nil {
@@ -122,11 +121,11 @@ func buildModifyReplicaOptions(tenant *oceanbase.DbaObTenant, param []param.Modi
 		unitConfChanged:    make(map[string]string),
 	}
 
-	poolList, err := tenantService.GetTenantResourcePool(tenant.Id)
+	poolList, err := tenantService.GetTenantResourcePool(tenant.TenantID)
 	if err != nil {
 		return nil, err
 	}
-	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.Id)
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +136,7 @@ func buildModifyReplicaOptions(tenant *oceanbase.DbaObTenant, param []param.Modi
 			}
 		}
 		if zone.UnitNum != nil {
-			currentUnitNum, err := tenantService.GetTenantUnitNum(tenant.Id)
+			currentUnitNum, err := tenantService.GetTenantUnitNum(tenant.TenantID)
 			if err != nil {
 				return nil, err
 			}
@@ -200,7 +199,7 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 	renderModifyReplicasParam(modifyReplicasParam)
 
 	// Check whether there is already has a replica in the zone
-	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.Id)
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return err
 	}
@@ -218,7 +217,7 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 		return err
 	}
 
-	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.Id)
+	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.TenantID)
 	if err != nil {
 		return err
 	}
@@ -295,7 +294,7 @@ func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*
 		return nil, nil
 	}
 	context := task.NewTaskContext().
-		SetParam(PARAM_TENANT_ID, tenant.Id).
+		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
@@ -305,18 +304,18 @@ func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*
 }
 
 func buildModifyReplicaTemplate(tenant *oceanbase.DbaObTenant, options *ModifyReplicaOption) (*task.Template, error) {
-	templateBuilder := task.NewTemplateBuilder(DAG_MODIFY_TENANT_REPLICA).SetMaintenance(task.TenantMaintenance(tenant.Name))
+	templateBuilder := task.NewTemplateBuilder(DAG_MODIFY_TENANT_REPLICA).SetMaintenance(task.TenantMaintenance(tenant.TenantName))
 	if options.replicaTypeChanged != nil && len(options.replicaTypeChanged) != 0 {
 		// Modify 'FULL' replica to 'READONLY' replica firstly.
 		for zone, replicaType := range options.replicaTypeChanged {
 			if replicaType == constant.REPLICA_TYPE_FULL {
-				templateBuilder.AddNode(newAlterLocalityNode(tenant.Id, MODIFY_REPLICA_TYPE, zone, replicaType))
+				templateBuilder.AddNode(newAlterLocalityNode(tenant.TenantID, MODIFY_REPLICA_TYPE, zone, replicaType))
 			}
 		}
 		// Modify 'READONLY' replica to 'FULL' replica secondly.
 		for zone, replicaType := range options.replicaTypeChanged {
 			if replicaType == constant.REPLICA_TYPE_READONLY {
-				templateBuilder.AddNode(newAlterLocalityNode(tenant.Id, MODIFY_REPLICA_TYPE, zone, replicaType))
+				templateBuilder.AddNode(newAlterLocalityNode(tenant.TenantID, MODIFY_REPLICA_TYPE, zone, replicaType))
 			}
 		}
 

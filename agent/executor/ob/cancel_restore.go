@@ -47,7 +47,7 @@ func CancelRestoreTaskForTenant(tenantName string) (*task.DagDetailDTO, *errors.
 		// If there is no running restore task, return directly.
 		if id == nil {
 			log.Infof("There is no running restore dag for tenant '%s'", tenantName)
-			tenant, err := tenantService.GetTenantsByName(tenantName)
+			tenant, err := tenantService.GetTenantByName(tenantName)
 			if err != nil {
 				return nil, errors.Occur(errors.ErrUnexpected, err, "get tenant by name")
 			}
@@ -193,7 +193,7 @@ func cancelAndRollbackRestoreDag(dag *task.Dag) (*task.DagDetailDTO, *errors.Ocs
 }
 
 func createCancelRestoreDag(tenantName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	tenant, err := tenantService.GetTenantsByName(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err, "get tenant by name")
 	}

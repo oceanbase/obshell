@@ -178,10 +178,10 @@ func (t *CheckBackupConfigTask) checkAllPath(conf *param.DestConf) error {
 type backupConfigTaskContext struct {
 	isAllTenants bool
 	clusterID    int
-	tenants      []oceanbase.DbaOBTenants
+	tenants      []oceanbase.DbaObTenant
 }
 
-func (t *backupConfigTaskContext) GetDestSubpath(tenantID int64, joinDir string) (subpath string) {
+func (t *backupConfigTaskContext) GetDestSubpath(tenantID int, joinDir string) (subpath string) {
 	if t.isAllTenants {
 		subpath = fmt.Sprintf("%d/%d/%s", t.clusterID, tenantID, joinDir)
 	}
@@ -310,7 +310,7 @@ func (t *SetBackupConfigTask) closeAllArchiveLog() (err error) {
 	return nil
 }
 
-func (t *SetBackupConfigTask) waitForArchiveLogStop(tenant *oceanbase.DbaOBTenants) error {
+func (t *SetBackupConfigTask) waitForArchiveLogStop(tenant *oceanbase.DbaObTenant) error {
 	t.ExecuteLogf("Wait for %s(%d) archive log to be '%s'", tenant.TenantName, tenant.TenantID, constant.ARCHIVELOG_STATUS_STOP)
 	for i := 0; i < waitForArchiveLogStop; i++ {
 		status, err := tenantService.GetArchiveLogStatus(tenant.TenantID)
@@ -359,7 +359,7 @@ func (t *SetBackupConfigTask) setLogArchiveDest() (err error) {
 	return nil
 }
 
-func (t *SetBackupConfigTask) getURI(conf *param.DestConf, tenantID int64) (string, error) {
+func (t *SetBackupConfigTask) getURI(conf *param.DestConf, tenantID int) (string, error) {
 	storage, err := system.GetStorageInterfaceByURI(conf.BaseURI)
 	if err != nil {
 		return "", err
@@ -389,7 +389,7 @@ const (
 	waitForArchiveLogOpened = 600 // seconds
 )
 
-func (t *SetBackupConfigTask) waitForArchiveLogClosed(tenant *oceanbase.DbaOBTenants) error {
+func (t *SetBackupConfigTask) waitForArchiveLogClosed(tenant *oceanbase.DbaObTenant) error {
 	t.ExecuteLogf("Wait for %s(%d) to close archive log", tenant.TenantName, tenant.TenantID)
 	for i := 0; i < waitForArchiveLogClosed; i++ {
 		archiveLogClosed, err := tenantService.IsArchiveLogClosed(tenant.TenantName)
@@ -465,7 +465,7 @@ func (t *SetBackupConfigTask) setHaLowThreadScore() (err error) {
 	return nil
 }
 
-func stopBackupAndWait(t task.ExecutableTask, tenant *oceanbase.DbaOBTenants) error {
+func stopBackupAndWait(t task.ExecutableTask, tenant *oceanbase.DbaObTenant) error {
 	backupStopped, err := tenantService.IsBackupFinished(tenant.TenantID)
 	if err != nil {
 		return errors.Wrap(err, "check backup stopped")
@@ -486,7 +486,7 @@ const (
 	waitForBackupStopped = 3600 // seconds
 )
 
-func waitBackupFinish(t task.ExecutableTask, tenant *oceanbase.DbaOBTenants) error {
+func waitBackupFinish(t task.ExecutableTask, tenant *oceanbase.DbaObTenant) error {
 	t.ExecuteLogf("Wait %s(%d) backup finish", tenant.TenantName, tenant.TenantID)
 	for i := 0; i < waitForBackupStopped; i++ {
 		backupFinished, err := tenantService.IsBackupFinished(tenant.TenantID)
@@ -502,7 +502,7 @@ func waitBackupFinish(t task.ExecutableTask, tenant *oceanbase.DbaOBTenants) err
 	return errors.New("wait backup finish timeout")
 }
 
-func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaOBTenants, err error) {
+func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaObTenant, err error) {
 	if ctx.GetParam(PARAM_ALL_TENANTS) != nil {
 		tenants, err = tenantService.GetAllUserTenants()
 		if err != nil {
@@ -513,7 +513,7 @@ func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaOBTenants, 
 		if err := ctx.GetParamWithValue(PARAM_NEED_BACKUP_TENANT, &tenantName); err != nil {
 			return nil, errors.Wrap(err, "get need backup tenant")
 		}
-		tenant, err := tenantService.GetTenantsByName(tenantName)
+		tenant, err := tenantService.GetTenantByName(tenantName)
 		if err != nil {
 			return nil, errors.Wrap(err, "get tenant by name")
 		}

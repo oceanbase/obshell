@@ -28,7 +28,7 @@ import (
 )
 
 func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param.ScaleOutTenantReplicasParam) error {
-	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.Id)
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return err
 	}
@@ -46,14 +46,14 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 	for _, zone := range param.ZoneList {
 		replicaInfoMap[zone.Name] = zone.ReplicaType
 		// Check if tenant already have a pool located in the zone
-		if exist, err := tenantService.CheckTenantHasPoolOnZone(tenant.Id, zone.Name); err != nil {
+		if exist, err := tenantService.CheckTenantHasPoolOnZone(tenant.TenantID, zone.Name); err != nil {
 			return err
 		} else if exist {
 			return errors.Errorf("Tenant already has a pool located in zone '%s'.", zone.Name)
 		}
 	}
 
-	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.Id)
+	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.TenantID)
 	if err != nil {
 		return err
 	}
@@ -92,17 +92,17 @@ func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplic
 
 func buildScaleoutTenantReplicasDagTemplate(tenant *oceanbase.DbaObTenant, replicaParam *param.ScaleOutTenantReplicasParam) *task.Template {
 	templateBuild := task.NewTemplateBuilder(DAG_SCALE_OUT_TENANT_REPLICA).
-		SetMaintenance(task.TenantMaintenance(tenant.Name)).
+		SetMaintenance(task.TenantMaintenance(tenant.TenantName)).
 		AddNode(newBatchCreateResourcePoolNode(replicaParam.ZoneList))
 	for _, zone := range replicaParam.ZoneList {
-		templateBuild.AddNode(newAlterLocalityNode(tenant.Id, SCALE_OUT_REPLICA, zone.Name, zone.ReplicaType))
+		templateBuild.AddNode(newAlterLocalityNode(tenant.TenantID, SCALE_OUT_REPLICA, zone.Name, zone.ReplicaType))
 	}
 	return templateBuild.Build()
 }
 
 func buildScaleoutTenantReplicasDagContext(tenant *oceanbase.DbaObTenant, replicasParam *param.ScaleOutTenantReplicasParam) *task.TaskContext {
 	return task.NewTaskContext().
-		SetParam(PARAM_TENANT_ID, tenant.Id).
+		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 }
 
@@ -110,7 +110,7 @@ type BatchCreateResourcePoolTask struct {
 	task.Task
 	createResourcePoolParam []param.CreateResourcePoolTaskParam
 	tenantId                int
-	timestamp                      int64 // use for pool name
+	timestamp               int64 // use for pool name
 	zoneParam               []param.ZoneParam
 }
 

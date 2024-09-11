@@ -37,7 +37,7 @@ func (s *TenantService) GetArchiveLogByID(tenantID int) (res *oceanbase.CdbOBArc
 	return
 }
 
-func (s *TenantService) GetArchiveDestByID(tenantID int64) (value string, err error) {
+func (s *TenantService) GetArchiveDestByID(tenantID int) (value string, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -74,7 +74,7 @@ func (s *TenantService) OpenArchiveLog(tenantName string) (err error) {
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) GetArchiveLogStatus(tenantID int64) (status string, err error) {
+func (s *TenantService) GetArchiveLogStatus(tenantID int) (status string, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -151,7 +151,7 @@ func (s *TenantService) SetDataBackupDest(tenantName, dest string) (err error) {
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) GetDataBackupDestByID(tenantID int64) (value string, err error) {
+func (s *TenantService) GetDataBackupDestByID(tenantID int) (value string, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -160,7 +160,7 @@ func (s *TenantService) GetDataBackupDestByID(tenantID int64) (value string, err
 	return
 }
 
-func (s *TenantService) IsBackupFinished(tenantID int64) (bool, error) {
+func (s *TenantService) IsBackupFinished(tenantID int) (bool, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return false, err
@@ -182,7 +182,7 @@ func (s *TenantService) StopBackup(tenantName string) error {
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) GetDeletePolicy(tenantID int64) (*oceanbase.CdbObBackupDeletePolicy, error) {
+func (s *TenantService) GetDeletePolicy(tenantID int) (*oceanbase.CdbObBackupDeletePolicy, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -260,7 +260,7 @@ func (s *TenantService) StartIncrementalBackup(tenantName, encryption string, pl
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) GetRunningBackupTask(tenantID int64) (task *oceanbase.CdbObBackupTask, err error) {
+func (s *TenantService) GetRunningBackupTask(tenantID int) (task *oceanbase.CdbObBackupTask, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -269,7 +269,7 @@ func (s *TenantService) GetRunningBackupTask(tenantID int64) (task *oceanbase.Cd
 	return
 }
 
-func (s *TenantService) GetLastBackupTask(tenantID int64) (task *oceanbase.CdbObBackupTask, err error) {
+func (s *TenantService) GetLastBackupTask(tenantID int) (task *oceanbase.CdbObBackupTask, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return

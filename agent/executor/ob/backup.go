@@ -56,7 +56,7 @@ func ObclusterStartBackup(p *param.BackupParam) (*task.DagDetailDTO, *errors.Ocs
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func checkAllDest(tenant *oceanbase.DbaOBTenants) error {
+func checkAllDest(tenant *oceanbase.DbaObTenant) error {
 	dest, err := tenantService.GetArchiveDestByID(tenant.TenantID)
 	if err != nil {
 		return errors.Wrapf(err, "get archive dest of %s(%d)", tenant.TenantName, tenant.TenantID)
@@ -140,7 +140,7 @@ func newStartBackupCtx(p *param.BackupParam) (*task.TaskContext, error) {
 
 type CheckDestTask struct {
 	task.Task
-	tenants []oceanbase.DbaOBTenants
+	tenants []oceanbase.DbaObTenant
 }
 
 func newCheckDestTask() *CheckDestTask {
@@ -183,7 +183,7 @@ func (t *CheckDestTask) getParams() (err error) {
 	return nil
 }
 
-func (t *CheckDestTask) checkArchiveDest(tenant *oceanbase.DbaOBTenants) (err error) {
+func (t *CheckDestTask) checkArchiveDest(tenant *oceanbase.DbaObTenant) (err error) {
 	t.ExecuteLogf("Check archive log dest of %s(%d)", tenant.TenantName, tenant.TenantID)
 	dest, err := tenantService.GetArchiveDestByID(tenant.TenantID)
 	if err != nil {
@@ -206,7 +206,7 @@ func (t *CheckDestTask) checkArchiveDest(tenant *oceanbase.DbaOBTenants) (err er
 	return nil
 }
 
-func (t *CheckDestTask) checkDataBackupDest(tenant *oceanbase.DbaOBTenants) (err error) {
+func (t *CheckDestTask) checkDataBackupDest(tenant *oceanbase.DbaObTenant) (err error) {
 	t.ExecuteLogf("Check data backup dest of %s(%d)", tenant.TenantName, tenant.TenantID)
 	dest, err := tenantService.GetDataBackupDestByID(tenant.TenantID)
 	if err != nil {
@@ -231,7 +231,7 @@ func (t *CheckDestTask) checkDataBackupDest(tenant *oceanbase.DbaOBTenants) (err
 
 type OpenArchiveLogTask struct {
 	task.Task
-	tenants []oceanbase.DbaOBTenants
+	tenants []oceanbase.DbaObTenant
 }
 
 func newOpenArchiveLogTask() *OpenArchiveLogTask {
@@ -320,7 +320,7 @@ func (t *OpenArchiveLogTask) getParams() (err error) {
 	return nil
 }
 
-func (t *OpenArchiveLogTask) waitArchiveLogOpened(tenant *oceanbase.DbaOBTenants) error {
+func (t *OpenArchiveLogTask) waitArchiveLogOpened(tenant *oceanbase.DbaObTenant) error {
 	t.ExecuteLogf("Wait %s(%d) archive log opened", tenant.TenantName, tenant.TenantID)
 	for i := 0; i < waitForArchiveLogOpened; i++ {
 		archiveLogClosed, err := tenantService.IsArchiveLogClosed(tenant.TenantName)
@@ -340,7 +340,7 @@ const (
 	waitForArchiveLogStop  = 3600
 )
 
-func (t *OpenArchiveLogTask) waitArchiveLogDoing(tenant *oceanbase.DbaOBTenants) error {
+func (t *OpenArchiveLogTask) waitArchiveLogDoing(tenant *oceanbase.DbaObTenant) error {
 	t.ExecuteLogf("Wait for %s(%d) archive log to be 'DOING'", tenant.TenantName, tenant.TenantID)
 	var status string
 	var err error
@@ -367,7 +367,7 @@ type StartBackupTask struct {
 	mode        string
 	encryption  string
 	plusArchive bool
-	tenants     []oceanbase.DbaOBTenants
+	tenants     []oceanbase.DbaObTenant
 }
 
 func newStartBackupTask() *StartBackupTask {
@@ -433,7 +433,7 @@ func (t *StartBackupTask) RollBack() (err error) {
 
 type WaitBackupTaskFinish struct {
 	task.Task
-	tenants []oceanbase.DbaOBTenants
+	tenants []oceanbase.DbaObTenant
 }
 
 func newWaitBackupTask() *WaitBackupTaskFinish {

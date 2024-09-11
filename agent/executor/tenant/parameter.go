@@ -42,7 +42,7 @@ func GetTenantParameter(tenantName string, parameterName string) (*oceanbase.GvO
 	if ocsErr != nil {
 		return nil, ocsErr
 	}
-	parameter, err := tenantService.GetTenantParameter(tenant.Id, parameterName)
+	parameter, err := tenantService.GetTenantParameter(tenant.TenantID, parameterName)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
@@ -63,7 +63,7 @@ func SetTenantParameters(tenantName string, parameters map[string]interface{}) *
 	}
 
 	transferNumber(parameters)
-	if err := tenantService.SetTenantParameters(tenant.Name, parameters); err != nil {
+	if err := tenantService.SetTenantParameters(tenant.TenantName, parameters); err != nil {
 		return errors.Occur(errors.ErrBadRequest, err)
 	}
 	return nil

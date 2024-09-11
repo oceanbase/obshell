@@ -32,7 +32,7 @@ func PostTenantBackupConfig(tenantName string, p *param.TenantBackupConfigParam)
 	return tenantBackupConfig(tenantName, p)
 }
 
-func PatchTenantBackupConfig(tenant *oceanbase.DbaOBTenants, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func PatchTenantBackupConfig(tenant *oceanbase.DbaObTenant, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
 	if p.ArchiveBaseUri == nil || *p.ArchiveBaseUri == "" {
 		if p.Binding != nil && *p.Binding != "" {
 			return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("If binding is set, archive_base_uri must be set"))
@@ -65,7 +65,7 @@ func tenantBackupConfig(tenantName string, tenantP *param.TenantBackupConfigPara
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func TenantStartBackup(tenant *oceanbase.DbaOBTenants, p *param.BackupParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func TenantStartBackup(tenant *oceanbase.DbaObTenant, p *param.BackupParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
 	if err := checkAllDest(tenant); err != nil {
 		return nil, errors.Occur(errors.ErrIllegalArgument, err)
 	}

@@ -43,7 +43,7 @@ func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, *errors.OcsAg
 	// Create 'Drop Tenant' dag instance.
 	template := buildDropTenantDagTemplate(param)
 	context := task.NewTaskContext().
-		SetParam(PARAM_TENANT_ID, tenant.Id).
+		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {

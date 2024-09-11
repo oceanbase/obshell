@@ -83,21 +83,21 @@ func tenantShow(showDetails bool, name ...string) error {
 	data := make([][]string, 0)
 	for _, tenant := range tenants {
 		if !showDetails {
-			data = append(data, []string{tenant.Name, fmt.Sprint(tenant.Id), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, tenant.Locked})
+			data = append(data, []string{tenant.TenantName, fmt.Sprint(tenant.TenantID), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, tenant.Locked})
 		} else {
 			info := bo.TenantInfo{}
-			err := api.CallApiWithMethod(http.GET, constant.URI_TENANT_API_PREFIX+"/"+tenant.Name, nil, &info)
+			err := api.CallApiWithMethod(http.GET, constant.URI_TENANT_API_PREFIX+"/"+tenant.TenantName, nil, &info)
 			if err != nil {
 				return err
 			}
 			if len(info.Pools) == 0 {
-				data = append(data, []string{tenant.Name, fmt.Sprint(tenant.Id), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, tenant.Locked, info.Whitelist, "", ""})
+				data = append(data, []string{tenant.TenantName, fmt.Sprint(tenant.TenantID), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, tenant.Locked, info.Whitelist, "", ""})
 			} else {
 				unitConfigs := ""
 				for _, pool := range info.Pools {
 					unitConfigs += fmt.Sprintf("%s(%s);", pool.ZoneList, pool.Unit.Name)
 				}
-				data = append(data, []string{tenant.Name, fmt.Sprint(tenant.Id), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, fmt.Sprint(info.Pools[0].UnitNum), unitConfigs, tenant.Locked, info.Whitelist, tenant.CreatedTime.Format(time.DateTime)})
+				data = append(data, []string{tenant.TenantName, fmt.Sprint(tenant.TenantID), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, fmt.Sprint(info.Pools[0].UnitNum), unitConfigs, tenant.Locked, info.Whitelist, tenant.CreatedTime.Format(time.DateTime)})
 			}
 		}
 	}

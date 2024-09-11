@@ -45,7 +45,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 	}
 
 	pools := make([]*bo.ResourcePoolWithUnit, 0)
-	poolInfos, err := tenantService.GetTenantResourcePool(tenant.Id)
+	poolInfos, err := tenantService.GetTenantResourcePool(tenant.TenantID)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
@@ -66,8 +66,8 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 	}
 
 	return &bo.TenantInfo{
-		Name:         tenant.Name,
-		Id:           tenant.Id,
+		Name:         tenant.TenantName,
+		Id:           tenant.TenantID,
 		CreatedTime:  tenant.CreatedTime,
 		Mode:         tenant.Mode,
 		Status:       tenant.Status,

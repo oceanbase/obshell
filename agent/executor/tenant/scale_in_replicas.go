@@ -35,12 +35,12 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 		return errors.New("No zone specified.")
 	}
 
-	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.Id)
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return err
 	}
 	if len(replicaInfoMap) == 1 {
-		return errors.Errorf("tenant %s only has one replica", tenant.Name)
+		return errors.Errorf("tenant %s only has one replica", tenant.TenantName)
 	}
 
 	// Check whether there is has a replica in the zone
@@ -54,7 +54,7 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 		return err
 	}
 
-	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.Id)
+	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.TenantID)
 	if err != nil {
 		return err
 	}
@@ -128,13 +128,13 @@ func ScaleInTenantReplicas(tenantName string, param *param.ScaleInTenantReplicas
 }
 
 func buildScaleInTenantReplicasDagTemplate(tenant *oceanbase.DbaObTenant, param param.ScaleInTenantReplicasParam) (*task.Template, error) {
-	templateBuilder := task.NewTemplateBuilder(DAG_SCALE_IN_TENANT_REPLICA).SetMaintenance(task.TenantMaintenance(tenant.Name))
+	templateBuilder := task.NewTemplateBuilder(DAG_SCALE_IN_TENANT_REPLICA).SetMaintenance(task.TenantMaintenance(tenant.TenantName))
 
 	for _, zone := range param.Zones {
-		templateBuilder.AddNode(newAlterLocalityNode(tenant.Id, SCALE_IN_REPLICA, zone))
+		templateBuilder.AddNode(newAlterLocalityNode(tenant.TenantID, SCALE_IN_REPLICA, zone))
 	}
 
-	poolInfo, err := tenantService.GetTenantResourcePool(tenant.Id)
+	poolInfo, err := tenantService.GetTenantResourcePool(tenant.TenantID)
 	if err != nil {
 		return nil, errors.Wrap(err, "Get tenant resource pool info failed")
 	}
@@ -161,7 +161,7 @@ func buildScaleInTenantReplicasDagTemplate(tenant *oceanbase.DbaObTenant, param 
 
 func buildScaleInTenantReplicasDagContext(tenant *oceanbase.DbaObTenant, param param.ScaleInTenantReplicasParam) *task.TaskContext {
 	context := task.NewTaskContext().
-		SetParam(PARAM_TENANT_ID, tenant.Id).
+		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(PARAM_ZONE_LIST, param.Zones).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	return context

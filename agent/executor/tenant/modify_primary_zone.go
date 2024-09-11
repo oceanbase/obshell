@@ -31,7 +31,7 @@ import (
 
 func checkModifyPrimaryZoneParam(tenant *oceanbase.DbaObTenant, param *param.ModifyTenantPrimaryZoneParam) *errors.OcsAgentError {
 	var zoneList = make([]string, 0)
-	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.Id)
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err.Error())
 	}
@@ -70,7 +70,7 @@ func ModifyTenantPrimaryZone(tenantName string, param *param.ModifyTenantPrimary
 		return nil, err
 	}
 
-	if err := tenantService.AlterTenantPrimaryZone(tenant.Name, *param.PrimaryZone); err != nil {
+	if err := tenantService.AlterTenantPrimaryZone(tenant.TenantName, *param.PrimaryZone); err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
@@ -78,7 +78,7 @@ func ModifyTenantPrimaryZone(tenantName string, param *param.ModifyTenantPrimary
 		SetMaintenance(task.TenantMaintenance(tenantName)).
 		AddTask(newModifyPrimaryZoneTask(), false).Build()
 	context := task.NewTaskContext().
-		SetParam(PARAM_TENANT_ID, tenant.Id).
+		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(PARAM_PRIMARY_ZONE, param.PrimaryZone).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)

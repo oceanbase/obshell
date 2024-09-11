@@ -45,7 +45,7 @@ func PatchObclusterBackup(p *param.BackupStatusParam) *errors.OcsAgentError {
 	return nil
 }
 
-func stopBackup(tenant *oceanbase.DbaOBTenants) error {
+func stopBackup(tenant *oceanbase.DbaObTenant) error {
 	log.Infof("stop backup for %s", tenant.TenantName)
 
 	backupStopped, err := tenantService.IsBackupFinished(tenant.TenantID)
@@ -65,7 +65,7 @@ func PatchTenantBackup(tenantName string, p *param.BackupStatusParam) *errors.Oc
 		return errors.Occur(errors.ErrIllegalArgument, err)
 	}
 
-	tenant, err := tenantService.GetTenantsByName(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err)
 	}
@@ -94,7 +94,7 @@ func PatchObclusterArchiveLog(p *param.ArchiveLogStatusParam) *errors.OcsAgentEr
 	return nil
 }
 
-func patchArchiveLogStatus(tenant *oceanbase.DbaOBTenants, p *param.ArchiveLogStatusParam) (err error) {
+func patchArchiveLogStatus(tenant *oceanbase.DbaObTenant, p *param.ArchiveLogStatusParam) (err error) {
 	switch *p.Status {
 	case constant.ARCHIVELOG_STATUS_DOING:
 		return startArchiveLog(tenant)
@@ -105,7 +105,7 @@ func patchArchiveLogStatus(tenant *oceanbase.DbaOBTenants, p *param.ArchiveLogSt
 	}
 }
 
-func startArchiveLog(tenant *oceanbase.DbaOBTenants) error {
+func startArchiveLog(tenant *oceanbase.DbaObTenant) error {
 	log.Infof("start archive log for %s", tenant.TenantName)
 	status, err := tenantService.GetArchiveLogStatus(tenant.TenantID)
 	if err != nil {
@@ -133,7 +133,7 @@ func startArchiveLog(tenant *oceanbase.DbaOBTenants) error {
 	return nil
 }
 
-func stopArchiveLog(tenant *oceanbase.DbaOBTenants) error {
+func stopArchiveLog(tenant *oceanbase.DbaObTenant) error {
 	log.Infof("stop archive log for %s", tenant.TenantName)
 	status, err := tenantService.GetArchiveLogStatus(tenant.TenantID)
 	if err != nil {
@@ -162,7 +162,7 @@ func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) *e
 		return errors.Occur(errors.ErrIllegalArgument, err)
 	}
 
-	tenant, err := tenantService.GetTenantsByName(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return errors.Occur(errors.ErrUnexpected, err)
 	}
@@ -202,7 +202,7 @@ func GetObclusterBackupOverview() (*param.BackupOverview, *errors.OcsAgentError)
 }
 
 func GetTenantBackupOverview(name string) (*param.TenantBackupOverview, *errors.OcsAgentError) {
-	tenant, err := tenantService.GetTenantsByName(name)
+	tenant, err := tenantService.GetTenantByName(name)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err)
 	}
@@ -222,7 +222,7 @@ func GetTenantBackupOverview(name string) (*param.TenantBackupOverview, *errors.
 	return overview, nil
 }
 
-func getTenantBackupTask(tenantID int64) (*oceanbase.CdbObBackupTask, error) {
+func getTenantBackupTask(tenantID int) (*oceanbase.CdbObBackupTask, error) {
 	task, err := tenantService.GetRunningBackupTask(tenantID)
 	if err != nil {
 		return nil, err
