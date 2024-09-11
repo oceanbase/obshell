@@ -92,7 +92,7 @@ func (t *TenantService) GetResourcePoolByName(name string) (pool *model.DbaOBRes
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_RESOURCE_POOLS).Where("NAME = (?)").Scan(&pool).Error
+	err = db.Table(DBA_OB_RESOURCE_POOLS).Where("NAME = (?)", name).Scan(&pool).Error
 	return
 }
 
