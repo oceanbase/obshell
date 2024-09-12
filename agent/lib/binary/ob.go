@@ -45,10 +45,10 @@ func GetMyOBVersion() (version string, err error) {
 	buildNumber := match[1]
 
 	// get version
-	regex = regexp.MustCompile(`observer\s*\(OceanBase_CE\s*([\d.]+)\)`)
+	regex = regexp.MustCompile(`observer\s*\(OceanBase(_CE)?\s*([\d.]+)\)`)
 	match = regex.FindStringSubmatch(res)
-	if len(match) != 2 {
+	if match == nil {
 		return "", errors.New("get my ob version failed")
 	}
-	return fmt.Sprintf("%s-%s", match[1], buildNumber), nil
+	return fmt.Sprintf("%s-%s", match[2], buildNumber), nil
 }
