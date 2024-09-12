@@ -364,11 +364,13 @@ func (task *Task) GetResult() TaskResult {
 
 func (task *Task) GetTimeout() time.Duration {
 	if task.taskContext != nil {
-		if timeout, ok := task.taskContext.GetParam(TIMEOUT_KEY).(float64); ok {
-			return time.Duration(timeout) * time.Second
-		}
 		if timeout, ok := task.taskContext.GetParam(TIMEOUT_KEY).(time.Duration); ok {
 			return timeout
+		}
+
+		var timeout int
+		if err := task.taskContext.GetParamWithValue(TIMEOUT_KEY, &timeout); err == nil {
+			return time.Duration(timeout) * time.Second
 		}
 	}
 	return DEFAULT_TIMEOUT

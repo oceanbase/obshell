@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -104,11 +105,13 @@ func cmpDagAncCancelRestoreForJobNil(dagID int64, tenantName string) (*task.DagD
 	}
 
 	data := *(dagDetail.AdditionalData)
-	jobID, ok := data[ADDL_KEY_RESTORE_JOB_ID].(float64)
+	num, ok := data[ADDL_KEY_RESTORE_JOB_ID].(json.Number)
 	// If the dag additional data has no restore job id, which means the dag is not the restore backup task, return directly.
 	if !ok {
 		return nil, errors.Occurf(errors.ErrBadRequest, "additional data has no restore job id, dag is not the restore backup task")
 	}
+	// if restore job id exists, it must be int64, so we can convert it to int64 directly.
+	jobID, _ := num.Int64()
 
 	if jobID == 0 {
 		return cancelAndRollbackRestoreDag(dag)
@@ -144,12 +147,15 @@ func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*tas
 			log.Infof("dag additional data is %v", *dagDetail.AdditionalData)
 			data := *(dagDetail.AdditionalData)
 
-			jobID, ok := data[ADDL_KEY_RESTORE_JOB_ID].(float64)
+			num, ok := data[ADDL_KEY_RESTORE_JOB_ID].(json.Number)
+			// If the dag additional data has no restore job id, which means the dag is not the restore backup task, return directly.
 			if !ok {
 				return nil, errors.Occurf(errors.ErrBadRequest, "additional data has no restore job id, %s(%d) is not the restore backup task", dag.GetName(), dagID)
 			}
+			// if restore job id exists, it must be int64, so we can convert it to int64 directly.
+			jobID, _ := num.Int64()
 
-			if jobID == 0 || jobID == float64(expectedJobID) {
+			if jobID == 0 || jobID == expectedJobID {
 				return cancelAndRollbackRestoreDag(dag)
 			} else {
 				return nil, errors.Occurf(errors.ErrBadRequest, "%s(%d) is not the restore backup task", dag.GetName(), dagID)
