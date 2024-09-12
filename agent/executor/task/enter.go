@@ -30,6 +30,12 @@ var (
 	agentService       = agentservice.AgentService{}
 )
 
+var (
+	// for local scale out dag
+	PARAM_COORDINATE_DAG_ID = "coordinateDagId"
+	PARAM_COORDINATE_AGENT  = "coordinateAgent"
+)
+
 func getTaskQueryParams(c *gin.Context) *param.TaskQueryParams {
 	var params param.TaskQueryParams
 	c.ShouldBindQuery(&params)

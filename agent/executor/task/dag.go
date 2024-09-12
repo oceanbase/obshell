@@ -28,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/secure"
 	taskservice "github.com/oceanbase/obshell/agent/service/task"
 	"github.com/oceanbase/obshell/param"
@@ -80,6 +81,11 @@ func GetDagDetail(c *gin.Context) {
 		return
 	}
 
+	if agent == nil && meta.OCS_AGENT.IsScalingOutAgent() {
+		sendToTargetClusterAgentForScaleOut(c, &dagDTOParam)
+		return
+	}
+
 	param := getTaskQueryParams(c)
 	if agent == nil {
 		service = clusterTaskService
@@ -95,6 +101,31 @@ func GetDagDetail(c *gin.Context) {
 
 	dagDetailDTO, err = convertDagDetailDTO(dag, *param.ShowDetails)
 	common.SendResponse(c, dagDetailDTO, err)
+}
+
+func sendToTargetClusterAgentForScaleOut(c *gin.Context, dagDTO *task.DagDetailDTO) {
+	// For scaling out agent, if the agent is nil, try to forward request to cluster agent.
+	if _, err := oceanbase.GetOcsInstance(); err != nil {
+		log.Info("try to forward request to cluster agent")
+		dag, err := localTaskService.FindLastMaintenanceDag()
+		if err != nil {
+			common.SendResponse(c, nil, err)
+			return
+		}
+
+		ctx := dag.GetContext()
+		var coordinateDagId string
+		var coordinateAgent meta.AgentInfo
+		err1 := ctx.GetParamWithValue(PARAM_COORDINATE_DAG_ID, &coordinateDagId)
+		err2 := ctx.GetParamWithValue(PARAM_COORDINATE_AGENT, &coordinateAgent)
+		if err1 == nil && err2 == nil && coordinateDagId == dagDTO.GenericID {
+			// Forward request to coordinate agent.
+			common.ForwardRequest(c, &coordinateAgent, dagDTO)
+			return
+		} else {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "coordinate cluster agent is not found or not match"))
+		}
+	}
 }
 
 func convertDagDetailDTO(dag *task.Dag, fillDeatil bool) (dagDetailDTO *task.DagDetailDTO, err error) {
