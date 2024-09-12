@@ -30,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -69,6 +70,15 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 	if !agent.IsSingleAgent() {
 		return nil, errors.Occurf(errors.ErrKnown, "%s is not single agent", param.AgentInfo.String())
 	}
+
+	// check ob version is consistent
+	if obVersion, err := binary.GetMyOBVersion(); err != nil {
+		return nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error())
+	} else if obVersion != agent.OBVersion {
+		return nil, errors.Occurf(errors.ErrBadRequest, "ob version is not consistent between %s(%s) and %s(%s)",
+			param.AgentInfo.String(), agent.OBVersion, meta.OCS_AGENT.String(), obVersion)
+	}
+
 	param.ObConfigs[constant.CONFIG_HOME_PATH] = agent.HomePath
 	if err := paramToConfig(param.ObConfigs); err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
