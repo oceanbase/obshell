@@ -51,6 +51,7 @@ func newCancelCmd() *cobra.Command {
 			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
+			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
