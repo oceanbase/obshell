@@ -326,7 +326,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 
 func Verify(skipRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
-		log.WithContext(NewContextWithTraceId(c)).Debugf("verfiy request: %s", c.Request.RequestURI)
+		log.WithContext(NewContextWithTraceId(c)).Infof("verfiy request: %s", c.Request.RequestURI)
 		for _, route := range skipRoutes {
 			if route == c.Request.RequestURI {
 				c.Next()
@@ -337,6 +337,7 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 		headerByte, exist := c.Get(constant.OCS_HEADER)
 
 		if headerByte == nil || !exist {
+			log.WithContext(NewContextWithTraceId(c)).Error("header not found")
 			c.Abort()
 			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
 			return
@@ -345,6 +346,7 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 
 		header, ok := headerByte.(secure.HttpHeader)
 		if !ok {
+			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
 			c.Abort()
 			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
 			return

@@ -49,7 +49,7 @@ func autoForward(c *gin.Context) {
 	}
 
 	ctx := NewContextWithTraceId(c)
-	log.WithContext(ctx).Infof("Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), master.String())
+	log.WithContext(ctx).Infof("Auto Forward request: [%v %v, client=%v, agent=%s]", c.Request.Method, c.Request.URL, c.ClientIP(), master.String())
 
 	// OriginalBody only would be set in api request
 	// Follower agent forward request to master agent, use the original encrypted body.

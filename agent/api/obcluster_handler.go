@@ -325,6 +325,15 @@ func obClusterScaleOutHandler(c *gin.Context) {
 //	@Failure		500	object	http.OcsAgentResponse
 //	@Router			/api/v1/ob/info [get]
 func obInfoHandler(c *gin.Context) {
+	if meta.OCS_AGENT.IsFollowerAgent() {
+		master := agentService.GetMasterAgentInfo()
+		if master == nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			return
+		}
+		common.ForwardRequest(c, master, nil)
+		return
+	}
 	data, err := ob.GetObInfo()
 	common.SendResponse(c, data, err)
 }
@@ -493,6 +502,15 @@ func obUpgradeHandler(c *gin.Context) {
 }
 
 func obAgentsHandler(c *gin.Context) {
+	if meta.OCS_AGENT.IsFollowerAgent() {
+		master := agentService.GetMasterAgentInfo()
+		if master == nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			return
+		}
+		common.ForwardRequest(c, master, nil)
+		return
+	}
 	data, err := ob.GetObAgents()
 	common.SendResponse(c, data, err)
 }

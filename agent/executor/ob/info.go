@@ -44,11 +44,8 @@ func GetObInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 		resp.Agents = append(resp.Agents, *meta.NewAgentInstanceByAgent(meta.OCS_AGENT))
 		return resp, nil
 	case meta.FOLLOWER:
-		master := agentService.GetMasterAgentInfo()
-		if master == nil {
-			return nil, errors.Occur(errors.ErrUnexpected, "master is not found")
-		}
-		return sendInfoApiTo(master)
+		// if agent is follower, it will forward the request to master in handler.
+		return nil, errors.Occurf(errors.ErrUnexpected, "wrong case: the request should be forwarded to master")
 	case meta.MASTER:
 		return getAgentInfo()
 	case meta.CLUSTER_AGENT, meta.TAKE_OVER_FOLLOWER, meta.TAKE_OVER_MASTER, meta.SCALING_OUT:
@@ -254,11 +251,8 @@ func GetObAgents() (agents []meta.AgentInfo, err error) {
 		agents = append(agents, meta.OCS_AGENT.GetAgentInfo())
 		return
 	case meta.FOLLOWER:
-		master := agentService.GetMasterAgentInfo()
-		if master == nil {
-			return nil, errors.New("master is not found")
-		}
-		return sendAgentsApiTo(master)
+		// if agent is follower, it will forward the request to master in handler.
+		return nil, errors.Errorf("wrong case: the request should be forwarded to master")
 	case meta.MASTER:
 		agents, err = agentService.GetAllAgentsInfo()
 		return
@@ -280,15 +274,6 @@ func GetObAgents() (agents []meta.AgentInfo, err error) {
 	}
 	return
 
-}
-
-func sendAgentsApiTo(agent meta.AgentInfoInterface) (agents []meta.AgentInfo, err error) {
-	var resp []meta.AgentInfo
-	err = secure.SendGetRequest(agent, constant.URI_OB_API_PREFIX+constant.URI_AGENTS, nil, &resp)
-	if err != nil {
-		return nil, errors.Wrap(err, "send agents api to master failed")
-	}
-	return resp, nil
 }
 
 func GetAllServerFromOBConf() (serversWithRpcPort [][2]string, err error) {
