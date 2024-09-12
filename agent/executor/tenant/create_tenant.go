@@ -287,9 +287,6 @@ func renderZoneParams(zoneList []param.ZoneParam) {
 		} else {
 			zoneList[i].ReplicaType = strings.ToUpper(zoneList[i].ReplicaType)
 		}
-		if zoneList[i].UnitNum == 0 {
-			zoneList[i].UnitNum = 1
-		}
 	}
 }
 
