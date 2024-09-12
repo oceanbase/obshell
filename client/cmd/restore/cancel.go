@@ -20,11 +20,12 @@ import (
 	"errors"
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -82,13 +83,16 @@ func cancel(opts *CancelFlags) error {
 		return errors.New("Operation canceled")
 	}
 
+	var dag task.DagDetailDTO
 	url := fmt.Sprintf("%s/%s%s", constant.URI_TENANT_API_PREFIX, opts.TenantName, constant.URI_RESTORE)
-	dag, err := api.CallDeleteApiAndPrintStage(url, nil)
-	if err != nil {
+	if err = api.CallApiWithMethod(http.DELETE, url, nil, &dag); err != nil {
 		return err
 	}
-	log.Info(dag)
-	return nil
+	if dag.GenericDTO == nil {
+		stdio.Infof("There is no restore task for tenant '%s'.", opts.TenantName)
+		return nil
+	}
+	return api.NewDagHandler(&dag).PrintDagStage()
 }
 
 func cancelCmdExample() string {
