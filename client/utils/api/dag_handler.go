@@ -116,7 +116,7 @@ func (dh *DagHandler) waitDagFinished() error {
 func (dh *DagHandler) PrintDagStage() (err error) {
 	var failed bool
 	dh.ctx, dh.cancel = context.WithCancel(context.Background())
-	for i := 1; i <= dh.Dag.MaxStage && !dh.Dag.IsSucceed(); i = dh.Dag.Stage {
+	for i := 0; i <= dh.Dag.MaxStage && !dh.Dag.IsSucceed(); i = dh.Dag.Stage {
 		failed, err = dh.waitDagFinishStage(i)
 		if err != nil || failed {
 			return
@@ -142,6 +142,17 @@ func (dh *DagHandler) waitDagFinishStage(stage int) (failed bool, err error) {
 	}
 }
 
+func (dh *DagHandler) getLoadMessage(stage int) string {
+	switch dh.Dag.Operator {
+	case task.RUN_STR:
+		return fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
+	case task.ROLLBACK_STR:
+		return fmt.Sprintf("Rollback `%s` [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
+	default:
+		return ""
+	}
+}
+
 // chaseToLatestStage will chase the dag to the latest stage, and return whether the prevStage is finished.
 // When exiting the function, the current print must be the latest stage.
 // when prevStage finished, return true, else return false.
@@ -159,30 +170,47 @@ func (dh *DagHandler) chaseToLatestStage(prevStage int) (finished bool, err erro
 		return false, err
 	}
 
-	if stage == 1 {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[0].Name, dh.Dag.Stage, dh.Dag.MaxStage)
-		stdio.StartOrUpdateLoading(msg)
+	if stage == 0 {
+		switch dh.Dag.Operator {
+		case task.RUN_STR:
+			stage = 1
+		case task.ROLLBACK_STR:
+			stage = dh.Dag.Stage
+		default:
+			return false, fmt.Errorf("Invalid operator %s", dh.Dag.Operator)
+		}
+		stdio.StartOrUpdateLoading(dh.getLoadMessage(stage))
 	}
 
-	for ; stage+1 < dh.Dag.Stage; stage++ {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
-		stdio.LoadStageSuccess(msg)
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage].Name, stage+1, dh.Dag.MaxStage)
-		stdio.StartOrUpdateLoading(msg)
+	nextStage := func(stage int) int {
+		if dh.Dag.Operator == task.ROLLBACK_STR {
+			stage--
+		} else {
+			stage++
+		}
+
+		if stage < 1 {
+			stage = 1
+		} else if stage > dh.Dag.MaxStage {
+			stage = dh.Dag.MaxStage
+		}
+		return stage
 	}
 
-	if dh.Dag.Stage > stage {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, stage, dh.Dag.MaxStage)
-		stdio.LoadStageSuccess(msg)
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage].Name, dh.Dag.Stage, dh.Dag.MaxStage)
-		stdio.StartOrUpdateLoading(msg)
-		return true, nil
+	isLatestStage := func(stage int) bool {
+		return dh.Dag.Stage == stage
+	}
+
+	for !isLatestStage(stage) {
+		stdio.LoadStageSuccess(dh.getLoadMessage(stage))
+
+		stage = nextStage(stage)
+		stdio.StartOrUpdateLoading(dh.getLoadMessage(stage))
 	}
 
 	if dh.Dag.IsSucceed() {
-		msg = fmt.Sprintf("%s [%d/%d]", dh.Dag.Nodes[stage-1].Name, dh.Dag.Stage, dh.Dag.MaxStage)
-		stdio.LoadSuccess(msg)
-		msg = fmt.Sprintf("Congratulations! '%s' task completed successfully.", dh.Dag.Name)
+		stdio.LoadSuccess(dh.getLoadMessage(stage))
+		msg = fmt.Sprintf("Congratulations! %s '%s' task completed successfully.", dh.Dag.Operator, dh.Dag.Name)
 		stdio.Success(msg)
 		return true, nil
 	}
@@ -194,5 +222,5 @@ func (dh *DagHandler) chaseToLatestStage(prevStage int) (finished bool, err erro
 		}
 		return true, fmt.Errorf("Sorry, task '%s' failed", dh.Dag.Name)
 	}
-	return false, nil
+	return true, nil
 }
