@@ -46,6 +46,7 @@ func newShowCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := unitConfigShow(args...); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -75,23 +76,21 @@ func unitConfigShow(name ...string) error {
 	if len(name) == 0 {
 		unitConfigs := make([]oceanbase.DbaObUnitConfig, 0)
 		// show all
-		stdio.StartLoading("Get all unit configs")
+		stdio.StartLoading("get all unit configs")
 		if err := api.CallApiWithMethod(http.GET, constant.URI_API_V1+constant.URI_UNITS_GROUP, nil, &unitConfigs); err != nil {
-			stdio.LoadFailedWithoutMsg()
 			return err
 		}
-		stdio.LoadSuccess("Get all unit configs")
+		stdio.LoadSuccess("get all unit configs")
 		for _, unitConfig := range unitConfigs {
 			data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), fmt.Sprint(unitConfig.MaxIops), fmt.Sprint(unitConfig.MinIops)})
 		}
 	} else {
 		var unitConfig oceanbase.DbaObUnitConfig
-		stdio.StartLoadingf("Get unit config %s", name[0])
+		stdio.StartLoadingf("get unit config %s", name[0])
 		if err := api.CallApiWithMethod(http.GET, constant.URI_UNIT_GROUP_PREFIX+"/"+name[0], nil, &unitConfig); err != nil {
-			stdio.LoadFailedWithoutMsg()
 			return err
 		}
-		stdio.LoadSuccessf("Get unit config %s", name[0])
+		stdio.LoadSuccessf("get unit config %s", name[0])
 		data = append(data, []string{unitConfig.GmtCreate.Format(time.DateTime), unitConfig.Name, transferCapacity(unitConfig.MemorySize), fmt.Sprint(unitConfig.MaxCpu), fmt.Sprint(unitConfig.MinCpu), transferCapacity(unitConfig.LogDiskSize), fmt.Sprint(unitConfig.MaxIops), fmt.Sprint(unitConfig.MinIops)})
 	}
 	stdio.PrintTable(header, data)

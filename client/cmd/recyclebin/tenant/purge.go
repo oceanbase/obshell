@@ -56,6 +56,7 @@ func newPurgeCmd() *cobra.Command {
 			stdio.SetVerboseMode(opts.Verbose)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			if err := tenantPurge(args[0]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -86,6 +87,7 @@ func tenantPurge(name string) error {
 		return err
 	}
 	if dag.GenericDTO == nil {
+		stdio.Printf("No such tenant '%s' in recyclebin", name)
 		return nil
 	}
 	if err := api.NewDagHandler(&dag).PrintDagStage(); err != nil {

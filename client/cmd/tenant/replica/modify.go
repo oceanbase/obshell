@@ -57,6 +57,7 @@ func newModifyCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			if err := replicaModify(cmd, args[0], &opts.ZoneParamsFlags); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -167,6 +168,7 @@ func replicaModify(cmd *cobra.Command, tenantName string, opts *ZoneParamsFlags)
 		return err
 	}
 	if dag.GenericDTO == nil { // No content
+		stdio.Print("nothing need to be modified")
 		return nil
 	}
 	if err = api.NewDagHandler(&dag).PrintDagStage(); err != nil {

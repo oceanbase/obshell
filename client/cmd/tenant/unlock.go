@@ -47,6 +47,7 @@ func newUnlockCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := tenantUnlock(args[0]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -61,11 +62,10 @@ func newUnlockCmd() *cobra.Command {
 
 func tenantUnlock(name string) error {
 	// Unlock tenant
-	stdio.StartLoadingf("Unlocking tenant %s", name)
+	stdio.StartLoadingf("unlock tenant %s", name)
 	if err := api.CallApiWithMethod(http.DELETE, constant.URI_TENANT_API_PREFIX+"/"+name+constant.URI_LOCK, nil, nil); err != nil {
-		stdio.LoadFailedWithoutMsg()
 		return err
 	}
-	stdio.LoadSuccessf("Unlock tenant %s", name)
+	stdio.LoadSuccessf("unlock tenant %s", name)
 	return nil
 }

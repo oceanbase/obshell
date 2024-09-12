@@ -48,6 +48,7 @@ func newLockCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := tenantLock(args[0]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -62,11 +63,10 @@ func newLockCmd() *cobra.Command {
 
 func tenantLock(name string) error {
 	// Lock tenant
-	stdio.StartLoadingf("Locking tenant %s", name)
+	stdio.StartLoadingf("lock tenant %s", name)
 	if err := api.CallApiWithMethod(http.POST, constant.URI_TENANT_API_PREFIX+"/"+name+constant.URI_LOCK, nil, nil); err != nil {
-		stdio.LoadFailedWithoutMsg()
 		return err
 	}
-	stdio.LoadSuccessf("Locking tenant %s", name)
+	stdio.LoadSuccessf("lock tenant %s", name)
 	return nil
 }

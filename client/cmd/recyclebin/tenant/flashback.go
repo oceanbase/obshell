@@ -49,6 +49,7 @@ func newFlashbackCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := tenantFlashback(cmd, args[0], newName); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -74,5 +75,10 @@ func tenantFlashback(cmd *cobra.Command, name string, newName string) error {
 		stdio.Verbosef("Flashback tenant %s to %s", name, name)
 	}
 	// flashback tenant
-	return api.CallApiWithMethod(http.POST, constant.URI_API_V1+constant.URI_RECYCLEBIN_GROUP+constant.URI_TENANT_GROUP+"/"+name, params, nil)
+	stdio.StartLoadingf("flashback tenant %s", name)
+	if err := api.CallApiWithMethod(http.POST, constant.URI_API_V1+constant.URI_RECYCLEBIN_GROUP+constant.URI_TENANT_GROUP+"/"+name, params, nil); err != nil {
+		return err
+	}
+	stdio.LoadSuccessf("flashback tenant %s", name)
+	return nil
 }

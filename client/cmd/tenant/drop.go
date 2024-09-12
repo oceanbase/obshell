@@ -57,6 +57,7 @@ func newDropCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
 			if err := tenantDrop(args[0], opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -104,6 +105,7 @@ func tenantDrop(name string, opts *tenantDropFlags) error {
 		return err
 	}
 	if dag.GenericDTO == nil {
+		stdio.Printf("Tenant '%s' is not exist.", name)
 		return nil
 	}
 	if err = api.NewDagHandler(&dag).PrintDagStage(); err != nil {

@@ -78,12 +78,13 @@ func newShowCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := showParameter(cmd, args[0], args[1]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
 			return nil
 		},
-		Example: `  obshell tenant parameter show t1 max_connections`,
+		Example: `  obshell tenant parameter show t1 cpu_quota_concurrency`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> [parameter]"}
 	showCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
@@ -162,7 +163,7 @@ func newSetCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant parameter set t1.max_connections=10000`,
+		Example: `  obshell tenant parameter set t1 cpu_quota_concurrency=10,_rowsets_enabled=true`,
 	})
 	setCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <name=value>"}
 	setCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
@@ -178,8 +179,11 @@ func setParameter(cmd *cobra.Command, tenant string, str string) error {
 	params := param.SetTenantParametersParam{
 		Parameters: parameters,
 	}
+
+	stdio.StartLoading("set tenant parameter(s)")
 	if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenant+constant.URI_PARAMETERS, params, nil); err != nil {
 		return err
 	}
+	stdio.LoadSuccess("set tenant parameter(s)")
 	return nil
 }

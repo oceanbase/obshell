@@ -91,14 +91,14 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 		return errors.New("could not change password of sys tenant")
 	}
 	if cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
-		stdio.StartLoadingf("Set password of tenant %s", tenantName)
+		stdio.StartLoadingf("set password of tenant %s", tenantName)
 		if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{
 			OldPwd: opts.oldPwd,
 			NewPwd: &opts.newPwd,
 		}, nil); err != nil {
 			return err
 		}
-		stdio.LoadSuccessf("Set password of tenant %s", tenantName)
+		stdio.LoadSuccessf("set password of tenant %s", tenantName)
 	}
 	if opts.interactivelyChangePassowrd {
 		old_password, err := stdio.InputPassword("Enter the old password(enter means empty): ")
@@ -119,14 +119,14 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 			return errors.New("The new password is not the same as the confirmation password")
 		}
 
-		stdio.StartLoadingf("Set password of tenant %s", tenantName)
+		stdio.StartLoadingf("set password of tenant %s", tenantName)
 		if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{
 			OldPwd: old_password,
 			NewPwd: &new_password,
 		}, nil); err != nil {
 			return err
 		}
-		stdio.LoadSuccessf("Set password of tenant %s", tenantName)
+		stdio.LoadSuccessf("set password of tenant %s", tenantName)
 	}
 	if cmd.Flags().Changed(FLAG_PRIMARY_ZONE) {
 		uri := constant.URI_TENANT_API_PREFIX + "/" + tenantName + constant.URI_PRIMARYZONE
@@ -143,13 +143,13 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 		}
 	}
 	if cmd.Flags().Changed(FLAG_WHITELIST) {
-		stdio.StartLoading("Set whitelist")
+		stdio.StartLoading("set whitelist")
 		if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_WHITELIST, param.ModifyTenantWhitelistParam{
 			Whitelist: &opts.whitelist,
 		}, nil); err != nil {
 			return err
 		}
-		stdio.LoadSuccess("Set whitelist")
+		stdio.LoadSuccess("set whitelist")
 	}
 	return nil
 }

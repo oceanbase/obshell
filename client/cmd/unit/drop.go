@@ -50,6 +50,7 @@ func newDropCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
 			if err := unitConfigDrop(args[0], opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -76,32 +77,29 @@ func unitConfigDrop(name string, opts *global.DropFlags) error {
 	if opts.IfExist {
 		unitConfigs := make([]oceanbase.DbaObUnitConfig, 0)
 		// show all
-		stdio.StartLoading("Get all unit configs")
+		stdio.StartLoading("get all unit configs")
 		err := api.CallApiWithMethod(http.GET, constant.URI_API_V1+constant.URI_UNITS_GROUP, nil, &unitConfigs)
 		if err != nil {
-			stdio.LoadFailedWithoutMsg()
 			return err
 		}
-		stdio.LoadSuccess("Get all unit configs")
+		stdio.LoadSuccess("get all unit configs")
 		for _, unitConfig := range unitConfigs {
 			if unitConfig.Name == name {
 				// Drop unit config
-				stdio.StartLoadingf("Drop unit config %s", name)
+				stdio.StartLoadingf("drop unit config %s", name)
 				if err := api.CallApiWithMethod(http.DELETE, constant.URI_UNIT_GROUP_PREFIX+"/"+name, nil, nil); err != nil {
-					stdio.LoadFailedWithoutMsg()
 					return err
 				}
-				stdio.LoadSuccessf("Drop unit config %s", name)
+				stdio.LoadSuccessf("drop unit config %s", name)
 			}
 		}
 		return nil
 	}
 	// Drop unit config
-	stdio.StartLoadingf("Drop unit config %s", name)
+	stdio.StartLoadingf("drop unit config %s", name)
 	if err := api.CallApiWithMethod(http.DELETE, constant.URI_UNIT_GROUP_PREFIX+"/"+name, nil, nil); err != nil {
-		stdio.LoadFailedWithoutMsg()
 		return err
 	}
-	stdio.LoadSuccessf("Drop unit config %s", name)
+	stdio.LoadSuccessf("drop unit config %s", name)
 	return nil
 }

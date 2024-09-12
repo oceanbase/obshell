@@ -67,6 +67,7 @@ func newCreateCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			if err := tenantCreate(cmd, args[0], opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -75,7 +76,7 @@ func newCreateCmd() *cobra.Command {
 		Example: `  obshell tenant create t1 -u s1
   obshell tenant create t1 -z zone1,zone2,zone3
     --zone1.unit=s1 --zone2.unit=s2  --zone3.unit=s3
-    --zone1.type=FULL --zone2.type=FULL --zone2.type=READONLY
+    --zone1.replica_type=FULL --zone2.replica_type=FULL --zone2.replica_type=READONLY
     --rp 111`,
 	})
 

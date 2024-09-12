@@ -58,6 +58,7 @@ func newCreateCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.Verbose)
 			if err := unitConfigCreate(cmd, args[0], &opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -84,12 +85,11 @@ func newCreateCmd() *cobra.Command {
 
 func unitConfigCreate(cmd *cobra.Command, name string, opts *unitConfigCreateFlags) error {
 	params := buildCreateUnitConfigParams(cmd, name, opts)
-	stdio.StartLoadingf("Create unit config %s", name)
+	stdio.StartLoadingf("create unit config %s", name)
 	if err := api.CallApiWithMethod(http.POST, constant.URI_UNIT_GROUP_PREFIX, params, nil); err != nil {
-		stdio.LoadFailedWithoutMsg()
 		return err
 	}
-	stdio.LoadSuccessf("Create unit config %s", name)
+	stdio.LoadSuccessf("create unit config %s", name)
 	return nil
 }
 

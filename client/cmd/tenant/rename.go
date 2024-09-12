@@ -52,6 +52,7 @@ func newRenameCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := tenantRename(args[0], args[1]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -69,11 +70,10 @@ func tenantRename(name string, newName string) error {
 	params := map[string]string{
 		"new_name": newName,
 	}
-	stdio.StartLoadingf("Renaming tenant %s to %s", name, newName)
+	stdio.StartLoadingf("rename tenant %s to %s", name, newName)
 	if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+name+constant.URI_NAME, params, nil); err != nil {
-		stdio.LoadFailedWithoutMsg()
 		return err
 	}
-	stdio.LoadSuccessf("Renaming tenant %s to %s", name, newName)
+	stdio.LoadSuccessf("rename tenant %s to %s", name, newName)
 	return nil
 }

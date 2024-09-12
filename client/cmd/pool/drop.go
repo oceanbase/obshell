@@ -49,6 +49,7 @@ func newDropCmd() *cobra.Command {
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
 			if err := rpDrop(args[0], opts); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -73,5 +74,10 @@ func rpDrop(name string, opts *global.DropFlags) error {
 		return nil
 	}
 	// Drop rp
-	return api.CallApiWithMethod(http.DELETE, constant.URI_POOL_API_PREFIX+"/"+name, nil, nil)
+	stdio.StartLoadingf("drop resource pool %s", name)
+	if err := api.CallApiWithMethod(http.DELETE, constant.URI_POOL_API_PREFIX+"/"+name, nil, nil); err != nil {
+		return err
+	}
+	stdio.LoadSuccessf("drop resource pool %s", name)
+	return nil
 }

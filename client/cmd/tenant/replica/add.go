@@ -105,6 +105,7 @@ func newAddCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
 			if err := replicaAdd(cmd, args[0], &opts.ZoneParamsFlags); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}

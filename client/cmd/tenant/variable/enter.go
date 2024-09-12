@@ -76,6 +76,7 @@ func newShowCmd() *cobra.Command {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
 			if err := showVariable(cmd, args[0], args[1]); err != nil {
+				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
 			}
@@ -135,7 +136,7 @@ func newSetCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant variable set t1 max_connections=10000`,
+		Example: `  obshell tenant variable set t1 max_connections=10000,recyclebin=true`,
 	})
 	setCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <name=value>"}
 	setCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
@@ -151,8 +152,10 @@ func setVariable(cmd *cobra.Command, tenant string, str string) error {
 	params := param.SetTenantVariablesParam{
 		Variables: variables,
 	}
+	stdio.StartLoading("set tenant variables")
 	if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenant+constant.URI_VARIABLES, params, nil); err != nil {
 		return err
 	}
+	stdio.LoadSuccess("set tenant variables")
 	return nil
 }
