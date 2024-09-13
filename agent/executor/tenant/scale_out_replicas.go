@@ -28,6 +28,10 @@ import (
 )
 
 func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param.ScaleOutTenantReplicasParam) error {
+	if err := checkZoneParams(param.ZoneList); err != nil {
+		return err
+	}
+
 	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return err
@@ -37,10 +41,6 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		if _, ok := replicaInfoMap[zone.Name]; ok {
 			return errors.Errorf("Zone '%s' already has a replica", zone.Name)
 		}
-	}
-
-	if err := checkZoneParams(param.ZoneList); err != nil {
-		return err
 	}
 
 	for _, zone := range param.ZoneList {
