@@ -113,7 +113,7 @@ func newAddCmd() *cobra.Command {
 		},
 		Example: `  obshell tenant replica add t1 -z zone4,zone5 --unit s1
   obshell tenant replica add t1 -z zone4,zone5 --zone4.unit=s4 --zone5.unit=s5
-  obshell tenant replica add t1 -z zone4,zone5 --zone4.replica_type=FULL --zone5.replica_type=READONLY --unit=s1`,
+  obshell tenant replica add t1 -z zone4,zone5 --zone4.replica_type=FULL --zone5.replica_type=READONLY --unit s1`,
 	})
 
 	addCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
