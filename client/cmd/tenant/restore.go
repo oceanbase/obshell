@@ -28,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/client/cmd/tenant/replica"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -42,14 +43,9 @@ type TenantRestoreFlags struct {
 	DataBackupUri string
 	ArchiveLogUri string
 
-	UnitConfigName string
-	UnitNum        string
-
 	Timestamp           string `json:"timestamp" time_format:"2006-01-02T15:04:05.000Z07:00"`
 	SCN                 int64
-	ZoneList            string
 	PrimaryZone         string
-	Locality            string
 	Concurrency         string
 	HaHighThreadScore   string
 	Decryption          string
@@ -58,6 +54,8 @@ type TenantRestoreFlags struct {
 
 	verbose     bool
 	skipConfirm bool
+
+	replica.ZoneParamsFlags
 }
 
 func newRestoreCmd() *cobra.Command {
@@ -75,7 +73,7 @@ func newRestoreCmd() *cobra.Command {
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
-			if err := tenantRestore(opts); err != nil {
+			if err := tenantRestore(cmd, opts); err != nil {
 				stdio.Error(err.Error())
 				return err
 			}
@@ -87,17 +85,18 @@ func newRestoreCmd() *cobra.Command {
 	restoreCmd.Flags().SortFlags = false
 	restoreCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
 	restoreCmd.VarsPs(&opts.DataBackupUri, []string{FLAG_DATA_BACKUP_URI, FLAG_DATA_BACKUP_URI_SH}, "", "The directory path where the backups are stored.", true)
-	restoreCmd.VarsPs(&opts.UnitConfigName, []string{FLAG_UNIT_CONFIG_NAME, FLAG_UNIT_CONFIG_NAME_SH}, "", "The name of the unit configuration to be used for the restore operation.", true)
-	restoreCmd.VarsPs(&opts.ZoneList, []string{FLAG_ZONE_LIST, FLAG_ZONE_LIST_SH}, "", "The list of zones to restore the tenant to. Desperate by comma.", true)
+
+	restoreCmd.VarsPs(&opts.Zones, []string{FLAG_ZONE, FLAG_ZONE_SH}, "", "The zones of the tenant.", false)
+	restoreCmd.VarsPs(&opts.UnitNum, []string{FLAG_UNIT_NUM}, 1, "The number of units in each zone", false)
+	restoreCmd.VarsPs(&opts.UnitConfigName, []string{FLAG_UNIT, FLAG_UNIT_SH}, "", "The unit config name.", false)
+	restoreCmd.VarsPs(&opts.ReplicaType, []string{FLAG_REPLICA_TYPE}, "", "The replica type of the tenant.", false)
+	restoreCmd.VarsPs(&opts.PrimaryZone, []string{FLAG_PRIMARY_ZONE, FLAG_PRIMARY_ZONE_SH}, "", "The primary zone of the tenant to be restored.", false)
 
 	restoreCmd.VarsPs(&opts.Timestamp, []string{FLAG_TIMESTAMP, FLAG_TIMESTAMP_SH}, "", "The timestamp to restore to.", false)
 	restoreCmd.VarsPs(&opts.SCN, []string{FLAG_SCN, FLAG_SCN_SH}, int64(0), "The SCN to restore to.", false)
-	restoreCmd.VarsPs(&opts.UnitNum, []string{FLAG_UNIT_NUM, FLAG_UNIT_NUM_SH}, "", "The number of units to be restored.", false)
 	restoreCmd.VarsPs(&opts.ArchiveLogUri, []string{FLAG_ARCHIVE_LOG_URI, FLAG_ARCHIVE_LOG_URI_SH}, "", "The directory path where the archive logs are stored.", false)
 	restoreCmd.VarsPs(&opts.HaHighThreadScore, []string{FLAG_HA_HIGH_THREAD_SCORE, FLAG_HA_HIGH_THREAD_SCORE_SH}, "", "The high thread score for HA. Range: [0, 100]", false)
 	restoreCmd.VarsPs(&opts.Concurrency, []string{FLAG_CONCURRENCY, FLAG_CONCURRENCY_SH}, "", "The number of threads to use for the restore operation.", false)
-	restoreCmd.VarsPs(&opts.Locality, []string{FLAG_LOCALITY, FLAG_LOCALITY_SH}, "", "The locality of the tenant to be restored.", false)
-	restoreCmd.VarsPs(&opts.PrimaryZone, []string{FLAG_PRIMARY_ZONE, FLAG_PRIMARY_ZONE_SH}, "", "The primary zone of the tenant to be restored.", false)
 	restoreCmd.VarsPs(&opts.Decryption, []string{FLAG_DECRYPTION, FLAG_DECRYPTION_SH}, "", "The decryption password for all backups.", false)
 	restoreCmd.VarsPs(&opts.KmsEncryptInfo, []string{FLAG_KMS_ENCRYPT_INFO, FLAG_KMS_ENCRYPT_INFO_SH}, "", "The KMS encryption information.", false)
 
@@ -107,8 +106,8 @@ func newRestoreCmd() *cobra.Command {
 	return restoreCmd.Command
 }
 
-func tenantRestore(opts *TenantRestoreFlags) error {
-	param, err := opts.toRestoreParam()
+func tenantRestore(cmd *cobra.Command, opts *TenantRestoreFlags) error {
+	param, err := opts.toRestoreParam(cmd)
 	if err != nil {
 		return err
 	}
@@ -138,12 +137,16 @@ func ConfirmRestore() error {
 	return nil
 }
 
-func (f *TenantRestoreFlags) toRestoreParam() (*param.RestoreParam, error) {
+func (f *TenantRestoreFlags) toRestoreParam(cmd *cobra.Command) (*param.RestoreParam, error) {
+	zoneList, err := replica.BuildZoneParams(cmd, &f.ZoneParamsFlags)
+	if err != nil {
+		return nil, err
+	}
+
 	restoreParam := &param.RestoreParam{
-		TenantName:     f.TenantName,
-		DataBackupUri:  f.DataBackupUri,
-		UnitConfigName: f.UnitConfigName,
-		ZoneList:       strings.Split(strings.TrimSpace(f.ZoneList), ","),
+		TenantName:    f.TenantName,
+		DataBackupUri: f.DataBackupUri,
+		ZoneList:      zoneList,
 	}
 	stdio.Verbosef("Zone list is %v", restoreParam.ZoneList)
 
@@ -157,14 +160,6 @@ func (f *TenantRestoreFlags) toRestoreParam() (*param.RestoreParam, error) {
 
 	if f.SCN != 0 {
 		restoreParam.SCN = &f.SCN
-	}
-
-	if f.UnitNum != "" {
-		unitNum, err := strconv.Atoi(f.UnitNum)
-		if err != nil {
-			return nil, errors.Wrap(err, "Invalid unit number")
-		}
-		restoreParam.UnitNum = &unitNum
 	}
 
 	if f.ArchiveLogUri != "" {
@@ -185,14 +180,6 @@ func (f *TenantRestoreFlags) toRestoreParam() (*param.RestoreParam, error) {
 			return nil, errors.Wrap(err, "Invalid concurrency")
 		}
 		restoreParam.Concurrency = &concurrency
-	}
-
-	if f.Locality != "" {
-		restoreParam.Locality = &f.Locality
-	}
-
-	if f.PrimaryZone != "" {
-		restoreParam.PrimaryZone = &f.PrimaryZone
 	}
 
 	if f.Decryption != "" {

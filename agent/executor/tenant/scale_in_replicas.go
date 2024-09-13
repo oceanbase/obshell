@@ -25,6 +25,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
@@ -65,7 +66,7 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 			delete(replicaInfoMap, zone)
 		}
 	}
-	if err = checkPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
+	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
 		return err
 	}
 

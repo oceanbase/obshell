@@ -22,13 +22,14 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/pool"
+	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
 
 func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param.ScaleOutTenantReplicasParam) error {
-	if err := checkZoneParams(param.ZoneList); err != nil {
+	if err := zone.CheckZoneParams(param.ZoneList); err != nil {
 		return err
 	}
 
@@ -66,7 +67,7 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		return err
 	}
 
-	if err = checkPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
+	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
 		return err
 	}
 
@@ -79,7 +80,7 @@ func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplic
 		return nil, ocsErr
 	}
 
-	renderZoneParams(param.ZoneList)
+	zone.RenderZoneParams(param.ZoneList)
 	if err := checkScaleOutTenantReplicasParam(tenant, param); err != nil {
 		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
 	}

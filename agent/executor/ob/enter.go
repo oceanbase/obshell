@@ -206,6 +206,7 @@ const (
 	TASK_PRE_RESTORE_CHECK   = "Pre restore check"
 	TASK_CREATE_RESOURCE     = "Create resource for restore"
 	TASK_RESTORE             = "Start restore"
+	TASK_START_RESTORE       = "Start restore"
 	TASK_WAIT_RESTORE_FINISH = "Wait restore task finish"
 	TASK_ACTIVE_TENANT       = "Active tenant"
 	TASK_UPGRADE_TENANT      = "Upgrade tenant"
@@ -434,8 +435,7 @@ func RegisterBackupTask() {
 
 func RegisterRestoreTask() {
 	task.RegisterTaskType(PreRestoreCheckTask{})
-	task.RegisterTaskType(CreateResourceTask{})
-	task.RegisterTaskType(RestoreTask{})
+	task.RegisterTaskType(StartRestoreTask{})
 	task.RegisterTaskType(WaitRestoreFinshTask{})
 	task.RegisterTaskType(ActiveTenantTask{})
 	task.RegisterTaskType(UpgradeTenantTask{})

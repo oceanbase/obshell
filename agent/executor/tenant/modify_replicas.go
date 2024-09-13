@@ -23,6 +23,8 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/zone"
+	zonecheck "github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
@@ -47,7 +49,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 
 		// Check replica type.
 		if zone.ReplicaType != nil {
-			if err := checkReplicaType(*zone.ReplicaType); err != nil {
+			if err := zonecheck.CheckReplicaType(*zone.ReplicaType); err != nil {
 				return err
 			}
 		}
@@ -228,7 +230,7 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 			replicaInfoMap[zone.Name] = *zone.ReplicaType
 		}
 	}
-	if err = checkPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
+	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
 		return err
 	}
 

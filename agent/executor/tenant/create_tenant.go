@@ -30,17 +30,11 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/pool"
 	"github.com/oceanbase/obshell/agent/executor/script"
+	"github.com/oceanbase/obshell/agent/executor/zone"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
-
-func checkReplicaType(localityType string) error {
-	if localityType != constant.REPLICA_TYPE_FULL && localityType != constant.REPLICA_TYPE_READONLY && localityType != "" {
-		return errors.New("ReplicaType should be 'FULL' or 'READONLY'")
-	}
-	return nil
-}
 
 func checkCharsetAndCollation(charset string, collation string) (err error) {
 	if charset == "" && collation == "" {
@@ -59,68 +53,6 @@ func checkCharsetAndCollation(charset string, collation string) (err error) {
 		} else {
 			return errors.Errorf("Collation '%s' is not exist.", collation)
 		}
-	}
-
-	return nil
-}
-
-func checkPrimaryZoneAndLocality(primaryZone string, locality map[string]string) error {
-	// Get first priority zones.
-	firstPriorityZones := make([]string, 0)
-	if primaryZone == constant.PRIMARY_ZONE_RANDOM {
-		for zone := range locality {
-			firstPriorityZones = append(firstPriorityZones, zone)
-		}
-	} else {
-		firstPriorityZones = strings.Split(strings.Split(primaryZone, ";")[0], ",")
-	}
-
-	// Build zone -> region map
-	zonesWithRegion, err := obclusterService.GetAllZonesWithRegion()
-	if err != nil {
-		return err
-	}
-	zoneToRegionMap := make(map[string]string, 0)
-	for _, z := range zonesWithRegion {
-		zoneToRegionMap[z.Zone] = z.Region
-	}
-
-	// Check whether first priority zones are in the same region.
-	var firstPriorityRegion string
-	for _, zone := range firstPriorityZones {
-		if firstPriorityRegion == "" {
-			firstPriorityRegion = zoneToRegionMap[zone]
-		} else if firstPriorityRegion != zoneToRegionMap[zone] {
-			return errors.New("Tenant primary zone could not span regions.")
-		}
-	}
-
-	// Check whether the locality has multi-region.
-	firstPriorityRegion = zoneToRegionMap[firstPriorityZones[0]]
-	hasMultiRegion := false
-	for zone := range locality {
-		if zoneToRegionMap[zone] != firstPriorityRegion {
-			hasMultiRegion = true
-			break
-		}
-	}
-	// If there is only one region, no need to check the number of full replicas.
-	if !hasMultiRegion {
-		return nil
-	}
-
-	// The first priority region should have more than 1 full replica when locality has multi-region.
-	fullReplicaNum := 0
-	for zone, replicaType := range locality {
-		if zoneToRegionMap[zone] == firstPriorityRegion {
-			arr := strings.Split(replicaType, "{")
-			if arr[0] == constant.REPLICA_TYPE_FULL || arr[0] == "F" || arr[0] == "" {
-				fullReplicaNum++
-			}
-		}
-	}
-	if fullReplicaNum < 2 {
-		return errors.Errorf("The region %v where the first priority of tenant zone is located needs to have at least 2 F replicas. In fact, there are only %d full replicas.", firstPriorityRegion, fullReplicaNum)
 	}
 
 	return nil
@@ -184,112 +116,6 @@ func checkScenario(scenario string) error {
 	return errors.Errorf("scenario only support to be one of %s", strings.Join(scenarios, ", "))
 }
 
-func checkPrimaryZone(primaryZone string, zoneList []string) error {
-	if primaryZone == constant.PRIMARY_ZONE_RANDOM {
-		return nil
-	}
-	zonesSemicolonSeparated := strings.Split(primaryZone, ";")
-	exsitZones := make([]string, 0)
-	for _, zones := range zonesSemicolonSeparated {
-		zonesCommaSeparated := strings.Split(zones, ",")
-		for _, zone := range zonesCommaSeparated {
-			if !utils.ContainsString(zoneList, zone) {
-				return errors.Errorf("Zone '%s' is not in zone_list.", zone)
-			} else if utils.ContainsString(exsitZones, zone) {
-				return errors.Errorf("Zone '%s' is repeated in primary_zone.", zone)
-			} else {
-				exsitZones = append(exsitZones, zone)
-			}
-		}
-	}
-	return nil
-}
-
-func checkZoneParams(zoneList []param.ZoneParam) error {
-	if len(zoneList) == 0 {
-		return errors.New("zone_list is empty")
-	}
-
-	if err := staticCheckForZoneParams(zoneList); err != nil {
-		return err
-	}
-
-	for _, zone := range zoneList {
-		// Check whether the zone exists
-		if exist, err := obclusterService.IsZoneExist(zone.Name); err != nil {
-			return err
-		} else if !exist {
-			return errors.Errorf("Zone '%s' is not exist.", zone.Name)
-		}
-
-		// Check unit config if exsits.
-		if exist, err := unitService.IsUnitConfigExist(zone.UnitConfigName); err != nil {
-			return err
-		} else if !exist {
-			return errors.Errorf("Unit config '%s' is not exist.", zone.UnitConfigName)
-		}
-
-		servers, err := obclusterService.GetServerByZone(zone.Name)
-		if err != nil {
-			return err
-		}
-		if len(servers) < zone.UnitNum {
-			return errors.Errorf("The number of servers in zone '%s' is %d, less than the number of units %d.", zone.Name, len(servers), zone.UnitNum)
-		}
-	}
-	return nil
-}
-
-func checkAtLeastOnePaxosReplica(zoneList []param.ZoneParam) error {
-	for _, zone := range zoneList {
-		if zone.ReplicaType == constant.REPLICA_TYPE_FULL {
-			return nil
-		}
-	}
-	return errors.New("At least one zone should be FULL replica.")
-}
-
-func staticCheckForZoneParams(zoneList []param.ZoneParam) error {
-	unitNum := 0
-	existZones := make([]string, 0)
-	for _, zone := range zoneList {
-		if utils.ContainsString(existZones, zone.Name) {
-			return errors.Errorf("Zone '%s' is repeated.", zone.Name)
-		}
-		existZones = append(existZones, zone.Name)
-
-		if zone.UnitConfigName == "" {
-			return errors.New("unit_config_name should not be empty.")
-		}
-
-		// Check replica type.
-		if err := checkReplicaType(zone.ReplicaType); err != nil {
-			return err
-		}
-
-		// Check unit num.
-		if zone.UnitNum <= 0 {
-			return errors.New("unit_num should be positive.")
-		}
-
-		if zone.UnitNum != unitNum && unitNum != 0 {
-			return errors.New("unit_num should be same in all zones.")
-		}
-		unitNum = zone.UnitNum
-	}
-	return nil
-}
-
-func renderZoneParams(zoneList []param.ZoneParam) {
-	for i := range zoneList {
-		if zoneList[i].ReplicaType == "" {
-			zoneList[i].ReplicaType = constant.REPLICA_TYPE_FULL
-		} else {
-			zoneList[i].ReplicaType = strings.ToUpper(zoneList[i].ReplicaType)
-		}
-	}
-}
-
 func renderCreateTenantParam(param *param.CreateTenantParam) error {
 	if param.PrimaryZone == "" {
 		param.PrimaryZone = constant.PRIMARY_ZONE_RANDOM
@@ -327,7 +153,7 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 		delete(param.Variables, constant.VARIABLE_TIME_ZONE)
 	}
 
-	renderZoneParams(param.ZoneList)
+	zone.RenderZoneParams(param.ZoneList)
 	return nil
 }
 
@@ -340,11 +166,11 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 		return errors.New("only support mysql mode")
 	}
 
-	if err = checkZoneParams(param.ZoneList); err != nil {
+	if err = zone.CheckZoneParams(param.ZoneList); err != nil {
 		return
 	}
 
-	if err = checkAtLeastOnePaxosReplica(param.ZoneList); err != nil {
+	if err = zone.CheckAtLeastOnePaxosReplica(param.ZoneList); err != nil {
 		return
 	}
 
@@ -352,7 +178,7 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 	for _, zone := range param.ZoneList {
 		zoneList = append(zoneList, zone.Name)
 	}
-	if err = checkPrimaryZone(param.PrimaryZone, zoneList); err != nil {
+	if err = zone.CheckPrimaryZone(param.PrimaryZone, zoneList); err != nil {
 		return
 	}
 
@@ -368,7 +194,7 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 	for _, zone := range param.ZoneList {
 		locality[zone.Name] = zone.ReplicaType
 	}
-	if err = checkPrimaryZoneAndLocality(param.PrimaryZone, locality); err != nil {
+	if err = zone.CheckPrimaryZoneAndLocality(param.PrimaryZone, locality); err != nil {
 		return
 	}
 

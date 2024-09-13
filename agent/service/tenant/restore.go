@@ -68,7 +68,7 @@ func (s *TenantService) CancelRestore(tenantName string) (err error) {
 	return oceanbaseDb.Exec(sql).Error
 }
 
-func (s *TenantService) Restore(c *param.RestoreParam, poolName string, scn int64) (err error) {
+func (s *TenantService) Restore(c *param.RestoreParam, locality, poolList string, scn int64) (err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -96,9 +96,9 @@ func (s *TenantService) Restore(c *param.RestoreParam, poolName string, scn int6
 		restoreSql = fmt.Sprintf("%s UNTIL SCN=%d", restoreSql, scn)
 	}
 
-	restoreOption := fmt.Sprintf("pool_list=%s", poolName)
-	if c.Locality != nil {
-		restoreOption = fmt.Sprintf("%s&locality=%s", restoreOption, *c.Locality)
+	restoreOption := fmt.Sprintf("pool_list=%s", poolList)
+	if locality != "" {
+		restoreOption = fmt.Sprintf("%s&locality=%s", restoreOption, locality)
 	}
 	if c.PrimaryZone != nil {
 		restoreOption = fmt.Sprintf("%s&primary_zone=%s", restoreOption, *c.PrimaryZone)

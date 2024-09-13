@@ -25,14 +25,16 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/pool"
+	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/system"
 	"github.com/oceanbase/obshell/param"
 )
 
 func TenantRestore(p *param.RestoreParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	if err := p.Check(); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+	if err := checkRestoreParam(p); err != nil {
+		return nil, err
 	}
 
 	template := buildRestoreTemplate(p)
@@ -44,6 +46,39 @@ func TenantRestore(p *param.RestoreParam) (*task.DagDetailDTO, *errors.OcsAgentE
 	return task.NewDagDetailDTO(dag), nil
 }
 
+func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
+	if err := p.Check(); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err)
+	}
+
+	zone.RenderZoneParams(p.ZoneList)
+
+	if err := zone.CheckZoneParams(p.ZoneList); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err)
+	}
+
+	if err := zone.CheckAtLeastOnePaxosReplica(p.ZoneList); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err)
+	}
+
+	zoneList := make([]string, 0)
+	for _, zone := range p.ZoneList {
+		zoneList = append(zoneList, zone.Name)
+	}
+	if err := zone.CheckPrimaryZone(*p.PrimaryZone, zoneList); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err)
+	}
+
+	locality := make(map[string]string, 0)
+	for _, zone := range p.ZoneList {
+		locality[zone.Name] = zone.ReplicaType
+	}
+	if err := zone.CheckPrimaryZoneAndLocality(*p.PrimaryZone, locality); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err)
+	}
+	return nil
+}
+
 func newRestoreDagName(tenantName string) string {
 	return fmt.Sprintf("%s_%s", DAG_RESTORE_BACKUP, tenantName)
 }
@@ -53,8 +88,7 @@ func buildRestoreTemplate(p *param.RestoreParam) *task.Template {
 	return task.NewTemplateBuilder(name).
 		SetMaintenance(task.TenantMaintenance(p.TenantName)).
 		AddTask(newPreRestoreCheckTask(), false).
-		AddTask(newCreateResourceTask(), false).
-		AddTask(newRestoreTask(), false).
+		AddTask(newStartRestoreTask(), false).
 		AddTask(newWaitRestoreFinshTask(), false).
 		AddTask(newActiveTenantTask(), false).
 		AddTask(newUpgradeTenantTask(), false).
@@ -67,7 +101,6 @@ func buildRestoreTaskContext(p *param.RestoreParam) *task.TaskContext {
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true).
 		SetParam(PARAM_RESTORE, *p).
 		SetParam(PARAM_TENANT_NAME, p.TenantName).
-		SetParam(PARAM_POOL_NAME, fmt.Sprintf("%s_%s_pool", p.TenantName, taskTime)).
 		SetParam(PARAM_TASK_TIME, taskTime).
 		SetParam(PARAM_HA_HIGH_THREAD_SCORE, p.HaHighThreadScore)
 	if p.KmsEncryptInfo != nil {
@@ -128,94 +161,26 @@ func (t *PreRestoreCheckTask) GetAdditionalData() map[string]any {
 	}
 }
 
-type CreateResourceTask struct {
+type StartRestoreTask struct {
 	task.Task
-	taskTime string
-	poolName string
-	p        *param.RestoreParam
+	tenantName              string
+	restoreScn              int64
+	param                   *param.RestoreParam
+	jobID                   int64
+	haHighThreadScore       int
+	createResourcePoolParam []param.CreateResourcePoolTaskParam
+	timeStamp               string
 }
 
-func newCreateResourceTask() *CreateResourceTask {
-	t := &CreateResourceTask{
-		Task: *task.NewSubTask(TASK_CREATE_RESOURCE),
+func newStartRestoreTask() *StartRestoreTask {
+	t := &StartRestoreTask{
+		Task: *task.NewSubTask(TASK_START_RESTORE),
 	}
 	t.SetCanRetry().SetCanRollback().SetCanContinue().SetCanPass().SetCanCancel()
 	return t
 }
 
-func (t *CreateResourceTask) Execute() (err error) {
-	if err = t.getParams(); err != nil {
-		return err
-	}
-
-	pool, err := tenantService.GetResourcePoolsByName(t.poolName)
-	if err != nil {
-		return errors.Wrapf(err, "get resource pool")
-	}
-	if pool != nil {
-		t.ExecuteLogf("Resource pool '%s' already exists", t.poolName)
-		return nil
-	}
-
-	t.ExecuteLogf("Create resource pool '%s'", t.poolName)
-	if err = tenantService.CreateResourcePool(t.poolName, t.p.UnitConfigName, *t.p.UnitNum, t.p.ZoneList); err != nil {
-		return errors.Wrapf(err, "create tenant")
-	}
-
-	return nil
-}
-
-func (t *CreateResourceTask) getParams() (err error) {
-	if err = t.GetContext().GetParamWithValue(PARAM_TASK_TIME, &t.taskTime); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TASK_TIME)
-	}
-	if err = t.GetContext().GetParamWithValue(PARAM_RESTORE, &t.p); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_RESTORE)
-	}
-	t.poolName = fmt.Sprintf("%s_%s_pool", t.p.TenantName, t.taskTime)
-	return nil
-}
-
-func (t *CreateResourceTask) Rollback() (err error) {
-	if err = t.getParams(); err != nil {
-		return err
-	}
-
-	pool, err := tenantService.GetResourcePoolsByName(t.poolName)
-	if err != nil {
-		return errors.Wrapf(err, "get resource pool")
-	}
-	if pool == nil {
-		t.ExecuteLogf("Resource pool '%s' not exists", t.poolName)
-		return nil
-	}
-
-	t.ExecuteLogf("Delete resource pool '%s'", t.poolName)
-	if err = tenantService.DeleteResourcePool(t.poolName); err != nil {
-		return errors.Wrapf(err, "delete resource pool")
-	}
-	return nil
-}
-
-type RestoreTask struct {
-	task.Task
-	tenantName        string
-	poolName          string
-	restoreScn        int64
-	param             *param.RestoreParam
-	jobID             int64
-	haHighThreadScore int
-}
-
-func newRestoreTask() *RestoreTask {
-	t := &RestoreTask{
-		Task: *task.NewSubTask(TASK_RESTORE),
-	}
-	t.SetCanRetry().SetCanRollback().SetCanContinue().SetCanPass().SetCanCancel()
-	return t
-}
-
-func (t *RestoreTask) getParams() (err error) {
+func (t *StartRestoreTask) getParams() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
 		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
 	}
@@ -228,8 +193,8 @@ func (t *RestoreTask) getParams() (err error) {
 			return errors.Wrapf(err, "get %s", PARAM_RESTORE_SCN)
 		}
 	}
-	if err = t.GetContext().GetParamWithValue(PARAM_POOL_NAME, &t.poolName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_POOL_NAME)
+	if err = t.GetContext().GetParamWithValue(PARAM_TASK_TIME, &t.timeStamp); err != nil {
+		return errors.Wrapf(err, "get %s", PARAM_TASK_TIME)
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_HA_HIGH_THREAD_SCORE, &t.haHighThreadScore); err != nil {
 		return errors.Wrapf(err, "get %s", PARAM_HA_HIGH_THREAD_SCORE)
@@ -238,7 +203,20 @@ func (t *RestoreTask) getParams() (err error) {
 	return nil
 }
 
-func (t *RestoreTask) Execute() (err error) {
+func buildCreateResourcePoolTaskParam(tenantName string, zoneParam []param.ZoneParam, timestamp string) []param.CreateResourcePoolTaskParam {
+	createResourcePoolParams := make([]param.CreateResourcePoolTaskParam, 0)
+	for _, zone := range zoneParam {
+		createResourcePoolParams = append(createResourcePoolParams, param.CreateResourcePoolTaskParam{
+			PoolName:       strings.Join([]string{tenantName, zone.Name, timestamp}, "_"),
+			ZoneName:       zone.Name,
+			UnitConfigName: zone.PoolParam.UnitConfigName,
+			UnitNum:        zone.PoolParam.UnitNum,
+		})
+	}
+	return createResourcePoolParams
+}
+
+func (t *StartRestoreTask) Execute() (err error) {
 	if err = t.getParams(); err != nil {
 		return err
 	}
@@ -258,9 +236,8 @@ func (t *RestoreTask) Execute() (err error) {
 			t.ExecuteLogf("Tenant '%s' already exists", t.tenantName)
 			return nil
 		} else {
-			t.ExecuteLogf("Restore tenant '%s'", t.tenantName)
-			if err = tenantService.Restore(t.param, t.poolName, t.restoreScn); err != nil {
-				return errors.Wrapf(err, "restore tenant")
+			if err = t.restoreTenant(); err != nil {
+				return err
 			}
 		}
 
@@ -295,9 +272,38 @@ func (t *RestoreTask) Execute() (err error) {
 	return nil
 }
 
-func (t *RestoreTask) Rollback() (err error) {
-	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+func (t *StartRestoreTask) restoreTenant() (err error) {
+	t.createResourcePoolParam = buildCreateResourcePoolTaskParam(t.tenantName, t.param.ZoneList, t.timeStamp)
+	if err := pool.CreatePools(t.Task, t.createResourcePoolParam); err != nil {
+		return err
+	}
+
+	var poolList []string
+	for _, poolParam := range t.createResourcePoolParam {
+		poolList = append(poolList, poolParam.PoolName)
+	}
+	resourcePoolList := strings.Join(poolList, ",")
+
+	var localityList []string
+	for _, zone := range t.param.ZoneList {
+		if zone.ReplicaType == "" {
+			localityList = append(localityList, strings.Join([]string{constant.REPLICA_TYPE_FULL, zone.Name}, "@"))
+		} else {
+			localityList = append(localityList, strings.Join([]string{zone.ReplicaType, zone.Name}, "@"))
+		}
+	}
+	locality := strings.Join(localityList, ",")
+
+	t.ExecuteLogf("Restore tenant '%s'", t.tenantName)
+	if err = tenantService.Restore(t.param, locality, resourcePoolList, t.restoreScn); err != nil {
+		return errors.Wrapf(err, "restore tenant")
+	}
+	return nil
+}
+
+func (t *StartRestoreTask) Rollback() (err error) {
+	if err = t.getParams(); err != nil {
+		return err
 	}
 
 	t.ExecuteLogf("Try cancel restore job")
@@ -324,9 +330,14 @@ func (t *RestoreTask) Rollback() (err error) {
 		}
 		if job == nil {
 			t.ExecuteLog("Restore task has finished successfully")
-			return nil
+			break
 		}
 		time.Sleep(time.Second)
+	}
+
+	t.createResourcePoolParam = buildCreateResourcePoolTaskParam(t.tenantName, t.param.ZoneList, t.timeStamp)
+	if err := pool.DropFreeResourcePools(t.Task, t.createResourcePoolParam); err != nil {
+		return err
 	}
 
 	return nil

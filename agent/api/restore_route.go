@@ -17,8 +17,6 @@
 package api
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -45,18 +43,18 @@ func InitRestoreRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 
 }
 
-// @ID			tenantRestore
-// @Summary	Restore tenant
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string				true	"Authorization"
-// @Param		body			body	param.RestoreParam	true	"Restore tenant"
-// @Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/restore [post]
+//	@ID			tenantRestore
+//	@Summary	Restore tenant
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string				true	"Authorization"
+//	@Param		body			body	param.RestoreParam	true	"Restore tenant"
+//	@Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/restore [post]
 func tenantRestoreHandler(c *gin.Context) {
 	var p param.RestoreParam
 	if err := c.BindJSON(&p); err != nil {
@@ -91,68 +89,25 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 		return errors.Occurf(errors.ErrIllegalArgument, "tenant '%s' already exists", p.TenantName)
 	}
 
-	log.Infof("check unit config %s", p.UnitConfigName)
-	unitConfig, err := tenantService.GetUnitConfigByName(p.UnitConfigName)
-	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
-	}
-	if unitConfig == nil {
-		return errors.Occurf(errors.ErrIllegalArgument, "unit config '%s' not exists", p.UnitConfigName)
-	}
-
-	log.Infof("check zone list %v", p.ZoneList)
-	zoneMap := make(map[string]int)
-	for _, zoneName := range p.ZoneList {
-		zoneMap[zoneName]++
-		if zoneMap[zoneName] > 1 {
-			return errors.Occurf(errors.ErrIllegalArgument, "zone '%s' duplicate in zone_list", zoneName)
-		}
-
-		exist, err := clusterService.IsZoneExistInOB(zoneName)
-		if err != nil {
-			return errors.Occur(errors.ErrUnexpected, err)
-		}
-		if !exist {
-			return errors.Occurf(errors.ErrIllegalArgument, "zone '%s' not exists in oceanbase", zoneName)
-		}
-	}
-
-	if p.PrimaryZone != nil && *p.PrimaryZone != "" && strings.ToLower(*p.PrimaryZone) != constant.PRIMARY_ZONE_RANDOM {
-		log.Infof("check primary zone %s", *p.PrimaryZone)
-		levels := strings.Split(*p.PrimaryZone, ";")
-		zones := make([]string, 0)
-		for _, level := range levels {
-			zones = append(zones, strings.Split(level, ",")...)
-		}
-		log.Infof("zones are %v", zones)
-
-		primaryZoneMap := make(map[string]int)
-		for _, zoneName := range zones {
-			primaryZoneMap[zoneName]++
-			if primaryZoneMap[zoneName] > 1 {
-				return errors.Occurf(errors.ErrIllegalArgument, "zone '%s' duplicate in primary_zone", zoneName)
-			}
-			if _, ok := zoneMap[zoneName]; !ok {
-				return errors.Occurf(errors.ErrIllegalArgument, "primary zone '%s' not in zone_list", zoneName)
-			}
-		}
+	if len(p.ZoneList) == 0 {
+		return errors.Occurf(errors.ErrIllegalArgument, "zone_list is empty")
 	}
 
 	return nil
 }
 
-// @ID			cancelRestoreTask
-// @Summary	Get restore task id
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string	true	"Authorization"
-// @Param		tenantName		path	string	true	"Tenant name"
-// @Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/:tenantName/restore [delete]
+//	@ID			cancelRestoreTask
+//	@Summary	Get restore task id
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string	true	"Authorization"
+//	@Param		tenantName		path	string	true	"Tenant name"
+//	@Success	200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/:tenantName/restore [delete]
 func cancelRestoreTaskHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "agent identity is %s.", meta.OCS_AGENT.GetIdentity()))
@@ -177,18 +132,18 @@ func cancelRestoreTaskHandler(c *gin.Context) {
 	}
 }
 
-// @ID			getRestoreOverview
-// @Summary	Get restore overview
-// @Tags		Restore
-// @Accept		application/json
-// @Produce	application/json
-// @Param		X-OCS-Header	header	string	true	"Authorization"
-// @Param		tenantName		path	string	true	"Tenant name"
-// @Success	200				object	http.OcsAgentResponse{data=param.RestoreOverview}
-// @Failure	400				object	http.OcsAgentResponse
-// @Failure	401				object	http.OcsAgentResponse
-// @Failure	500				object	http.OcsAgentResponse
-// @Router		/api/v1/tenant/:tenantName/restore/overview [get]
+//	@ID			getRestoreOverview
+//	@Summary	Get restore overview
+//	@Tags		Restore
+//	@Accept		application/json
+//	@Produce	application/json
+//	@Param		X-OCS-Header	header	string	true	"Authorization"
+//	@Param		tenantName		path	string	true	"Tenant name"
+//	@Success	200				object	http.OcsAgentResponse{data=param.RestoreOverview}
+//	@Failure	400				object	http.OcsAgentResponse
+//	@Failure	401				object	http.OcsAgentResponse
+//	@Failure	500				object	http.OcsAgentResponse
+//	@Router		/api/v1/tenant/:tenantName/restore/overview [get]
 func getRestoreOverviewHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {

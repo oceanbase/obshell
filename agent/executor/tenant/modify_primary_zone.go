@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 
@@ -39,11 +40,11 @@ func checkModifyPrimaryZoneParam(tenant *oceanbase.DbaObTenant, param *param.Mod
 		zoneList = append(zoneList, zone)
 	}
 
-	if err := checkPrimaryZone(*param.PrimaryZone, zoneList); err != nil {
+	if err := zone.CheckPrimaryZone(*param.PrimaryZone, zoneList); err != nil {
 		return errors.Occur(errors.ErrIllegalArgument, err.Error())
 	}
 
-	if err := checkPrimaryZoneAndLocality(*param.PrimaryZone, replicaInfoMap); err != nil {
+	if err := zone.CheckPrimaryZoneAndLocality(*param.PrimaryZone, replicaInfoMap); err != nil {
 		return errors.Occur(errors.ErrIllegalArgument, err.Error())
 	}
 	return nil

@@ -18,6 +18,7 @@ package param
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -28,28 +29,21 @@ type RestoreParam struct {
 	DataBackupUri string  `json:"data_backup_uri" binding:"required"`
 	ArchiveLogUri *string `json:"archive_log_uri"`
 
-	TenantName     string `json:"restore_tenant_name" binding:"required"`
-	UnitConfigName string `json:"unit_config_name" binding:"required"`
-	UnitNum        *int   `json:"unit_num"`
+	TenantName string `json:"restore_tenant_name" binding:"required"`
 
 	Timestamp *time.Time `json:"timestamp" time_format:"2006-01-02T15:04:05.000Z07:00"`
 	SCN       *int64     `json:"scn"`
 
-	ZoneList          []string  `json:"zone_list" binding:"required"`
-	PrimaryZone       *string   `json:"primary_zone"`
-	Locality          *string   `json:"locality"`
-	Concurrency       *int      `json:"concurrency"`
-	HaHighThreadScore *int      `json:"ha_high_thread_score"`
-	Decryption        *[]string `json:"decryption"`
+	ZoneList          []ZoneParam `json:"zone_list" binding:"required"` // Tenant zone list with unit config.
+	PrimaryZone       *string     `json:"primary_zone"`
+	Concurrency       *int        `json:"concurrency"`
+	HaHighThreadScore *int        `json:"ha_high_thread_score"`
+	Decryption        *[]string   `json:"decryption"`
 
 	KmsEncryptInfo *string `json:"kms_encrypt_info"`
 }
 
 func (p *RestoreParam) Format() {
-	if p.UnitNum == nil {
-		num := constant.RESTORE_UNIT_NUM_DEFAULT
-		p.UnitNum = &num
-	}
 	if p.HaHighThreadScore == nil {
 		score := constant.HA_LOW_THREAD_SCORE_HIGH
 		p.HaHighThreadScore = &score
@@ -63,16 +57,17 @@ func (p *RestoreParam) Format() {
 	if p.Timestamp != nil && *p.Timestamp == constant.ZERO_TIME {
 		p.Timestamp = nil
 	}
+	if p.PrimaryZone == nil || *p.PrimaryZone == "" ||
+		strings.ToUpper(*p.PrimaryZone) == constant.PRIMARY_ZONE_RANDOM {
+		primaryZone := constant.PRIMARY_ZONE_RANDOM
+		p.PrimaryZone = &primaryZone
+	}
 }
 
 func (p *RestoreParam) Check() error {
 	p.Format()
 	if (p.Timestamp != nil && *p.Timestamp != constant.ZERO_TIME) && (p.SCN != nil && *p.SCN != 0) {
 		return fmt.Errorf("timestamp and scn cannot be set at the same time")
-	}
-
-	if p.UnitNum != nil && *p.UnitNum < 1 {
-		return fmt.Errorf("invalid unit_num %d, should be greater than 0", *p.UnitNum)
 	}
 
 	if p.HaHighThreadScore != nil && (*p.HaHighThreadScore < 0 || *p.HaHighThreadScore > 100) {
