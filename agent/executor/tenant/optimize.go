@@ -159,7 +159,7 @@ func parseTemplate(templateType, filepath, scenario string) (map[string]interfac
 
 func (t *OptimizeTenantTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_OPTIMIZE_TENANT, &t.template); err != nil {
 		return errors.Wrap(err, "Get template failed")

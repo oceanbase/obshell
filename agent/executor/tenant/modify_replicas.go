@@ -357,7 +357,7 @@ func newAlterResourcePoolUnitConfTask() *AlterResourcePoolUnitConfTask {
 
 func (t *AlterResourcePoolUnitConfTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_ZONE_WITH_UNIT, &t.zoneWithUnitConf); err != nil {
 		return errors.Wrap(err, "Get tenant zone name failed")
@@ -399,7 +399,7 @@ func newAlterResourcePoolUnitNumTask() *AlterResourcePoolUnitNumTask {
 func waitAlterTenantUnitNumSucceed(tenantId int, targetUnitNum int) error {
 	tenantName, err := tenantService.GetTenantName(tenantId)
 	if err != nil {
-		return errors.Wrap(err, "Get tenant name failed.")
+		return errors.Wrap(err, "Get tenant id failed.")
 	}
 	jobId, err := tenantService.GetTargetTenantJob(constant.ALTER_RESOURCE_TENANT_UNIT_NUM, tenantId, fmt.Sprintf(tenantservice.SQL_ALTER_TENANT_UNIT_NUM, tenantName, targetUnitNum))
 	if err != nil {
@@ -415,7 +415,7 @@ func waitAlterTenantUnitNumSucceed(tenantId int, targetUnitNum int) error {
 
 func (t *AlterResourcePoolUnitNumTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_UNIT_NUM, &t.unitNum); err != nil {

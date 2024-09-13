@@ -164,7 +164,7 @@ func (t *BatchCreateResourcePoolTask) detachResourcePools() error {
 
 func (t *BatchCreateResourcePoolTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
@@ -207,7 +207,7 @@ func (t *BatchCreateResourcePoolTask) Execute() error {
 
 func (t *BatchCreateResourcePoolTask) Rollback() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {

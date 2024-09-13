@@ -675,7 +675,7 @@ func (t *CreateTenantTask) Execute() error {
 		return err
 	}
 	t.ExecuteLogf("Create tenant success, tenant id: %d", tenantID)
-	t.GetContext().SetData(PARAM_TENANT_ID, tenantID)
+	t.GetContext().SetParam(PARAM_TENANT_ID, tenantID)
 	return nil
 }
 
@@ -688,7 +688,8 @@ func (t *CreateTenantTask) Rollback() error {
 		return errors.Wrapf(err, "Get timestamp failed")
 	}
 
-	t.GetContext().GetDataWithValue(PARAM_TENANT_ID, &t.id) // ignore the error
+	// If error, tenant id will be 0.
+	t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.id)
 
 	if t.CreateTenantParam.Name == nil {
 		return errors.Errorf("Unexpected error, tenant name is nil")

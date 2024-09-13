@@ -77,7 +77,7 @@ func newRecycleTenantTask() *RecycleTenantTask {
 
 func (t *RecycleTenantTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 	tenantName, err := tenantService.GetTenantName(t.tenantId)
 	if err != nil {
@@ -102,7 +102,7 @@ func newDropTenantTask() *DropTenantTask {
 
 func (t *DropTenantTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.id); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 	tenantName, err := tenantService.GetTenantName(t.id)
 	if err != nil {

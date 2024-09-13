@@ -195,7 +195,7 @@ func (t *SplitResourcePoolTask) Execute() error {
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {

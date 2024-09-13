@@ -87,8 +87,8 @@ func (t *SetTenantParamterTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_PARAMETER, &t.parameters); err != nil {
 		return errors.Wrapf(err, "Get tenant parameter failed")
 	}
-	if err := t.GetContext().GetDataWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
+		return errors.Wrap(err, "Get tenant id failed")
 	}
 
 	transferNumber(t.parameters)
