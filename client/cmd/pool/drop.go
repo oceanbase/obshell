@@ -61,7 +61,7 @@ func newDropCmd() *cobra.Command {
 	dropCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<resource-pool-name>"}
 	dropCmd.Flags().SortFlags = false
 	dropCmd.VarsPs(&opts.Verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
-	dropCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of drop unit config operation", false)
+	dropCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of drop resource pool operation", false)
 	return dropCmd.Command
 }
 

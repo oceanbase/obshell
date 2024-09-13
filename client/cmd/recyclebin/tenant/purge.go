@@ -69,7 +69,7 @@ func newPurgeCmd() *cobra.Command {
 	purgeCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name|object-name>"}
 	purgeCmd.Flags().SortFlags = false
 	purgeCmd.VarsPs(&opts.Verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
-	purgeCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of drop unit config operation", false)
+	purgeCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of purge tenant operation", false)
 	return purgeCmd.Command
 }
 

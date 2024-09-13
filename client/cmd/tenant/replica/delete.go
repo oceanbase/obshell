@@ -44,7 +44,7 @@ func newDeleteCmd() *cobra.Command {
 	opts := &replicaDeleteFlags{}
 	deleteCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_DELETE,
-		Short: "Add tenant replicas.",
+		Short: "Delete tenant replicas.",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceErrors = true
 			if len(args) <= 0 {

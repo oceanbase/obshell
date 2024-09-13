@@ -71,10 +71,10 @@ func newCreateCmd() *cobra.Command {
 	createCmd.Flags().SortFlags = false
 	// Setup of required flags for 'obshell unit create'.
 	createCmd.VarsPs(&opts.MemorySize, []string{FLAG_MEMORY_SIZE, FLAG_MEMORY_SIZE_SH}, "", "Unit Config memory size.", true)
-	createCmd.VarsPs(&opts.MaxCpu, []string{FLAG_MAX_CPU, FLAG_MAX_CPU_SH}, float64(0), "Unit Config max cpu. Default to max_cpu", true)
+	createCmd.VarsPs(&opts.MaxCpu, []string{FLAG_MAX_CPU, FLAG_MAX_CPU_SH}, float64(0), "Unit Config max cpu.", true)
 
 	// Configuration of optional flags for more detailed setup.
-	createCmd.VarsPs(&opts.MinCpu, []string{FLAG_MIN_CPU}, float64(0), "Unit Config min cpu.", false)
+	createCmd.VarsPs(&opts.MinCpu, []string{FLAG_MIN_CPU}, float64(0), "Unit Config min cpu. Default to max_cpu", false)
 	createCmd.VarsPs(&opts.LogDiskSize, []string{FLAG_LOG_DISK_SIZE}, "", "Unit Config log disk size.", false)
 	createCmd.VarsPs(&opts.MinIops, []string{FLAG_MIN_IOPS}, 0, "Unit Config min iops.", false)
 	createCmd.VarsPs(&opts.MaxIops, []string{FLAG_MAX_IOPS}, 0, "Unit Config max iops.", false)

@@ -49,7 +49,7 @@ const (
 func NewParameterCmd() *cobra.Command {
 	parameterCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_PARAMETER,
-		Short: "Display and manage the tenant global parameters.",
+		Short: "Display and manage the tenant parameters.",
 	})
 	parameterCmd.AddCommand(newShowCmd())
 	parameterCmd.AddCommand(newSetCmd())
@@ -61,7 +61,7 @@ func newShowCmd() *cobra.Command {
 	var verbose bool
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SHOW,
-		Short: "Show speciaic parameter.",
+		Short: "Show speciaic parameter(s).",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmd.SilenceErrors = true
 			if len(args) < 1 {

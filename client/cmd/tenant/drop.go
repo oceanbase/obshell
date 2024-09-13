@@ -69,7 +69,7 @@ func newDropCmd() *cobra.Command {
 	dropCmd.Flags().SortFlags = false
 	dropCmd.VarsPs(&opts.needRecycle, []string{FLAG_RECYCLE}, false, "Drop tenant bu reserver resource pool.", false)
 	dropCmd.VarsPs(&opts.Verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
-	dropCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of drop unit config operation", false)
+	dropCmd.VarsPs(&opts.SkipConfirm, []string{clientconst.FLAG_SKIP_CONFIRM, clientconst.FLAG_SKIP_CONFIRM_SH}, false, "Skip the confirmation of drop tenant operation", false)
 	return dropCmd.Command
 }
 

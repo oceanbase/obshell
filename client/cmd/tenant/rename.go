@@ -58,9 +58,9 @@ func newRenameCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant rename t1 new_name`,
+		Example: `  obshell tenant rename t1 t2`,
 	})
-	renameCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
+	renameCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <new-name>"}
 	renameCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 	return renameCmd.Command
 }
