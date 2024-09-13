@@ -43,6 +43,14 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		}
 	}
 
+	currentTenantUnitNum, err := tenantService.GetTenantUnitNum(tenant.TenantID)
+	if err != nil {
+		return err
+	}
+	if currentTenantUnitNum != param.ZoneList[0].UnitNum {
+		return errors.New("Unit number must be the same as the current tenant unit number")
+	}
+
 	for _, zone := range param.ZoneList {
 		replicaInfoMap[zone.Name] = zone.ReplicaType
 		// Check if tenant already have a pool located in the zone
