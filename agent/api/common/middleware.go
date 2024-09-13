@@ -160,6 +160,8 @@ func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
 		for _, it := range maskBodyRoutes {
 			if strings.HasPrefix(c.Request.RequestURI, it) {
 				masked = true
+			} else if strings.Contains(it, constant.URI_ROOTPASSWORD) {
+				masked = true
 			}
 		}
 		if masked {
