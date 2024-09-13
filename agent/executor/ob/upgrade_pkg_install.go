@@ -110,6 +110,7 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 		t.ExecuteLogf("Unpack '%s'", rpmPkgInfo.RpmPkgPath)
 		if err = InstallRpmPkgInPlace(rpmPkgInfo.RpmPkgPath); err != nil {
 			success = false
+			t.ExecuteErrorLog(err)
 			continue
 		}
 		t.ExecuteLogf("Successfully installed %s", rpmPkgInfo.RpmPkgPath)
