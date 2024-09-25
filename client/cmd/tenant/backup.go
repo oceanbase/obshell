@@ -67,6 +67,7 @@ func newBackupCmd() *cobra.Command {
 	})
 
 	backupCmd.Flags().SortFlags = false
+	backupCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
 
 	backupCmd.VarsPs(&opts.DataBackupUri, []string{FLAG_DATA_BACKUP_URI, FLAG_DATA_BACKUP_URI_SH}, "", "The directory path where the backup will be stored.", false)
 	backupCmd.VarsPs(&opts.ArchiveLogUri, []string{FLAG_ARCHIVE_LOG_URI, FLAG_ARCHIVE_LOG_URI_SH}, "", "The directory path where the archive logs will be stored.", false)
