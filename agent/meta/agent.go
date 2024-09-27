@@ -33,6 +33,9 @@ const (
 	TAKE_OVER_FOLLOWER AgentIdentity = "TAKE OVER FOLLOWER"
 	SCALING_OUT        AgentIdentity = "SCALING OUT"
 	UNIDENTIFIED       AgentIdentity = "UNIDENTIFIED"
+
+	AUTH_V1 = "v1"
+	AUTH_V2 = "v2"
 )
 
 type AgentInfoInterface interface {
@@ -128,6 +131,7 @@ type AgentStatus struct {
 	HomePath  string `json:"homePath"`
 	OBVersion string `json:"obVersion"`
 	AgentInstance
+	SupportedAuth []string `json:"supportedAuth"`
 }
 
 func (agent *ZoneDTO) GetZone() string {
@@ -304,5 +308,6 @@ func NewAgentStatus(agent Agent, pid int, state int32, startAt int64, homePath s
 		HomePath:      homePath,
 		OBVersion:     obVersion,
 		AgentInstance: *NewAgentInstanceByAgent(agent),
+		SupportedAuth: []string{AUTH_V2},
 	}
 }
