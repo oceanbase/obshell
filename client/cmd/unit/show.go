@@ -52,6 +52,7 @@ func newShowCmd() *cobra.Command {
 			}
 			return nil
 		},
+		Example: `  obshell unit show`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "[unit-config-name]"}
 	showCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Show verbose output.", false)

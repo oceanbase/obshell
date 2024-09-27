@@ -62,8 +62,7 @@ func newDeleteCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant replica delete t1 -z z3
-   obshell tenant replica add t1 -z zone4,zone5`,
+		Example: `  obshell tenant replica delete t1 -z zone3`,
 	})
 
 	deleteCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}

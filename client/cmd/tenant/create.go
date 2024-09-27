@@ -77,7 +77,7 @@ func newCreateCmd() *cobra.Command {
   obshell tenant create t1 -z zone1,zone2,zone3
     --zone1.unit=s1 --zone2.unit=s2  --zone3.unit=s3
     --zone1.replica_type=FULL --zone2.replica_type=FULL --zone3.replica_type=READONLY
-    --rp 111`,
+    --root_password 111`,
 	})
 
 	createCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}

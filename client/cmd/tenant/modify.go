@@ -64,6 +64,7 @@ func newModifyCmd() *cobra.Command {
 			}
 			return nil
 		},
+		Example: `  obshell tenant modify t1 --primary_zone RANDOM"`,
 	})
 
 	modifyCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}

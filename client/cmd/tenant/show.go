@@ -59,6 +59,7 @@ func newShowCmd() *cobra.Command {
 			}
 			return nil
 		},
+		Example: `  obshell tenant show`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "[tenant-name]"}
 	showCmd.VarsPs(&opts.showDetail, []string{clientconst.FLAG_DETAIL, clientconst.FLAG_DETAIL_SH}, false, "Show tenant detail.", false)

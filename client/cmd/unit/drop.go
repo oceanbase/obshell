@@ -56,7 +56,7 @@ func newDropCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell unit create s1 -m 5G -c 2`,
+		Example: `  obshell unit drop s1`,
 	})
 
 	dropCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<unit-config-name>"}
