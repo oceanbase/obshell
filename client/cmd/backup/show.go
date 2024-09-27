@@ -101,10 +101,10 @@ func backupShow(opts *BackupShowFlags) error {
 }
 
 func showCmdExample() string {
-	return `  Checking the backup status for the entire cluster:
-    obshell backup status
+	return `  Show the backup status for the entire cluster:
+    obshell backup show -d
 
-  Checking the backup status for a specific tenant:
-    obshell backup status -t tenant1
+  Show the backup status for a specific tenant:
+    obshell backup show -t tenant1 -d
 `
 }
