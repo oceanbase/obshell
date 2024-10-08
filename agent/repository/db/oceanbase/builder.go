@@ -25,13 +25,13 @@ import (
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	mysqlDriver "gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/repository/driver"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
@@ -69,7 +69,7 @@ func createGormDbByConfig(datasourceConfig *config.ObDataSourceConfig) (db *gorm
 
 	for ; times != 0; updateTimes() {
 		log.Info("try connect oceanbase: ", times)
-		db, err = gorm.Open(mysqlDriver.Open(dsn), &gormConfig)
+		db, err = gorm.Open(driver.Open(dsn), &gormConfig)
 		hasAttemptedConnection = true
 		if err == nil {
 			break
