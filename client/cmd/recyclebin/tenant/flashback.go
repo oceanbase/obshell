@@ -55,8 +55,8 @@ func newFlashbackCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant flashback t1
-  obshell tenant flashback t1 -n t2`,
+		Example: `  obshell recyclebin tenant flashback t1
+  obshell recyclebin tenant flashback t1 -n t2`,
 	})
 
 	flashbackCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name|object-name>"}

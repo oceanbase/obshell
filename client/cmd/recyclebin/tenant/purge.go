@@ -33,11 +33,6 @@ import (
 	"github.com/oceanbase/obshell/client/utils/api"
 )
 
-type tenantPurgeFlags struct {
-	needReservcePool bool
-	global.DropFlags
-}
-
 func newPurgeCmd() *cobra.Command {
 	opts := global.DropFlags{}
 	purgeCmd := command.NewCommand(&cobra.Command{
@@ -62,8 +57,8 @@ func newPurgeCmd() *cobra.Command {
 			}
 			return nil
 		},
-		Example: `  obshell tenant purge t1
-  obshell tenant purge '__recycle_$_1_1720679549921648'`,
+		Example: `  obshell recyclebin tenant purge t1
+  obshell recyclebin tenant purge '__recycle_$_1_1720679549921648'`,
 	})
 
 	purgeCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name|object-name>"}
