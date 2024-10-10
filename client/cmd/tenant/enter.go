@@ -114,6 +114,12 @@ const (
 
 	// obshell tenant rename
 	CMD_RENAME = "rename"
+
+	// obshell tenant archive-log open
+	CMD_ARCHIVE_LOG = "archivelog"
+
+	// obshell tenant archive-log close
+	CMD_NO_ARCHIVE_LOG = "noarchivelog"
 )
 
 func NewTenantCmd() *cobra.Command {
@@ -143,6 +149,8 @@ func NewTenantCmd() *cobra.Command {
 	tenantCmd.AddCommand(newRenameCmd())
 	tenantCmd.AddCommand(newBackupCmd())
 	tenantCmd.AddCommand(newRestoreCmd())
+	tenantCmd.AddCommand(newArchiveLogCmd())
+	tenantCmd.AddCommand(newNoArchiveLogCmd())
 
 	return tenantCmd.Command
 }
