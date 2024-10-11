@@ -85,11 +85,11 @@ func (t *MinorFreezeTask) Execute() error {
 		return errors.Wrap(err, "get all target observers failed")
 	}
 
-	curTs, err := obclusterService.GetUTCTime()
+	checkpointScns, err := obclusterService.GetServerCheckpointScn(servers)
 	if err != nil {
-		return err
+		return errors.Wrap(err, "get server checkpoint_scn failed")
 	}
-	t.ExecuteLogf("timestamp before minor freeze: %v", curTs)
+	t.ExecuteLogf("checkpoint_scn before minor freeze: %v", checkpointScns)
 
 	if err := obclusterService.MinorFreeze(servers); err != nil {
 		return errors.Wrap(err, "minor freeze failed")
@@ -99,7 +99,7 @@ func (t *MinorFreezeTask) Execute() error {
 	checkOk := make(map[oceanbase.OBServer]bool)
 	for count := 0; count < DEFAULT_MINOR_FREEZE_TIMEOUT; count++ {
 		time.Sleep(10 * time.Second)
-		if ok, err := t.isMinorFreezeOver(servers, curTs, checkOk); err != nil {
+		if ok, err := t.isMinorFreezeOver(servers, checkpointScns, checkOk); err != nil {
 			return err
 		} else if ok {
 			return nil
@@ -108,21 +108,22 @@ func (t *MinorFreezeTask) Execute() error {
 	return errors.New("minor freeze timeout")
 }
 
-func (t *MinorFreezeTask) isMinorFreezeOver(servers []oceanbase.OBServer, curTs time.Time, checkedServer map[oceanbase.OBServer]bool) (bool, error) {
+func (t *MinorFreezeTask) isMinorFreezeOver(servers []oceanbase.OBServer, oldCheckpointScn map[oceanbase.OBServer]uint64, checkedServer map[oceanbase.OBServer]bool) (bool, error) {
 	for _, server := range servers {
 		if checkedServer[server] {
 			continue
 		}
 		if checkpointScn, err := obclusterService.IsLsCheckpointAfterTs(server); err != nil {
 			return false, errors.Wrap(err, "check minor freeze failed")
-		} else if checkpointScn.Equal(time.Time{}) {
+		} else if checkpointScn == 0 {
+			// checkpoint_scn is 0, means there is no ls in this server
 			continue
-		} else if checkpointScn.After(curTs) {
-			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn %+v bigger than expired timestamp %+v, check pass ", server.SvrIp, server.SvrPort, checkpointScn, curTs)
+		} else if checkpointScn > oldCheckpointScn[server] {
+			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn %+v bigger than expired timestamp %+v, check pass ", server.SvrIp, server.SvrPort, checkpointScn, oldCheckpointScn[server])
 			checkedServer[server] = true
 			continue
 		} else {
-			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn: %+v smaller than expired timestamp %+v, waiting...", server.SvrIp, server.SvrPort, checkpointScn, curTs)
+			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn: %+v smaller than expired timestamp %+v, waiting...", server.SvrIp, server.SvrPort, checkpointScn, oldCheckpointScn[server])
 			return false, nil
 		}
 	}

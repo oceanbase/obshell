@@ -108,6 +108,23 @@ func (obclusterService *ObclusterService) GetUTCTime() (t time.Time, err error) 
 	return
 }
 
+func (ObclusterService *ObclusterService) GetServerCheckpointScn(servers []oceanbase.OBServer) (map[oceanbase.OBServer]uint64, error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var result = make(map[oceanbase.OBServer]uint64)
+	for _, server := range servers {
+		var checkpointScn uint64
+		err = db.Raw("SELECT checkpoint_scn FROM oceanbase.__all_virtual_ls_info WHERE svr_ip = ? AND svr_port = ? ORDER BY checkpoint_scn ASC LIMIT 1", server.SvrIp, server.SvrPort).Scan(&checkpointScn).Error
+		if err != nil {
+			return nil, err
+		}
+		result[server] = checkpointScn
+	}
+	return result, nil
+}
+
 // MinorFreeze is only for sys tenant, and only support one server.
 func (obclusterService *ObclusterService) MinorFreeze(servers []oceanbase.OBServer) (err error) {
 	db, err := oceanbasedb.GetInstance()
@@ -125,10 +142,10 @@ func (obclusterService *ObclusterService) MinorFreeze(servers []oceanbase.OBServ
 }
 
 // IsLsCheckpointAfterTs will check the smallest checkpoint of the log stream of on the target server.
-func (obclusterService *ObclusterService) IsLsCheckpointAfterTs(server oceanbase.OBServer) (t time.Time, err error) {
+func (obclusterService *ObclusterService) IsLsCheckpointAfterTs(server oceanbase.OBServer) (checkpintScn uint64, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
-		return t, err
+		return checkpintScn, err
 	}
 
 	var systemTimeZone string
@@ -137,8 +154,8 @@ func (obclusterService *ObclusterService) IsLsCheckpointAfterTs(server oceanbase
 	}
 
 	// Get checkpoint of target server.
-	sql := fmt.Sprintf("select CONVERT_TZ(scn_to_timestamp(checkpoint_scn), '%s', '+00:00') from oceanbase.__all_virtual_ls_info where svr_ip = '%s' and svr_port = %d order by checkpoint_scn asc limit 1", systemTimeZone, server.SvrIp, server.SvrPort)
-	err = db.Raw(sql).Scan(&t).Error
+	sql := fmt.Sprintf("select checkpoint_scn from oceanbase.__all_virtual_ls_info where svr_ip = '%s' and svr_port = %d order by checkpoint_scn asc limit 1", server.SvrIp, server.SvrPort)
+	err = db.Raw(sql).Scan(&checkpintScn).Error
 	return
 
 }
