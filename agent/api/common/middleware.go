@@ -143,6 +143,24 @@ func getPeerCred(r *http.Request) (ucred *syscall.Ucred) {
 	return ucred
 }
 
+func compareRequestUri(c *gin.Context, maskUri string) bool {
+	requestUriArr := strings.Split(c.Request.RequestURI, "/")
+	maskUriArr := strings.Split(maskUri, "/")
+	if len(requestUriArr) != len(maskUriArr) {
+		return false
+	}
+	for i := range requestUriArr {
+		if requestUriArr[i] == maskUriArr[i] {
+			continue
+		}
+		if strings.HasPrefix(maskUriArr[i], ":") {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
 // PreHandlers returns a Gin middleware function to extract and log
 // trace IDs from incoming HTTP requests, and to log request details.
 func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
@@ -158,10 +176,9 @@ func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
 
 		masked := false
 		for _, it := range maskBodyRoutes {
-			if strings.HasPrefix(c.Request.RequestURI, it) {
+			if compareRequestUri(c, it) {
 				masked = true
-			} else if strings.Contains(it, constant.URI_ROOTPASSWORD) {
-				masked = true
+				break
 			}
 		}
 		if masked {

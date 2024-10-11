@@ -50,7 +50,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_BACKUP+constant.URI_CONFIG,
 			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG,
 			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_RESTORE,
-			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD,
+			constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK,
+			constant.URI_API_V1+constant.URI_TENANT_GROUP,
+			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD,
 		),
 		common.SetContentType,
 	)
