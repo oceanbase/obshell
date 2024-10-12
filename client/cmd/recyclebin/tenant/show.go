@@ -74,7 +74,7 @@ func tenantShow(name ...string) error {
 			}
 		}
 		if len(data) == 0 {
-			return fmt.Errorf("Tenant '%s' is not exsit in recyclebin", name[0])
+			return fmt.Errorf("Tenant '%s' is not exist in recyclebin", name[0])
 		}
 	} else {
 		for _, n := range tenants {
