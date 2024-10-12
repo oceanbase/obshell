@@ -71,6 +71,7 @@ const (
 	URI_PARAMS  = "/params"
 	URI_BACKUP  = "/backup"
 	URI_RESTORE = "/restore"
+	URI_WINDOWS = "/windows"
 
 	// Used for tenant
 	URI_TENANTS      = "/tenants"

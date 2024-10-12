@@ -23,8 +23,10 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/exp/slices"
 
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/json"
@@ -39,6 +41,16 @@ type TenantKey struct {
 	TenantId int `json:"tenant_id"`
 }
 
+type RestoreWindows struct {
+	Windows []RestoreWindow `json:"restore_windows"`
+}
+
+type RestoreWindow struct {
+	StartTime time.Time `json:"start_time"`
+	EndTime   time.Time `json:"end_time"`
+}
+
+// ArchiveInfo contains the information of archive log, which only contains the key, start scn and checkpoint scn but not the display time of scn.
 type ArchiveInfo struct {
 	Key           TenantKey `json:"key"`
 	StartSCN      SCN       `json:"start_scn"`
@@ -91,13 +103,14 @@ func formateBackupInfo(context string) []string {
 	return infos
 }
 
-func checkRestoreTime(clogCtx, dataCtx string, scn int64) (bool, error) {
+func getLogPointAndDataSet(clogCtx, dataCtx string) ([][]int64, map[int]*BackupSet, error) {
 	clogSet := formateBackupInfo(clogCtx)
 	var logPointSet [][]int64
+
 	for _, logPoint := range clogSet {
 		var logPointData ArchiveInfo
 		if err := json.Unmarshal([]byte(logPoint), &logPointData); err != nil {
-			return false, errors.Wrap(err, "Failed to parse logPoint data")
+			return nil, nil, errors.Wrap(err, "Failed to parse logPoint data")
 		}
 		logPointSet = append(logPointSet, []int64{logPointData.StartSCN.Val, logPointData.CheckPointSCN.Val})
 	}
@@ -106,11 +119,32 @@ func checkRestoreTime(clogCtx, dataCtx string, scn int64) (bool, error) {
 	for _, data := range formateBackupInfo(dataCtx) {
 		var backupSet BackupSet
 		if err := json.Unmarshal([]byte(data), &backupSet); err != nil {
-			return false, errors.Wrap(err, "Failed to parse backupSet data")
+			return nil, nil, errors.Wrap(err, "Failed to parse backupSet data")
 		}
 		dataSet[backupSet.BackupSetID] = &backupSet
 	}
+	return logPointSet, dataSet, nil
+}
 
+func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
+	log.Info("Get archive log context")
+	archiveLogCtx, err := getOBAdminCtxByURI(logURI)
+	if err != nil {
+		return nil, errors.Wrapf(err, "execute archive log command failed")
+	}
+
+	log.Info("Get data backup context")
+	dataCtx, err := getOBAdminCtxByURI(dataURI)
+	if err != nil {
+		return nil, errors.Wrapf(err, "execute data backup command failed")
+	}
+
+	logPointSet, dataSet, err := getLogPointAndDataSet(archiveLogCtx, dataCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	var restoreWindows [][2]int64
 	for _, data := range dataSet {
 		if data.PlusArchivelog {
 			// plugs 备份暂未实现
@@ -124,33 +158,52 @@ func checkRestoreTime(clogCtx, dataCtx string, scn int64) (bool, error) {
 			continue
 		}
 
-		if scn < data.MinRestoreSCN.Val {
-			continue
-		}
-
 		for _, logPoint := range logPointSet {
-			if logPoint[0] <= data.StartReplaySCN.Val && data.StartReplaySCN.Val <= logPoint[1] && scn <= logPoint[1] {
-				return true, nil
+			if logPoint[0] <= data.StartReplaySCN.Val && data.StartReplaySCN.Val <= logPoint[1] {
+				restoreWindows = append(restoreWindows, [2]int64{data.MinRestoreSCN.Val, logPoint[1]})
 			}
+		}
+	}
+
+	log.Infof("restoreWindows: %+v", restoreWindows)
+	return mergeWindows(restoreWindows), nil
+}
+
+func mergeWindows(intervals [][2]int64) [][2]int64 {
+	ans := make([][2]int64, 0)
+	slices.SortFunc(intervals, func(a, b [2]int64) int {
+		return int(a[0] - b[0])
+	})
+
+	l, r := intervals[0][0], intervals[0][1]
+	for _, inte := range intervals {
+		if inte[0] > r {
+			ans = append(ans, [2]int64{l, r})
+			l, r = inte[0], inte[1]
+		} else if inte[1] > r {
+			r = inte[1]
+		}
+	}
+
+	return append(ans, [2]int64{l, r})
+}
+
+func checkRestoreTime(dataURI, logURI string, scn int64) (bool, error) {
+	restoreWindows, err := getRestoreWindows(dataURI, logURI)
+	if err != nil {
+		return false, err
+	}
+
+	for _, window := range restoreWindows {
+		if window[0] <= scn && scn <= window[1] {
+			return true, nil
 		}
 	}
 	return false, nil
 }
 
 func CheckRestoreTime(dataURI, logURI string, scn int64) (err error) {
-	log.Info("Get archive log context")
-	archiveLogCtx, err := getOBAdminCtxByURI(logURI)
-	if err != nil {
-		return errors.Wrapf(err, "execute archive log command failed")
-	}
-
-	log.Info("Get data backup context")
-	dataCtx, err := getOBAdminCtxByURI(dataURI)
-	if err != nil {
-		return errors.Wrapf(err, "execute data backup command failed")
-	}
-
-	canRestore, err := checkRestoreTime(archiveLogCtx, dataCtx, scn)
+	canRestore, err := checkRestoreTime(dataURI, logURI, scn)
 	if err != nil {
 		return errors.Wrapf(err, "check restore time")
 	}
@@ -175,4 +228,21 @@ func newOBAdminCommand(storage StorageInterface) string {
 		cmd += fmt.Sprintf(" -s '%s'", storage.GenerateQueryParams())
 	}
 	return cmd
+}
+
+func GetRestoreWindows(dataURI, logURI string) (*RestoreWindows, error) {
+	windows, err := getRestoreWindows(dataURI, logURI)
+	if err != nil {
+		return nil, err
+	}
+
+	res := new(RestoreWindows)
+	for _, window := range windows {
+		res.Windows = append(res.Windows, RestoreWindow{
+			StartTime: time.Unix(0, window[0]),
+			EndTime:   time.Unix(0, window[1]),
+		})
+	}
+
+	return res, err
 }

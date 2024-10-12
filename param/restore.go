@@ -25,9 +25,13 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
-type RestoreParam struct {
+type RestoreWindowsParam struct {
 	DataBackupUri string  `json:"data_backup_uri" binding:"required"`
 	ArchiveLogUri *string `json:"archive_log_uri"`
+}
+
+type RestoreParam struct {
+	RestoreWindowsParam
 
 	TenantName string `json:"restore_tenant_name" binding:"required"`
 

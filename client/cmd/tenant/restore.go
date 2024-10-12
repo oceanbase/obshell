@@ -144,9 +144,11 @@ func (f *TenantRestoreFlags) toRestoreParam(cmd *cobra.Command) (*param.RestoreP
 	}
 
 	restoreParam := &param.RestoreParam{
-		TenantName:    f.TenantName,
-		DataBackupUri: f.DataBackupUri,
-		ZoneList:      zoneList,
+		TenantName: f.TenantName,
+		RestoreWindowsParam: param.RestoreWindowsParam{
+			DataBackupUri: f.DataBackupUri,
+		},
+		ZoneList: zoneList,
 	}
 	stdio.Verbosef("Zone list is %v", restoreParam.ZoneList)
 

@@ -527,3 +527,19 @@ func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e *error
 
 	return res, nil
 }
+
+func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWindows, e *errors.OcsAgentError) {
+	if !system.IsFileExist(path.OBAdmin()) {
+		return nil, errors.Occur(errors.ErrKnown, "ob_admin not found")
+	}
+
+	if param.ArchiveLogUri == nil || *param.ArchiveLogUri == "" {
+		*param.ArchiveLogUri = param.DataBackupUri
+	}
+
+	res, err := system.GetRestoreWindows(param.DataBackupUri, *param.ArchiveLogUri)
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err)
+	}
+	return res, nil
+}
