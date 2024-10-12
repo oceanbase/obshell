@@ -69,12 +69,12 @@ jobs:
       script: |
         #!/bin/bash
         if [[ `uname -m` == aarch64 ]]; then
-          wget https://studygolang.com/dl/golang/go1.20.6.linux-arm64.tar.gz
+          wget https://studygolang.com/dl/golang/go1.20.6.linux-arm64.tar.gz --no-check-certificate
           rm -rf /usr/local/go 
           tar -C /usr/local -xzf go1.20.6.linux-arm64.tar.gz
           cp /usr/local/go/bin/go /usr/local/bin/
         else
-          wget https://studygolang.com/dl/golang/go1.20.6.linux-amd64.tar.gz
+          wget https://studygolang.com/dl/golang/go1.20.6.linux-amd64.tar.gz --no-check-certificate
           rm -rf /usr/local/go 
           tar -C /usr/local -xzf go1.20.6.linux-amd64.tar.gz
           cp /usr/local/go/bin/go /usr/local/bin/
