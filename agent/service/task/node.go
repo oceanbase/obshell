@@ -22,8 +22,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
@@ -59,12 +59,12 @@ func (s *taskService) newNodes(template *task.Template, ctx *task.TaskContext) (
 }
 
 func (s *taskService) insertNewNode(tx *gorm.DB, node *task.Node, nodeInstanceBO *bo.NodeInstance, dagId int64) (*bo.NodeInstance, error) {
-	nodeCtxJsonStr, err := json.Marshal(node.GetContext())
+	nodeCtxStr, err := s.encodeTaskContext(node.GetContext())
 	if err != nil {
 		return nil, err
 	}
 	nodeInstanceBO.DagId = dagId
-	nodeInstanceBO.Context = nodeCtxJsonStr
+	nodeInstanceBO.Context = []byte(nodeCtxStr)
 	nodeInstance := s.convertNodeInstanceBOToDO(nodeInstanceBO)
 	if resp := tx.Create(nodeInstance); resp.Error != nil {
 		return nil, resp.Error

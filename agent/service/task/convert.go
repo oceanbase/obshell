@@ -17,6 +17,7 @@
 package task
 
 import (
+	"encoding/base64"
 	"time"
 
 	"gorm.io/gorm"
@@ -31,37 +32,59 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
+func (s *taskService) encodeTaskContext(ctx *task.TaskContext) (string, error) {
+	str, err := json.Marshal(ctx)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(str), nil
+}
+
+func (s *taskService) decodeTaskContext(encoded []byte) (*task.TaskContext, error) {
+	data, err := base64.StdEncoding.DecodeString(string(encoded))
+	if err != nil {
+		// If the encoded string is not base64 encoded, it may be a json string.
+		data = encoded
+	}
+	var ctx task.TaskContext
+	if err := json.Unmarshal(data, &ctx); err != nil {
+		return nil, err
+	}
+	return &ctx, nil
+}
+
 // convertDagInstance converts DagInstance to task.Dag.
 func (s *taskService) convertDagInstance(bo *bo.DagInstance) (*task.Dag, error) {
-	var ctx task.TaskContext
-	if err := json.Unmarshal(bo.Context, &ctx); err != nil {
+	ctx, err := s.decodeTaskContext(bo.Context)
+	if err != nil {
 		return nil, err
 	}
 
 	maintenance := task.NewMaintenance(bo.MaintenanceType, bo.MaintenanceKey)
-	return task.NewDag(bo.Id, bo.Name, bo.Type, bo.State, bo.Stage, bo.MaxStage, bo.Operator, maintenance, &ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
+	return task.NewDag(bo.Id, bo.Name, bo.Type, bo.State, bo.Stage, bo.MaxStage, bo.Operator, maintenance, ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
 }
 
 // convertNodeInstance converts NodeInstance to task.TaskNode.
 func (s *taskService) convertNodeInstance(bo *bo.NodeInstance) (*task.Node, error) {
-	var ctx task.TaskContext
-	if err := json.Unmarshal(bo.Context, &ctx); err != nil {
+	ctx, err := s.decodeTaskContext(bo.Context)
+	if err != nil {
 		return nil, err
 	}
-	return task.NewNodeWithId(bo.Id, bo.Name, bo.State, bo.Operator, bo.StructName, &ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
+
+	return task.NewNodeWithId(bo.Id, bo.Name, bo.State, bo.Operator, bo.StructName, ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
 }
 
 // convertSubTaskInstance convert SubTaskInstance to task.ExecutableTask.
 func (s *taskService) convertSubTaskInstance(bo *bo.SubTaskInstance) (task.ExecutableTask, error) {
-	var ctx task.TaskContext
-	if err := json.Unmarshal(bo.Context, &ctx); err != nil {
+	ctx, err := s.decodeTaskContext(bo.Context)
+	if err != nil {
 		return nil, err
 	}
 
 	agentInfo := meta.NewAgentInfo(bo.ExecuterAgentIp, bo.ExecuterAgentPort)
 	isLocal := s.isLocal && bo.NodeId != 0
 	return task.CreateSubTaskInstance(
-		bo.StructName, bo.Id, bo.Name, &ctx, bo.State, bo.Operator, bo.CanCancel, bo.CanContinue, bo.CanPass,
+		bo.StructName, bo.Id, bo.Name, ctx, bo.State, bo.Operator, bo.CanCancel, bo.CanContinue, bo.CanPass,
 		bo.CanRetry, bo.CanRollback, bo.ExecuteTimes, *agentInfo, isLocal, bo.StartTime, bo.EndTime)
 }
 

@@ -24,7 +24,6 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -239,7 +238,7 @@ func (s *taskService) insertNewDag(tx *gorm.DB, dagInstanceBO *bo.DagInstance) (
 
 // newDagInstanceBO creates a new DagInstance based on template and ctx.
 func (s *taskService) newDagInstanceBO(template *task.Template, ctx *task.TaskContext) (*bo.DagInstance, error) {
-	ctxJsonStr, err := json.Marshal(ctx)
+	ctxJsonStr, err := s.encodeTaskContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -252,7 +251,7 @@ func (s *taskService) newDagInstanceBO(template *task.Template, ctx *task.TaskCo
 		IsMaintenance:   template.IsMaintenance(),
 		MaintenanceType: template.GetMaintenanceType(),
 		MaintenanceKey:  template.GetMaintenanceKey(),
-		Context:         ctxJsonStr,
+		Context:         []byte(ctxJsonStr),
 	}, nil
 }
 
