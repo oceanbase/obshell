@@ -27,6 +27,10 @@ const (
 	DEFAULT_AGENT_PORT = 2886
 )
 
+const (
+	AGENT_V4241 = "4.2.4.1"
+)
+
 var (
 	VERSION             = ""
 	RELEASE             = ""
@@ -45,6 +49,7 @@ const (
 	OCS_INFO_STATUS       = "status"
 	OCS_INFO_OS           = "os"
 	OCS_INFO_ARCHITECTURE = "architecture"
+	OCS_INFO_BIN_SYNCED   = "binary_synced"
 )
 
 const (

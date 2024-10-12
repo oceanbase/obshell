@@ -16,28 +16,9 @@
 
 package oceanbase
 
-import (
-	"sync"
-
-	"gorm.io/gorm"
-
-	"github.com/oceanbase/obshell/agent/config"
-)
-
-const (
-	TEST_DATABASE_SQL         = "SELECT 1"
-	TEST_OCEANBASE_SQL        = "SHOW DATABASES"
-	TEST_OCEANBASE_TABLES_SQL = "SHOW TABLES"
-)
-
-var (
-	dbLock        sync.Mutex
-	dbInstance    *gorm.DB
-	currentConfig *config.ObDataSourceConfig
-	isOcs         bool
-	initOnce      sync.Once
-	migrateOnce   sync.Once
-
-	lastInitError          error
-	hasAttemptedConnection bool
-)
+type AgentBinaryChunk struct {
+	BinId      int    `gorm:"primaryKey;not null"`
+	ChunkId    int    `gorm:"primaryKey;column:chunk_id;not null"`
+	ChunkCount int    `gorm:"not null"`
+	Chunk      []byte `gorm:"type:MEDIUMBLOB;not null"`
+}

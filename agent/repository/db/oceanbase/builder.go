@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -35,7 +36,7 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-var table_list = []interface{}{
+var tableList = []interface{}{
 	oceanbase.AllAgent{},
 	oceanbase.TaskMaintainer{},
 	oceanbase.DagInstance{},
@@ -46,6 +47,8 @@ var table_list = []interface{}{
 	oceanbase.UpgradePkgChunk{},
 	oceanbase.ClusterStatus{},
 	oceanbase.PartialMaintenance{},
+	oceanbase.AgentBinaryInfo{},
+	oceanbase.AgentBinaryChunk{},
 }
 
 // createGormDbByConfig will create an ob db instance according to the configuration and
@@ -143,19 +146,34 @@ func IsTableNotExists(err error) bool {
 	return strings.Contains(err.Error(), "Error 1146")
 }
 
-func AutoMigrateObTables() (err error) {
+func AutoMigrateObTables(parallel bool) (err error) {
+	migrateOnce.Do(func() {
+		if parallel {
+			err = parallelAutoMigrateObTables()
+		} else {
+			err = autoMigrateObTables()
+		}
+	})
+
+	if err != nil {
+		migrateOnce = sync.Once{}
+	}
+	return
+}
+
+func autoMigrateObTables() (err error) {
 	if dbInstance == nil {
 		return errors.New("oceanbase db is nil")
 	}
 	// When the ob db instance exists, do ob table migration
-	return dbInstance.AutoMigrate(table_list...)
+	return dbInstance.AutoMigrate(tableList...)
 }
 
-func ParallelAutoMigrateObTables() (err error) {
+func parallelAutoMigrateObTables() (err error) {
 	if dbInstance == nil {
 		return errors.New("oceanbase db is nil")
 	}
-	for _, table := range table_list {
+	for _, table := range tableList {
 		for i := 0; i < 10; i++ {
 			err = dbInstance.AutoMigrate(table)
 			if err == nil || IsTableAlreadyExists(err) || IsDuplicateColumn(err) {

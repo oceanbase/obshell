@@ -37,6 +37,44 @@ var OBStateShortMap = map[int]string{
 	3: "AVAILABLE",
 }
 
+// Subscribers to connection events
+// Each subscriber is assigned a channel to receive database connection events
+// So this is a map, each element is a channel
+// The type of the channel is chan int, and the status enumeration value is defined in status.go
+var connectSubscribers = make(map[*connectSubscriber]chan int)
+
+type connectSubscriber struct {
+	eventChan chan int
+}
+
+func NewConnectSubscriber() *connectSubscriber {
+	return &connectSubscriber{}
+}
+
+func (s *connectSubscriber) subscribe() {
+	s.eventChan = make(chan int, 1)
+	connectSubscribers[s] = s.eventChan
+}
+
+func (s *connectSubscriber) unsubscribe() {
+	delete(connectSubscribers, s)
+	close(s.eventChan)
+	s.eventChan = nil
+}
+
+func (s *connectSubscriber) GetEvent() int {
+	s.subscribe()
+	state := <-s.eventChan
+	s.unsubscribe()
+	return state
+}
+
+func notifyAll(state int) {
+	for _, s := range connectSubscribers {
+		s <- state
+	}
+}
+
 func GetState() int {
 	var err error
 	if err = CheckObserverProcess(); err != nil {

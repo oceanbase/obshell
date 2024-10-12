@@ -215,3 +215,20 @@ func agentUpdateHandler(c *gin.Context) {
 	dag, err := ob.CreateAgentSyncDag(params.Password)
 	common.SendResponse(c, dag, err)
 }
+
+func takeOverAgentUpdateBinaryHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsTakeover() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not takeover agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		return
+	}
+
+	if dag, err := ob.TakeOverUpdateAgentVersion(); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	} else if dag == nil {
+		common.SendNoContentResponse(c, err)
+		return
+	} else {
+		common.SendResponse(c, dag, nil)
+	}
+}

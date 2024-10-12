@@ -57,6 +57,7 @@ type ClusterScaleOutParam struct {
 
 type LocalScaleOutParam struct {
 	ScaleOutParam
+	TargetVersion                string            `json:"targetVersion"`
 	AllAgents                    []meta.AgentInfo  `json:"allAgents" binding:"required"`
 	Dirs                         map[string]string `json:"dirs" binding:"required"`
 	CoordinateDagId              string            `json:"coordinateDagId" binding:"required"`

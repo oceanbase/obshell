@@ -157,10 +157,11 @@ func (s *Server) RunLocalServer() {
 	go func() {
 		err := s.LocalHttpServer.Serve(s.UnixListener)
 		if err != nil {
-			log.WithError(err).Error("obshell serve on unix listener failed")
 			if s.SocketPath() == path.ObshellTmpSocketPath() {
+				log.WithError(err).Info("tmp socket server closed")
 				return
 			}
+			log.WithError(err).Error("obshell serve on unix listener failed")
 			if s.IsStarting() {
 				process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("serve on unix listener failed: %v\n", err))
 			}

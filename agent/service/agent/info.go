@@ -152,6 +152,37 @@ func (s *AgentService) setZone(tx *gorm.DB, zone string) error {
 	return nil
 }
 
+func (s *AgentService) UpdateBaseInfo() error {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+
+	return db.Transaction(func(tx *gorm.DB) (err error) {
+		ocsInfoList := []*sqlite.OcsInfo{
+			{Name: constant.OCS_INFO_OS, Value: global.Os},
+			{Name: constant.OCS_INFO_ARCHITECTURE, Value: global.Architecture},
+		}
+
+		var curVersion string
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", constant.OCS_INFO_VERSION).Find(&curVersion).Error; err != nil {
+			return err
+		}
+
+		if curVersion != constant.VERSION {
+			ocsInfoList = append(ocsInfoList, &sqlite.OcsInfo{Name: constant.OCS_INFO_VERSION, Value: constant.VERSION})
+			ocsInfoList = append(ocsInfoList, &sqlite.OcsInfo{Name: constant.OCS_INFO_BIN_SYNCED, Value: "0"})
+		}
+
+		for _, info := range ocsInfoList {
+			if err := s.updateInfo(tx, info); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (s *AgentService) BeMasterAgent(zone string) error {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
@@ -165,17 +196,6 @@ func (s *AgentService) BeMasterAgent(zone string) error {
 				ocsAgent.Zone = ""
 			}
 		}()
-		// Update info.
-		ocsInfoList := []*sqlite.OcsInfo{
-			{Name: constant.OCS_INFO_VERSION, Value: constant.VERSION},
-			{Name: constant.OCS_INFO_OS, Value: global.Os},
-			{Name: constant.OCS_INFO_ARCHITECTURE, Value: global.Architecture},
-		}
-		for _, info := range ocsInfoList {
-			if err = s.updateInfo(tx, info); err != nil {
-				return
-			}
-		}
 		if err = s.setZone(tx, zone); err != nil {
 			return
 		}
@@ -203,20 +223,6 @@ func (s *AgentService) BeFollowerAgent(masterAgent meta.AgentInstance, zone stri
 				ocsAgent.MasterAgent = nil
 			}
 		}()
-		// Update info.
-		ocsInfoList := []*sqlite.OcsInfo{
-			{Name: constant.OCS_INFO_VERSION,
-				Value: constant.VERSION},
-			{Name: constant.OCS_INFO_OS,
-				Value: global.Os},
-			{Name: constant.OCS_INFO_ARCHITECTURE,
-				Value: global.Architecture},
-		}
-		for _, info := range ocsInfoList {
-			if err = s.updateInfo(tx, info); err != nil {
-				return
-			}
-		}
 		if err = s.updateIdentity(tx, meta.FOLLOWER); err != nil {
 			return
 		}
@@ -289,17 +295,6 @@ func (s *AgentService) BeScalingOutAgent(zone string) error {
 				ocsAgent.Zone = ""
 			}
 		}()
-		// Update info.
-		ocsInfoList := []*sqlite.OcsInfo{
-			{Name: constant.OCS_INFO_VERSION, Value: constant.VERSION},
-			{Name: constant.OCS_INFO_OS, Value: runtime.GOOS},
-			{Name: constant.OCS_INFO_ARCHITECTURE, Value: runtime.GOARCH},
-		}
-		for _, info := range ocsInfoList {
-			if err = s.updateInfo(tx, info); err != nil {
-				return
-			}
-		}
 		if err = s.setZone(tx, zone); err != nil {
 			return
 		}

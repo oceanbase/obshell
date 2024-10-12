@@ -63,7 +63,9 @@ func (d *Daemon) stop() error {
 	d.setState(constant.STATE_STOPPED)
 	d.cleanup()
 	d.wg.Wait()
-	d.localHttpServer.Close()
+	if d.localHttpServer != nil {
+		d.localHttpServer.Close()
+	}
 	return nil
 }
 

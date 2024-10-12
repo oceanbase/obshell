@@ -165,7 +165,12 @@ func (a *Agent) initAgent() (err error) {
 	}
 
 	log.Info("initialize agent status")
-	return agentService.InitializeAgentStatus()
+	if err = agentService.InitializeAgentStatus(); err != nil {
+		return err
+	}
+
+	log.Info("update base info")
+	return agentService.UpdateBaseInfo()
 }
 
 func (a *Agent) updateAgent() (err error) {

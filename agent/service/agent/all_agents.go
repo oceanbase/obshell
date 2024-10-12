@@ -17,7 +17,6 @@
 package agent
 
 import (
-	"errors"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -390,9 +389,6 @@ func (s *AgentService) CheckCanBeTakeOverMaster() (bool, error) {
 		exist := false
 		for _, agent := range agents {
 			if server.SvrIp == agent.Ip && server.SvrPort == agent.RpcPort {
-				if agent.Version != meta.OCS_AGENT.GetVersion() {
-					return false, errors.New("agent version is not consistent")
-				}
 				exist = true
 				break
 			}

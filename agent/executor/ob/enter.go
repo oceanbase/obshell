@@ -47,9 +47,10 @@ const (
 	PARAM_UNRS       = "unRs" // PARAM_UNRS is a map, key is zone, value is servers that not in rs
 	PARAM_DELETE_ALL = "deleteAll"
 	// for scale out
-	PARAM_IS_NEW_ZONE    = "isNewZone"
-	PARAM_AGENT_INFO     = "agentInfo"
-	PARAM_SCALE_OUT_UUID = "scaleOutUUID"
+	PARAM_IS_NEW_ZONE          = "isNewZone"
+	PARAM_AGENT_INFO           = "agentInfo"
+	PARAM_SCALE_OUT_UUID       = "scaleOutUUID"
+	PARAM_TARGET_AGENT_VERSION = "targetAgentVersion"
 
 	PARAM_EXPECTED_STAGE         = "expectedStage"
 	PARAM_MAIN_DAG_ID            = "mainDagId"
@@ -160,6 +161,7 @@ const (
 	TASK_CHECK_PYTHON_ENV                        = "Check the python environment"
 	TASK_BACKUP_FOR_UPGRADE                      = "Backup for upgrade"
 	TASK_INSTALL_NEW_OBSHELL                     = "Install new obshell"
+	TASK_INSTALL_CLUSTER_AGENT_VERSION           = "Upgrade to cluster agent version"
 	TASK_RESTART_OBSHELL                         = "Restart obshell"
 	TASK_CREATE_UPGRADE_DIR                      = "Create upgrade dir"
 	TASK_REMOVE_UPGRADE_CHECK_TASK_DIR           = "Remove upgrade check task dir"
@@ -223,6 +225,7 @@ const (
 	DAG_STOP_OB                          = "Stop OB"
 	DAG_TAKE_OVER                        = "Take over"
 	DAG_CHECK_AND_UPGRADE_OBSHELL        = "Check and upgrade obshell"
+	DAG_TAKE_OVER_UPDATE_AGENT_VERSION   = "Take over agent update agent version"
 	DAG_UPGRADE_OBSHELL                  = "Upgrade obshell"
 	DAG_UPGRADE_CHECK_OBSHELL            = "Upgrade check obshell"
 	DAG_UPGRADE_CHECK_OB                 = "Upgrade check OB"
@@ -384,6 +387,7 @@ func RegisterObScaleOutTask() {
 	task.RegisterTaskType(WaitDeployRetryTask{})
 	task.RegisterTaskType(WaitStartRetryTask{})
 	task.RegisterTaskType(WatchDagTask{})
+	task.RegisterTaskType(ScalingAgentUpdateBinaryTask{})
 	task.RegisterTaskType(SyncFromOB{})
 
 	// for Cluster Agent
@@ -413,6 +417,12 @@ func RegisterUpgradeTask() {
 	task.RegisterTaskType(InstallNewAgentTask{})
 	task.RegisterTaskType(RestartAgentTask{})
 	task.RegisterTaskType(UpgradePostTableMaintainTask{})
+
+	// agent auto upgrade
+	task.RegisterTaskType(UpgradeToClusterAgentVersionTask{})
+
+	// take over
+	task.RegisterTaskType(TakeOverAgentUpdateBinaryTask{})
 
 	// ob upgrade
 	task.RegisterTaskType(CheckEnvTask{})

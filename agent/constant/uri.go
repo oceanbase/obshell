@@ -43,6 +43,8 @@ const (
 	URI_JOIN   = "/join"
 	URI_REMOVE = "/remove"
 
+	URI_SYNC_BIN = "/sync-bin"
+
 	URI_DAG      = "/dag"
 	URI_NODE     = "/node"
 	URI_SUB_TASK = "/sub_task"

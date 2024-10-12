@@ -38,6 +38,7 @@ func InitOcsAgentRpcRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	agent.POST("", agentJoinHandler)
 	agent.DELETE("", agentRemoveHandler)
 	agent.POST(constant.URI_UPDATE, agentUpdateHandler)
+	agent.POST(constant.URI_SYNC_BIN, takeOverAgentUpdateBinaryHandler)
 
 	InitTaskRoutes(v1)
 

@@ -19,9 +19,11 @@ package ob
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
@@ -32,6 +34,7 @@ import (
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/http"
+	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	oceanbaseModel "github.com/oceanbase/obshell/agent/repository/model/oceanbase"
@@ -79,13 +82,30 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 			param.AgentInfo.String(), agent.OBVersion, meta.OCS_AGENT.String(), obVersion)
 	}
 
+	var targetVersion string
+	agentVersion := strings.Split(agent.Version, "-")[0]
+	log.Infof("scale out agent %s(%s) into cluster agent %s(%s)", agent.String(), agentVersion, meta.OCS_AGENT.String(), constant.VERSION)
+	if cmp := pkg.CompareVersion(constant.VERSION, agentVersion); cmp < 0 {
+		return nil, errors.Occurf(errors.ErrBadRequest, "scale out a higer version agent(%s) into cluster agent(%s) is not allowed", agentVersion, constant.VERSION)
+	} else if cmp > 0 {
+		if pkg.CompareVersion(agentVersion, constant.AGENT_V4241) < 0 {
+			return nil, errors.Occurf(errors.ErrBadRequest, "scale out a lower version agent(%s before %s) into cluster agent(%s) is not allowed", agentVersion, constant.AGENT_V4241, constant.VERSION)
+		}
+		if exist, err := agentService.TargetVersionAgentExists(constant.VERSION); err != nil {
+			return nil, errors.Occur(errors.ErrUnexpected, "check target version agent exists failed")
+		} else if !exist {
+			return nil, errors.Occurf(errors.ErrBadRequest, "There is no aviailable agent(version: %s, architecture: %s) in OB", constant.VERSION, global.Architecture)
+		}
+		targetVersion = constant.VERSION
+	}
+
 	param.ObConfigs[constant.CONFIG_HOME_PATH] = agent.HomePath
 	if err := paramToConfig(param.ObConfigs); err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
 	// Create Cluster Scale Out Dag
-	dag, err := CreateClusterScaleOutDag(param)
+	dag, err := CreateClusterScaleOutDag(param, targetVersion)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
@@ -124,14 +144,14 @@ func HandleLocalScaleOut(params param.LocalScaleOutParam) (*LocalScaleOutResp, *
 	}, nil
 }
 
-func CreateClusterScaleOutDag(param param.ClusterScaleOutParam) (*task.DagDetailDTO, error) {
+func CreateClusterScaleOutDag(param param.ClusterScaleOutParam, targetVersion string) (*task.DagDetailDTO, error) {
 	zone := param.Zone
 	isZoneExist, err := obclusterService.IsZoneExistInOB(zone)
 	if err != nil {
 		return nil, errors.Wrap(err, "check zone exist failed")
 	}
 	template := buildClusterScaleOutTaskTemplate(param, !isZoneExist)
-	context := buildClusterScaleOutDagContext(param, !isZoneExist)
+	context := buildClusterScaleOutDagContext(param, !isZoneExist, targetVersion)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
 		return nil, errors.Wrap(err, "create dag instance failed")
@@ -191,25 +211,29 @@ func buildClusterScaleOutTaskTemplate(param param.ClusterScaleOutParam, isNewZon
 }
 
 func buildLocalScaleOutTaskTemplate(param param.LocalScaleOutParam) *task.Template {
-	return task.NewTemplateBuilder(DAG_NAME_LOCAL_SCALE_OUT).
+	builder := task.NewTemplateBuilder(DAG_NAME_LOCAL_SCALE_OUT).
 		AddTask(newAgentBeScalingOutTask(), false).
 		AddNode(task.NewNodeWithContext(newWaitDeployRetryTask(), false, task.NewTaskContext().SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, param.ParamExpectDeployNextStage))).
 		AddTask(newDeployTask(), false).
 		AddNode(task.NewNodeWithContext(newWaitStartRetryTask(), false, task.NewTaskContext().SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, param.ParamExpectStartNextStage))).
 		AddTask(newStartObServerTask(), false).
-		AddTask(newWatchDagTask(), false).
-		AddTask(newSyncFromOB(), false).
+		AddTask(newWatchDagTask(), false)
+	if param.TargetVersion != "" {
+		builder.AddTask(newScalingAgentUpdateBinaryTask(), false)
+	}
+	return builder.AddTask(newSyncFromOB(), false).
 		SetMaintenance(task.GlobalMaintenance()).
 		Build()
 }
 
-func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone bool) *task.TaskContext {
+func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone bool, targetVersion string) *task.TaskContext {
 	context := task.NewTaskContext().
 		SetParam(PARAM_ZONE, param.Zone).
 		SetParam(PARAM_IS_NEW_ZONE, isNewZone).
 		SetParam(PARAM_AGENT_INFO, param.AgentInfo).
 		SetParam(PARAM_CONFIG, param.ObConfigs).
-		SetParam(PARAM_HEALTH_CHECK, true)
+		SetParam(PARAM_HEALTH_CHECK, true).
+		SetParam(PARAM_TARGET_AGENT_VERSION, targetVersion)
 	return context
 }
 
@@ -226,6 +250,9 @@ func buildLocalScaleOutDagContext(param param.LocalScaleOutParam) *task.TaskCont
 		SetParam(PARAM_SCALE_OUT_UUID, param.Uuid).
 		SetAgentData(meta.OCS_AGENT, PARAM_DIRS, param.Dirs).
 		SetAgentData(meta.OCS_AGENT, PARAM_CONFIG, param.ObConfigs)
+	if param.TargetVersion != "" {
+		context.SetParam(PARAM_TARGET_AGENT_VERSION, param.TargetVersion)
+	}
 	return context
 }
 
@@ -524,6 +551,57 @@ func (t *WatchDagTask) Rollback() error {
 	return nil
 }
 
+type ScalingAgentUpdateBinaryTask struct {
+	task.Task
+
+	scaleCoordinateTask
+	UpgradeToClusterAgentVersionTask
+}
+
+func newScalingAgentUpdateBinaryTask() *ScalingAgentUpdateBinaryTask {
+	newTask := &ScalingAgentUpdateBinaryTask{
+		scaleCoordinateTask: *newScaleCoordinateTask(TASK_INSTALL_CLUSTER_AGENT_VERSION),
+	}
+	newTask.SetCanContinue().SetCanRetry().SetCanRollback()
+	return newTask
+}
+
+func (t *ScalingAgentUpdateBinaryTask) Execute() error {
+	// Try to connect to the ocenabase.
+	var cipherPassword, password string
+	val := t.GetContext().GetParam(PARAM_ROOT_PWD)
+	if val != nil {
+		cipherPassword = val.(string)
+		var err error
+		password, err = secure.Decrypt(cipherPassword)
+		if err != nil {
+			return err
+		}
+	}
+	for i := 0; i < SYNC_FROM_OB_RETRY_TIME; i++ {
+		if _, err := oceanbase.GetOcsInstance(); err != nil {
+			t.ExecuteLogf("get ocs instance failed: %s, try to connect", err.Error())
+			if err := oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetPassword(password).SetTryTimes(10).SetSkipPwdCheck(true)); err != nil {
+				time.Sleep(1 * time.Second)
+				continue
+			}
+		}
+		break
+	}
+
+	t.UpgradeToClusterAgentVersionTask.Task = t.Task
+	return t.UpgradeToClusterAgentVersionTask.Execute()
+}
+
+func (t *ScalingAgentUpdateBinaryTask) Rollback() error {
+	t.scaleCoordinateTask.Task = t.Task
+	t.init()
+	if _, err := t.syncCoordinateDag(); err != nil {
+		return errors.Wrap(err, "sync coordinate dag failed")
+	}
+	return nil
+}
+
 type SyncFromOB struct {
 	scaleCoordinateTask
 }
@@ -537,6 +615,7 @@ func newSyncFromOB() *SyncFromOB {
 }
 
 func (t *SyncFromOB) Execute() error {
+	// Try to connect to the ocenabase.
 	var cipherPassword, password string
 	val := t.GetContext().GetParam(PARAM_ROOT_PWD)
 	if val != nil {
@@ -563,6 +642,7 @@ func (t *SyncFromOB) Execute() error {
 			break
 		}
 	}
+
 	if err := agentService.SyncAgentData(); err != nil {
 		return err
 	}
@@ -652,6 +732,10 @@ func (t *CreateLocalScaleOutDagTask) Execute() error {
 		return errors.Wrap(err, "build local scale out param failed")
 	}
 
+	if param.TargetVersion != "" {
+		t.ExecuteLogf("create local scale out dag, target version: %s", param.TargetVersion)
+	}
+
 	var resp LocalScaleOutResp
 	if err := secure.SendPostRequest(&agentInfo, constant.URI_OB_RPC_PREFIX+constant.URI_SCALE_OUT, param, &resp); err != nil {
 		return errors.Wrap(err, "send scale out rpc to target agent failed")
@@ -700,6 +784,10 @@ func (t *CreateLocalScaleOutDagTask) buildLocalScaleOutParam() (*param.LocalScal
 	uuid := uuid.New().String()
 	t.GetContext().SetAgentData(meta.OCS_AGENT, PARAM_SCALE_OUT_UUID, uuid)
 
+	var targetVersion string
+	if err := ctx.GetParamWithValue(PARAM_TARGET_AGENT_VERSION, &targetVersion); err != nil {
+		return nil, errors.Wrap(err, "get target version failed")
+	}
 	param := param.LocalScaleOutParam{
 		ScaleOutParam: param.ScaleOutParam{
 			AgentInfo: meta.OCS_AGENT.GetAgentInfo(),
@@ -714,6 +802,7 @@ func (t *CreateLocalScaleOutDagTask) buildLocalScaleOutParam() (*param.LocalScal
 		ParamExpectDeployNextStage:   paramExpectDeployNextStage,
 		ParamExpectStartNextStage:    paramExpectStartNextStage,
 		ParamExpectRollbackNextStage: paramExpectRollbackNextStage,
+		TargetVersion:                targetVersion,
 	}
 	return &param, nil
 }
@@ -1252,7 +1341,7 @@ func (t *FinishTask) Execute() error {
 		if err := http.SendGetRequest(&agentInfo, constant.URI_API_V1+constant.URI_INFO, nil, &agent); err != nil {
 			t.ExecuteWarnLogf("send info api to %s failed", agentInfo.String())
 			time.Sleep(1 * time.Second)
-			return err
+			continue
 		}
 		if agent.IsClusterAgent() {
 			break

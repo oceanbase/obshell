@@ -38,7 +38,7 @@ func newUpgradePostTableMaintainTask() *UpgradePostTableMaintainTask {
 
 func (t *UpgradePostTableMaintainTask) Execute() (err error) {
 	t.ExecuteLog("Start to upgrade post table maintain")
-	if err := oceanbase.ParallelAutoMigrateObTables(); err != nil {
+	if err := oceanbase.AutoMigrateObTables(true); err != nil {
 		return err
 	}
 	return nil

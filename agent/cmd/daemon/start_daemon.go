@@ -59,6 +59,7 @@ func (d *Daemon) start() (err error) {
 		return
 	}
 	go d.startSocket(socketListener)
+	go d.ListenSignal()
 
 	s := d.server
 	defer s.proc.SwitchToLogMode()

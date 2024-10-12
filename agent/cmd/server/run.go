@@ -46,6 +46,8 @@ func (a *Agent) run() (err error) {
 	if err := a.startConnenctModule(); err != nil {
 		return errors.Wrap(err, "statr oceanbase connect module failed")
 	}
+
+	a.handleOBMeta()
 	return nil
 }
 
@@ -139,6 +141,21 @@ func (a *Agent) startConnenctModule() (err error) {
 		}
 	}
 	return nil
+}
+
+func (a *Agent) handleOBMeta() {
+	if a.upgradeMode {
+		// if agent is in upgrade mode, it will handle OB meta in upgrade process.
+		return
+	}
+
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		// Only cluster agent need handle OB meta.
+		// other agent will handle OB meta when it become cluster agent.
+		return
+	}
+
+	go ob.HandleOBMeta()
 }
 
 func (a *Agent) NeedStartOB() bool {

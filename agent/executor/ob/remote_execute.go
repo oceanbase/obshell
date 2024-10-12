@@ -223,6 +223,11 @@ func (t *RemoteExecutableTask) request() error {
 }
 
 func (t *RemoteExecutableTask) watchRemoteDag() error {
+	if t.remoteDag.GenericDTO == nil {
+		t.ExecuteLog("do noting")
+		return nil
+	}
+
 	t.SetLocalData(PARAM_REMOTE_ID, t.remoteDag.GenericID)
 	agent := t.GetExecuteAgent()
 	uri := t.getRemoteDagURI()

@@ -46,7 +46,7 @@ func (t *MigrateTableTask) Execute() (err error) {
 	if err = oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig()); err != nil {
 		return errors.Wrap(err, "connect ocs database failed")
 	}
-	if err = oceanbase.AutoMigrateObTables(); err != nil {
+	if err = oceanbase.AutoMigrateObTables(false); err != nil {
 		return errors.Wrap(err, "register ob tables failed")
 	}
 	return nil

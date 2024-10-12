@@ -30,6 +30,10 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
+var (
+	ErrOtherAgentUpgrading = errors.New("other agents are upgrading the binary")
+)
+
 type AgentService struct{}
 
 type Agent struct {
@@ -60,6 +64,10 @@ func (s *AgentService) InitAgent() error {
 		}
 		fallthrough
 	case meta.MASTER:
+		fallthrough
+	case meta.TAKE_OVER_FOLLOWER, meta.TAKE_OVER_MASTER:
+		fallthrough
+	case meta.SCALING_OUT:
 		fallthrough
 	case meta.CLUSTER_AGENT:
 		if err := s.initOBPort(); err != nil {

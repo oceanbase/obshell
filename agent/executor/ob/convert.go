@@ -107,6 +107,11 @@ func (t *ConvertMasterToClusterAgentTask) Execute() error {
 		return err
 	}
 
+	t.ExecuteLog("sync agent binary")
+	if err := syncAgentBinary(); err != nil {
+		return err
+	}
+
 	t.ExecuteLog("synchronize agent from oceanbase")
 	if err := agentService.SyncAgentData(); err != nil {
 		return err

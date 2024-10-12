@@ -19,15 +19,22 @@ package ob
 import (
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
 
 func TakeOver() (err error) {
-	if err = oceanbase.ParallelAutoMigrateObTables(); err != nil {
+	if err = oceanbase.AutoMigrateObTables(true); err != nil {
 		return err
+	}
+
+	targetVersion, err := needUpdateAgentBinary()
+	if err != nil {
+		return
 	}
 
 	lk, err := obclusterService.GetClusterStatusLock()
@@ -64,13 +71,13 @@ func TakeOver() (err error) {
 		if err = agentService.CreateTakeOverAgent(meta.TAKE_OVER_MASTER); err != nil {
 			return errors.Wrap(err, "create take over agent failed")
 		}
-		return createTakeOverDag()
+		return createTakeOverDag(targetVersion)
 	} else {
 		return agentService.CreateTakeOverAgent(meta.TAKE_OVER_FOLLOWER)
 	}
 }
 
-func createTakeOverDag() error {
+func createTakeOverDag(targetVersion string) error {
 	isRunning, err := localTaskService.IsRunning()
 	if err != nil {
 		return err
@@ -79,21 +86,87 @@ func createTakeOverDag() error {
 		return nil
 	}
 	log.Info("create take over dag")
-	template := task.NewTemplateBuilder(DAG_TAKE_OVER).
+	builder := task.NewTemplateBuilder(DAG_TAKE_OVER).
 		SetMaintenance(task.GlobalMaintenance()).
-		AddTask(newAgentSyncTask(), false).
+		AddTask(newAgentSyncTask(), false)
+
+	if targetVersion != "" {
+		builder.AddTask(newTakeOverAgentUpdateBinaryTask(), true)
+	}
+
+	template := builder.
 		AddTemplate(newConvertClusterTemplate()).
 		AddTask(newAgentSyncTask(), true).
 		Build()
 
-	ctx, err := newConvertClusterContext()
+	ctx, err := newTakeOverContext(targetVersion)
 	if err != nil {
 		return err
 	}
+
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
 		return err
 	}
 	log.Infof("create takeover dag '%s' success", task.NewDagDetailDTO(dag).GenericID)
 	return err
+}
+
+func newTakeOverContext(targetVersion string) (*task.TaskContext, error) {
+	ctx, err := newConvertClusterContext()
+	if err != nil {
+		return nil, errors.Wrap(err, "new convert cluster context failed")
+	}
+	if targetVersion != "" {
+		ctx.SetParam(PARAM_TARGET_AGENT_VERSION, targetVersion)
+	}
+
+	takeoverFollowers, err := agentService.GetTakeOverFollowerAgentsFromOB()
+	if err != nil {
+		return nil, errors.Wrap(err, "get take over follower agents failed")
+	}
+	var agents []meta.AgentInfo
+	for _, follower := range takeoverFollowers {
+		agents = append(agents, follower.AgentInfo)
+	}
+	agents = append(agents, meta.OCS_AGENT.GetAgentInfo())
+
+	ctx.SetParam(task.EXECUTE_AGENTS, agents)
+	return ctx, nil
+}
+
+type TakeOverAgentUpdateBinaryTask struct {
+	task.Task
+
+	RemoteExecutableTask
+	UpgradeToClusterAgentVersionTask
+}
+
+func newTakeOverAgentUpdateBinaryTask() *TakeOverAgentUpdateBinaryTask {
+	newTask := &TakeOverAgentUpdateBinaryTask{
+		Task: *task.NewSubTask(DAG_TAKE_OVER_UPDATE_AGENT_VERSION),
+	}
+	newTask.
+		SetCanRetry().
+		SetCanRollback().
+		SetCanContinue().
+		SetCanPass().
+		SetCanCancel()
+	return newTask
+}
+
+func (t *TakeOverAgentUpdateBinaryTask) Execute() (err error) {
+	agent := t.GetExecuteAgent()
+	if !meta.OCS_AGENT.Equal(&agent) {
+		return t.retmoteSync()
+	}
+
+	t.UpgradeToClusterAgentVersionTask.Task = t.Task
+	return t.UpgradeToClusterAgentVersionTask.Execute()
+}
+
+func (t *TakeOverAgentUpdateBinaryTask) retmoteSync() error {
+	t.RemoteExecutableTask.Task = t.Task
+	t.initial(constant.URI_AGENT_RPC_PREFIX+constant.URI_SYNC_BIN, http.POST, nil)
+	return t.retmoteExecute()
 }
