@@ -70,7 +70,6 @@ func syncAgentBinary() (err error) {
 	log.Info("try to upgrade binary")
 	for {
 		err = agentService.UpgradeBinary()
-		log.Info("error is: ", err)
 		if errors.Is(err, agent.ErrOtherAgentUpgrading) {
 			log.Info("other agent is upgrading, wait for a while")
 			time.Sleep(constant.UPGRADE_BINARY_RETRY_INTERVAL * time.Second)

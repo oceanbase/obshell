@@ -386,7 +386,7 @@ func (t *scaleCoordinateTask) syncCoordinateDag() (bool, error) {
 	}
 }
 
-func (t *scaleCoordinateTask) getcoordinateDag() (*task.DagDetailDTO, error) {
+func (t *scaleCoordinateTask) getCoordinateDag() (*task.DagDetailDTO, error) {
 	var coordinateDag task.DagDetailDTO
 	for i := 0; i <= len(t.allAgent); i++ {
 		uri := fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, t.coordinateDagId)
@@ -507,7 +507,7 @@ func (t *WatchDagTask) Execute() error {
 	t.init()
 	t.ExecuteLog("Watch cluster scale out dag")
 	for {
-		coordinateDag, err := t.getcoordinateDag()
+		coordinateDag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteWarnLogf("get remote dag failed, %s", err.Error())
 			continue
@@ -536,7 +536,7 @@ func (t *WatchDagTask) Rollback() error {
 	}
 	expectStage -= 1
 	for {
-		coordinateDag, err := t.getcoordinateDag()
+		coordinateDag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteWarnLogf("get remote dag failed, %s", err.Error())
 			continue
@@ -645,6 +645,13 @@ func (t *SyncFromOB) Execute() error {
 
 	if err := agentService.SyncAgentData(); err != nil {
 		return err
+	}
+
+	if t.GetContext().GetParam(PARAM_TARGET_AGENT_VERSION) == nil {
+		// If PARAM_TARGET_AGENT_VERSION is not set, it means that the agent version is the same as the cluster agent version.
+		// But there may not be a binary for the current architecture in the cluster agent version.
+		// Therefore, an attempt is made to upload the binary.
+		go syncAgentBinary()
 	}
 	return nil
 }
@@ -883,7 +890,7 @@ func (t *WaitScalingReadyTask) Execute() error {
 	}
 	expectStage -= 2
 	for i := 0; i < WAIT_REMOTE_TASK_FINISH_TIMES; i++ {
-		dag, err := t.getcoordinateDag()
+		dag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteErrorLogf("get remote dag failed, %s", err.Error())
 		}
@@ -928,7 +935,7 @@ func (t *WaitRemoteDeployTaskFinish) Execute() error {
 	expectStage -= 1
 	// Send retry.
 	for i := 0; i < DEFAULT_REMOTE_REQUEST_RETRY_TIMES; i++ {
-		dag, err := t.getcoordinateDag()
+		dag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteErrorLogf("get remote dag failed, %s", err.Error())
 		}
@@ -944,7 +951,7 @@ func (t *WaitRemoteDeployTaskFinish) Execute() error {
 
 	// Wait for succeed.
 	for i := 0; i < WAIT_REMOTE_TASK_FINISH_TIMES; i++ {
-		dag, err := t.getcoordinateDag()
+		dag, err := t.getCoordinateDag()
 		if err != nil {
 			return errors.Wrap(err, "get remote dag failed")
 		}
@@ -998,7 +1005,7 @@ func (t *WaitRemoteStartTaskFinish) Execute() error {
 	}
 	expectStage -= 1
 	for i := 0; i < DEFAULT_REMOTE_REQUEST_RETRY_TIMES; i++ {
-		dag, err := t.getcoordinateDag()
+		dag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteErrorLogf("get remote dag failed, %s", err.Error())
 		}
@@ -1014,7 +1021,7 @@ func (t *WaitRemoteStartTaskFinish) Execute() error {
 
 	// Wait for succeed.
 	for i := 0; i < WAIT_REMOTE_TASK_FINISH_TIMES; i++ {
-		dag, err := t.getcoordinateDag()
+		dag, err := t.getCoordinateDag()
 		if err != nil {
 			return errors.Wrap(err, "get remote dag failed")
 		}
