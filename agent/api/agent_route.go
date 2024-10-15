@@ -43,6 +43,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 		gin.CustomRecovery(common.Recovery), // gin's crash-free middleware
 		common.PostHandlers("/debug/pprof", "/swagger"),
 		common.BodyDecrypt(), // decrypt request body
+		common.PaddingBody(), // if the response body is empty, the response body is padded with "{}"
 
 		common.PreHandlers(
 			constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,

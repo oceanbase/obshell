@@ -225,6 +225,17 @@ func getOcsResponseFromContext(c *gin.Context) ocshttp.OcsAgentResponse {
 	return ocshttp.BuildResponse(nil, errors.Occur(errors.ErrUnexpected, "ocsagent cannot build response body"))
 }
 
+func PaddingBody() func(*gin.Context) {
+	return func(c *gin.Context) {
+		if c.Request.ContentLength == 0 {
+			c.Request.Body = io.NopCloser(strings.NewReader("{}"))
+			c.Request.ContentLength = 2
+		}
+
+		c.Next()
+	}
+}
+
 // PostHandlers returns a Gin middleware function that logs the response and duration of API requests.
 func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
