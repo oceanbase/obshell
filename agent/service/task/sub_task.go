@@ -18,6 +18,7 @@ package task
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -171,7 +172,18 @@ func (s *taskService) StartSubTask(subtask task.ExecutableTask) error {
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to set task running: no row affected")
+		if err := db.Model(s.getSubTaskModel()).Where("id=?", subtask.GetID()).First(&taskInstance).Error; err != nil {
+			return err
+		}
+
+		taskInstanceBO = s.convertSubTaskInstanceBO(taskInstance)
+		if taskInstanceBO.State != task.RUNNING {
+			return fmt.Errorf("failed to start task: sub task %d state is %d now", subtask.GetID(), taskInstanceBO.State)
+		} else if taskInstanceBO.ExecuteTimes != subtask.GetExecuteTimes() {
+			return fmt.Errorf("failed to start task: sub task %d execute times is %d now", subtask.GetID(), taskInstanceBO.ExecuteTimes)
+		} else if taskInstanceBO.ExecuterAgentIp != subtask.GetExecuteAgent().Ip || taskInstanceBO.ExecuterAgentPort != subtask.GetExecuteAgent().Port {
+			return fmt.Errorf("failed to start task: sub task %d execute agent is %s:%d now", subtask.GetID(), taskInstanceBO.ExecuterAgentIp, taskInstanceBO.ExecuterAgentPort)
+		}
 	}
 	subtask.SetState(taskInstanceBO.State)
 	subtask.SetStartTime(taskInstanceBO.StartTime)
