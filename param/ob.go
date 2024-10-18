@@ -68,6 +68,10 @@ type LocalScaleOutParam struct {
 	ParamExpectRollbackNextStage int               `json:"paramExpectRollbackNextStage" binding:"required"`
 }
 
+type ObInitParam struct {
+	ImportScript bool `json:"import_script"`
+}
+
 type ObStopParam struct {
 	Scope             Scope             `json:"scope" binding:"required"`
 	Force             bool              `json:"force"`

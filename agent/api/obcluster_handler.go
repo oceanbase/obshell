@@ -191,9 +191,14 @@ func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 //	@Failure		500				object	http.OcsAgentResponse
 //	@Router			/api/v1/ob/init [post]
 func obInitHandler(c *gin.Context) {
+	var param param.ObInitParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	switch meta.OCS_AGENT.GetIdentity() {
 	case meta.MASTER:
-		data, err := ob.CreateInitDag()
+		data, err := ob.CreateInitDag(param)
 		common.SendResponse(c, data, err)
 	case meta.FOLLOWER:
 		master := agentService.GetMasterAgentInfo()

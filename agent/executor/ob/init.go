@@ -20,15 +20,16 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/executor/script"
+	"github.com/oceanbase/obshell/param"
 )
 
-func CreateInitDag() (*task.DagDetailDTO, error) {
+func CreateInitDag(param param.ObInitParam) (*task.DagDetailDTO, error) {
 	agents, err := agentService.GetAllAgentsInfo()
 	if err != nil {
 		return nil, err
 	}
 
-	template := task.NewTemplateBuilder(DAG_INIT_CLUSTER).
+	builder := task.NewTemplateBuilder(DAG_INIT_CLUSTER).
 		SetMaintenance(task.GlobalMaintenance()).
 		AddTask(newIntegrateObConfigTask(), false).
 		AddTask(newDeployTask(), true).
@@ -37,12 +38,16 @@ func CreateInitDag() (*task.DagDetailDTO, error) {
 		AddTask(newMigrateTableTask(), false).
 		AddTask(newModifyPwdTask(), false).
 		AddTask(newMigrateDataTask(), false).
-		AddTemplate(newConvertClusterTemplate()).
-		AddNode(script.NewImportScriptForTenantNode(false)).
-		AddTask(newAgentSyncTask(), true).
-		Build()
+		AddTemplate(newConvertClusterTemplate())
+	if param.ImportScript {
+		builder.AddNode(script.NewImportScriptForTenantNode(false))
+	}
+	template := builder.AddTask(newAgentSyncTask(), true).Build()
 
-	ctx := task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetParam(PARAM_HEALTH_CHECK, true).SetParam(PARAM_TENANT_NAME, constant.TENANT_SYS)
+	ctx := task.NewTaskContext().
+		SetParam(task.EXECUTE_AGENTS, agents).
+		SetParam(PARAM_HEALTH_CHECK, true).
+		SetParam(PARAM_TENANT_NAME, constant.TENANT_SYS)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
 		return nil, err

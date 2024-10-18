@@ -352,7 +352,9 @@ func buildCreateTenatDagTemplate(param *param.CreateTenantParam) (*task.Template
 	if err != nil {
 		return nil, err
 	}
-	templateBuilder.AddNode(script.NewParallelImportScriptForTenantNode(agents, false))
+	if param.ImportScript {
+		templateBuilder.AddNode(script.NewParallelImportScriptForTenantNode(agents, false))
+	}
 
 	if param.RootPassword != "" {
 		setRootPwdNode, err := newSetRootPwdNode(param.RootPassword)

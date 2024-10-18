@@ -53,6 +53,7 @@ const (
 	FLAG_SCENARIO        = "scenario"
 	FLAG_WHITELIST       = "whitelist"
 	FLAG_ROOT_PASSWORD   = "root_password"
+	FLAG_IMPORT_SCRIPT   = "import_script"
 
 	// obshell tenant restore
 	CMD_RESTORE                  = "restore"

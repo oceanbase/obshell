@@ -36,8 +36,9 @@ import (
 )
 
 type ClusterInitFlags struct {
-	password string
-	verbose  bool
+	password     string
+	verbose      bool
+	importScript bool
 	ObserverConfigFlags
 }
 
@@ -75,6 +76,7 @@ func newInitCmd() *cobra.Command {
 	initCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
 	initCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR, FLAG_OPT_STR_SH}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
 	initCmd.VarsPs(&opts.rsList, []string{FLAG_RS_LIST, FLAG_RS_LIST_ALIAS}, "", "Root service list", false)
+	initCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Whether need to import the observer's scripts.", false)
 
 	initCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
@@ -98,10 +100,16 @@ func clusterInit(flags *ClusterInitFlags) error {
 	if err := callObserverConfig(flags); err != nil {
 		return errors.Wrap(err, "set observer config failed")
 	}
-	if err := callInit(); err != nil {
+	if err := callInit(buildInitParams(flags)); err != nil {
 		return errors.Wrap(err, "init failed")
 	}
 	return nil
+}
+
+func buildInitParams(flags *ClusterInitFlags) *param.ObInitParam {
+	return &param.ObInitParam{
+		ImportScript: flags.importScript,
+	}
 }
 
 // buildObclusterConfigParams constructs an ObClusterConfigParams struct using provided flag values.
@@ -159,8 +167,8 @@ func buildObGlobalConfigParams(flags *ClusterInitFlags) param.ObServerConfigPara
 	}
 }
 
-func callInit() error {
-	dag, err := api.CallApiAndPrintStage(constant.URI_OB_API_PREFIX+constant.URI_INIT, nil)
+func callInit(param *param.ObInitParam) error {
+	dag, err := api.CallApiAndPrintStage(constant.URI_OB_API_PREFIX+constant.URI_INIT, param)
 	if err != nil {
 		return err
 	}

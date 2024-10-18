@@ -116,9 +116,6 @@ func (t *ImportScriptForTenantTask) Execute() error {
 
 	/* import timezone info */
 	t.ExecuteLog("Importing timezone info.")
-	if err != nil {
-		return errors.Wrap(err, "Check timezone table failed")
-	}
 	pwd := strings.ReplaceAll(meta.GetOceanbasePwd(), "'", "'\"'\"'")
 	str := fmt.Sprintf("%s -h%s -P%d -t%s -f%s", path.ImportTimeZoneInfoScriptPath(), constant.LOCAL_IP, server.SqlPort, t.tenantName, path.ImportTimeZoneInfoFilePath())
 	if meta.GetOceanbasePwd() != "" {

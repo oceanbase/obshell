@@ -25,11 +25,12 @@ type CreateTenantParam struct {
 	RootPassword string                 `json:"root_password"`                // Root password.
 	Charset      string                 `json:"charset"`
 	Collation    string                 `json:"collation"`
-	ReadOnly     bool                   `json:"read_only"`  // Default to false.
-	Comment      string                 `json:"comment"`    // Messages.
-	Variables    map[string]interface{} `json:"variables"`  // Teantn global variables.
-	Parameters   map[string]interface{} `json:"parameters"` // Tenant parameters.
-	Scenario     string                 `json:"scenario"`   // Tenant scenario.
+	ReadOnly     bool                   `json:"read_only"`     // Default to false.
+	Comment      string                 `json:"comment"`       // Messages.
+	Variables    map[string]interface{} `json:"variables"`     // Teantn global variables.
+	Parameters   map[string]interface{} `json:"parameters"`    // Tenant parameters.
+	Scenario     string                 `json:"scenario"`      // Tenant scenario.
+	ImportScript bool                   `json:"import_script"` // whether to import script.
 	TimeZone     string                 `json:"-"`
 }
 

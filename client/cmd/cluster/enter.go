@@ -61,6 +61,7 @@ const (
 	FLAG_CLUSTER_ID_SH   = "i"
 	FLAG_RS_LIST         = "rs_list"
 	FLAG_RS_LIST_ALIAS   = "rs"
+	FLAG_IMPORT_SCRIPT   = "import_script"
 
 	// CMD_START represents the "start" command used to start observers.
 	CMD_START = "start"
