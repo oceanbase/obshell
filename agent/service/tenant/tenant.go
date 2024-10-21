@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -306,14 +305,10 @@ func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd strin
 			db.Close()
 		}
 	}()
-	err = tempDb.Exec(fmt.Sprintf(SQL_ALTER_TENANT_ROOT_PASSWORD, transfer(newPwd))).Error
-	if err == nil {
-		return nil
+	if err = tempDb.Exec(fmt.Sprintf(SQL_ALTER_TENANT_ROOT_PASSWORD, transfer(newPwd))).Error; err != nil {
+		return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
 	}
-	if dbErr, ok := err.(*mysql.MySQLError); ok && dbErr.Number == 1045 {
-		errors.Occur(errors.ErrIllegalArgument, "Access denied for user.")
-	}
-	return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
+	return nil
 }
 
 func (t *TenantService) AlterTenantPrimaryZone(tenantName string, primaryZone string) error {

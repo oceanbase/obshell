@@ -17,8 +17,6 @@
 package tenant
 
 import (
-	"strings"
-
 	"github.com/gin-gonic/gin"
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/constant"
@@ -105,16 +103,16 @@ func (t *SetRootPwdTask) Execute() error {
 		return errors.Wrap(err, "Get tenant new password failed")
 	}
 
-	executeAgent, err := getExecuteAgentForSetTenantRootPwd(t.tenantName)
+	executeAgent, err := tenantService.GetTenantActiveAgent(t.tenantName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error())
+		return err
+	}
+	if executeAgent == nil {
+		return errors.New("tenant is not active")
 	}
 
 	if meta.OCS_AGENT.Equal(executeAgent) {
 		if err := tenantService.ModifyTenantRootPassword(t.tenantName, "", t.newPassword); err != nil {
-			if strings.Contains(err.Error(), "Access denied for user") {
-				return errors.Occur(errors.ErrIllegalArgument, "Original password is incorrect.")
-			}
 			return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
 		}
 	}
