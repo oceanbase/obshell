@@ -130,7 +130,7 @@ func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
 
 		// Check if the observer process exists
 		if exist, err := process.CheckObserverProcess(); !exist || err != nil {
-			return fmt.Errorf("check observer process exist: %v, %v,", exist, err)
+			return fmt.Errorf("check observer process exist: %v, %v.", exist, err)
 		}
 
 		// Check if the SSTable file exists

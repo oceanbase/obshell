@@ -104,6 +104,13 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
+	// Check the server is not already in the cluster.
+	if exist, err := obclusterService.IsServerExist(param.AgentInfo.Ip, param.ObConfigs[constant.CONFIG_RPC_PORT]); err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	} else if exist {
+		return nil, errors.Occurf(errors.ErrBadRequest, "server %s:%s already exists in the cluster", param.AgentInfo.Ip, param.ObConfigs[constant.CONFIG_RPC_PORT])
+	}
+
 	// Create Cluster Scale Out Dag
 	dag, err := CreateClusterScaleOutDag(param, targetVersion)
 	if err != nil {
@@ -232,7 +239,6 @@ func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone 
 		SetParam(PARAM_IS_NEW_ZONE, isNewZone).
 		SetParam(PARAM_AGENT_INFO, param.AgentInfo).
 		SetParam(PARAM_CONFIG, param.ObConfigs).
-		SetParam(PARAM_HEALTH_CHECK, true).
 		SetParam(PARAM_TARGET_AGENT_VERSION, targetVersion)
 	return context
 }
@@ -248,6 +254,7 @@ func buildLocalScaleOutDagContext(param param.LocalScaleOutParam) *task.TaskCont
 		SetParam(PARAM_EXPECT_ROLLBACK_NEXT_STAGE, param.ParamExpectRollbackNextStage).
 		SetParam(PARAM_ROOT_PWD, param.RootPwd).
 		SetParam(PARAM_SCALE_OUT_UUID, param.Uuid).
+		SetParam(PARAM_HEALTH_CHECK, true).
 		SetAgentData(meta.OCS_AGENT, PARAM_DIRS, param.Dirs).
 		SetAgentData(meta.OCS_AGENT, PARAM_CONFIG, param.ObConfigs)
 	if param.TargetVersion != "" {
