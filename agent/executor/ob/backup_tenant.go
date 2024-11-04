@@ -49,7 +49,7 @@ func tenantBackupConfig(tenantName string, tenantP *param.TenantBackupConfigPara
 	p := param.NewBackupConfigParamForTenant(tenantP)
 	backupConf, err := p.Check()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err, "backup config is invalid")
+		return nil, errors.Occur(errors.ErrIllegalArgument, errors.Wrap(err, "backup config is invalid"))
 	}
 
 	template := buildSetBackupConfigTemplate(&tenantName)
