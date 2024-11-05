@@ -99,7 +99,7 @@ func (a *Agent) initSqlite() (err error) {
 func (a *Agent) initServerForUpgrade() error {
 	log.Info("init local server [upgrade mode]")
 	serverConfig := config.ServerConfig{
-		Ip:          meta.OCS_AGENT.GetIp(),
+		Ip:          "0.0.0.0",
 		Port:        meta.OCS_AGENT.GetPort(),
 		Address:     meta.OCS_AGENT.String(),
 		RunDir:      path.RunDir(),
@@ -228,7 +228,7 @@ func (a *Agent) checkAgentInfo() {
 func (a *Agent) initServer() {
 	log.Info("init server")
 	serverConfig := config.ServerConfig{
-		Ip:      meta.OCS_AGENT.GetIp(),
+		Ip:      "0.0.0.0",
 		Port:    meta.OCS_AGENT.GetPort(),
 		Address: meta.OCS_AGENT.String(),
 		RunDir:  path.RunDir(),
