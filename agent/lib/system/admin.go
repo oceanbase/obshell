@@ -29,6 +29,7 @@ import (
 	"golang.org/x/exp/slices"
 
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
@@ -223,7 +224,7 @@ func getOBAdminCtxByURI(uri string) (string, error) {
 }
 
 func newOBAdminCommand(storage StorageInterface) string {
-	cmd := fmt.Sprintf("%s dump_backup -q -d '%s'", path.OBAdmin(), storage.GenerateURIWhitoutParams())
+	cmd := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s dump_backup -q -d '%s'", global.HomePath, path.OBAdmin(), storage.GenerateURIWhitoutParams())
 	if storage.GenerateQueryParams() != "" {
 		cmd += fmt.Sprintf(" -s '%s'", storage.GenerateQueryParams())
 	}
