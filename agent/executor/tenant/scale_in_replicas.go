@@ -66,6 +66,11 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 			delete(replicaInfoMap, zone)
 		}
 	}
+
+	if err := zone.CheckFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant, buildLocality(replicaInfoMap)); err != nil {
+		return err
+	}
+
 	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
 		return err
 	}

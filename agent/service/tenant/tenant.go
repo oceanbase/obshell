@@ -447,7 +447,7 @@ func (t *TenantService) IsTimeZoneTableEmpty() (bool, error) {
 	return count == 0, err
 }
 
-func parseLocalityToReplicaInfoMap(locality string) (map[string]string, error) {
+func ParseLocalityToReplicaInfoMap(locality string) (map[string]string, error) {
 	replicaInfoMap := make(map[string]string)
 	parts := strings.Split(locality, ",")
 	for _, part := range parts {
@@ -474,7 +474,7 @@ func (t *TenantService) GetTenantReplicaInfoMap(tenantId int) (map[string]string
 	if err != nil {
 		return nil, errors.Wrap(err, "Get tenant locality failed.")
 	}
-	return parseLocalityToReplicaInfoMap(locality)
+	return ParseLocalityToReplicaInfoMap(locality)
 }
 
 func (s *TenantService) GetAllUserTenants() (res []oceanbase.DbaObTenant, err error) {

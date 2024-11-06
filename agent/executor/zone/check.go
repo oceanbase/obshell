@@ -21,6 +21,8 @@ import (
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
@@ -86,6 +88,98 @@ func CheckPrimaryZoneAndLocality(primaryZone string, locality map[string]string)
 
 	return nil
 }
+
+func GetFirstPriorityPrimaryZone(locality string, primaryZone string) ([]string, error) {
+	replicaInfoMap, err := tenantservice.ParseLocalityToReplicaInfoMap(locality)
+	if err != nil {
+		return nil, nil
+	}
+	var firstPriorityZones []string
+	if primaryZone == constant.PRIMARY_ZONE_RANDOM {
+		for zone, replicaType := range replicaInfoMap {
+			if replicaType == constant.REPLICA_TYPE_FULL {
+				// Only full replica zone can be first priority primary zone.
+				firstPriorityZones = append(firstPriorityZones, zone)
+			}
+		}
+	} else {
+		zoneArrayList := strings.Split(primaryZone, ";")
+		for _, zoneArray := range zoneArrayList {
+			firstPriorityZones = make([]string, 0)
+			zoneList := strings.Split(zoneArray, ",")
+			for _, zone := range zoneList {
+				if replicaType, ok := replicaInfoMap[zone]; ok && replicaType == constant.REPLICA_TYPE_FULL {
+					// Only full replica zone can be first priority primary zone.
+					firstPriorityZones = append(firstPriorityZones, zone)
+				}
+			}
+			if len(firstPriorityZones) > 0 {
+				break
+			}
+			// if there is no full replica zone in this zone array, then continue to check next zone array.
+		}
+	}
+	return firstPriorityZones, nil
+}
+
+func isFirstPriorityPrimaryZoneChangedWhenAlterParimaryZone(tenant *oceanbase.DbaObTenant, targetPrimaryZone string) (bool, error) {
+	prevFirstPriorityZones, err := GetFirstPriorityPrimaryZone(tenant.Locality, tenant.PrimaryZone)
+	if err != nil {
+		return false, err
+	}
+	newFirstPriorityZones, err := GetFirstPriorityPrimaryZone(tenant.Locality, targetPrimaryZone)
+	if err != nil {
+		return false, err
+	}
+	return !utils.SliceEqual(prevFirstPriorityZones, newFirstPriorityZones), nil
+}
+
+func isFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant *oceanbase.DbaObTenant, targetLocality string) (bool, error) {
+	prevFirstPriorityZones, err := GetFirstPriorityPrimaryZone(tenant.Locality, tenant.PrimaryZone)
+	if err != nil {
+		return false, err
+	}
+	newFirstPriorityZones, err := GetFirstPriorityPrimaryZone(targetLocality, tenant.PrimaryZone)
+	if err != nil {
+		return false, err
+	}
+	return !utils.SliceEqual(prevFirstPriorityZones, newFirstPriorityZones), nil
+}
+
+func CheckFirstPriorityPrimaryZoneChangedWhenAlterPrimaryZone(tenant *oceanbase.DbaObTenant, targetPrimaryZone string) error {
+	changed, err := isFirstPriorityPrimaryZoneChangedWhenAlterParimaryZone(tenant, targetPrimaryZone)
+	if err != nil {
+		return err
+	}
+	if changed {
+		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, constant.PARAMETER_ENABLE_REBALANCE); err != nil {
+			return err
+		} else if enableRebalance == nil {
+			return errors.New("Get enable_rebalance failed.")
+		} else if enableRebalance.Value != "True" {
+			return errors.New("Change first priority zone of primary zone is not allowed when tenant 'enable_rebalance' is disabled")
+		}
+	}
+	return nil
+}
+
+func CheckFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant *oceanbase.DbaObTenant, targetLocality string) error {
+	changed, err := isFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant, targetLocality)
+	if err != nil {
+		return err
+	}
+	if changed {
+		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, constant.PARAMETER_ENABLE_REBALANCE); err != nil {
+			return err
+		} else if enableRebalance == nil {
+			return errors.New("Get enable_rebalance failed.")
+		} else if enableRebalance.Value != "True" {
+			return errors.New("Change first priority zone of primary zone is not allowed when tenant 'enable_rebalance' is disabled")
+		}
+	}
+	return nil
+}
+
 func CheckPrimaryZone(primaryZone string, zoneList []string) error {
 	if primaryZone == constant.PRIMARY_ZONE_RANDOM {
 		return nil

@@ -126,7 +126,7 @@ func convertDbaObTenantJobToTenantJobBo(job *model.DbaObTenantJob) (*bo.DbaObTen
 
 	var err error
 	if job.JobType == constant.ALTER_TENANT_LOCALITY {
-		jobBo.CurrentTarget, err = parseLocalityToReplicaInfoMap(to)
+		jobBo.CurrentTarget, err = ParseLocalityToReplicaInfoMap(to)
 		if err != nil {
 			return nil, err
 		}

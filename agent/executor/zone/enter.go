@@ -18,10 +18,12 @@ package zone
 
 import (
 	"github.com/oceanbase/obshell/agent/service/obcluster"
+	"github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/agent/service/unit"
 )
 
 var (
 	obclusterService obcluster.ObclusterService
 	unitService      unit.UnitService
+	tenantService    tenant.TenantService
 )

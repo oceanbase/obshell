@@ -23,3 +23,15 @@ func ContainsString(list []string, item string) bool {
 	}
 	return false
 }
+
+func SliceEqual(list1, list2 []string) bool {
+	if len(list1) != len(list2) {
+		return false
+	}
+	for _, v := range list1 {
+		if !ContainsString(list2, v) {
+			return false
+		}
+	}
+	return true
+}

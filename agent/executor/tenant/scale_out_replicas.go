@@ -62,12 +62,11 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		}
 	}
 
-	primaryZone, err := tenantService.GetTenantPrimaryZone(tenant.TenantID)
-	if err != nil {
+	if err := zone.CheckFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant, buildLocality(replicaInfoMap)); err != nil {
 		return err
 	}
 
-	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
+	if err = zone.CheckPrimaryZoneAndLocality(tenant.PrimaryZone, replicaInfoMap); err != nil {
 		return err
 	}
 

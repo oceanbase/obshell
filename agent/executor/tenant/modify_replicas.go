@@ -93,7 +93,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 	}
 	if unitNum != 0 && unitNum != currentUnitNum {
 		// Check if enable_rebalance is true.
-		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, "enable_rebalance"); err != nil {
+		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, constant.PARAMETER_ENABLE_REBALANCE); err != nil {
 			return err
 		} else {
 			if enableRebalance == nil {
@@ -230,6 +230,11 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 			replicaInfoMap[zone.Name] = *zone.ReplicaType
 		}
 	}
+
+	if err := zone.CheckFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant, buildLocality(replicaInfoMap)); err != nil {
+		return err
+	}
+
 	if err = zone.CheckPrimaryZoneAndLocality(primaryZone, replicaInfoMap); err != nil {
 		return err
 	}

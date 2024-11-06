@@ -44,6 +44,10 @@ func checkModifyPrimaryZoneParam(tenant *oceanbase.DbaObTenant, param *param.Mod
 		return errors.Occur(errors.ErrIllegalArgument, err.Error())
 	}
 
+	if err := zone.CheckFirstPriorityPrimaryZoneChangedWhenAlterPrimaryZone(tenant, *param.PrimaryZone); err != nil {
+		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+	}
+
 	if err := zone.CheckPrimaryZoneAndLocality(*param.PrimaryZone, replicaInfoMap); err != nil {
 		return errors.Occur(errors.ErrIllegalArgument, err.Error())
 	}
