@@ -101,7 +101,7 @@ func (a *Agent) initServerForUpgrade() error {
 	serverConfig := config.ServerConfig{
 		Ip:          "0.0.0.0",
 		Port:        meta.OCS_AGENT.GetPort(),
-		Address:     meta.OCS_AGENT.String(),
+		Address:     fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
 		RunDir:      path.RunDir(),
 		UpgradeMode: true,
 	}
@@ -230,7 +230,7 @@ func (a *Agent) initServer() {
 	serverConfig := config.ServerConfig{
 		Ip:      "0.0.0.0",
 		Port:    meta.OCS_AGENT.GetPort(),
-		Address: meta.OCS_AGENT.String(),
+		Address: fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
 		RunDir:  path.RunDir(),
 	}
 	log.Infof("server config is %v", serverConfig)
