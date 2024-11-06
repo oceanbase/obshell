@@ -221,7 +221,7 @@ func CheckZoneParams(zoneList []param.ZoneParam) error {
 
 	for _, zone := range zoneList {
 		// Check whether the zone exists
-		if exist, err := obclusterService.IsZoneExist(zone.Name); err != nil {
+		if exist, err := obclusterService.IsZoneExistInOB(zone.Name); err != nil {
 			return err
 		} else if !exist {
 			return errors.Errorf("Zone '%s' is not exist.", zone.Name)
