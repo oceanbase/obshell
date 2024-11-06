@@ -141,7 +141,7 @@ func waitTenantJobSucceed(jobId int) error {
 		}
 		if jobStatus == "SUCCESS" {
 			return nil
-		} else if jobStatus == "FAILED" {
+		} else if jobStatus != "INPROGRESS" {
 			return errors.Errorf("Job %d failed, job status is %s", jobId, jobStatus)
 		} else {
 			retryTimes--
