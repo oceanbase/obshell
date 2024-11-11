@@ -97,7 +97,7 @@ func newCreateCmd() *cobra.Command {
 	createCmd.VarsPs(&opts.whitelist, []string{FLAG_WHITELIST}, "", "Tenant whitelist.", false)
 	createCmd.VarsPs(&opts.scenario, []string{FLAG_SCENARIO}, "", "Tenant scenario.", false)
 	createCmd.VarsPs(&opts.pwd, []string{FLAG_ROOT_PASSWORD}, "", "Tenant password.", false)
-	createCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Whether need to import the observer's scripts.", false)
+	createCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Import the observer's scripts for tenant.", false)
 	createCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
 	createCmd.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {

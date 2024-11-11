@@ -76,7 +76,7 @@ func newInitCmd() *cobra.Command {
 	initCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
 	initCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR, FLAG_OPT_STR_SH}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
 	initCmd.VarsPs(&opts.rsList, []string{FLAG_RS_LIST, FLAG_RS_LIST_ALIAS}, "", "Root service list", false)
-	initCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Whether need to import the observer's scripts.", false)
+	initCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Import the observer's scripts for sys tenant.", false)
 
 	initCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
