@@ -276,12 +276,10 @@ func FormatRoute(routes []*VersionDep) []RouteNode {
 
 	// Supported since v4.2.1. Earlier upgrade paths prior to v4.1.0.0 are not required to be considered for compatibility.
 	nodes := []RouteNode{res[len(res)-1]}
-	fmt.Println(nodes)
 	for i := len(res) - 2; i >= 0; i-- {
 		v := res[i]
 		if v.RequireFromBinary {
 			nodes = append([]RouteNode{v}, nodes...)
-			fmt.Println(nodes)
 		}
 	}
 	nodes = append([]RouteNode{res[0]}, nodes...)
