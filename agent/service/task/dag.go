@@ -358,17 +358,20 @@ func (s *taskService) getNodesCanPass(dag *task.Dag) ([]*task.Node, error) {
 	if err != nil {
 		return nil, err
 	}
-	var idx int
+
+	idx := len(nodes)
 	for _idx, node := range nodes {
-		idx = _idx
+		if node.IsSuccess() {
+			continue
+		} else if node.IsFail() {
+			idx = _idx
+		}
+
 		if _, err := s.GetSubTasks(node); err != nil {
 			return nil, err
 		}
 		if !node.CanPass() {
 			return nil, fmt.Errorf("failed to pass dag: %s can not pass", node.GetName())
-		}
-		if node.IsFail() {
-			break
 		}
 	}
 	return nodes[idx:], nil
