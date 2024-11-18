@@ -71,6 +71,10 @@ func (a *Agent) takeOverOrRebuild() (err error) {
 		time.Sleep(constant.GET_INSTANCE_RETRY_INTERVAL * time.Second)
 	}
 
+	if err = oceanbase.AutoMigrateObTables(true); err != nil {
+		return err
+	}
+
 	var agentInstance *meta.AgentInstance
 	if agentInstance, err = agentService.GetAgentInstanceByIpAndRpcPortFromOB(meta.OCS_AGENT.GetIp(), meta.RPC_PORT); err != nil {
 		log.WithError(err).Errorf("get ocs agent by ip and rpc port failed, ip: %s, rpc port: %d", meta.OCS_AGENT.GetIp(), meta.RPC_PORT)

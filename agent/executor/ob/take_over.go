@@ -24,14 +24,9 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
-	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
 
 func TakeOver() (err error) {
-	if err = oceanbase.AutoMigrateObTables(true); err != nil {
-		return err
-	}
-
 	targetVersion, err := needUpdateAgentBinary()
 	if err != nil {
 		return
