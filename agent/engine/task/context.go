@@ -22,6 +22,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/utils"
 )
 
 const (
@@ -132,27 +133,27 @@ func (ctx *TaskContext) SetAgentDataByAgentKey(agentKey string, key string, valu
 }
 
 func (ctx *TaskContext) MergeContext(other *TaskContext) {
-	for k, v := range other.Params {
-		if ctx.Params[k] == nil {
-			ctx.Params[k] = v
-		}
-	}
-	mergeMap(ctx.Data, other.Data)
-	for k, v := range other.AgentDataUpdateCount {
-		if v > ctx.AgentDataUpdateCount[k] {
-			ctx.AgentData[k] = other.AgentData[k]
-			ctx.AgentDataUpdateCount[k] = v
-		}
-	}
+	ctx.mergeContextWithoutKeyords(other)
 }
 
 func (ctx *TaskContext) MergeContextWithoutExecAgents(other *TaskContext) {
+	ctx.mergeContextWithoutKeyords(other, EXECUTE_AGENTS)
+}
+
+func (ctx *TaskContext) MergeContextWithoutFailureExitMaintenance(other *TaskContext) {
+	ctx.mergeContextWithoutKeyords(other, FAILURE_EXIT_MAINTENANCE)
+}
+
+func (ctx *TaskContext) MergeContextWithoutKeyords(other *TaskContext) {
+	ctx.mergeContextWithoutKeyords(other, EXECUTE_AGENTS, FAILURE_EXIT_MAINTENANCE)
+}
+
+func (ctx *TaskContext) mergeContextWithoutKeyords(other *TaskContext, keywords ...string) {
 	for k, v := range other.Params {
-		if k == EXECUTE_AGENTS {
-			continue
-		}
-		if ctx.Params[k] == nil {
-			ctx.Params[k] = v
+		if !utils.ContainsString(keywords, k) {
+			if ctx.Params[k] == nil {
+				ctx.Params[k] = v
+			}
 		}
 	}
 	mergeMap(ctx.Data, other.Data)

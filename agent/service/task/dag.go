@@ -400,7 +400,8 @@ func (s *taskService) txForRollbackDag(dag *task.Dag, rollbackNodes []*task.Node
 		return err
 	}
 	return db.Transaction(func(tx *gorm.DB) error {
-		if dag.IsMaintenance() && dag.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+		lastNode := rollbackNodes[len(rollbackNodes)-1]
+		if dag.IsMaintenance() && lastNode.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
 			if err := s.StartMaintenance(tx, dag); err != nil {
 				return err
 			}
@@ -433,6 +434,15 @@ func (s *taskService) txForRetryAndReadyDag(dag *task.Dag, node *task.Node) erro
 		return err
 	}
 	return db.Transaction(func(tx *gorm.DB) error {
+		if dag.IsMaintenance() && node.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+			if err := s.StartMaintenance(tx, dag); err != nil {
+				return err
+			}
+			if err := s.UpdateMaintenanceTask(tx, dag); err != nil {
+				return err
+			}
+		}
+
 		if err := s.updateDagOperator(tx, dag, task.RUN); err != nil {
 			return errors.Wrap(err, "failed to rerun dag")
 		}
@@ -537,7 +547,12 @@ func (s *taskService) FinishDagAsFailed(dag *task.Dag) error {
 			return err
 		}
 
-		if dag.IsMaintenance() && dag.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+		node, err := s.GetNodeByStage(dag.GetID(), dag.GetStage())
+		if err != nil {
+			return err
+		}
+
+		if dag.IsMaintenance() && node.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
 			return s.StopMaintenance(tx, dag)
 		}
 		return nil

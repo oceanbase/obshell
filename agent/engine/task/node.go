@@ -54,7 +54,7 @@ func (node *Node) GetContext() *TaskContext {
 }
 
 func (node *Node) MergeContext(ctx *TaskContext) {
-	node.ctx.MergeContext(ctx)
+	node.ctx.MergeContextWithoutKeyords(ctx)
 }
 
 func (node *Node) SetContext(ctx *TaskContext) {
