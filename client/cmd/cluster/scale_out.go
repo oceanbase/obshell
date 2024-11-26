@@ -191,7 +191,7 @@ func NewAgentByString(str string) (*meta.AgentInfo, error) {
 			return nil, errors.Errorf("Invalid server format: '%s:'", info[0])
 		}
 		port, err := strconv.Atoi(info[1])
-		if err != nil || !isValidPort(info[1]) {
+		if err != nil || !isValidPortStr(info[1]) {
 			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", info[1])
 		}
 		agent.Port = port

@@ -40,7 +40,6 @@ import (
 
 type AgentJoinFlags struct {
 	server  string
-	zone    string
 	verbose bool
 	ObserverConfigFlags
 }
@@ -84,7 +83,7 @@ func newJoinCmd() *cobra.Command {
 }
 
 func agentJoin(flags *AgentJoinFlags) error {
-	if err := checkFlagsForJoinCmd(flags); err != nil {
+	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 	// check status
@@ -95,12 +94,6 @@ func agentJoin(flags *AgentJoinFlags) error {
 	stdio.StopLoading()
 
 	targetAgent, err := NewAgentByString(flags.server)
-	if err != nil {
-		return err
-	}
-
-	// config server
-	params, err := buildObServerConfigParams(flags)
 	if err != nil {
 		return err
 	}
@@ -116,6 +109,12 @@ func agentJoin(flags *AgentJoinFlags) error {
 	}
 	log.Infof("[join] Join cluster with dag: %+v", dag)
 
+	// config server
+	params, err := buildObServerConfigParams(flags.parsedConfig)
+	if err != nil {
+		return err
+	}
+
 	if params.ObServerConfig != nil && len(params.ObServerConfig) > 0 {
 		dag, err = api.CallApiAndPrintStage(constant.URI_API_V1+constant.URI_OBSERVER_GROUP+constant.URI_CONFIG, params)
 		if err != nil {
@@ -127,9 +126,13 @@ func agentJoin(flags *AgentJoinFlags) error {
 	return nil
 }
 
-func buildObServerConfigParams(flags *AgentJoinFlags) (obParams param.ObServerConfigParams, err error) {
+func buildObServerConfigParams(configs map[string]string) (obParams param.ObServerConfigParams, err error) {
 	stdio.Verbose("Build observer config params")
-	obParams.ObServerConfig = flags.parsedConfig
+	// Remove any configurations from flags.parsedConfig that are explicitly denied.
+	for _, key := range ob.DeniedConfig {
+		delete(configs, key)
+	}
+	obParams.ObServerConfig = configs
 	agentInfo, err := api.GetMyAgentInfo()
 	if err != nil {
 		return
@@ -173,7 +176,7 @@ func isValidRsList(rsList string) bool {
 			if len(arr) != 3 {
 				return false
 			}
-			if !isValidIp(arr[0]) || !isValidPort(arr[1]) || !isValidPort(arr[2]) {
+			if !isValidIp(arr[0]) || !isValidPortStr(arr[1]) || !isValidPortStr(arr[2]) {
 				return false
 			}
 		}
@@ -186,7 +189,7 @@ func isValidIp(ip string) bool {
 	return ipRegexp.MatchString(ip)
 }
 
-func isValidPort(port string) bool {
+func isValidPortStr(port string) bool {
 	if port == "" {
 		return true
 	}
@@ -194,7 +197,11 @@ func isValidPort(port string) bool {
 	if err != nil {
 		return false
 	}
-	return p > 1024 && p < 65536
+	return isValidPort(p)
+}
+
+func isValidPort(port int) bool {
+	return port > 1024 && port < 65536
 }
 
 func isValidLogLevel(level string) bool {
@@ -209,55 +216,60 @@ func isValidLogLevel(level string) bool {
 	return false
 }
 
-func checkFlagsForJoinCmd(flags *AgentJoinFlags) error {
-	stdio.Verbose("Check flags for join command")
-	return parseObserverConfigFlags(&flags.ObserverConfigFlags)
-}
-
-func checkServerConfigFlags(flags *ObserverConfigFlags) error {
+func checkServerConfigFlags(config map[string]string) error {
 	// Validate the MySQL port and RPC port.
 	stdio.Verbose("Check whether the configs is valid")
-	stdio.Verbosef("Check mysql port: %s", flags.mysqlPort)
-	if !isValidPort(flags.mysqlPort) {
-		return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", flags.mysqlPort)
-	}
-
-	stdio.Verbosef("Check rpc port: %s", flags.rpcPort)
-	if !isValidPort(flags.rpcPort) {
-		return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", flags.rpcPort)
-	}
-
-	// Standardize and validate the log level.
-	flags.logLevel = strings.ToUpper(flags.logLevel)
-	stdio.Verbosef("Check log level: %s", flags.logLevel)
-	if !isValidLogLevel(flags.logLevel) {
-		return errors.Errorf("Invalid log level: %s. (support: %v)", flags.logLevel, LOGLEVEL)
-	}
-
-	// If provided, validate the format of the rs_list.
-	if flags.rsList != "" {
-		stdio.Verbose("Check rs_list is valid or not")
-		if !isValidRsList(flags.rsList) {
-			return errors.Errorf("Invaild rs_list format '%s'. Please use the format `--rs 'ip:rpc_port:mysql_port;ip:rpc_port:mysql_port'`", flags.rsList)
+	if mysqlPort, ok := config[constant.CONFIG_MYSQL_PORT]; ok {
+		stdio.Verbosef("Check mysql port: %s", mysqlPort)
+		if !isValidPortStr(mysqlPort) {
+			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", mysqlPort)
 		}
 	}
 
-	// If provided, validate the cluster ID.
-	if flags.clusterId != "" {
+	if rpcPort, ok := config[constant.CONFIG_RPC_PORT]; ok {
+		stdio.Verbosef("Check rpc port: %s", rpcPort)
+		if !isValidPortStr(rpcPort) {
+			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", rpcPort)
+		}
+	}
+
+	// Standardize and validate the log level.
+	if logLevel, ok := config[constant.CONFIG_LOG_LEVEL]; ok {
+		stdio.Verbosef("Check log level: %s", logLevel)
+		config[constant.CONFIG_LOG_LEVEL] = strings.ToUpper(logLevel)
+		if !isValidLogLevel(logLevel) {
+			return errors.Errorf("Invalid log level: %s. (support: %v)", logLevel, LOGLEVEL)
+		}
+	}
+
+	// If provided, validate the format of the rs_list.
+	if rsList, ok := config[constant.CONFIG_RS_LIST]; ok {
+		stdio.Verbose("Check rs_list is valid or not")
+		if !isValidRsList(rsList) {
+			return errors.Errorf("Invalid rs_list format '%s'. Please use the format `--rs 'ip:rpc_port:mysql_port;ip:rpc_port:mysql_port'`", rsList)
+		}
+	}
+
+	if clusterId, ok := config[constant.CONFIG_CLUSTER_ID]; ok {
 		stdio.Verbose("Check cluster id is valid or not")
-		if _, err := strconv.Atoi(flags.clusterId); err != nil {
-			return errors.Errorf("Invalid cluster id: %s", flags.clusterId)
+		if _, err := strconv.Atoi(clusterId); err != nil {
+			return errors.Errorf("Invalid cluster id: %s", clusterId)
 		}
 	}
 
 	// Check the validity of the data directory path and redo log directory path.
-	stdio.Verbosef("Check data directory: %s", flags.dataDir)
-	if flags.dataDir != "" && utils.CheckPathValid(flags.dataDir) != nil {
-		return errors.Errorf("Invalid data directory: %s", flags.dataDir)
+	if dataDir, ok := config[constant.CONFIG_DATA_DIR]; ok {
+		stdio.Verbosef("Check data directory: %s", dataDir)
+		if utils.CheckPathValid(dataDir) != nil {
+			return errors.Errorf("Invalid data directory: %s", dataDir)
+		}
 	}
-	stdio.Verbosef("Check redo directory: %s", flags.redoDir)
-	if flags.redoDir != "" && utils.CheckPathValid(flags.redoDir) != nil {
-		return errors.Errorf("Invalid redo directory: %s", flags.redoDir)
+
+	if redoDir, ok := config[constant.CONFIG_REDO_DIR]; ok {
+		stdio.Verbosef("Check redo directory: %s", redoDir)
+		if utils.CheckPathValid(redoDir) != nil {
+			return errors.Errorf("Invalid redo directory: %s", redoDir)
+		}
 	}
 	return nil
 }
@@ -301,7 +313,7 @@ func parseObserverConfigFlags(flags *ObserverConfigFlags) error {
 	}
 
 	// Perform validation checks on the flags to ensure all configurations are valid.
-	if err := checkServerConfigFlags(flags); err != nil {
+	if err := checkServerConfigFlags(config); err != nil {
 		return err
 	}
 	flags.parsedConfig = config

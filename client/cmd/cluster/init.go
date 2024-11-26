@@ -84,7 +84,7 @@ func newInitCmd() *cobra.Command {
 }
 
 func clusterInit(flags *ClusterInitFlags) error {
-	if err := checkFlagsForInitCmd(flags); err != nil {
+	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 	// check status
@@ -97,7 +97,7 @@ func clusterInit(flags *ClusterInitFlags) error {
 	if err := callObclusterConfig(flags); err != nil {
 		return errors.Wrap(err, "set obcluster config failed")
 	}
-	if err := callObserverConfig(flags); err != nil {
+	if err := callObserverConfig(flags.parsedConfig); err != nil {
 		return errors.Wrap(err, "set observer config failed")
 	}
 	if err := callInit(buildInitParams(flags)); err != nil {
@@ -117,11 +117,15 @@ func buildObclusterConfigParams(flags *ClusterInitFlags) *param.ObClusterConfigP
 	obclusterConfigParams := param.ObClusterConfigParams{
 		ClusterName: &flags.clusterName,
 		RootPwd:     &flags.password,
-		RsList:      &flags.rsList,
 	}
-	if flags.clusterId != "" {
+
+	if rsList, ok := flags.parsedConfig[FLAG_RS_LIST]; ok {
+		obclusterConfigParams.RsList = &rsList
+	}
+
+	if id, ok := flags.parsedConfig[FLAG_CLUSTER_ID]; ok {
 		// Convert cluster ID from string to integer safely, as it has been pre-validated.
-		id, _ := strconv.Atoi(flags.clusterId)
+		id, _ := strconv.Atoi(id)
 		obclusterConfigParams.ClusterId = &id
 	} else {
 		ts := int(time.Now().Unix())
@@ -140,8 +144,8 @@ func callObclusterConfig(flags *ClusterInitFlags) error {
 	return nil
 }
 
-func callObserverConfig(flags *ClusterInitFlags) error {
-	obGlobalConfigParams := buildObGlobalConfigParams(flags)
+func callObserverConfig(configs map[string]string) error {
+	obGlobalConfigParams := buildObGlobalConfigParams(configs)
 
 	if obGlobalConfigParams.ObServerConfig != nil && len(obGlobalConfigParams.ObServerConfig) > 0 {
 		dag, err := api.CallApiAndPrintStage(constant.URI_API_V1+constant.URI_OBSERVER_GROUP+constant.URI_CONFIG, obGlobalConfigParams)
@@ -153,14 +157,14 @@ func callObserverConfig(flags *ClusterInitFlags) error {
 	return nil
 }
 
-func buildObGlobalConfigParams(flags *ClusterInitFlags) param.ObServerConfigParams {
+func buildObGlobalConfigParams(configs map[string]string) param.ObServerConfigParams {
 	// Remove any configurations from flags.parsedConfig that are explicitly denied.
 	for _, key := range ob.DeniedConfig {
-		delete(flags.parsedConfig, key)
+		delete(configs, key)
 	}
 
 	return param.ObServerConfigParams{
-		ObServerConfig: flags.parsedConfig,
+		ObServerConfig: configs,
 		Scope: param.Scope{
 			Type: ob.SCOPE_GLOBAL,
 		},
@@ -174,10 +178,6 @@ func callInit(param *param.ObInitParam) error {
 	}
 	log.Infof("[init] Init with DAG: %v", dag)
 	return nil
-}
-
-func checkFlagsForInitCmd(flags *ClusterInitFlags) error {
-	return parseObserverConfigFlags(&flags.ObserverConfigFlags)
 }
 
 func checkInitStatus() error {
