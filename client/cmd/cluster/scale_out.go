@@ -40,13 +40,13 @@ import (
 var LOGLEVEL = []string{"DEBUG", "TRACE", "WDIAG", "EDIAG", "INFO", "WARN", "ERROR"}
 
 type ObserverConfigFlags struct {
-	mysqlPort    string
-	rpcPort      string
+	mysqlPort    int
+	rpcPort      int
 	dataDir      string
 	redoDir      string
 	logLevel     string
 	clusterName  string
-	clusterId    string
+	clusterId    int
 	rsList       string
 	zone         string
 	optStr       string
@@ -73,7 +73,7 @@ func NewScaleOutCmd() *cobra.Command {
 			ocsagentlog.SetDBLoggerLevel(ocsagentlog.Silent)
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
-			if err := clusterScaleOut(opts); err != nil {
+			if err := clusterScaleOut(cmd, opts); err != nil {
 				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
@@ -89,8 +89,8 @@ func NewScaleOutCmd() *cobra.Command {
 	scaleOutCmd.VarsPs(&opts.zone, []string{FLAG_ZONE_SH, FLAG_ZONE}, "", "The zone in which you are located", true)
 
 	// Configuration of optional flags for more detailed setup.
-	scaleOutCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT_SH, FLAG_MYSQL_PORT}, "", "The SQL service port for the current node.", false)
-	scaleOutCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT_SH, FLAG_RPC_PORT}, "", "The remote access port for intra-cluster communication.", false)
+	scaleOutCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT_SH, FLAG_MYSQL_PORT}, 0, "The SQL service port for the current node.", false)
+	scaleOutCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT_SH, FLAG_RPC_PORT}, 0, "The remote access port for intra-cluster communication.", false)
 	scaleOutCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR_SH, FLAG_DATA_DIR}, "", "The directory for storing the observer's data.", false)
 	scaleOutCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR_SH, FLAG_REDO_DIR}, "", "The directory for storing the observer's clogs.", false)
 	scaleOutCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL_SH, FLAG_LOG_LEVEL}, "", "The log print level for the observer.", false)
@@ -102,8 +102,8 @@ func NewScaleOutCmd() *cobra.Command {
 	return scaleOutCmd.Command
 }
 
-func clusterScaleOut(flags *ClusterScaleOutFlags) (err error) {
-	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
+func clusterScaleOut(cmd *cobra.Command, flags *ClusterScaleOutFlags) (err error) {
+	if err := parseObserverConfigFlags(cmd, &flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 

@@ -52,7 +52,7 @@ func newInitCmd() *cobra.Command {
 			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := clusterInit(opts); err != nil {
+			if err := clusterInit(cmd, opts); err != nil {
 				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
@@ -68,9 +68,9 @@ func newInitCmd() *cobra.Command {
 	initCmd.VarsPs(&opts.password, []string{FLAG_PASSWORD, FLAG_PASSWORD_ALIAS}, "", "Password for OceanBase root@sys user.", true)
 
 	// Configuration of optional flags for more detailed setup.
-	initCmd.VarsPs(&opts.clusterId, []string{FLAG_CLUSTER_ID, FLAG_CLUSTER_ID_SH}, "", "Set a id to verify the identity of OceanBase cluster.", false)
-	initCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, "", "The SQL service port for the current node.", false)
-	initCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, "", "The remote access port for intra-cluster communication.", false)
+	initCmd.VarsPs(&opts.clusterId, []string{FLAG_CLUSTER_ID, FLAG_CLUSTER_ID_SH}, 0, "Set a id to verify the identity of OceanBase cluster.", false)
+	initCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, 0, "The SQL service port for the current node.", false)
+	initCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, 0, "The remote access port for intra-cluster communication.", false)
 	initCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR, FLAG_DATA_DIR_SH}, "", "The directory for storing the observer's data.", false)
 	initCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR, FLAG_REDO_DIR_SH}, "", "The directory for storing the observer's clogs.", false)
 	initCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
@@ -83,8 +83,8 @@ func newInitCmd() *cobra.Command {
 	return initCmd.Command
 }
 
-func clusterInit(flags *ClusterInitFlags) error {
-	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
+func clusterInit(cmd *cobra.Command, flags *ClusterInitFlags) error {
+	if err := parseObserverConfigFlags(cmd, &flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 	// check status

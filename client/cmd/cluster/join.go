@@ -55,7 +55,7 @@ func newJoinCmd() *cobra.Command {
 			cmd.SilenceErrors = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := agentJoin(opts); err != nil {
+			if err := agentJoin(cmd, opts); err != nil {
 				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
@@ -71,8 +71,8 @@ func newJoinCmd() *cobra.Command {
 	joinCmd.VarsPs(&opts.zone, []string{FLAG_ZONE_SH, FLAG_ZONE}, "", "The zone in which you are located.", true)
 
 	// Configuration of optional flags for more detailed setup.
-	joinCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, "", "The SQL service port for the current node.", false)
-	joinCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, "", "The remote access port for intra-cluster communication.", false)
+	joinCmd.VarsPs(&opts.mysqlPort, []string{FLAG_MYSQL_PORT, FLAG_MYSQL_PORT_SH}, 0, "The SQL service port for the current node.", false)
+	joinCmd.VarsPs(&opts.rpcPort, []string{FLAG_RPC_PORT, FLAG_RPC_PORT_SH}, 0, "The remote access port for intra-cluster communication.", false)
 	joinCmd.VarsPs(&opts.dataDir, []string{FLAG_DATA_DIR, FLAG_DATA_DIR_SH}, "", "The directory for storing the observer's data.", false)
 	joinCmd.VarsPs(&opts.redoDir, []string{FLAG_REDO_DIR, FLAG_REDO_DIR_SH}, "", "The directory for storing the observer's clogs.", false)
 	joinCmd.VarsPs(&opts.logLevel, []string{FLAG_LOG_LEVEL, FLAG_LOG_LEVEL_SH}, "", "The log print level for the observer.", false)
@@ -82,8 +82,8 @@ func newJoinCmd() *cobra.Command {
 	return joinCmd.Command
 }
 
-func agentJoin(flags *AgentJoinFlags) error {
-	if err := parseObserverConfigFlags(&flags.ObserverConfigFlags); err != nil {
+func agentJoin(cmd *cobra.Command, flags *AgentJoinFlags) error {
+	if err := parseObserverConfigFlags(cmd, &flags.ObserverConfigFlags); err != nil {
 		return err
 	}
 	// check status
@@ -250,13 +250,6 @@ func checkServerConfigFlags(config map[string]string) error {
 		}
 	}
 
-	if clusterId, ok := config[constant.CONFIG_CLUSTER_ID]; ok {
-		stdio.Verbose("Check cluster id is valid or not")
-		if _, err := strconv.Atoi(clusterId); err != nil {
-			return errors.Errorf("Invalid cluster id: %s", clusterId)
-		}
-	}
-
 	// Check the validity of the data directory path and redo log directory path.
 	if dataDir, ok := config[constant.CONFIG_DATA_DIR]; ok {
 		stdio.Verbosef("Check data directory: %s", dataDir)
@@ -274,7 +267,7 @@ func checkServerConfigFlags(config map[string]string) error {
 	return nil
 }
 
-func parseObserverConfigFlags(flags *ObserverConfigFlags) error {
+func parseObserverConfigFlags(cmd *cobra.Command, flags *ObserverConfigFlags) error {
 	stdio.Verbose("Parse observer config flags")
 	config := stringToMap(flags.optStr)
 
@@ -292,16 +285,24 @@ func parseObserverConfigFlags(flags *ObserverConfigFlags) error {
 	}
 
 	flagConfigs := map[string]string{
-		constant.CONFIG_MYSQL_PORT:   flags.mysqlPort,
-		constant.CONFIG_RPC_PORT:     flags.rpcPort,
 		constant.CONFIG_DATA_DIR:     flags.dataDir,
 		constant.CONFIG_REDO_DIR:     flags.redoDir,
 		constant.CONFIG_LOG_LEVEL:    flags.logLevel,
 		constant.CONFIG_CLUSTER_NAME: flags.clusterName,
 		constant.CONFIG_RS_LIST:      flags.rsList,
-		constant.CONFIG_CLUSTER_ID:   flags.clusterId,
 		constant.CONFIG_ZONE:         flags.zone,
 	}
+
+	if cmd.Flags().Changed(FLAG_MYSQL_PORT) {
+		flagConfigs[constant.CONFIG_MYSQL_PORT] = strconv.Itoa(flags.mysqlPort)
+	}
+	if cmd.Flags().Changed(FLAG_RPC_PORT) {
+		flagConfigs[constant.CONFIG_RPC_PORT] = strconv.Itoa(flags.rpcPort)
+	}
+	if cmd.Flags().Changed(FLAG_CLUSTER_ID) {
+		flagConfigs[constant.CONFIG_CLUSTER_ID] = strconv.Itoa(flags.clusterId)
+	}
+
 	for k, v := range flagConfigs {
 		if v != "" {
 			if val, ok := config[k]; ok && v != val {
