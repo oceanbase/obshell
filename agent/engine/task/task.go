@@ -141,7 +141,7 @@ type Executable interface {
 type CancelableTask interface {
 	IsCancel() bool
 	CanCancel() bool
-	Cancel(error) error
+	Cancel()
 	SetCancelFunc(cancel context.CancelFunc)
 }
 type ContinuableTask interface {
@@ -286,8 +286,11 @@ func (task *Task) SetLogChannel(logChan chan<- TaskExecuteLogDTO) {
 }
 
 func (task *Task) TimeoutCheck() {
-	if task.logChan == nil {
-		log.Warningf("task %d Interrupted", task.id)
+	if task.IsCancel() {
+		log.Warningf("Check: task %d cancel", task.id)
+		runtime.Goexit()
+	} else if task.logChan == nil {
+		log.Warningf("Check: task %d Interrupted", task.id)
 		runtime.Goexit()
 	}
 }
@@ -504,13 +507,7 @@ func (task *Task) SetCancelFunc(cancel context.CancelFunc) {
 	task.cancel = cancel
 }
 
-func (task *Task) Cancel(err error) error {
-	if task.cancel == nil {
-		return fmt.Errorf("task %d can not cancel", task.id)
-	}
-	task.Finish(err)
-	task.cancel()
-	return nil
+func (task *Task) Cancel() {
 }
 
 func (task *Task) Rollback() error {

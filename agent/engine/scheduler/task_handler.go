@@ -218,14 +218,14 @@ func (s *Scheduler) cancelHandler(node *task.Node) ([]task.ExecutableTask, bool,
 		switch subTask.GetState() {
 		case task.PENDING:
 		case task.READY:
-			if err := s.cancelSubTask(subTask); err != nil {
+			if err := s.cancelSubTask(node, subTask); err != nil {
 				return nil, isFinished, false, errors.Wrap(err, "set sub task failed error")
 			}
 		case task.RUNNING:
 			if _, err := s.runningSubTaskHandler(subTask); err != nil {
 				return nil, isFinished, false, errors.Wrap(err, "running sub task handler error")
 			}
-			if err := s.cancelSubTask(subTask); err != nil {
+			if err := s.cancelSubTask(node, subTask); err != nil {
 				return nil, isFinished, false, errors.Wrap(err, "set sub task failed error")
 			}
 		}
@@ -254,7 +254,7 @@ func (s *Scheduler) createRemoteTask(node *task.Node, subTask task.ExecutableTas
 
 func (s *Scheduler) runSubTask(subTask *task.RemoteTask) error {
 	agentInfo := subTask.ExecuterAgent
-	if agentInfo.Ip == meta.OCS_AGENT.GetIp() && agentInfo.Port == meta.OCS_AGENT.GetPort() {
+	if agentInfo.Equal(meta.OCS_AGENT) {
 		taskMapInstance, err := localTaskService.GetTaskMappingByRemoteTaskId(subTask.TaskID)
 		if err != nil {
 			return errors.Wrapf(err, "get task mapping by remote task id %d error", subTask.TaskID)
@@ -289,24 +289,37 @@ func (s *Scheduler) sendRunSubTaskRpc(subTask *task.RemoteTask) error {
 	return secure.SendPostRequest(&subTask.ExecuterAgent, constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK, subTask, nil)
 }
 
-func (s *Scheduler) cancelSubTask(subTask task.ExecutableTask) error {
+func (s *Scheduler) cancelSubTask(node *task.Node, subTask task.ExecutableTask) error {
 	if err := s.service.SetSubTaskFailed(subTask, "sub task cancelled"); err != nil {
 		return err
 	}
 
-	if !subTask.IsPending() {
-		agentInfo := subTask.GetExecuteAgent()
-		if agentInfo.Ip == meta.OCS_AGENT.GetIp() && agentInfo.Port == meta.OCS_AGENT.GetPort() {
-			return nil
-		} else {
-			return s.sendCancelSubTaskRpc(subTask)
+	log.withScheduler(s).Infof("handle cancel sub task %d, is local task: %t", subTask.GetID(), subTask.IsLocalTask())
+	if subTask.IsLocalTask() {
+		executor.OCS_EXECUTOR_POOL.CancelTask(subTask.GetID())
+	} else {
+		if !subTask.IsPending() {
+			agentInfo := subTask.GetExecuteAgent()
+			if agentInfo.Equal(meta.OCS_AGENT) {
+				taskMapInstance, err := localTaskService.GetTaskMappingByRemoteTaskId(subTask.GetID())
+				if err != nil {
+					return errors.Wrapf(err, "get task mapping by remote task id %d error", subTask.GetID())
+				} else if taskMapInstance == nil {
+					return fmt.Errorf("task mapping by remote task id %d not found", subTask.GetID())
+				}
+				executor.OCS_EXECUTOR_POOL.CancelTask(taskMapInstance.LocalTaskId)
+			} else {
+				return s.sendCancelSubTaskRpc(node, subTask)
+			}
 		}
 	}
 	return nil
 }
 
-func (s *Scheduler) sendCancelSubTaskRpc(subTask task.ExecutableTask) error {
-	return nil
+func (s *Scheduler) sendCancelSubTaskRpc(node *task.Node, subTask task.ExecutableTask) error {
+	remoteTask := s.createRemoteTask(node, subTask)
+	agent := subTask.GetExecuteAgent()
+	return secure.SendDeleteRequest(&agent, constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK, remoteTask, nil)
 }
 
 func (s *Scheduler) runningSubTaskHandler(subTask task.ExecutableTask) (bool, error) {

@@ -33,7 +33,6 @@ import (
 	"github.com/oceanbase/obshell/agent/secure"
 )
 
-var OCS_EXECUTOR *Executor
 var running_task_map = make(map[int64]*Executor)
 var task_id_list_lock sync.Mutex
 
@@ -47,7 +46,9 @@ type Executor struct {
 	waitingQueue   chan int64
 	duplicateQueue chan int64
 	logChan        chan task.TaskExecuteLogDTO
+	ctx            context.Context
 	cancel         context.CancelFunc
+	taskCancel     context.CancelFunc
 	executorPool   *ExecutorPool
 }
 
@@ -65,9 +66,8 @@ func (executor *Executor) Start(ctx context.Context) {
 	}
 
 	executor.logChan = make(chan task.TaskExecuteLogDTO)
-	ctx, cancel := context.WithCancel(ctx)
-	executor.cancel = cancel
-	go executor.logCommiter(ctx)
+	executor.ctx, executor.cancel = context.WithCancel(ctx)
+	go executor.logCommiter()
 	flag := false
 	for {
 		executor.currentTask = nil
@@ -93,7 +93,7 @@ func (executor *Executor) Start(ctx context.Context) {
 	}
 }
 
-func (executor *Executor) logCommiter(ctx context.Context) {
+func (executor *Executor) logCommiter() {
 	defer func() {
 		executor.logChan = nil
 	}()
@@ -111,7 +111,7 @@ func (executor *Executor) logCommiter(ctx context.Context) {
 				}
 			}
 			subTaskLogService.InsertLocal(executeLog)
-		case <-ctx.Done():
+		case <-executor.ctx.Done():
 			log.Info("Executor stop")
 			return
 		}
@@ -120,7 +120,7 @@ func (executor *Executor) logCommiter(ctx context.Context) {
 
 // handler will set task state to running and execute task.
 func (executor *Executor) handler(taskID int64) error {
-	executor.executorPool.readySet.Remove(taskID)
+	executor.executorPool.RemoveTask(taskID)
 	subTask, err := localTaskService.GetSubTaskByTaskID(taskID)
 	if err != nil {
 		return errors.Wrapf(err, "get task %d error", taskID)
@@ -253,11 +253,7 @@ func (executor *Executor) finishTask() {
 	}()
 
 	if !subTask.IsFinished() {
-		cancelReason := errors.New("executor stopped")
-		if err := subTask.Cancel(cancelReason); err != nil {
-			log.WithError(err).Warnf("cancel task %d error", taskID)
-			return
-		}
+		executor.CancelTask()
 	}
 
 	log.Infof("finishing local task %d", taskID)
@@ -291,7 +287,7 @@ func (executor *Executor) executeTask() (err error) {
 
 	after := time.After(subTask.GetTimeout())
 	ctx, cancel := context.WithCancel(context.Background())
-	subTask.SetCancelFunc(cancel)
+	executor.taskCancel = cancel
 
 	// Execute task.
 	go func() {
@@ -326,15 +322,50 @@ func (executor *Executor) executeTask() (err error) {
 	case <-after:
 		err = fmt.Errorf("task %d timeout", subTask.GetID())
 	case <-ctx.Done():
-		err = fmt.Errorf("task %d cancel", subTask.GetID())
+		log.Infof("task %d cancel", subTask.GetID())
+		subTask.SetOperator(task.CANCEL)
+		go executor.handleCancelTask(finished, subTask) // Execute cancel function.
 	}
 	return
+}
+
+func (executor *Executor) handleCancelTask(finished chan bool, subTask task.ExecutableTask) {
+	<-finished // Wait for the goroutine to exit.
+	log.Infof("run task %d cancel function", subTask.GetID())
+	go func() {
+		defer func() {
+			finished <- true
+		}()
+		subTask.SetOperator(task.RUN)
+		subTask.SetLogChannel(executor.logChan)
+		subTask.Cancel()
+	}()
+
+	after := time.After(subTask.GetTimeout())
+	select {
+	case <-finished:
+		log.Infof("execute task %d cancel function success", subTask.GetID())
+	case <-after:
+		log.Warnf("execute task %d cancel function timeout", subTask.GetID())
+	case <-executor.ctx.Done():
+		log.Infof("executor stop, interrupt task %d cancel function", subTask.GetID())
+	}
+	subTask.SetLogChannel(nil)
+}
+
+func (executor *Executor) CancelTask() {
+	if executor.currentTask != nil {
+		subTask := executor.currentTask.subTask
+		subTask.SetOperator(task.CANCEL)
+		executor.taskCancel()
+	}
 }
 
 func (executor *Executor) Stop() {
 	if executor.cancel != nil {
 		log.Info("Executor stopping")
-		executor.cancel()
+		executor.CancelTask() // Stop task
+		executor.cancel()     // Stop executor
 	} else {
 		log.Info("Executor is not running")
 	}

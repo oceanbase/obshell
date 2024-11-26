@@ -18,6 +18,7 @@ package executor
 
 import (
 	"context"
+	"sync"
 
 	mapset "github.com/deckarep/golang-set"
 	log "github.com/sirupsen/logrus"
@@ -34,13 +35,16 @@ type ExecutorPool struct {
 	waitingQueue chan int64
 	readyQueue   chan int64
 	readySet     mapset.Set
+	readySetLock sync.Mutex
 	executors    []*Executor
+	context      context.Context
 	cancel       context.CancelFunc
 }
 
 func NewExecutorPool() *ExecutorPool {
 	pool := &ExecutorPool{
 		readySet:     mapset.NewSet(),
+		readySetLock: sync.Mutex{},
 		waitingQueue: make(chan int64, QUEUE_SIZE),
 		readyQueue:   make(chan int64, QUEUE_SIZE),
 	}
@@ -51,6 +55,9 @@ func NewExecutorPool() *ExecutorPool {
 }
 
 func (pool *ExecutorPool) AddTask(taskID int64) {
+	pool.readySetLock.Lock()
+	defer pool.readySetLock.Unlock()
+
 	if pool.readySet.Contains(taskID) {
 		log.Infof("task %d is already in ExecutorPool", taskID)
 		return
@@ -58,6 +65,35 @@ func (pool *ExecutorPool) AddTask(taskID int64) {
 	log.Infof("add task %d to ExecutorPool", taskID)
 	pool.readySet.Add(taskID)
 	pool.waitingQueue <- taskID
+}
+
+func (pool *ExecutorPool) RemoveTask(taskID int64) {
+	pool.readySetLock.Lock()
+	defer pool.readySetLock.Unlock()
+
+	if !pool.readySet.Contains(taskID) {
+		return
+	}
+	log.Infof("remove task %d from ExecutorPool", taskID)
+	pool.readySet.Remove(taskID)
+}
+
+func (pool *ExecutorPool) CancelTask(taskID int64) {
+	log.Infof("cancel local task id: %d", taskID)
+	pool.readySetLock.Lock()
+	defer pool.readySetLock.Unlock()
+	task_id_list_lock.Lock()
+	defer task_id_list_lock.Unlock()
+
+	executor := running_task_map[taskID]
+	if executor != nil {
+		log.Infof("local task id: %d is running, cancel it", taskID)
+		executor.CancelTask()
+		return
+	}
+
+	log.Infof("local task id %d is not running, remove it from ExecutorPool", taskID)
+	pool.readySet.Remove(taskID)
 }
 
 func (pool *ExecutorPool) recoverLocalTask() {
@@ -76,10 +112,9 @@ func (pool *ExecutorPool) Start() {
 	}
 
 	pool.recoverLocalTask()
-	ctx, cancel := context.WithCancel(context.Background())
-	pool.cancel = cancel
+	pool.context, pool.cancel = context.WithCancel(context.Background())
 	for _, executor := range pool.executors {
-		go executor.Start(ctx)
+		go executor.Start(pool.context)
 	}
 	flag := false
 	for {
@@ -94,7 +129,7 @@ func (pool *ExecutorPool) Start() {
 			} else {
 				pool.readyQueue <- taskID
 			}
-		case <-ctx.Done():
+		case <-pool.context.Done():
 			log.Info("ExecutorPool stopped")
 			flag = true
 		}

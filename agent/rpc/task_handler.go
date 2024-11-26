@@ -38,10 +38,12 @@ func InitTaskRoutes(r *gin.RouterGroup) {
 	group := r.Group("/task")
 	group.POST(constant.URI_SUB_TASK, StartTask)
 	group.PATCH(constant.URI_SUB_TASK, UpdateTask)
+	group.DELETE(constant.URI_SUB_TASK, CancelTask)
 	group.POST(constant.URI_LOG, SyncLog)
 }
 
 // StartTask will start remote subtask and create local subtask instance by remote subtask if not exist.
+// Cluster task scheduler use this rpc to send task to agent.
 func StartTask(c *gin.Context) {
 	var remoteTask task.RemoteTask
 	if err := c.ShouldBind(&remoteTask); err != nil {
@@ -83,6 +85,8 @@ func StartTask(c *gin.Context) {
 	}
 }
 
+// UpdateTask used to update the task in cluster.
+// If the local task finished and the agent can't commite the task to cluster, the agent will update by this rpc.
 func UpdateTask(c *gin.Context) {
 	var remoteTask task.RemoteTask
 	if err := c.ShouldBind(&remoteTask); err != nil {
@@ -147,6 +151,37 @@ func UpdateTask(c *gin.Context) {
 
 }
 
+// CancelTask used to cancel the task in local.
+func CancelTask(c *gin.Context) {
+	var remoteTask task.RemoteTask
+	if err := c.ShouldBind(&remoteTask); err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+
+	localTask, err := localTaskService.GetLocalTaskInstanceByRemoteTaskId(remoteTask.TaskID)
+	if err != nil {
+		log.WithError(err).Warnf("get sub task by task id %d error", remoteTask.TaskID)
+		common.SendResponse(c, nil, err)
+		return
+	} else if localTask == nil {
+		log.Warnf("remote task %d not exist in local", remoteTask.TaskID)
+		common.SendResponse(c, nil, nil)
+		return
+	}
+
+	if remoteTask.ExecuteTimes <= localTask.ExecuteTimes {
+		log.Warnf("remote task %d execute times %d <= local task %d execute times %d, reject it", remoteTask.TaskID, remoteTask.ExecuteTimes, localTask.Id, localTask.ExecuteTimes)
+		common.SendResponse(c, nil, nil)
+		return
+	}
+
+	go executor.OCS_EXECUTOR_POOL.CancelTask(localTask.Id)
+	common.SendResponse(c, nil, nil)
+}
+
+// SyncLog used to sync log from local to remote.
+// If the agent can't commit the log to cluster, the agent will commit the log by this rpc.
 func SyncLog(c *gin.Context) {
 	var taskLogDTIO task.TaskExecuteLogDTO
 	if err := c.ShouldBind(&taskLogDTIO); err != nil {
