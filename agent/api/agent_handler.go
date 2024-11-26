@@ -149,16 +149,21 @@ func agentRemoveHandler(c *gin.Context) {
 		if meta.OCS_AGENT.Equal(&param) {
 			dag, err = agent.CreateRemoveAllAgentsDag()
 		} else {
-			_, err = agentService.GetAgentInstance(&param)
+			targetAgent, err := agentService.FindAgentInstance(&param)
 			if err != nil {
-				err = errors.Errorf("agent %s is not exists", param.String())
+				common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "get agent instance failed: %s", err.Error()))
+				return
+			}
+			if targetAgent == nil {
+				common.SendNoContentResponse(c, nil)
+				return
 			} else {
 				dag, err = agent.CreateRemoveFollowerAgentDag(param, true)
 			}
 		}
 	case meta.SINGLE:
 		if meta.OCS_AGENT.Equal(&param) {
-			common.SendResponse(c, nil, nil)
+			common.SendNoContentResponse(c, nil)
 			return
 		}
 		fallthrough

@@ -117,21 +117,6 @@ func (s *AgentService) GetAgentDO(agentInfo meta.AgentInfoInterface) (agent sqli
 	return
 }
 
-// GetAgentInstance will get agent by ip and port, if not exist, return err
-func (s *AgentService) GetAgentInstance(agentInfo meta.AgentInfoInterface) (*meta.AgentInstance, error) {
-	db, err := sqlitedb.GetSqliteInstance()
-	if err != nil {
-		return nil, err
-	}
-
-	var agent *meta.AgentInstance
-	err = db.Model(&sqlite.AllAgent{}).Where("ip=? and port=?", agentInfo.GetIp(), agentInfo.GetPort()).First(&agent).Error
-	if err != nil {
-		return nil, err
-	}
-	return agent, nil
-}
-
 // FindAgentInstance will get agent by ip and port, if not exist, return nil
 func (s *AgentService) FindAgentInstance(agentInfo meta.AgentInfoInterface) (agent *meta.AgentInstance, err error) {
 	db, err := sqlitedb.GetSqliteInstance()

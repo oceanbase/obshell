@@ -32,23 +32,12 @@ import (
 )
 
 func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param.ScaleInTenantReplicasParam) error {
-	if param.Zones == nil || len(param.Zones) == 0 {
-		return errors.New("No zone specified.")
-	}
-
 	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenant.TenantID)
 	if err != nil {
 		return err
 	}
 	if len(replicaInfoMap) == 1 {
 		return errors.Errorf("tenant %s only has one replica", tenant.TenantName)
-	}
-
-	// Check whether there is has a replica in the zone
-	for _, zone := range param.Zones {
-		if _, ok := replicaInfoMap[zone]; !ok {
-			return errors.Errorf("Zone '%s' does not have a replica.", zone)
-		}
 	}
 
 	if err := checkScaleInLocalityValid(replicaInfoMap, param.Zones); err != nil {
@@ -110,10 +99,32 @@ func scaleInLocality(tenantId int, zone string) (map[string]string, error) {
 	return replicaInfoMap, nil
 }
 
+func filterZones(tenantId int, param *param.ScaleInTenantReplicasParam) error {
+	replicaInfoMap, err := tenantService.GetTenantReplicaInfoMap(tenantId)
+	if err != nil {
+		return err
+	}
+	filterZones := make([]string, 0)
+	for _, zone := range param.Zones {
+		if _, ok := replicaInfoMap[zone]; ok {
+			filterZones = append(filterZones, zone)
+		}
+	}
+	param.Zones = filterZones
+	return nil
+}
+
 func ScaleInTenantReplicas(tenantName string, param *param.ScaleInTenantReplicasParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
 	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
 	if ocsErr != nil {
 		return nil, ocsErr
+	}
+
+	if err := filterZones(tenant.TenantID, param); err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	if len(param.Zones) == 0 {
+		return nil, nil
 	}
 
 	if err := checkScaleInTenantReplicasParam(tenant, param); err != nil {

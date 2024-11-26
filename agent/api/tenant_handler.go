@@ -254,8 +254,11 @@ func tenantRemoveReplicasHandler(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	dag, err := tenant.ScaleInTenantReplicas(name, &param)
-	common.SendResponse(c, dag, err)
+	if dag, err := tenant.ScaleInTenantReplicas(name, &param); err == nil && dag == nil {
+		common.SendNoContentResponse(c, nil)
+	} else {
+		common.SendResponse(c, dag, err)
+	}
 }
 
 //	@ID				tenantModifyReplicas
