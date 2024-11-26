@@ -32,6 +32,9 @@ const (
 	// show command
 	CMD_SHOW = "show"
 
+	// watch command
+	CMD_WATCH = "watch"
+
 	// cancel command
 	CMD_CANCEL = "cancel"
 	CMD_STOP   = "stop"
@@ -71,5 +74,6 @@ func NewTaskCmd() *cobra.Command {
 	taskCmd.AddCommand(newRollbackCmd())
 	taskCmd.AddCommand(newRetryCmd())
 	taskCmd.AddCommand(newPassCmd())
+	taskCmd.AddCommand(newWatchCmd())
 	return taskCmd.Command
 }
