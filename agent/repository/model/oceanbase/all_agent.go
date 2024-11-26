@@ -17,15 +17,15 @@
 package oceanbase
 
 type AllAgent struct {
-	Ip           string `gorm:"primaryKey;type:varchar(64);not null"`
-	Port         int    `gorm:"primaryKey;type:bigint(20);not null"`
-	Identity     string `gorm:"type:varchar(64);not null"`
-	Version      string `gorm:"type:varchar(64);not null"`
-	Os           string `gorm:"type:varchar(64);not null"`
-	Architecture string `gorm:"type:varchar(64);not null"`
-	Zone         string `gorm:"type:varchar(64);not null"`
-	MysqlPort    int    `gorm:"type:bigint(20)"`
-	RpcPort      int    `gorm:"type:bigint(20)"`
-	HomePath     string `gorm:"type:text"`
-	PublicKey    string `gorm:"type:text"`
+	Ip           string `gorm:"primaryKey;type:varchar(64);not null" json:"ip"`
+	Port         int    `gorm:"primaryKey;type:bigint(20);not null" json:"port"`
+	Identity     string `gorm:"type:varchar(64);not null" json:"identity"`
+	Version      string `gorm:"type:varchar(64);not null" json:"version"`
+	Os           string `gorm:"type:varchar(64);not null" json:"os"`
+	Architecture string `gorm:"type:varchar(64);not null" json:"architecture"`
+	Zone         string `gorm:"type:varchar(64);not null" json:"zone"`
+	MysqlPort    int    `gorm:"type:bigint(20)" json:"mysql_port"`
+	RpcPort      int    `gorm:"type:bigint(20)" json:"rpc_port"`
+	HomePath     string `gorm:"type:text" json:"home_path"`
+	PublicKey    string `gorm:"type:text" json:"public_key"`
 }

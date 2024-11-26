@@ -46,8 +46,8 @@ var (
 	// OCS_COORDINATOR is the coordinator of agent and globally Unique
 	OCS_COORDINATOR *Coordinator
 
-	// IDENTIFIED String Map
-	IDENTIFIED = map[int]string{
+	// identifiedMap String Map
+	identifiedMap = map[int]string{
 		FAULTY:     "FAULTY",
 		MAINTAINER: "MAINTAINER",
 		WATCHER:    "WATCHER",
@@ -65,18 +65,18 @@ type Maintainer struct {
 type Coordinator struct {
 	Maintainer *Maintainer
 	identity   int
-	eventChan  chan bool
 	isSuspend  bool
 	lock       sync.Mutex
+	eventChans map[interface{}]*coordinatorEventChan
 }
 
 func NewCoordinator() *Coordinator {
 	return &Coordinator{
 		Maintainer: &Maintainer{},
 		identity:   FAULTY,
-		eventChan:  make(chan bool, 1),
 		isSuspend:  false,
 		lock:       sync.Mutex{},
+		eventChans: make(map[interface{}]*coordinatorEventChan),
 	}
 }
 
@@ -231,7 +231,7 @@ func (c *Coordinator) getMaintainerbyRpc(agentInfo meta.AgentInfoInterface) erro
 	now := time.Now()
 	log.Infof("try get maintainer rpc request from '%s:%d' to '%s:%d' ", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), agentInfo.GetIp(), agentInfo.GetPort())
 	maintainer := Maintainer{}
-	if err := secure.SendGetRequest(agentInfo, "/rpc/v1/maintainer", nil, &maintainer); err != nil {
+	if err := secure.SendGetRequest(agentInfo, constant.URI_RPC_V1+constant.URI_MAINTAINER, nil, &maintainer); err != nil {
 		return err
 	}
 	if maintainer.LifeTime > constant.MAINTAINER_MAX_ACTIVE_TIME_SEC {
@@ -324,9 +324,9 @@ func (c *Coordinator) addLifeTime(delta float64) {
 
 func (c *Coordinator) setIdendity(identity int) {
 	if c.identity != identity {
-		log.Infof("coordinator identity change from %s to %s", IDENTIFIED[c.identity], IDENTIFIED[identity])
+		log.Infof("coordinator identity change from %s to %s", identifiedMap[c.identity], identifiedMap[identity])
 		c.identity = identity
-		c.eventChan <- identity == MAINTAINER
+		c.publish(identity == MAINTAINER)
 	}
 }
 
@@ -348,10 +348,6 @@ func (c *Coordinator) HasMaintainer() bool {
 
 func (c *Coordinator) IsWatcher() bool {
 	return c.identity == WATCHER
-}
-
-func (c *Coordinator) GetEventChan() <-chan bool {
-	return c.eventChan
 }
 
 func (c *Coordinator) Suspend() {

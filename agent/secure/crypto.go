@@ -246,8 +246,8 @@ func EncryptPwdInObConfigMapForOther(configs map[string]sqlite.ObConfig, otherAg
 	return nil
 }
 
-func EncryptForAgent(pwd string, agent meta.AgentInfoInterface) (res string, err error) {
-	res, err = crypto.RSAEncrypt([]byte(pwd), GetAgentPublicKey(agent))
+func EncryptForAgent(value string, agent meta.AgentInfoInterface) (res string, err error) {
+	res, err = crypto.RSAEncrypt([]byte(value), GetAgentPublicKey(agent))
 	return
 }
 

@@ -27,17 +27,23 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-var encryptMethod = "aes"
+const (
+	EncryptMethodAes = "aes"
+	EncryptMethodRsa = "rsa"
+	EncryptMethodSm4 = "sm4"
+)
+
+var encryptMethod = EncryptMethodAes
 
 func BodyDecrypt(body []byte, keys ...string) ([]byte, error) {
-	if encryptMethod == "aes" {
+	if encryptMethod == EncryptMethodAes {
 		if len(keys) == 0 {
 			return nil, errors.New("no key for aes")
 		}
 		return bodyDecryptWithAes(string(body), keys[0])
-	} else if encryptMethod == "rsa" {
+	} else if encryptMethod == EncryptMethodRsa {
 		return bodyDecryptWithRsa(string(body))
-	} else if encryptMethod == "sm4" {
+	} else if encryptMethod == EncryptMethodSm4 {
 		if len(keys) == 0 {
 			return nil, errors.New("no key for sm4")
 		}
@@ -145,7 +151,7 @@ func bodyDecryptWithSm4(ciphertext string, keys string) ([]byte, error) {
 func transferKeys(Keys string) (aesKey []byte, aesIv []byte, err error) {
 	keys := []byte(Keys)
 	key_size := 16
-	if encryptMethod == "aes" {
+	if encryptMethod == EncryptMethodAes {
 		key_size = crypto.GetAesKeySize()
 	}
 	if len(keys) < key_size {

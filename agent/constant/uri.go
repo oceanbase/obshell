@@ -45,12 +45,13 @@ const (
 
 	URI_SYNC_BIN = "/sync-bin"
 
-	URI_DAG      = "/dag"
-	URI_NODE     = "/node"
-	URI_SUB_TASK = "/sub_task"
-	URI_LOG      = "/log"
-	URI_MAINTAIN = "/maintain"
-	URI_UNFINISH = "/unfinish"
+	URI_DAG        = "/dag"
+	URI_NODE       = "/node"
+	URI_SUB_TASK   = "/sub_task"
+	URI_LOG        = "/log"
+	URI_MAINTAIN   = "/maintain"
+	URI_UNFINISH   = "/unfinish"
+	URI_MAINTAINER = "/maintainer"
 
 	// OB api
 	URI_CONFIG      = "/config"

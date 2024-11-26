@@ -71,8 +71,10 @@ func (s *Scheduler) Start() {
 		return
 	}
 
+	eventChan := s.coordinator.Subscribe(s)
+	defer eventChan.Close()
 	for {
-		isMaintainer := <-s.coordinator.GetEventChan()
+		isMaintainer := <-eventChan.Listen()
 		if isMaintainer && s.coordinator.IsMaintainer() {
 			ctx := context.Background()
 			go s.run(ctx)
@@ -84,7 +86,7 @@ func (s *Scheduler) Start() {
 
 func (s *Scheduler) run(ctx context.Context) {
 	if s.cancel != nil {
-		log.withScheduler(s).Warn("s is running")
+		log.withScheduler(s).Warn("scheduler is running")
 		return
 	}
 	log.withScheduler(s).Info("scheduler starting")

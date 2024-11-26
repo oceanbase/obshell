@@ -59,6 +59,10 @@ func startClusterTaskEngine() {
 				coordinator.OCS_COORDINATOR = coordinator.NewCoordinator()
 				go coordinator.OCS_COORDINATOR.Start()
 			}
+			if coordinator.OCS_AGENT_SYNCHRONIZER == nil {
+				coordinator.OCS_AGENT_SYNCHRONIZER = coordinator.NewAgentSynchronizer(coordinator.OCS_COORDINATOR)
+				go coordinator.OCS_AGENT_SYNCHRONIZER.Start()
+			}
 			if scheduler.OCS_SCHEDULER == nil {
 				scheduler.OCS_SCHEDULER = scheduler.NewScheduler(coordinator.OCS_COORDINATOR, false)
 				go scheduler.OCS_SCHEDULER.Start()

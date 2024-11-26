@@ -116,6 +116,20 @@ func getMaintainerHandler(c *gin.Context) {
 	common.SendResponse(c, maintainer, err)
 }
 
+func updateAllAgentsHandler(c *gin.Context) {
+	var allAgentsSyncData param.AllAgentsSyncData
+	if err := c.BindJSON(&allAgentsSyncData); err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+	if coordinator.OCS_AGENT_SYNCHRONIZER == nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "agent synchronizer is not initialized"))
+		return
+	}
+	coordinator.OCS_AGENT_SYNCHRONIZER.Update(coordinator.ConvertToAllAgentsSyncData(allAgentsSyncData))
+	common.SendResponse(c, nil, nil)
+}
+
 func obServerDeployHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsFollowerAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not follower agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))

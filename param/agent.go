@@ -16,7 +16,12 @@
 
 package param
 
-import "github.com/oceanbase/obshell/agent/meta"
+import (
+	"time"
+
+	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+)
 
 type JoinApiParam struct {
 	AgentInfo meta.AgentInfo `json:"agentInfo" binding:"required"`
@@ -31,4 +36,10 @@ type JoinMasterParam struct {
 	Architecture string       `json:"architecture" binding:"required"`
 	PublicKey    string       `json:"public_key" binding:"required"`
 	Token        string       `json:"token" binding:"required"`
+}
+
+type AllAgentsSyncData struct {
+	Maintainer   meta.AgentInfo       `json:"maintainer" binding:"required"`
+	AllAgents    []oceanbase.AllAgent `json:"all_agents" binding:"required"`
+	LastSyncTime time.Time            `json:"last_sync_time" binding:"required"`
 }

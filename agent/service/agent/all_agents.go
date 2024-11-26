@@ -183,6 +183,14 @@ func (s *AgentService) IsAgentExist(agentInfo meta.AgentInfoInterface) (bool, er
 	return count > 0, nil
 }
 
+func (s *AgentService) RemoveAgent(agentInfo meta.AgentInfoInterface) error {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	return db.Where("ip=? and port=?", agentInfo.GetIp(), agentInfo.GetPort()).Delete(&sqlite.AllAgent{}).Error
+}
+
 // AddAgent will add agent to all_agent
 func (s *AgentService) AddAgent(agentInstance meta.Agent, homePath string, os string, arch string, publicKey string, token string) error {
 	db, err := sqlitedb.GetSqliteInstance()
@@ -207,6 +215,10 @@ func (s *AgentService) AddAgentInOB(agent oceanbase.AllAgent) error {
 }
 
 func (s *AgentService) addAgentToken(tx *gorm.DB, agentInfo meta.AgentInfoInterface, token string) error {
+	if token == "" {
+		// if token is empty means the agent is sync from oceanbase, no need to add token
+		return nil
+	}
 	ocsToken := sqlite.OcsToken{
 		Ip:    agentInfo.GetIp(),
 		Port:  agentInfo.GetPort(),
@@ -475,4 +487,59 @@ func (s *AgentService) UpdateAgentVersion() (err error) {
 		return err
 	}
 	return db.Model(&oceanbase.AllAgent{}).Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Update("version", meta.OCS_AGENT.GetVersion()).Error
+}
+
+func (s *AgentService) ConvertToOBAgentDO(agent sqlite.AllAgent) oceanbase.AllAgent {
+	return oceanbase.AllAgent{
+		Ip:           agent.Ip,
+		Port:         agent.Port,
+		RpcPort:      agent.RpcPort,
+		MysqlPort:    agent.MysqlPort,
+		Identity:     agent.Identity,
+		Os:           agent.Os,
+		Architecture: agent.Architecture,
+		Version:      agent.Version,
+		Zone:         agent.Zone,
+		HomePath:     agent.HomePath,
+		PublicKey:    agent.PublicKey,
+	}
+}
+
+func (s *AgentService) ConvertToSqliteAgentDO(agent oceanbase.AllAgent) sqlite.AllAgent {
+	return sqlite.AllAgent{
+		Ip:           agent.Ip,
+		Port:         agent.Port,
+		RpcPort:      agent.RpcPort,
+		MysqlPort:    agent.MysqlPort,
+		Identity:     agent.Identity,
+		Os:           agent.Os,
+		Architecture: agent.Architecture,
+		Version:      agent.Version,
+		Zone:         agent.Zone,
+		HomePath:     agent.HomePath,
+		PublicKey:    agent.PublicKey,
+	}
+}
+
+func (s *AgentService) SyncAgentDOToSqlite(agent oceanbase.AllAgent) error {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		sqliteAgent := s.ConvertToSqliteAgentDO(agent)
+		err = tx.Model(&sqliteAgent).Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "ip"}, {Name: "port"}},
+			DoUpdates: clause.AssignmentColumns([]string{"rpc_port", "mysql_port", "identity", "os", "architecture", "version", "zone", "home_path", "public_key"}),
+		}).Create(&sqliteAgent).Error
+
+		// Check if the agent being synced is the same as the current agent
+		if err == nil && ocsAgent.GetIp() == agent.Ip && ocsAgent.GetPort() == agent.Port {
+			// Update the identity of the current agent to match the new agent's identity.
+			// Other fields will NOT be updated.
+			err = s.updateIdentity(tx, meta.AgentIdentity(agent.Identity))
+		}
+		return err
+	})
 }
