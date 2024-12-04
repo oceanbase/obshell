@@ -36,16 +36,6 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
-type ObclusterService struct{}
-
-const (
-	COLLATIONS       = "information_schema.collations"
-	DBA_OB_SERVERS   = "oceanbase.DBA_OB_SERVERS"
-	DBA_OB_ZONES     = "oceanbase.DBA_OB_ZONES"
-	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
-	DBA_OB_UNITS     = "oceanbase.DBA_OB_UNITS"
-)
-
 func (obclusterService *ObclusterService) ExecuteSql(sql string) (err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -89,6 +79,8 @@ func (obclusterService *ObclusterService) StartZone(zone string) (err error) {
 	return
 }
 
+// StopZone attempts to stop a given zone. It is safe to call this function
+// even if the zone is already stopped (INACTIVE).
 func (obclusterService *ObclusterService) StopZone(zone string) (err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -158,6 +150,16 @@ func (obclusterService *ObclusterService) IsLsCheckpointAfterTs(server oceanbase
 	err = db.Raw(sql).Scan(&checkpintScn).Error
 	return
 
+}
+
+func (obclusterService *ObclusterService) AddZoneInRegion(zone string, region string) (err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	sql := fmt.Sprintf("alter system add zone '%s' region '%s'", zone, region)
+	err = db.Exec(sql).Error
+	return
 }
 
 func (obclusterService *ObclusterService) AddZone(zone string) (err error) {
@@ -241,12 +243,30 @@ func (obclusterService *ObclusterService) AddServer(ip, port, zoneName string) (
 	return db.Exec(alterSql).Error
 }
 
-func (obclusterService *ObclusterService) DeleteServer(ip, port, zoneName string) (err error) {
+func (obclusterService *ObclusterService) DeleteServerInZone(ip, port, zoneName string) (err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return err
 	}
 	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s:%s' ZONE '%s'", ip, port, zoneName)
+	return db.Exec(alterSql).Error
+}
+
+func (obclusterService *ObclusterService) DeleteServer(svrInfo meta.ObserverSvrInfo) (err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s:%d'", svrInfo.GetIp(), svrInfo.GetPort())
+	return db.Exec(alterSql).Error
+}
+
+func (ObclusterService *ObclusterService) CancelDeleteServer(svrInfo meta.ObserverSvrInfo) (err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	alterSql := fmt.Sprintf("ALTER SYSTEM CANCEL DELETE SERVER '%s:%d'", svrInfo.GetIp(), svrInfo.GetPort())
 	return db.Exec(alterSql).Error
 }
 
@@ -282,6 +302,17 @@ func (obclusterService *ObclusterService) IsZoneActive(zone string) (bool, error
 	return count == 1, err
 }
 
+// HasOtherStopTask returns true if there has other zone which is stopped or has stopped server.
+func (obclusterService *ObclusterService) HasOtherStopTask(excludeZone string) (bool, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = oceanbaseDb.Raw("SELECT COUNT(*) FROM (SELECT zone FROM oceanbase.DBA_OB_SERVERS WHERE stop_time > 0 AND zone != ? UNION SELECT zone FROM oceanbase.DBA_OB_ZONES WHERE status = 'INACTIVE' AND zone != ?)", excludeZone, excludeZone).Scan(&count).Error
+	return count > 0, err
+}
+
 func (obclusterService *ObclusterService) IsZoneExist(zone string) (res bool, err error) {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
@@ -298,7 +329,7 @@ func (obclusterService *ObclusterService) IsZoneExistInOB(zone string) (res bool
 	if err != nil {
 		return false, err
 	}
-	err = oceanbaseDb.Raw("select count(*) from oceanbase.dba_ob_zones where zone = ?", zone).First(&count).Error
+	err = oceanbaseDb.Raw("select count(*) from oceanbase.dba_ob_zones where zone = ?", zone).Scan(&count).Error
 	if err != nil {
 		return false, err
 	}
@@ -447,6 +478,15 @@ func (obclusterService *ObclusterService) GetAllZone() (zones []oceanbase.DbaObZ
 	return
 }
 
+func (obclusterService *ObclusterService) GetZone(zoneName string) (zone *oceanbase.DbaObZones, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+	err = oceanbaseDb.Table(DBA_OB_ZONES).Where("ZONE = ?", zoneName).Scan(&zone).Error
+	return
+}
+
 func (obclusterService *ObclusterService) IsZoneInactive(zone string) (bool, error) {
 	var count int
 	oceanbaseDb, err := oceanbasedb.GetInstance()
@@ -466,12 +506,21 @@ func (obclusterService *ObclusterService) GetOBServersByZone(zone string) (obser
 	return
 }
 
-func (obclusterService *ObclusterService) GetOBServerByAgentInfo(ip string, port int) (server oceanbase.OBServer, err error) {
+func (obclusterService *ObclusterService) GetOBServer(svrInfo meta.ObserverSvrInfo) (observer *oceanbase.OBServer, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
 	}
-	err = oceanbaseDb.Raw("SELECT ip AS SvrIp, rpc_port AS SvrPort FROM ocs.all_agent WHERE Ip = ? AND Port = ?", ip, port).Scan(&server).Error
+	err = oceanbaseDb.Table(DBA_OB_SERVERS).Where("SVR_IP = ? AND SVR_PORT = ?", svrInfo.GetIp(), svrInfo.GetPort()).Scan(&observer).Error
+	return
+}
+
+func (obclusterService *ObclusterService) GetOBServerByAgentInfo(agent meta.AgentInfo) (server *oceanbase.OBServer, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+	err = oceanbaseDb.Raw("SELECT ip AS SvrIp, rpc_port AS SvrPort FROM ocs.all_agent WHERE Ip = ? AND Port = ?", agent.GetIp(), agent.GetPort()).Scan(&server).Error
 	return
 }
 
@@ -651,4 +700,45 @@ func (ObclusterService *ObclusterService) GetObUnitsOnServer(svrIp string, svrPo
 	}
 	err = oceanbaseDb.Table(DBA_OB_UNITS).Where("SVR_IP = ? AND SVR_PORT = ?", svrIp, svrPort).Scan(&units).Error
 	return
+}
+
+func (ObclusterService *ObclusterService) IsLsMultiPaxosAlive(lsId int, tenantId int, svrInfo meta.ObserverSvrInfo) (bool, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	if err = oceanbaseDb.Raw("select count(*) from oceanbase.GV$OB_LOG_STAT as a inner join oceanbase.GV$OB_LOG_STAT as b on a.tenant_id = b.tenant_id and a.ls_id = b.ls_id and b.role = 'LEADER' and b.paxos_member_list like concat('%',a.svr_ip,':',a.svr_port,'%') and a.in_sync = 'YES' and a.ls_id = ? AND a.tenant_id = ? and (a.svr_ip != ? OR a.svr_port != ?)", lsId, tenantId, svrInfo.GetIp(), svrInfo.GetPort()).Count(&count).Error; err != nil {
+		return false, err
+	}
+	var paxosMember int64
+	if err = oceanbaseDb.Table(GV_OB_LOG_STAT).Select("paxos_replica_num").Where("ls_id = ? AND tenant_id = ? AND ROLE = 'LEADER'", lsId, tenantId).Scan(&paxosMember).Error; err != nil {
+		return false, err
+	}
+	if count > paxosMember/2 {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
+// GetLogInfosInServer returns the log stat in target server
+// only contains tenant_id and ls_id.
+func (ObclusterService *ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logStats []oceanbase.ObLogStat, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(GV_OB_LOG_STAT).Distinct("TENANT_ID", "LS_ID").Where("SVR_IP = ? AND SVR_PORT = ?", svrInfo.GetIp(), svrInfo.GetPort()).Find(&logStats).Error
+	return
+}
+
+func (ObclusterService *ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = oceanbaseDb.Table(DBA_OB_UNITS).Where("ZONE = ?", zone).Count(&count).Error
+	return count > 0, err
 }

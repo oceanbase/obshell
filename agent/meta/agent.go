@@ -32,6 +32,7 @@ const (
 	TAKE_OVER_MASTER   AgentIdentity = "TAKE OVER MASTER"
 	TAKE_OVER_FOLLOWER AgentIdentity = "TAKE OVER FOLLOWER"
 	SCALING_OUT        AgentIdentity = "SCALING OUT"
+	SCALING_IN         AgentIdentity = "SCALING IN"
 	UNIDENTIFIED       AgentIdentity = "UNIDENTIFIED"
 
 	AUTH_V1 = "v1"
@@ -60,6 +61,7 @@ type Agent interface {
 	IsTakeOverFollowerAgent() bool
 	IsTakeOverMasterAgent() bool
 	IsScalingOutAgent() bool
+	IsScalingInAgent() bool
 	IsUnidentified() bool
 	GetVersion() string
 	GetAgentInfo() AgentInfo
@@ -172,6 +174,10 @@ func (agent *IdentityDTO) IsTakeover() bool {
 
 func (agent *IdentityDTO) IsScalingOutAgent() bool {
 	return agent.Identity == SCALING_OUT
+}
+
+func (agent *IdentityDTO) IsScalingInAgent() bool {
+	return agent.Identity == SCALING_IN
 }
 
 func (agent *IdentityDTO) IsUnidentified() bool {

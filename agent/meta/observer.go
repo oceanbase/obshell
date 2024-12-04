@@ -20,3 +20,5 @@ var (
 	MYSQL_PORT = 0
 	RPC_PORT   = 0
 )
+
+type ObserverSvrInfo = AgentInfo

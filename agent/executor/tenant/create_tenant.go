@@ -237,6 +237,9 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 
 	var validServer int
 	var checkErr error
+	if len(source) < unitNum {
+		return errors.Errorf("The number of servers in zone '%s' is %d, less than the number of units %d.", zone, len(source), unitNum)
+	}
 	for _, server := range source {
 		gatheredUnitInfo, err := gatherAllUnitsOnServer(server.SvrIp, server.SvrPort)
 		if err != nil {

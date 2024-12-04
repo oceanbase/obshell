@@ -95,6 +95,9 @@ const (
 	// CMD_SCALE_OUT represents the "scale-out" command.
 	CMD_SCALE_OUT = "scale-out"
 
+	// CMD_SCALE_IN represents the "scale-in" command.
+	CMD_SCALE_IN = "scale-in"
+
 	// CMD_UPGRADE represents the "upgrade" command for upgrading the cluster.
 	CMD_UPGRADE = "upgrade"
 	// Flags for the "upgrade" command.
@@ -153,7 +156,7 @@ func NewClusterCmd() *cobra.Command {
 			case CMD_START:
 				AsyncCheckAndStartDaemon()
 				fmt.Println("Starting the OceanBase cluster, please wait...")
-			case CMD_STOP, CMD_SHOW, CMD_SCALE_OUT, CMD_UPGRADE:
+			case CMD_STOP, CMD_SHOW, CMD_SCALE_OUT, CMD_UPGRADE, CMD_SCALE_IN:
 				if err := CheckAndStartDaemon(true); err != nil {
 					stdio.StopLoading()
 					stdio.Error(err.Error())
@@ -175,6 +178,7 @@ func NewClusterCmd() *cobra.Command {
 	clusterCmd.AddCommand(newStartCmd())
 	clusterCmd.AddCommand(newUpgradeCmd())
 	clusterCmd.AddCommand(NewScaleOutCmd())
+	clusterCmd.AddCommand(NewScaleInCmd())
 	clusterCmd.AddCommand(newShowCmd())
 	clusterCmd.AddCommand(newStopCmd())
 	clusterCmd.AddCommand(newBackupCmd())

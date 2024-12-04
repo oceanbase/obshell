@@ -67,7 +67,7 @@ func (s *AgentService) InitAgent() error {
 		fallthrough
 	case meta.TAKE_OVER_FOLLOWER, meta.TAKE_OVER_MASTER:
 		fallthrough
-	case meta.SCALING_OUT:
+	case meta.SCALING_OUT, meta.SCALING_IN:
 		fallthrough
 	case meta.CLUSTER_AGENT:
 		if err := s.initOBPort(); err != nil {

@@ -68,6 +68,11 @@ type LocalScaleOutParam struct {
 	ParamExpectRollbackNextStage int               `json:"paramExpectRollbackNextStage" binding:"required"`
 }
 
+type ClusterScaleInParam struct {
+	AgentInfo meta.AgentInfo `json:"agent_info" binding:"required"`
+	ForceKill bool           `json:"force_kill"` // default to false
+}
+
 type ObInitParam struct {
 	ImportScript bool `json:"import_script"`
 }

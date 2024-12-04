@@ -52,3 +52,31 @@ type OBServer struct {
 func (OBServer) TableName() string {
 	return "oceanbase.DBA_OB_SERVERS"
 }
+
+type ObLogStat struct {
+	TenantId          int    `gorm:"column:TENANT_ID"`
+	LsId              int    `gorm:"column:LS_ID"`
+	SvrIp             string `gorm:"column:SVR_IP"`
+	SvrPort           int    `gorm:"column:SVR_PORT"`
+	Role              string `gorm:"column:ROLE"`
+	ProposalId        int64  `gorm:"column:PROPOSAL_ID"`
+	ConfigVersion     string `gorm:"column:CONFIG_VERSION"`
+	AccessMode        string `gorm:"column:ACCESS_MODE"`
+	PaxosMemberList   string `gorm:"column:PAXOS_MEMBER_LIST"`
+	PaxosReplicaNum   int    `gorm:"column:PAXOS_REPLICA_NUM"`
+	InSync            int    `gorm:"column:IN_SYNC"`
+	BaseLsn           int64  `gorm:"column:BASE_LSN"`
+	BeginLsn          int64  `gorm:"column:BEGIN_LSN"`
+	BeginScn          int64  `gorm:"column:BEGIN_SCN"`
+	EndLsn            int64  `gorm:"column:END_LSN"`
+	EndScn            int64  `gorm:"column:END_SCN"`
+	MaxLsn            int64  `gorm:"column:MAX_LSN"`
+	MaxScn            int64  `gorm:"column:MAX_SCN"`
+	ArbitrationMember string `gorm:"column:ARBITRATION_MEMBER"`
+	DegradedList      string `gorm:"column:DEGRADED_LIST"`
+	LearnerList       string `gorm:"column:LEARNER_LIST"`
+}
+
+func (ObLogStat) TableName() string {
+	return "oceanbase.GV$OB_LOG_STAT"
+}

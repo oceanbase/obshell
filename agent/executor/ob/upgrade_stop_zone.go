@@ -30,6 +30,7 @@ type StopZoneTask struct {
 	zone string
 }
 
+// newStopZoneNode will create a node which can't be rollback.
 func newStopZoneNode(zone string) *task.Node {
 	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone)
 	name := fmt.Sprintf("Stop %s", zone)
@@ -38,6 +39,21 @@ func newStopZoneNode(zone string) *task.Node {
 			SetCanContinue().
 			SetCanRetry()},
 		false, ctx)
+}
+
+// newStopZoneNodeForDelete will create a node which can be rollback.
+func newStopZoneNodeForDelete(zone string) *task.Node {
+	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone)
+	subTask := *task.NewSubTask(fmt.Sprintf(TASK_NAME_STOP_ZONE, zone)).
+		SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanPass().
+		SetCanCancel()
+	return task.NewNodeWithContext(
+		&StopZoneTask{Task: subTask},
+		false,
+		ctx)
 }
 
 func (t *StopZoneTask) getParams() (err error) {
@@ -64,4 +80,29 @@ func (t *StopZoneTask) Execute() (err error) {
 		time.Sleep(constant.TICK_INTERVAL_FOR_OB_STATUS_CHECK)
 	}
 	return errors.New("stop zone timeout")
+}
+
+// Rollback will start the zone if it is inactive.
+func (t *StopZoneTask) Rollback() error {
+	if retry, err := clusterTaskService.IsRetryTask(t.Task.GetID()); err != nil {
+		return err
+	} else if retry {
+		return nil
+	}
+
+	if err := t.getParams(); err != nil {
+		return err
+	}
+	t.ExecuteLogf("rollback stop zone %s", t.zone)
+	// Check if the zone is inactive, if not, start it
+	zoneIsInactive, err := obclusterService.IsZoneInactive(t.zone)
+	if err != nil {
+		return fmt.Errorf("check zone %s status failed: %s", t.zone, err.Error())
+	}
+	if zoneIsInactive {
+		return obclusterService.StartZone(t.zone)
+	} else {
+		t.ExecuteLogf("no need to start '%s' because it is not exist or active", t.zone)
+	}
+	return nil
 }

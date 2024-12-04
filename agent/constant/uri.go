@@ -24,6 +24,7 @@ const (
 	URI_AGENT_GROUP      = "/agent"
 	URI_AGENTS_GROUP     = "/agents"
 	URI_OB_GROUP         = "/ob"
+	URI_ZONE_GROUP       = "/zone"
 	URI_OBCLUSTER_GROUP  = "/obcluster"
 	URI_OBSERVER_GROUP   = "/observer"
 	URI_TENANT_GROUP     = "/tenant"
@@ -63,6 +64,7 @@ const (
 	URI_INIT        = "/init"
 	URI_DESTROY     = "/destroy"
 	URI_SCALE_OUT   = "/scale_out"
+	URI_SCALE_IN    = "/scale_in"
 	URI_AGENTS      = "/agents"
 
 	// Used for upgrade
@@ -107,6 +109,8 @@ const (
 	URI_AGENTS_API_PREFIX    = URI_API_V1 + URI_AGENTS_GROUP
 	URI_OB_API_PREFIX        = URI_API_V1 + URI_OB_GROUP
 	URI_OBCLUSTER_API_PREFIX = URI_API_V1 + URI_OBCLUSTER_GROUP
+	URI_OBSERVER_API_PREFIX  = URI_API_V1 + URI_OBSERVER_GROUP
+	URI_ZONE_API_PREFIX      = URI_API_V1 + URI_ZONE_GROUP
 	URI_TENANT_API_PREFIX    = URI_API_V1 + URI_TENANT_GROUP
 
 	URI_TASK_RPC_PREFIX     = URI_RPC_V1 + URI_TASK_GROUP

@@ -51,6 +51,8 @@ func InitOcsAgentRpcRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	observer := v1.Group(constant.URI_OBSERVER_GROUP)
 	observer.POST(constant.URI_DEPLOY, obServerDeployHandler)
+	observer.DELETE("", killObserverHandler)
+	observer.POST("", startObserverHandler)
 
 	maintainer := v1.Group(constant.URI_MAINTAINER)
 	maintainer.GET("", getMaintainerHandler)

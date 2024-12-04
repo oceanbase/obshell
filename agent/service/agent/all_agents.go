@@ -358,7 +358,7 @@ func (s *AgentService) DeleteAgentInOB(agent meta.AgentInfoInterface) error {
 	if err != nil {
 		return err
 	}
-	return db.Where("ip=? and port=?", agent.GetIp(), agent.GetPort()).Delete(&sqlite.AllAgent{}).Error
+	return db.Where("ip=? and port=?", agent.GetIp(), agent.GetPort()).Delete(&oceanbase.AllAgent{}).Error
 }
 
 func (s *AgentService) CheckCanBeTakeOverMaster() (bool, error) {
@@ -526,5 +526,28 @@ func (s *AgentService) SyncAgentDOToSqlite(agent oceanbase.AllAgent) error {
 			err = s.updateIdentity(tx, meta.AgentIdentity(agent.Identity))
 		}
 		return err
+	})
+}
+
+func (s *AgentService) UpdateAgentIdentity(agentInfo meta.AgentInfoInterface, identity meta.AgentIdentity) (err error) {
+	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	if err != nil {
+		return err
+	}
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	return oceanbaseDb.Transaction(func(oceanbaseTx *gorm.DB) error {
+		return sqliteDb.Transaction(func(sqliteTx *gorm.DB) error {
+			err = oceanbaseTx.Model(&oceanbase.AllAgent{}).
+				Where("ip = ? AND port = ?", agentInfo.GetIp(), agentInfo.GetPort()).
+				Updates(&oceanbase.AllAgent{Identity: string(identity)}).Error
+
+			if err == nil && ocsAgent.Equal(agentInfo) {
+				err = s.updateIdentity(sqliteTx, identity)
+			}
+			return err
+		})
 	})
 }

@@ -39,7 +39,7 @@ import (
 func GetObInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 	identity := meta.OCS_AGENT.GetIdentity()
 	switch identity {
-	case meta.SINGLE:
+	case meta.SINGLE, meta.SCALING_IN:
 		resp := &param.ObInfoResp{}
 		resp.Agents = append(resp.Agents, *meta.NewAgentInstanceByAgent(meta.OCS_AGENT))
 		return resp, nil

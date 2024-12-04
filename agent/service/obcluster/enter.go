@@ -17,7 +17,15 @@
 package obcluster
 
 type ObserverService struct{}
+type ObclusterService struct{}
 
 const (
 	ob_parameters_view = "oceanbase.V$OB_PARAMETERS"
+
+	COLLATIONS       = "information_schema.collations"
+	DBA_OB_SERVERS   = "oceanbase.DBA_OB_SERVERS"
+	DBA_OB_ZONES     = "oceanbase.DBA_OB_ZONES"
+	DBA_OB_UNITS     = "oceanbase.DBA_OB_UNITS"
+	GV_OB_LOG_STAT   = "oceanbase.GV$OB_LOG_STAT"
+	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
 )

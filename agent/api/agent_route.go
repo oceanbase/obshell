@@ -80,6 +80,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	pools := v1.Group(constant.URI_POOLS_GROUP)
 	pool := v1.Group(constant.URI_POOL_GROUP)
 	recyclebin := v1.Group(constant.URI_RECYCLEBIN_GROUP)
+	zone := v1.Group(constant.URI_ZONE_GROUP)
 
 	if !isLocalRoute {
 		ob.Use(common.Verify())
@@ -113,6 +114,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	ob.POST(constant.URI_START, obStartHandler)
 	ob.GET(constant.URI_INFO, obInfoHandler)
 	ob.POST(constant.URI_SCALE_OUT, obClusterScaleOutHandler)
+	ob.POST(constant.URI_SCALE_IN, obClusterScaleInHandler)
 	ob.POST(constant.URI_UPGRADE, obUpgradeHandler)
 	ob.POST(constant.URI_UPGRADE+constant.URI_CHECK, obUpgradeCheckHandler)
 	ob.GET(constant.URI_AGENTS, obAgentsHandler)
@@ -135,6 +137,10 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	// observer routes
 	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))
 	observer.POST(constant.URI_CONFIG, obServerConfigHandler(true))
+	observer.DELETE("", obClusterScaleInHandler)
+
+	// zone routes
+	zone.DELETE(constant.URI_PATH_PARAM_NAME, zoneDeleteHandler)
 
 	// upgrade routes
 	upgrade.POST(constant.URI_PACKAGE, pkgUploadHandler)

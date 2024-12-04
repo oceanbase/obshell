@@ -23,6 +23,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
@@ -64,11 +65,13 @@ func (t *MinorFreezeTask) GetAllObServer() (servers []oceanbase.OBServer, err er
 			info := strings.Split(server, ":")
 			ip := info[0]
 			port, _ := strconv.Atoi(info[1])
-			server, err := obclusterService.GetOBServerByAgentInfo(ip, port)
+			server, err := obclusterService.GetOBServerByAgentInfo(meta.AgentInfo{Ip: ip, Port: port})
 			if err != nil {
 				return nil, errors.Wrap(err, "get server by agent info failed")
 			}
-			servers = append(servers, server)
+			if server != nil {
+				servers = append(servers, *server)
+			}
 		}
 	}
 

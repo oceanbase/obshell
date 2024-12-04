@@ -216,10 +216,6 @@ func obLocalScaleOutHandler(c *gin.Context) {
 	common.SendResponse(c, data, err)
 }
 
-func createStopDagHandler(c *gin.Context) {
-
-}
-
 func agentUpdateHandler(c *gin.Context) {
 	var params param.SyncAgentParams
 	if err := c.BindJSON(&params); err != nil {
@@ -245,4 +241,23 @@ func takeOverAgentUpdateBinaryHandler(c *gin.Context) {
 	} else {
 		common.SendResponse(c, dag, nil)
 	}
+}
+
+// killObserverHandler only used for delete server
+func killObserverHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsScalingInAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not %s agent, can not kill observer.", meta.OCS_AGENT.String(), meta.SCALING_IN))
+		return
+	}
+	dag, err := ob.CreateKillObserverDag()
+	common.SendResponse(c, dag, err)
+}
+
+func startObserverHandler(c *gin.Context) {
+	dag, err := ob.CreateStartObserverDag()
+	if dag == nil && err == nil {
+		common.SendNoContentResponse(c, err)
+		return
+	}
+	common.SendResponse(c, dag, err)
 }

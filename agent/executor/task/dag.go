@@ -95,6 +95,20 @@ func GetDagDetail(c *gin.Context) {
 
 	dag, err := service.GetDagInstance(dagID)
 	if err != nil {
+		if oceanbase.GetState() != oceanbase.STATE_CONNECTION_AVAILABLE {
+			agents, _ := agentService.GetAllAgentsInfo() // If get agents failed, just go on.
+			for _, agent := range agents {
+				if meta.OCS_AGENT.Equal(&agent) {
+					continue
+				}
+				var dagDetailDTO task.DagDetailDTO
+				if resp, err := secure.SendGetRequestAndReturnResponse(&agent, c.Request.RequestURI, nil, &dagDetailDTO); err == nil && !resp.IsError() {
+					common.SendResponse(c, dagDetailDTO, nil)
+					return
+				}
+			}
+			// If all agents failed, just return original error.
+		}
 		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
 		return
 	}

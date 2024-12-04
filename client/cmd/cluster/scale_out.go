@@ -117,7 +117,7 @@ func clusterScaleOut(cmd *cobra.Command, flags *ClusterScaleOutFlags) (err error
 		return errors.New("ask for scale-out confirmation failed")
 	}
 	if !pass {
-		return nil
+		return errors.New("operation cancelled")
 	}
 	meta.SetOceanbasePwd(flags.password)
 	scaleOutReq, err := buildScaleOutParam(flags)

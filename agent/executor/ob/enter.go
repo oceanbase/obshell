@@ -72,6 +72,13 @@ const (
 	PARAM_COORDINATE_AGENT           = "coordinateAgent"
 	PARAM_JOIN_MASTER_INFO           = "joinMasterInfo"
 
+	// for scale in
+	PARAM_DELETE_SERVER  = "deleteServer"
+	PARAM_DELETE_AGENTS  = "deleteAgents"
+	PARAM_DELETE_AGENT   = "deleteAgent"
+	PARAM_OBSERVER_STATE = "observerState"
+	PARAM_FORCE_KILL     = "forceKill"
+
 	// for upgrade
 	PARAM_VERSION                = "version"
 	PARAM_BUILD_NUMBER           = "buildNumber"
@@ -87,6 +94,7 @@ const (
 	PARAM_UPGRADE_ROUTE          = "upgradeRoute"
 	PARAM_UPGRADE_ROUTE_INDEX    = "upgradeRouteIndex"
 	PARAM_ZONE                   = "zone"
+	PARAM_ZONE_REGION            = "region"
 	PARAM_CLUSTER_NAME           = "cluster"
 	PARAM_CLUSTER_ID             = "cluster_id"
 
@@ -195,6 +203,19 @@ const (
 	TASK_NAME_ADD_AGENT                          = "Add agent for scale_out"
 	TASK_NAME_FINISH                             = "Check cluster scale_out whether finished"
 	TASK_NAME_MINOR_FREEZE                       = "Minor freeze before stop server"
+	// task name for scale in
+	TASK_NAME_SET_AGENT_TO_SCALING_IN              = "Set agent to 'SCALING IN'"
+	TASK_NAME_DELETE_OBSERVER                      = "Delete observer '%s'"
+	TASK_NAME_WAIT_DELETE_SERVER_SUCCESS           = "Wait delete observer '%s' success"
+	TASK_NAME_DELETE_AGENTS                        = "Delete agent"
+	TASK_NAME_INFORM_TO_KILL_OBSERVER              = "Try to inform to kill observer"
+	TASK_NAME_INFORM_TO_KILL_OBSERVERS             = "Try to inform to kill observers"
+	TASK_NAME_CHECK_MULTI_PAXOS_MEMBER_ALIVE       = "Check multi paxos member alive"
+	TASK_NAME_KILL_OBSERVER                        = "Kill observer"
+	TASK_NAME_START_OBSERVER_FOR_SCALE_IN_ROLLBACK = "Start observer for scale in rollback"
+
+	TASK_NAME_STOP_ZONE   = "Stop zone %s"
+	TASK_NAME_DELETE_ZONE = "Delete zone %s"
 
 	// task name for backup
 	TASK_CHECK_BACKUP_CONFIG = "Check backup config"
@@ -216,28 +237,32 @@ const (
 	TASK_DROP_RESOURCE_POOL  = "Drop resource pool"
 
 	// dag name
-	DAG_EMERGENCY_START                  = "Start local observer"
-	DAG_EMERGENCY_STOP                   = "Stop local observer"
-	DAG_INIT_CLUSTER                     = "Initialize cluster"
-	DAG_START_OBSERVER                   = "Start observer"
-	DAG_START_OB                         = "Start OB"
-	DAG_STOP_OBSERVER                    = "Stop observer"
-	DAG_STOP_OB                          = "Stop OB"
-	DAG_TAKE_OVER                        = "Take over"
-	DAG_CHECK_AND_UPGRADE_OBSHELL        = "Check and upgrade obshell"
-	DAG_TAKE_OVER_UPDATE_AGENT_VERSION   = "Take over agent update agent version"
-	DAG_UPGRADE_OBSHELL                  = "Upgrade obshell"
-	DAG_UPGRADE_CHECK_OBSHELL            = "Upgrade check obshell"
-	DAG_UPGRADE_CHECK_OB                 = "Upgrade check OB"
-	DAG_OB_STOP_SVC_UPGRADE              = "OB stop service upgrade"
-	DAG_OB_ROLLING_UPGRADE               = "OB rolling upgrade"
-	DAG_NAME_LOCAL_SCALE_OUT             = "Local scale out"
-	DAG_NAME_CLUSTER_SCALE_OUT           = "Cluster scale out"
-	DAG_SET_BACKUP_CONFIG                = "Set obcluster backup config"
-	DAG_OBCLUSTER_START_FULL_BACKUP      = "Obcluster start full backup"
-	DAG_OBCLUSTER_START_INCREMENT_BACKUP = "Obcluster start increment backup"
-	DAG_RESTORE_BACKUP                   = "Restore backup"
-	DAG_CANCEL_RESTORE                   = "Cancel restore"
+	DAG_EMERGENCY_START                      = "Start local observer"
+	DAG_EMERGENCY_STOP                       = "Stop local observer"
+	DAG_INIT_CLUSTER                         = "Initialize cluster"
+	DAG_START_OBSERVER                       = "Start observer"
+	DAG_START_OB                             = "Start OB"
+	DAG_STOP_OBSERVER                        = "Stop observer"
+	DAG_STOP_OB                              = "Stop OB"
+	DAG_TAKE_OVER                            = "Take over"
+	DAG_CHECK_AND_UPGRADE_OBSHELL            = "Check and upgrade obshell"
+	DAG_TAKE_OVER_UPDATE_AGENT_VERSION       = "Take over agent update agent version"
+	DAG_UPGRADE_OBSHELL                      = "Upgrade obshell"
+	DAG_UPGRADE_CHECK_OBSHELL                = "Upgrade check obshell"
+	DAG_UPGRADE_CHECK_OB                     = "Upgrade check OB"
+	DAG_OB_STOP_SVC_UPGRADE                  = "OB stop service upgrade"
+	DAG_OB_ROLLING_UPGRADE                   = "OB rolling upgrade"
+	DAG_NAME_LOCAL_SCALE_OUT                 = "Local scale out"
+	DAG_NAME_CLUSTER_SCALE_OUT               = "Cluster scale out"
+	DAG_CLUSTER_SCALE_IN                     = "Cluster scale in"
+	DAG_DELETE_ZONE                          = "Delete zone"
+	DAG_KILL_OBSERVER                        = "Kill observer"
+	DAG_START_OBSERVER_FOR_SCALE_IN_ROLLBACK = "Start observer for scale in rollback"
+	DAG_SET_BACKUP_CONFIG                    = "Set obcluster backup config"
+	DAG_OBCLUSTER_START_FULL_BACKUP          = "Obcluster start full backup"
+	DAG_OBCLUSTER_START_INCREMENT_BACKUP     = "Obcluster start increment backup"
+	DAG_RESTORE_BACKUP                       = "Restore backup"
+	DAG_CANCEL_RESTORE                       = "Cancel restore"
 
 	// rpc retry times
 	MAX_RETRY_RPC_TIMES = 3
@@ -402,6 +427,18 @@ func RegisterObScaleOutTask() {
 	task.RegisterTaskType(AddServerTask{})
 	task.RegisterTaskType(AddAgentTask{})
 	task.RegisterTaskType(FinishTask{})
+}
+
+func RegisterObScaleInTask() {
+	task.RegisterTaskType(SetAgentToScaleInTask{})
+	task.RegisterTaskType(DeleteAgentTask{})
+	task.RegisterTaskType(TryToInformToKillObserverTask{})
+	task.RegisterTaskType(TryToInformToKillObserversTask{})
+	task.RegisterTaskType(KillObserverTask{})
+	task.RegisterTaskType(CheckMultiPaxosMemberAliveTask{})
+	task.RegisterTaskType(DeleteObserverTask{})
+	task.RegisterTaskType(WaitDeleteServerSuccessTask{})
+	task.RegisterTaskType(DeleteZoneTask{})
 }
 
 func RegisterUpgradeTask() {

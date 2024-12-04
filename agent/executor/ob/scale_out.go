@@ -1247,7 +1247,7 @@ func (t *AddServerTask) Rollback() error {
 		return nil
 	}
 
-	if err = obclusterService.DeleteServer(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone); err != nil {
+	if err = obclusterService.DeleteServerInZone(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone); err != nil {
 		return errors.Errorf("delete server %s:%s failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
 	}
 	return nil

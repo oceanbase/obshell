@@ -17,13 +17,13 @@
 package task
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
@@ -463,4 +463,20 @@ func (s *taskService) GetUnSyncTaskMappingByTime(lastTime time.Time, limit int) 
 	}
 	err = sqliteDb.Model(&sqlite.TaskMapping{}).Where("gmt_modify > ? and is_sync = false", lastTime).Order("gmt_modify asc").Limit(limit).Find(&taskMappings).Error
 	return
+}
+
+func (s *taskService) IsRetryTask(localTaskId int64) (isRetry bool, err error) {
+	var taskId int64
+	if !s.isLocal {
+		taskId, err = s.GetRemoteTaskIdByLocalTaskId(taskId)
+		if err != nil {
+			return false, errors.Wrapf(err, "get remote task id failed")
+		}
+	}
+
+	node, err := s.GetNodeBySubTask(taskId)
+	if err != nil {
+		return false, err
+	}
+	return node.IsRetry(), nil
 }

@@ -83,9 +83,15 @@ func NewCoordinator() *Coordinator {
 func (c *Coordinator) Start() error {
 	log.Info("coordinator start")
 	for {
-		if meta.OCS_AGENT == nil || !meta.OCS_AGENT.IsClusterAgent() {
+		if meta.OCS_AGENT.IsScalingInAgent() && c.IsMaintainer() {
+			c.Suspend()
+			continue
+		} else if meta.OCS_AGENT == nil || !meta.OCS_AGENT.IsClusterAgent() {
 			time.Sleep(constant.COORDINATOR_MIN_INTERVAL)
 			continue
+		}
+		if c.isSuspend {
+			c.Resume()
 		}
 		if err := c.reconcile(); err != nil {
 			log.WithError(err).Error("coordinator reconcile failed")
