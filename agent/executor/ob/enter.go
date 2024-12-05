@@ -71,6 +71,7 @@ const (
 	PARAM_COORDINATE_DAG_ID          = "coordinateDagId"
 	PARAM_COORDINATE_AGENT           = "coordinateAgent"
 	PARAM_JOIN_MASTER_INFO           = "joinMasterInfo"
+	PARAM_ADD_SERVER_SUCCEED         = "addServerSucceed"
 
 	// for scale in
 	PARAM_DELETE_SERVER  = "deleteServer"

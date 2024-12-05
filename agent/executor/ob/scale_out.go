@@ -1211,6 +1211,9 @@ func (t *AddServerTask) Execute() error {
 	if err != nil {
 		return errors.Errorf("add server %s:%s failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
 	}
+
+	t.GetContext().SetParam(PARAM_ADD_SERVER_SUCCEED, true)
+
 	return nil
 }
 
@@ -1230,6 +1233,12 @@ func (t *AddServerTask) Rollback() error {
 			return err
 		}
 	}
+
+	if t.GetContext().GetParam(PARAM_ADD_SERVER_SUCCEED) == nil {
+		// If add server falied, should not delete from obcluster.
+		return nil
+	}
+
 	var configs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_CONFIG, &configs); err != nil {
 		return errors.Wrap(err, "get configs failed")
@@ -1240,7 +1249,7 @@ func (t *AddServerTask) Rollback() error {
 	}
 
 	// Check whether addserver task execute successfully.
-	exist, err := obclusterService.IsServerExist(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
+	exist, err := obclusterService.IsServerExistWithZone(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone)
 	if err != nil {
 		return errors.Errorf("check server %s:%s exist failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
 	}

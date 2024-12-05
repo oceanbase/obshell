@@ -283,6 +283,19 @@ func (obclusterService *ObclusterService) IsServerExist(ip string, port string) 
 	return count > 0, nil
 }
 
+func (obclusterService *ObclusterService) IsServerExistWithZone(ip string, port string, zone string) (bool, error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = db.Table(DBA_OB_SERVERS).Where("svr_ip = ? and svr_port = ? and zone = ?", ip, port, zone).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (obclusterService *ObclusterService) GetObZonesName() (zones []string, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
