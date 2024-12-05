@@ -101,6 +101,7 @@ func (t *MinorFreezeTask) Execute() error {
 
 	checkOk := make(map[oceanbase.OBServer]bool)
 	for count := 0; count < DEFAULT_MINOR_FREEZE_TIMEOUT; count++ {
+		t.TimeoutCheck()
 		time.Sleep(10 * time.Second)
 		if ok, err := t.isMinorFreezeOver(servers, checkpointScns, checkOk); err != nil {
 			return err

@@ -79,8 +79,9 @@ func (t *WaitForPurgeFinishedTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_OBECJT_NAME, &name); err != nil {
 		return errors.Wrap(err, "Get tenant name failed")
 	}
+	t.ExecuteLogf("Wait for tenant %s purge finished", name)
 	for {
-		t.ExecuteLogf("Wait for tenant %s purge finished", name)
+		t.TimeoutCheck()
 		if exist, err := tenantService.IsTenantExist(name); err != nil {
 			return errors.Wrapf(err, "Check tenant '%s' exist failed", name)
 		} else if !exist {

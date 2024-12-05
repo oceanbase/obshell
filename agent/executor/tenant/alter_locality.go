@@ -101,7 +101,7 @@ func (t *AlterLocalityTask) Execute() error {
 		return errors.Wrap(err, "Get in progress tenant job failed")
 	} else if jobBo != nil {
 		if jobBo.TargetIs(targetReplicaInfpMap) {
-			if err := waitTenantJobSucceed(jobBo.JobId); err != nil {
+			if err := waitTenantJobSucceed(t.Task, jobBo.JobId); err != nil {
 				return errors.Wrap(err, "Wait for alter tenant locality succeed failed")
 			}
 		} else {
@@ -114,27 +114,28 @@ func (t *AlterLocalityTask) Execute() error {
 			return errors.Wrap(err, "Alter tenant locality failed")
 		}
 		// Wait for task execute successfully
-		if err := waitAlterTenantLocalitySucceed(t.tenantId, targetLocality); err != nil {
+		if err := waitAlterTenantLocalitySucceed(t.Task, t.tenantId, targetLocality); err != nil {
 			return errors.Wrap(err, "Wait for alter tenant locality succeed failed")
 		}
 	}
 	return nil
 }
 
-func waitAlterTenantLocalitySucceed(tenantId int, locality string) error {
+func waitAlterTenantLocalitySucceed(t task.Task, tenantId int, locality string) error {
 	jobId, err := tenantService.GetTargetTenantJob(constant.ALTER_TENANT_LOCALITY, tenantId, transfer("%\""+locality+"\""))
 	if err != nil {
 		return errors.Wrap(err, "Get tenant job failed")
 	} else if jobId == 0 {
 		return errors.Occur(errors.ErrUnexpected, "There is no job for altering tenant locality to %s", locality)
 	}
-	return waitTenantJobSucceed(jobId)
+	return waitTenantJobSucceed(t, jobId)
 }
 
-func waitTenantJobSucceed(jobId int) error {
+func waitTenantJobSucceed(t task.Task, jobId int) error {
 	// wait for success
 	retryTimes := constant.CHECK_JOB_RETRY_TIMES
 	for retryTimes > 0 {
+		t.TimeoutCheck()
 		jobStatus, err := tenantService.GetTenantJobStatus(jobId)
 		if err != nil {
 			return errors.Wrap(err, "Get tenant job status failed.")

@@ -107,7 +107,7 @@ func newModifyPrimaryZoneTask() *ModifyPrimaryZoneTask {
 	return newTask
 }
 
-func waitAlterPrimaryZoneSucceed(tenantId int, targetPrimaryZone string) error {
+func waitAlterPrimaryZoneSucceed(t task.Task, tenantId int, targetPrimaryZone string) error {
 	tenantName, err := tenantService.GetTenantName(tenantId)
 	if err != nil {
 		return errors.Wrap(err, "Get tenant name failed.")
@@ -120,7 +120,7 @@ func waitAlterPrimaryZoneSucceed(tenantId int, targetPrimaryZone string) error {
 	if jobId == 0 {
 		return errors.Occurf(errors.ErrUnexpected, "There is no job for altering tenant %s primary zone to %s", tenantName, targetPrimaryZone)
 	}
-	return waitTenantJobSucceed(jobId)
+	return waitTenantJobSucceed(t, jobId)
 }
 
 func (t *ModifyPrimaryZoneTask) Execute() error {
@@ -159,7 +159,7 @@ func (t *ModifyPrimaryZoneTask) Execute() error {
 		return errors.Wrap(err, "Get in progress tenant job failed")
 	} else if jobBo != nil {
 		if jobBo.TargetIs(parsedTargetPrimaryZoneList) {
-			if err := waitTenantJobSucceed(jobBo.JobId); err != nil {
+			if err := waitTenantJobSucceed(t.Task, jobBo.JobId); err != nil {
 				return errors.Wrap(err, "Wait for alter tenant primary zone succeed failed")
 			}
 		} else {
@@ -172,7 +172,7 @@ func (t *ModifyPrimaryZoneTask) Execute() error {
 			return errors.Occur(errors.ErrUnexpected, err.Error())
 		}
 		t.ExecuteLogf("Wait for tenant %s primary zone to be altered to %s", tenantName, t.primaryZone)
-		if err := waitAlterPrimaryZoneSucceed(t.tenantId, t.primaryZone); err != nil {
+		if err := waitAlterPrimaryZoneSucceed(t.Task, t.tenantId, t.primaryZone); err != nil {
 			return err
 		}
 	}

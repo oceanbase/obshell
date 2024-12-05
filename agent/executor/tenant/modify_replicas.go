@@ -403,7 +403,7 @@ func newAlterResourcePoolUnitNumTask() *AlterResourcePoolUnitNumTask {
 	return newTask
 }
 
-func waitAlterTenantUnitNumSucceed(tenantId int, targetUnitNum int) error {
+func waitAlterTenantUnitNumSucceed(t task.Task, tenantId int, targetUnitNum int) error {
 	tenantName, err := tenantService.GetTenantName(tenantId)
 	if err != nil {
 		return errors.Wrap(err, "Get tenant id failed.")
@@ -416,7 +416,7 @@ func waitAlterTenantUnitNumSucceed(tenantId int, targetUnitNum int) error {
 	if jobId == 0 {
 		return errors.Occur(errors.ErrUnexpected, "There is no job for altering tenant %s unit num to %d", tenantName, targetUnitNum)
 	} else {
-		return waitTenantJobSucceed(jobId)
+		return waitTenantJobSucceed(t, jobId)
 	}
 }
 
@@ -446,7 +446,7 @@ func (t *AlterResourcePoolUnitNumTask) Execute() error {
 		return errors.Wrap(err, "Get in progress tenant job failed")
 	} else if jobBo != nil {
 		if jobBo.TargetIs(t.unitNum) {
-			if err := waitTenantJobSucceed(jobBo.JobId); err != nil {
+			if err := waitTenantJobSucceed(t.Task, jobBo.JobId); err != nil {
 				return errors.Wrap(err, "Wait for alter tenant unit num succeed failed")
 			}
 		} else {
@@ -459,7 +459,7 @@ func (t *AlterResourcePoolUnitNumTask) Execute() error {
 			return errors.Wrap(err, "Alter tenant unit num failed.")
 		}
 		// Wait for task execute successfully
-		if err := waitAlterTenantUnitNumSucceed(t.tenantId, t.unitNum); err != nil {
+		if err := waitAlterTenantUnitNumSucceed(t.Task, t.tenantId, t.unitNum); err != nil {
 			return errors.Wrap(err, "Wait for alter tenant unit num succeed failed.")
 		}
 	}

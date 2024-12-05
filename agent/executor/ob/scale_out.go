@@ -514,12 +514,12 @@ func (t *WatchDagTask) Execute() error {
 	t.init()
 	t.ExecuteLog("Watch cluster scale out dag")
 	for {
+		t.TimeoutCheck()
 		coordinateDag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteWarnLogf("get remote dag failed, %s", err.Error())
 			continue
 		}
-		t.ExecuteInfoLogf("remote task %s %s running [%d/%d]", coordinateDag.GenericID, coordinateDag.Name, coordinateDag.Stage, coordinateDag.MaxStage)
 		if coordinateDag.Stage == coordinateDag.MaxStage {
 			break
 		}
@@ -543,6 +543,7 @@ func (t *WatchDagTask) Rollback() error {
 	}
 	expectStage -= 1
 	for {
+		t.TimeoutCheck()
 		coordinateDag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteWarnLogf("get remote dag failed, %s", err.Error())
