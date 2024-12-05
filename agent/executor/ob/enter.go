@@ -205,8 +205,8 @@ const (
 	TASK_NAME_MINOR_FREEZE                       = "Minor freeze before stop server"
 	// task name for scale in
 	TASK_NAME_SET_AGENT_TO_SCALING_IN              = "Set agent to 'SCALING IN'"
-	TASK_NAME_DELETE_OBSERVER                      = "Delete observer '%s'"
-	TASK_NAME_WAIT_DELETE_SERVER_SUCCESS           = "Wait delete observer '%s' success"
+	TASK_NAME_DELETE_OBSERVER                      = "Delete observer"
+	TASK_NAME_WAIT_DELETE_SERVER_SUCCESS           = "Wait delete observer success"
 	TASK_NAME_DELETE_AGENTS                        = "Delete agent"
 	TASK_NAME_INFORM_TO_KILL_OBSERVER              = "Try to inform to kill observer"
 	TASK_NAME_INFORM_TO_KILL_OBSERVERS             = "Try to inform to kill observers"

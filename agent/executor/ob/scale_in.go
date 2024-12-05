@@ -200,11 +200,10 @@ type DeleteObserverTask struct {
 	BaseDeleteObserverTask
 }
 
-func newDeleteObserverTask(server *meta.ObserverSvrInfo) *DeleteObserverTask {
-	taskName := fmt.Sprintf(TASK_NAME_DELETE_OBSERVER, server.String())
+func newDeleteObserverTask() *DeleteObserverTask {
 	newTask := &DeleteObserverTask{
 		BaseDeleteObserverTask: BaseDeleteObserverTask{
-			Task: *task.NewSubTask(taskName),
+			Task: *task.NewSubTask(TASK_NAME_DELETE_OBSERVER),
 		},
 	}
 	newTask.SetCanContinue().
@@ -221,7 +220,7 @@ func newDeleteObserverNode(server meta.ObserverSvrInfo, failureExitMaintenance b
 	if failureExitMaintenance {
 		context.SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	}
-	return task.NewNodeWithContext(newDeleteObserverTask(&server), false, context)
+	return task.NewNodeWithContext(newDeleteObserverTask(), false, context)
 }
 
 type SetAgentToScaleInTask struct {
@@ -296,11 +295,10 @@ type WaitDeleteServerSuccessTask struct {
 	BaseDeleteObserverTask
 }
 
-func newWaitDeleteServerSuccessTask(server *meta.ObserverSvrInfo) *WaitDeleteServerSuccessTask {
-	taskName := fmt.Sprintf(TASK_NAME_WAIT_DELETE_SERVER_SUCCESS, server.String())
+func newWaitDeleteServerSuccessTask() *WaitDeleteServerSuccessTask {
 	newTask := &WaitDeleteServerSuccessTask{
 		BaseDeleteObserverTask: BaseDeleteObserverTask{
-			Task: *task.NewSubTask(taskName),
+			Task: *task.NewSubTask(TASK_NAME_WAIT_DELETE_SERVER_SUCCESS),
 		},
 	}
 	newTask.SetCanContinue().
@@ -314,7 +312,7 @@ func newWaitDeleteServerSuccessTask(server *meta.ObserverSvrInfo) *WaitDeleteSer
 func newWaitDeleteServerSuccessNode(server meta.ObserverSvrInfo) *task.Node {
 	context := task.NewTaskContext().SetParam(PARAM_DELETE_SERVER, server)
 	return task.NewNodeWithContext(
-		newWaitDeleteServerSuccessTask(&server),
+		newWaitDeleteServerSuccessTask(),
 		false,
 		context)
 }
