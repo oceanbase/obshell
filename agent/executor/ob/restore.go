@@ -260,6 +260,7 @@ func (t *StartRestoreTask) Execute() (err error) {
 			break
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	if !metaTenantNormal {
 		return errors.New("create tenant timeout")
@@ -333,6 +334,7 @@ func (t *StartRestoreTask) Rollback() (err error) {
 			break
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 
 	t.createResourcePoolParam = buildCreateResourcePoolTaskParam(t.tenantName, t.param.ZoneList, t.timeStamp)
@@ -378,6 +380,7 @@ func (t *WaitRestoreFinshTask) Execute() (err error) {
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("wait restore finish timeout")
 }
@@ -428,6 +431,7 @@ func (t *ActiveTenantTask) Execute() (err error) {
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("wait for tenant role primary timeout")
 }
@@ -469,6 +473,7 @@ func (t *UpgradeTenantTask) Execute() (err error) {
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 
 	return errors.New("wait for upgrade tenant timeout")

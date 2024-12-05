@@ -78,6 +78,7 @@ func (t *StopZoneTask) Execute() (err error) {
 			return nil
 		}
 		time.Sleep(constant.TICK_INTERVAL_FOR_OB_STATUS_CHECK)
+		t.TimeoutCheck()
 	}
 	return errors.New("stop zone timeout")
 }

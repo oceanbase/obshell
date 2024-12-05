@@ -79,7 +79,10 @@ func stopObserver(t task.ExecutableTask) error {
 		if err := res.Run(); err != nil {
 			log.Warn("Kill observer process failed")
 		}
+
 		time.Sleep(time.Second * STOP_OB_MAX_RETRY_INTERVAL)
+		t.TimeoutCheck()
+
 		t.ExecuteLog("Check observer process")
 		exist, err := process.CheckObserverProcess()
 		if err != nil {

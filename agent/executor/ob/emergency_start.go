@@ -64,6 +64,7 @@ func (t *GetConnForEStartTask) Execute() error {
 			log.Error("get db connection failed", err)
 		}
 		time.Sleep(constant.GET_INSTANCE_RETRY_INTERVAL * time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("get connection failed")
 }

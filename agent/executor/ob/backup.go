@@ -331,6 +331,7 @@ func (t *OpenArchiveLogTask) waitArchiveLogOpened(tenant *oceanbase.DbaObTenant)
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("wait archive log opened timeout")
 }
@@ -353,6 +354,7 @@ func (t *OpenArchiveLogTask) waitArchiveLogDoing(tenant *oceanbase.DbaObTenant) 
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 
 	return fmt.Errorf("wait archive log doing timeout, tenant: %s(%d), status: %s", tenant.TenantName, tenant.TenantID, status)

@@ -321,6 +321,7 @@ func (t *SetBackupConfigTask) waitForArchiveLogStop(tenant *oceanbase.DbaObTenan
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return fmt.Errorf("wait archive log to be '%s' timeout", constant.ARCHIVELOG_STATUS_STOP)
 }
@@ -400,6 +401,7 @@ func (t *SetBackupConfigTask) waitForArchiveLogClosed(tenant *oceanbase.DbaObTen
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("wait archive log closed timeout")
 }
@@ -498,6 +500,7 @@ func waitBackupFinish(t task.ExecutableTask, tenant *oceanbase.DbaObTenant) erro
 			return nil
 		}
 		time.Sleep(time.Second)
+		t.TimeoutCheck()
 	}
 	return errors.New("wait backup finish timeout")
 }

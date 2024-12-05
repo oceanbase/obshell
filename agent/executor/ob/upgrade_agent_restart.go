@@ -60,7 +60,7 @@ func (t *RestartAgentTask) Execute() (err error) {
 			return
 		}
 		t.ExecuteLog("Connecting to the database.")
-		if err = getOcsInstance(); err != nil {
+		if err = t.getOcsInstance(); err != nil {
 			return err
 		}
 		t.ExecuteLog("Updating version.")
@@ -77,13 +77,14 @@ func (t *RestartAgentTask) Execute() (err error) {
 	return nil
 }
 
-func getOcsInstance() (err error) {
+func (t *RestartAgentTask) getOcsInstance() (err error) {
 	for i := 1; i <= constant.MAX_GET_INSTANCE_RETRIES; i++ {
 		if _, err = oceanbase.GetOcsInstance(); err == nil {
 			return nil
 		}
 		log.Infof("get ocs instance failed: %v , retry [%d/%d]", err, i, constant.MAX_GET_INSTANCE_RETRIES)
 		time.Sleep(time.Second * constant.GET_INSTANCE_RETRY_INTERVAL)
+		t.TimeoutCheck()
 	}
 	return errors.New("get ocs instance timeout")
 }

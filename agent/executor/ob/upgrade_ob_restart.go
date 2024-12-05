@@ -106,7 +106,7 @@ func (t *ReinstallAndRestartObTask) reinstallAndRestartOb() (err error) {
 		return err
 	}
 	t.ExecuteLog("wait all observer available")
-	return waitAllObSeverAvailable()
+	return t.waitAllObSeverAvailable()
 }
 
 func (t *ReinstallAndRestartObTask) installNewOb(upgradePath string) (err error) {
@@ -159,7 +159,7 @@ func copyFilesForInstallObserver(src, dest string) (err error) {
 	return nil
 }
 
-func waitAllObSeverAvailable() (err error) {
+func (t *ReinstallAndRestartObTask) waitAllObSeverAvailable() (err error) {
 	log.Info("wait all observer available")
 	for i := 0; i < constant.TICK_NUM_FOR_OB_STATUS_CHECK; i++ {
 		allObserverIsAvailable, _ := isAllObSeverAvailable()
@@ -167,6 +167,7 @@ func waitAllObSeverAvailable() (err error) {
 			return nil
 		}
 		time.Sleep(constant.TICK_INTERVAL_FOR_OB_STATUS_CHECK)
+		t.TimeoutCheck()
 
 	}
 	return errors.New("wait all observer available timeout")
