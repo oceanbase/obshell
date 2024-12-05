@@ -32,15 +32,15 @@ const (
 )
 
 type VersionDep struct {
-	Version           string                `yaml:"version"`
-	Release           string                `yaml:"release"`
-	Next              []*VersionDep         `yaml:"next,omitempty"`
-	CanBeUpgradedTo   []string              `yaml:"can_be_upgraded_to,flow,omitempty"`
-	DirectComeFrom    []*VersionDep         `yaml:"directComeFrom,omitempty"`
-	Deprecated        bool                  `yaml:"deprecated,omitempty"`
-	RequireFromBinary RequireFromBinarySpec `yaml:"require_from_binary,flow,omitempty"`
-	Precursor         *VersionDep           `yaml:"precursor,omitempty"`
-	DirectUpgrade     bool                  `yaml:"directUpgrade,omitempty"`
+	Version           string        `yaml:"version"`
+	Release           string        `yaml:"release"`
+	Next              []*VersionDep `yaml:"next,omitempty"`
+	CanBeUpgradedTo   []string      `yaml:"can_be_upgraded_to,flow,omitempty"`
+	DirectComeFrom    []*VersionDep `yaml:"directComeFrom,omitempty"`
+	Deprecated        bool          `yaml:"deprecated,omitempty"`
+	RequireFromBinary interface{}   `yaml:"require_from_binary,flow,omitempty"`
+	Precursor         *VersionDep   `yaml:"precursor,omitempty"`
+	DirectUpgrade     bool          `yaml:"directUpgrade,omitempty"`
 	DeprecatedInfo    []string
 }
 
@@ -246,24 +246,39 @@ func FormatRoute(routes []*VersionDep) []RouteNode {
 	var res []RouteNode
 	preBarrier := routes[0]
 	for _, v := range routes {
-		requireFromBinary := v.RequireFromBinary.Value
-		if len(v.RequireFromBinary.WhenComeFrom) != 0 {
+		// Format require_from_binary
+		var requireFromBinary RequireFromBinarySpec
+		if v.RequireFromBinary != nil {
+			var ok bool
+			if requireFromBinary.Value, ok = v.RequireFromBinary.(bool); !ok {
+				if data, ok := v.RequireFromBinary.(map[string]interface{}); ok {
+					if value, ok := data["value"]; ok {
+						requireFromBinary.Value = value.(bool)
+					}
+					if whenComeFrom, ok := data["when_come_from"]; ok {
+						requireFromBinary.WhenComeFrom = whenComeFrom.([]string)
+					}
+				}
+			}
+		}
+
+		if len(requireFromBinary.WhenComeFrom) != 0 {
 			var comeFrom bool
-			for _, vv := range v.RequireFromBinary.WhenComeFrom {
+			for _, vv := range requireFromBinary.WhenComeFrom {
 				if vv == preBarrier.Version || vv == fmt.Sprintf("%s-%s", preBarrier.Version, preBarrier.Release) {
 					comeFrom = true
 					break
 				}
 			}
-			requireFromBinary = requireFromBinary && comeFrom
-			if requireFromBinary {
+			requireFromBinary.Value = requireFromBinary.Value && comeFrom
+			if requireFromBinary.Value {
 				preBarrier = v
 			}
 		}
 		node := RouteNode{
 			Version:           v.Version,
 			Release:           v.Release,
-			RequireFromBinary: requireFromBinary,
+			RequireFromBinary: requireFromBinary.Value,
 			DeprecatedInfo:    v.DeprecatedInfo,
 		}
 		if v.Release == RELEASE_NULL {
