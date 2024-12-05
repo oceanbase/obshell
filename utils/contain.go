@@ -15,6 +15,8 @@
  */
 package utils
 
+import "strings"
+
 func ContainsString(list []string, item string) bool {
 	for _, v := range list {
 		if v == item {
@@ -34,4 +36,13 @@ func SliceEqual(list1, list2 []string) bool {
 		}
 	}
 	return true
+}
+
+func ContainsPrefix(prefix []string, s string) bool {
+	for _, pre := range prefix {
+		if strings.HasPrefix(s, pre) {
+			return true
+		}
+	}
+	return false
 }

@@ -47,6 +47,7 @@ func NewDaemonCmd() *cobra.Command {
 		Args:   cobra.NoArgs,
 	})
 	daemonCmd.RunE = func(c *cobra.Command, args []string) (err error) {
+		opts.HiddenPassword()
 		ocsagentlog.InitLogger(config.DefaultDaemonLoggerConifg())
 		global.InitGlobalVariable()
 		daemon := newDaemon(opts)

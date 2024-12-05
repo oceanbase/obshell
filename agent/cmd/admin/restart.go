@@ -41,6 +41,7 @@ func newRestartCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.NoArgs,
 		RunE: func(c *cobra.Command, args []string) (err error) {
+			opts.HiddenPassword()
 			c.SilenceUsage = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			admin := NewAdmin(opts)

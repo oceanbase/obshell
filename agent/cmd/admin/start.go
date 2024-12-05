@@ -44,6 +44,7 @@ func newStartCmd() *cobra.Command {
 		Hidden: true,
 		Args:   cobra.NoArgs,
 		Run: func(cmd *cobra.Command, args []string) {
+			opts.HiddenPassword()
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			admin := NewAdmin(opts)
 			if err := admin.StartDaemon(); err != nil {

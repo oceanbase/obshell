@@ -18,10 +18,13 @@ package cmd
 
 import (
 	"fmt"
+	"os"
+	"unsafe"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
+	"github.com/oceanbase/obshell/utils"
 )
 
 const (
@@ -42,6 +45,9 @@ type CommonFlag struct {
 	IsTakeover    int
 	NeedStartOB   bool
 	NeedBeCluster bool
+	RootPassword  *string // Call HiddenPassword() before use RootPassword, or use GetRootPassword() instead.
+	rootPassword  string  // Just use for input. Don't use it in the code.
+	hiden         bool
 }
 
 func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
@@ -51,12 +57,14 @@ func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 	cmd.VarsPs(&flag.OldServerPid, []string{constant.FLAG_PID}, int32(0), "Old obshell pid, only used for upgrade", false)
 	cmd.Flags().MarkHidden(constant.FLAG_PID)
 	cmd.VarsPs(&flag.IsTakeover, []string{constant.FLAG_TAKE_OVER}, 1, "If the agent is started for a takeover", false)
+	cmd.VarsPs(&flag.rootPassword, []string{constant.FLAG_ROOT_PWD_SH, constant.FLAG_ROOT_PWD}, "", "The password for OceanBase root@sys user, only used for takeover", false)
 	cmd.VarsPs(&flag.NeedStartOB, []string{constant.FLAG_START_OB}, false, "If need to start observer", false)
 	cmd.VarsPs(&flag.NeedBeCluster, []string{constant.FLAG_NEED_BE_CLUSTER}, false, "If need to be a cluster agent", false)
 	cmd.Flags().MarkHidden(constant.FLAG_START_OB)
 }
 
 func (flag *CommonFlag) GetArgs() (args []string) {
+	flag.HiddenPassword()
 	if flag.AgentInfo.GetIp() != "" {
 		args = append(args, fmt.Sprintf("--%s", constant.FLAG_IP), flag.AgentInfo.GetIp())
 	}
@@ -69,6 +77,9 @@ func (flag *CommonFlag) GetArgs() (args []string) {
 	if flag.IsTakeover == 0 {
 		args = append(args, fmt.Sprintf("--%s", constant.FLAG_TAKE_OVER), fmt.Sprint(flag.IsTakeover))
 	}
+	if flag.RootPassword != nil {
+		args = append(args, fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD), *flag.RootPassword)
+	}
 	if flag.NeedStartOB {
 		args = append(args, fmt.Sprintf("--%s", constant.FLAG_START_OB))
 	}
@@ -76,4 +87,47 @@ func (flag *CommonFlag) GetArgs() (args []string) {
 		args = append(args, fmt.Sprintf("--%s", constant.FLAG_NEED_BE_CLUSTER))
 	}
 	return args
+}
+
+func (flag *CommonFlag) GetRootPassword() *string {
+	flag.HiddenPassword()
+	return flag.RootPassword
+}
+
+func (flag *CommonFlag) HiddenPassword() {
+	if flag.hiden {
+		return
+	}
+
+	password := string([]byte(flag.rootPassword)) // Deep copy the password to avoid being modified by hiddenPassword.
+	if hiddenPassword(fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD), fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD_SH)) {
+		flag.RootPassword = &password
+	}
+	flag.hiden = true
+}
+
+func hiddenPassword(flags ...string) bool {
+	hiden := false
+	for idx, arg := range os.Args {
+		if hiden {
+			maskArgs(idx)
+			return true
+		} else if utils.ContainsString(flags, arg) {
+			hiden = true
+			maskArgs(idx)
+		} else if utils.ContainsPrefix(flags, arg) {
+			maskArgs(idx)
+			return true
+		}
+	}
+	return hiden
+}
+
+func maskArgs(idx int) {
+	baseAddr := uintptr(unsafe.Pointer(&os.Args[idx]))
+	argPtr := (*[]byte)(unsafe.Pointer(baseAddr))
+	oldLen := len(os.Args[idx])
+	for i := 0; i < oldLen; i++ {
+		(*argPtr)[i] = 0
+	}
 }

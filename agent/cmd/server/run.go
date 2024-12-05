@@ -39,7 +39,7 @@ func (a *Agent) run() (err error) {
 		return errors.Wrap(err, "run local server failed")
 	}
 
-	if err = restoreSecure(); err != nil {
+	if err = a.restoreSecure(); err != nil {
 		return errors.Wrap(err, "restore secure failed")
 	}
 
@@ -68,7 +68,7 @@ func (a *Agent) runServer() (err error) {
 	return nil
 }
 
-func restoreSecure() (err error) {
+func (a *Agent) restoreSecure() (err error) {
 	// Restore private key from sqlite.
 	log.Info("restore secure info")
 	err = secure.RestoreKey()
@@ -81,7 +81,7 @@ func restoreSecure() (err error) {
 		}
 	} else {
 		log.Info("restore secure info successed, check password in sqlite")
-		err = secure.LoadPassword()
+		err = secure.LoadPassword(a.GetRootPassword())
 		if err != nil {
 			log.WithError(err).Info("check password in sqlite failed")
 			if !meta.OCS_AGENT.IsClusterAgent() {

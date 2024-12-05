@@ -58,12 +58,14 @@ const (
 
 // command flag
 const (
-	FLAG_IP        = "ip"
-	FLAG_PORT      = "port"
-	FLAG_PORT_SH   = "P"
-	FLAG_PID       = "pid"
-	FLAG_TAKE_OVER = "takeover"
-	FLAG_START_OB  = "ob"
+	FLAG_IP          = "ip"
+	FLAG_PORT        = "port"
+	FLAG_PORT_SH     = "P"
+	FLAG_PID         = "pid"
+	FLAG_START_OB    = "ob"
+	FLAG_TAKE_OVER   = "takeover"
+	FLAG_ROOT_PWD    = "rootpassword"
+	FLAG_ROOT_PWD_SH = "rp"
 
 	FLAG_NEED_BE_CLUSTER = "cluster"
 )

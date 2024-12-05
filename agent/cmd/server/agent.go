@@ -42,6 +42,7 @@ func NewServerCmd() *cobra.Command {
 		Args:   cobra.NoArgs,
 	})
 	serverCmd.RunE = func(c *cobra.Command, args []string) (err error) {
+		opts.HiddenPassword()
 		ocsagentlog.SetDBLoggerLevel(ocsagentlog.Warn)
 		log.SetLevel(log.DebugLevel)
 		server := newAgent(opts)

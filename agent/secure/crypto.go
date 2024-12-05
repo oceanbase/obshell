@@ -114,17 +114,22 @@ func GetAgentPublicKey(agent meta.AgentInfoInterface) string {
 }
 
 // LoadPassword will load password from environment variable or sqlite.
-func LoadPassword() error {
-	rootPwd, isSet := syscall.Getenv(constant.OB_ROOT_PASSWORD)
-	if !isSet {
-		return CheckPasswordInSqlite()
+func LoadPassword(password *string) error {
+	if password == nil {
+		rootPwd, isSet := syscall.Getenv(constant.OB_ROOT_PASSWORD)
+		if !isSet {
+			return CheckPasswordInSqlite()
+		}
+		log.Info("get password from environment variable")
+		password = &rootPwd
+	} else {
+		log.Infof("get password from command line: %s", *password)
 	}
-	log.Info("get password from environment variable")
 
 	// clear root password, avoid to cover sqlite when agent restart
 	syscall.Unsetenv(constant.OB_ROOT_PASSWORD)
-	meta.SetOceanbasePwd(rootPwd)
-	go dumpTempPassword(rootPwd)
+	meta.SetOceanbasePwd(*password)
+	go dumpTempPassword(*password)
 	return nil
 }
 
