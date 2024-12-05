@@ -237,7 +237,7 @@ func checkServerConfigFlags(config map[string]string) error {
 	if logLevel, ok := config[constant.CONFIG_LOG_LEVEL]; ok {
 		stdio.Verbosef("Check log level: %s", logLevel)
 		config[constant.CONFIG_LOG_LEVEL] = strings.ToUpper(logLevel)
-		if !isValidLogLevel(logLevel) {
+		if !isValidLogLevel(config[constant.CONFIG_LOG_LEVEL]) {
 			return errors.Errorf("Invalid log level: %s. (support: %v)", logLevel, LOGLEVEL)
 		}
 	}
