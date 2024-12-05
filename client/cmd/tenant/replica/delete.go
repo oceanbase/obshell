@@ -84,8 +84,9 @@ func replicaDelete(tenantName string, opts *replicaDeleteFlags) (err error) {
 	if err := api.CallApiWithMethod(http.DELETE, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_REPLICAS, params, &dag); err != nil {
 		return err
 	}
-	if err = api.NewDagHandler(&dag).PrintDagStage(); err != nil {
-		return err
+	if dag.GenericDTO == nil {
+		stdio.Infof("Tenant %s has no replicas in %s", tenantName, opts.zones)
+		return nil
 	}
-	return nil
+	return api.NewDagHandler(&dag).PrintDagStage()
 }

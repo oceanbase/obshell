@@ -21,7 +21,9 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -88,8 +90,15 @@ func agentRemove(flags *AgentRemoveFlags) error {
 	}
 	stdio.StopLoading()
 
-	_, err = api.CallApiAndPrintStage(constant.URI_AGENT_API_PREFIX+constant.URI_REMOVE, targetAgent)
-	return err
+	dag := task.DagDetailDTO{}
+	if err := api.CallApiWithMethod(http.POST, constant.URI_AGENT_API_PREFIX+constant.URI_REMOVE, targetAgent, &dag); err != nil {
+		return err
+	}
+	if dag.GenericDTO == nil {
+		stdio.Infof("%s is not in cluster", targetAgent.String())
+		return nil
+	}
+	return api.NewDagHandler(&dag).PrintDagStage()
 }
 
 func checkRemoveStatus() error {
