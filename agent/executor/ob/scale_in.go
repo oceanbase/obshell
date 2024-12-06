@@ -502,7 +502,7 @@ func (t *TryToInformToKillObserverTask) Rollback() error {
 		for {
 			t.TimeoutCheck()
 			if err := secure.SendGetRequest(&t.agent, fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, dag.GenericID), nil, dag); err != nil {
-				return errors.Errorf("watch launch observer dag %s failed: %v", dag.GenericID, err)
+				return errors.Errorf("watch start observer dag %s failed: %v", dag.GenericID, err)
 			}
 			if dag.IsSucceed() {
 				return nil

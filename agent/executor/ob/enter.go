@@ -440,6 +440,7 @@ func RegisterObScaleInTask() {
 	task.RegisterTaskType(DeleteObserverTask{})
 	task.RegisterTaskType(WaitDeleteServerSuccessTask{})
 	task.RegisterTaskType(DeleteZoneTask{})
+	task.RegisterTaskType(StartObserverForScaleInRollbackTask{})
 }
 
 func RegisterUpgradeTask() {

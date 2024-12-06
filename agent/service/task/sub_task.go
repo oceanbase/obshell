@@ -466,9 +466,9 @@ func (s *taskService) GetUnSyncTaskMappingByTime(lastTime time.Time, limit int) 
 }
 
 func (s *taskService) IsRetryTask(localTaskId int64) (isRetry bool, err error) {
-	var taskId int64
+	taskId := localTaskId
 	if !s.isLocal {
-		taskId, err = s.GetRemoteTaskIdByLocalTaskId(taskId)
+		taskId, err = s.GetRemoteTaskIdByLocalTaskId(localTaskId)
 		if err != nil {
 			return false, errors.Wrapf(err, "get remote task id failed")
 		}

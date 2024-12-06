@@ -132,5 +132,5 @@ func (t *StartObserverForScaleInRollbackTask) Execute() error {
 		}
 		time.Sleep(WAIT_START_OBSERVER_INTERVAL)
 	}
-	return errors.New("launch observer failed")
+	return errors.New("start observer failed")
 }
