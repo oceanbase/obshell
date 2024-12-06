@@ -65,6 +65,12 @@ func DeleteZone(zoneName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
 		return nil, errors.Occurf(errors.ErrUnexpected, "get agents by zone from ob failed: %s", err.Error())
 	}
 
+	for _, agent := range agentInfos {
+		if meta.OCS_AGENT.Equal(&agent) {
+			return nil, errors.Occur(errors.ErrBadRequest, "The current agent is in '%s', please initiate the request through another agent.", zoneName)
+		}
+	}
+
 	builder := task.NewTemplateBuilder(DAG_DELETE_ZONE).SetMaintenance(task.GlobalMaintenance())
 	context := task.NewTaskContext().SetParam(PARAM_ZONE, zoneName).SetParam(PARAM_ZONE_REGION, zone.Region)
 	if len(agentInfos) != 0 {

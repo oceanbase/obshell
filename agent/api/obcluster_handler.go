@@ -343,6 +343,10 @@ func obClusterScaleInHandler(c *gin.Context) {
 		common.SendNoContentResponse(c, nil)
 		return
 	}
+	if meta.OCS_AGENT.Equal(&param.AgentInfo) {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cannot delete the current server."))
+		return
+	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
 		return
