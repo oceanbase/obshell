@@ -20,7 +20,6 @@ import (
 	"errors"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -34,9 +33,8 @@ type AgentAuth struct {
 	Ts       int64
 }
 
-func VerifyAuth(pwd string, ts string) error {
+func VerifyAuth(pwd string, ts string, curTs int64) error {
 	if pwd != "" {
-		curTs := time.Now().Unix()
 		tsInt, err := strconv.ParseInt(ts, 10, 64)
 		if err != nil {
 			log.WithError(err).Errorf("parse ts failed, ts:%v", ts)

@@ -247,6 +247,7 @@ func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 		}
 
 		startTime := time.Now()
+		c.Set(constant.REQUEST_RECEIVED_TIME, startTime.Unix())
 
 		c.Next()
 
@@ -411,7 +412,13 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 			}
 			fallthrough
 		default:
-			if secure.VerifyAuth(header.Auth, header.Ts) == nil {
+			curTs := time.Now().Unix()
+			if r, ok := c.Get(constant.REQUEST_RECEIVED_TIME); ok {
+				if receivedTs, ok := r.(int64); ok {
+					curTs = receivedTs
+				}
+			}
+			if secure.VerifyAuth(header.Auth, header.Ts, curTs) == nil {
 				pass = true
 			}
 		}
