@@ -57,7 +57,7 @@ func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 	cmd.VarsPs(&flag.OldServerPid, []string{constant.FLAG_PID}, int32(0), "Old obshell pid, only used for upgrade", false)
 	cmd.Flags().MarkHidden(constant.FLAG_PID)
 	cmd.VarsPs(&flag.IsTakeover, []string{constant.FLAG_TAKE_OVER}, 1, "If the agent is started for a takeover", false)
-	cmd.VarsPs(&flag.rootPassword, []string{constant.FLAG_ROOT_PWD_SH, constant.FLAG_ROOT_PWD}, "", "The password for OceanBase root@sys user, only used for takeover", false)
+	cmd.VarsPs(&flag.rootPassword, []string{constant.FLAG_ROOT_PWD}, "", "The password for OceanBase root@sys user, only used for takeover", false)
 	cmd.VarsPs(&flag.NeedStartOB, []string{constant.FLAG_START_OB}, false, "If need to start observer", false)
 	cmd.VarsPs(&flag.NeedBeCluster, []string{constant.FLAG_NEED_BE_CLUSTER}, false, "If need to be a cluster agent", false)
 	cmd.Flags().MarkHidden(constant.FLAG_START_OB)
@@ -100,7 +100,7 @@ func (flag *CommonFlag) HiddenPassword() {
 	}
 
 	password := string([]byte(flag.rootPassword)) // Deep copy the password to avoid being modified by hiddenPassword.
-	if hiddenPassword(fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD), fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD_SH)) {
+	if hiddenPassword(fmt.Sprintf("--%s", constant.FLAG_ROOT_PWD)) {
 		flag.RootPassword = &password
 	}
 	flag.hiden = true
