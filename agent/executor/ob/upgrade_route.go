@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -228,7 +229,7 @@ func FindShortestUpgradePath(nodeMap map[string]*VersionDep, currentRepo, target
 		return nil, errors.New("target version is deprecated")
 	}
 	res = (AddDeprecatedInfo(nodeMap, res))
-	return FormatRoute(res), nil
+	return FormatRoute(res)
 }
 
 func AddDeprecatedInfo(nodeMap map[string]*VersionDep, res []*VersionDep) []*VersionDep {
@@ -242,7 +243,7 @@ func AddDeprecatedInfo(nodeMap map[string]*VersionDep, res []*VersionDep) []*Ver
 	return res
 }
 
-func FormatRoute(routes []*VersionDep) []RouteNode {
+func FormatRoute(routes []*VersionDep) ([]RouteNode, error) {
 	var res []RouteNode
 	preBarrier := routes[0]
 	for _, v := range routes {
@@ -251,12 +252,16 @@ func FormatRoute(routes []*VersionDep) []RouteNode {
 		if v.RequireFromBinary != nil {
 			var ok bool
 			if requireFromBinary.Value, ok = v.RequireFromBinary.(bool); !ok {
-				if data, ok := v.RequireFromBinary.(map[string]interface{}); ok {
+				if data, ok := v.RequireFromBinary.(map[interface{}]interface{}); ok {
 					if value, ok := data["value"]; ok {
 						requireFromBinary.Value = value.(bool)
 					}
 					if whenComeFrom, ok := data["when_come_from"]; ok {
-						requireFromBinary.WhenComeFrom = whenComeFrom.([]string)
+						if data, err := json.Marshal(whenComeFrom); err != nil {
+							return nil, errors.Wrapf(err, "marshal %s %v failed", v.Version, whenComeFrom)
+						} else if err = json.Unmarshal(data, &requireFromBinary.WhenComeFrom); err != nil {
+							return nil, errors.Wrapf(err, "unmarshal %s %v failed", v.Version, whenComeFrom)
+						}
 					}
 				}
 			}
@@ -298,5 +303,5 @@ func FormatRoute(routes []*VersionDep) []RouteNode {
 		}
 	}
 	nodes = append([]RouteNode{res[0]}, nodes...)
-	return nodes
+	return nodes, nil
 }
