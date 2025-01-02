@@ -20,7 +20,9 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/go-sql-driver/mysql"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -615,4 +617,39 @@ func (s *TenantService) GetUpgradeJobHistoryCount(tenantName string) (count int6
 
 	err = oceanbaseDb.Table(DBA_OB_CLUSTER_EVENT_HISTORY).Where("event = 'UPGRADE_ALL' AND value3 = ? AND value5 = ?", version, id).Count(&count).Error
 	return
+}
+
+func (s *TenantService) CheckModuleData(tenantName string, moduleName string) (pass bool, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+
+	sql := fmt.Sprintf("alter system check module data module=%s tenant=%s", moduleName, tenantName)
+	err = oceanbaseDb.Exec(sql).Error
+	if err != nil {
+		if dbErr, ok := err.(*mysql.MySQLError); ok && dbErr.Number == 4025 {
+			pass = false
+			err = nil
+		}
+	} else {
+		pass = true
+	}
+	return
+}
+
+func (s *TenantService) LoadModuleData(tenantName string, moduleName string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	return oceanbaseDb.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Exec("SET SESSION ob_query_timeout=1000000000").Error; err != nil {
+			return err
+		}
+
+		sql := fmt.Sprintf("alter system load module data module=%s tenant=%s", moduleName, tenantName)
+		return tx.Exec(sql).Error
+	})
 }

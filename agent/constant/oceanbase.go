@@ -75,6 +75,10 @@ const (
 	OB_IMPORT_TIME_ZONE_INFO_FILE   = "timezone_V1.log"
 	OB_IMPORT_SRS_DATA_FILE         = "default_srs_data_mysql.sql"
 
+	OB_MODULE_TIMEZONE = "timezone"
+	OB_MODULE_GIS      = "gis"
+	OB_MODULE_REDIS    = "redis"
+
 	// env
 	OB_ROOT_PASSWORD = "OB_ROOT_PASSWORD"
 )
