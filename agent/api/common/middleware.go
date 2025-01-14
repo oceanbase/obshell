@@ -418,7 +418,9 @@ func Verify(skipRoutes ...string) func(*gin.Context) {
 					curTs = receivedTs
 				}
 			}
-			if secure.VerifyAuth(header.Auth, header.Ts, curTs) == nil {
+			if err := secure.VerifyAuth(header.Auth, header.Ts, curTs); err != nil {
+				log.WithContext(NewContextWithTraceId(c)).Error(err.Error())
+			} else {
 				pass = true
 			}
 		}

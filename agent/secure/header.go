@@ -95,13 +95,12 @@ func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, 
 }
 
 func DecryptHeader(ciphertext string) (HttpHeader, error) {
-	decHeader, _ := Crypter.DecryptAndReturnBytes(ciphertext)
 	var headers HttpHeader
-	err := json.Unmarshal(decHeader, &headers)
-	if err != nil {
-		return headers, err
+	decHeader, err := Crypter.DecryptAndReturnBytes(ciphertext)
+	if err == nil {
+		err = json.Unmarshal(decHeader, &headers)
 	}
-	return headers, nil
+	return headers, err
 }
 
 func RepackageHeaderForAutoForward(header *HttpHeader, agentInfo meta.AgentInfoInterface) (headers map[string]string, err error) {
