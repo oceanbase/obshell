@@ -45,7 +45,7 @@ type DagInstance struct {
 
 func (d *DagInstance) ToBO() *bo.DagInstance {
 	MaintenanceType := d.MaintenanceType
-	if d.IsMaintenance && MaintenanceType == 0 {
+	if d.IsMaintenance && MaintenanceType == 1 {
 		MaintenanceType = 2
 	}
 	return &bo.DagInstance{
