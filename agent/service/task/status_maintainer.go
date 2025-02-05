@@ -192,6 +192,9 @@ func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, o
 	if resp.Error != nil {
 		return resp.Error
 	}
+	if resp.RowsAffected == 0 {
+		return fmt.Errorf("failed to start maintenance: agent status is not %d", oldStatus)
+	}
 	return nil
 }
 
