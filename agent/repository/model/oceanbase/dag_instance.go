@@ -19,6 +19,7 @@ package oceanbase
 import (
 	"time"
 
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -45,8 +46,8 @@ type DagInstance struct {
 
 func (d *DagInstance) ToBO() *bo.DagInstance {
 	MaintenanceType := d.MaintenanceType
-	if d.IsMaintenance && MaintenanceType == 1 {
-		MaintenanceType = 2
+	if d.IsMaintenance && MaintenanceType == task.NOT_UNDER_MAINTENANCE {
+		MaintenanceType = task.GLOBAL_MAINTENANCE
 	}
 	return &bo.DagInstance{
 		Id:                d.Id,

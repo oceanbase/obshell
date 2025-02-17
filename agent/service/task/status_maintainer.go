@@ -192,8 +192,14 @@ func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, o
 	if resp.Error != nil {
 		return resp.Error
 	}
-	if resp.RowsAffected == 0 {
-		return fmt.Errorf("failed to start maintenance: agent status is not %d", oldStatus)
+	if resp.RowsAffected == 0 && newStatus == task.NOT_UNDER_MAINTENANCE {
+		var nowStatus int
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", "status").First(&nowStatus).Error; err != nil {
+			return err
+		} else if nowStatus == newStatus {
+			return nil
+		}
+		return fmt.Errorf("failed to set status to %d: agent status is not %d", newStatus, oldStatus)
 	}
 	return nil
 }
