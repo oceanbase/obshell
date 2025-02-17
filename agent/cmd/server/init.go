@@ -18,7 +18,7 @@ package server
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -267,12 +267,16 @@ func (a *Agent) isUpgradeMode() bool {
 	if a.OldServerPid != 0 {
 		// If the old agent is running in the same directory as the new agent,
 		// it is considered an upgrade.
-		cwdDir, err := os.Readlink(fmt.Sprintf("/proc/%d/cwd", a.OldServerPid))
+		cwdDir, err := filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/cwd", a.OldServerPid))
+		if err != nil {
+			return false
+		}
+		curDir, err := filepath.EvalSymlinks(global.HomePath)
 		if err != nil {
 			return false
 		}
 		log.Infof("the cwd of %d is %s", a.OldServerPid, cwdDir)
-		if global.HomePath == cwdDir {
+		if curDir == cwdDir {
 			log.Info("The obshell is in upgrade mode.")
 			a.upgradeMode = true
 			// Unset root password env to avoid cover sqlite when upgrade (agent restart)
