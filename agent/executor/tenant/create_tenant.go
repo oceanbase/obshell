@@ -31,6 +31,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/pool"
 	"github.com/oceanbase/obshell/agent/executor/script"
 	"github.com/oceanbase/obshell/agent/executor/zone"
+	"github.com/oceanbase/obshell/agent/lib/path"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
@@ -101,7 +102,7 @@ func checkParameters(parameters map[string]interface{}) error {
 	return nil
 }
 
-func checkScenario(scenario string) error {
+func checkAndLoadScenario(param *param.CreateTenantParam, scenario string) error {
 	if scenario == "" {
 		return nil
 	}
@@ -110,10 +111,30 @@ func checkScenario(scenario string) error {
 	if len(scenarios) == 0 {
 		return errors.New("current observer does not support scenario")
 	}
-	if utils.ContainsString(scenarios, strings.ToLower(scenario)) {
-		return nil
+	if !utils.ContainsString(scenarios, strings.ToLower(scenario)) {
+		errors.Errorf("scenario only support to be one of %s", strings.Join(scenarios, ", "))
 	}
-	return errors.Errorf("scenario only support to be one of %s", strings.Join(scenarios, ", "))
+
+	variables, err := parseTemplate(VARIABLES_TEMPLATE, path.ObshellDefaultVariablePath(), scenario)
+	if err != nil {
+		return errors.Wrap(err, "Parse variable template failed")
+	}
+	for key, value := range variables {
+		if _, exist := param.Variables[key]; !exist {
+			param.Variables[key] = value
+		}
+	}
+
+	parameters, err := parseTemplate(PARAMETERS_TEMPLATE, path.ObshellDefaultParameterPath(), scenario)
+	if err != nil {
+		return errors.Wrap(err, "Parse parameter template failed")
+	}
+	for key, value := range parameters {
+		if _, exist := param.Parameters[key]; !exist {
+			param.Parameters[key] = value
+		}
+	}
+	return nil
 }
 
 func renderCreateTenantParam(param *param.CreateTenantParam) error {
@@ -182,10 +203,6 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 		return
 	}
 
-	if err = checkScenario(param.Scenario); err != nil {
-		return
-	}
-
 	if err = checkCharsetAndCollation(param.Charset, param.Collation); err != nil {
 		return
 	}
@@ -203,6 +220,10 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 	}
 
 	if err = checkParameters(param.Parameters); err != nil {
+		return
+	}
+
+	if err = checkAndLoadScenario(param, param.Scenario); err != nil {
 		return
 	}
 
@@ -320,7 +341,7 @@ func CreateTenant(param *param.CreateTenantParam) (*task.DagDetailDTO, *errors.O
 	}
 
 	// Create 'Create tenant' dag instance.
-	template, err := buildCreateTenatDagTemplate(param)
+	template, err := buildCreateTenantDagTemplate(param)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
@@ -332,7 +353,7 @@ func CreateTenant(param *param.CreateTenantParam) (*task.DagDetailDTO, *errors.O
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func buildCreateTenatDagTemplate(param *param.CreateTenantParam) (*task.Template, error) {
+func buildCreateTenantDagTemplate(param *param.CreateTenantParam) (*task.Template, error) {
 	createTenantNode, err := newCreateTenantNode(param)
 	if err != nil {
 		return nil, err
@@ -344,12 +365,23 @@ func buildCreateTenatDagTemplate(param *param.CreateTenantParam) (*task.Template
 		templateBuilder.AddNode(newSetTenantTimeZoneNode(param.TimeZone))
 	}
 	if param.Parameters != nil && len(param.Parameters) != 0 {
-		templateBuilder.AddTask(newSetTenantParameterTask(), false)
-	}
-	if param.Scenario != "" {
-		templateBuilder.AddNode(newOptimizeTenantNode(param.Scenario, param))
+		templateBuilder.AddNode(newSetTenantParameterNode(param.Parameters))
 	}
 	templateBuilder.AddNode(newModifyTenantWhitelistNode(*param.Whitelist))
+
+	// Delete the read-only variables
+	for k := range param.Variables {
+		if utils.ContainsString(CREATE_TENANT_STATEMENT_VARIABLES, k) {
+			delete(param.Variables, k)
+		}
+	}
+	if param.Variables != nil && len(param.Variables) != 0 {
+		node, err := newSetTenantVariableNode(param.Variables)
+		if err != nil {
+			return nil, err
+		}
+		templateBuilder.AddNode(node)
+	}
 
 	agents, err := agentService.GetAllAgentsInfo()
 	if err != nil {
@@ -366,13 +398,13 @@ func buildCreateTenatDagTemplate(param *param.CreateTenantParam) (*task.Template
 		}
 		templateBuilder.AddNode(setRootPwdNode)
 	}
+
 	return templateBuilder.Build(), nil
 }
 
 func buildCreateTenantDagContext(param *param.CreateTenantParam) *task.TaskContext {
 	context := task.NewTaskContext()
 	context.SetParam(PARAM_TENANT_NAME, param.Name).
-		SetParam(PARAM_TENANT_PARAMETER, param.Parameters).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	return context
 }
@@ -414,7 +446,7 @@ func newCreateTenantTask() *CreateTenantTask {
 	return newTask
 }
 
-func buildCreateTenantSql(param param.CreateTenantParam, poolList []string) (string, []interface{}) {
+func buildCreateTenantSql(param *param.CreateTenantParam, poolList []string) (string, []interface{}) {
 	resourcePoolList := "\"" + strings.Join(poolList, "\",\"") + "\""
 	sql := fmt.Sprintf(tenantservice.SQL_CREATE_TENANT_BASIC, *param.Name, resourcePoolList)
 
@@ -462,13 +494,16 @@ func buildCreateTenantSql(param param.CreateTenantParam, poolList []string) (str
 
 	transferNumber(param.Variables)
 	for k, v := range param.Variables {
-		if _, ok := v.(string); ok {
-			sql += ", " + k + "= `%s`"
-		} else {
-			sql += ", " + k + "= %v"
+		if utils.ContainsString(CREATE_TENANT_STATEMENT_VARIABLES, k) {
+			if _, ok := v.(string); ok {
+				sql += ", " + k + "= `%s`"
+			} else {
+				sql += ", " + k + "= %v"
+			}
+			input = append(input, v)
 		}
-		input = append(input, v)
 	}
+
 	return sql, input
 }
 
@@ -490,7 +525,7 @@ func (t *CreateTenantTask) Execute() error {
 	for _, poolParam := range t.createResourcePoolParam {
 		poolList = append(poolList, poolParam.PoolName)
 	}
-	basic, input := buildCreateTenantSql(t.CreateTenantParam, poolList)
+	basic, input := buildCreateTenantSql(&t.CreateTenantParam, poolList)
 	sql := fmt.Sprintf(basic, input...)
 	t.ExecuteLogf("Create tenant sql: %s", sql)
 	if err := tenantService.TryExecute(sql); err != nil {

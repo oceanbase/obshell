@@ -435,7 +435,7 @@ func tenantSetVariableHandler(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	common.SendResponse(c, nil, tenant.SetTenantVariables(name, param.Variables))
+	common.SendResponse(c, nil, tenant.SetTenantVariables(c, name, param))
 }
 
 //	@ID				getTenantInfo

@@ -32,7 +32,7 @@ type SetRootPwdTask struct {
 	newPassword string
 }
 
-func getExecuteAgentForSetTenantRootPwd(tenantName string) (meta.AgentInfoInterface, error) {
+func getExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error) {
 	isTenantOn, err := tenantService.IsTenantActiveAgent(tenantName, meta.OCS_AGENT.GetIp(), meta.RPC_PORT)
 	if err != nil {
 		return nil, err
@@ -57,7 +57,7 @@ func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.
 	if tenantName == constant.TENANT_SYS {
 		return errors.Occur(errors.ErrIllegalArgument, "Can not modify root password for sys tenant."), false
 	}
-	executeAgent, err := getExecuteAgentForSetTenantRootPwd(tenantName)
+	executeAgent, err := getExecuteAgentForTenant(tenantName)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error()), false
 	}
