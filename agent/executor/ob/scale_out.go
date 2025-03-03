@@ -1213,7 +1213,7 @@ func (t *AddServerTask) Execute() error {
 		return errors.New("get zone failed")
 	}
 
-	port, err := strconv.Atoi(configs[constant.CONFIG_MYSQL_PORT])
+	port, err := strconv.Atoi(configs[constant.CONFIG_RPC_PORT])
 	if err != nil {
 		return errors.Wrap(err, "convert port to integer failed")
 	}

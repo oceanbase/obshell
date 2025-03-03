@@ -237,9 +237,13 @@ func (t *ExecStopSqlTask) stopServer() (err error) {
 	}
 	for _, server := range t.scope.Target {
 		t.ExecuteLogf("Stop %s", server)
-		serverInfo, err := meta.ConvertAddressToAgentInfo(server)
+		agentInfo, err := meta.ConvertAddressToAgentInfo(server)
+		if err != nil {
+			return errors.Errorf("convert server '%s' to agent info failed: %v", server, err)
+		}
 		for _, agent := range agents {
-			if serverInfo.Ip == agent.Ip && serverInfo.Port == agent.Port {
+			if agentInfo.Ip == agent.Ip && agentInfo.Port == agent.Port {
+				serverInfo := meta.NewAgentInfo(agent.Ip, agent.RpcPort)
 				sql := fmt.Sprintf("alter system stop server '%s'", serverInfo.String())
 				log.Info(sql)
 				if err = obclusterService.ExecuteSql(sql); err != nil {
