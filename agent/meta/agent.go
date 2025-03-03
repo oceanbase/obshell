@@ -18,8 +18,14 @@ package meta
 
 import (
 	"fmt"
+	"net"
+	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/utils"
 )
 
 type AgentIdentity string
@@ -66,6 +72,8 @@ type Agent interface {
 	GetVersion() string
 	GetAgentInfo() AgentInfo
 	String() string
+	IsIPv6() bool
+	GetLocalIp() string
 	Equal(other AgentInfoInterface) bool
 }
 
@@ -80,11 +88,25 @@ func (agentInfo *AgentInfo) GetIp() string {
 	return agentInfo.Ip
 }
 
+func (agentInfo *AgentInfo) GetLocalIp() string {
+	if agentInfo.IsIPv6() {
+		return constant.LOCAL_IP_V6
+	}
+	return constant.LOCAL_IP
+}
+
 func (agentInfo *AgentInfo) GetPort() int {
 	return agentInfo.Port
 }
 
-func (agentInfo *AgentInfo) String() string {
+func (agentInfo *AgentInfo) IsIPv6() bool {
+	return strings.Contains(agentInfo.Ip, ":")
+}
+
+func (agentInfo AgentInfo) String() string {
+	if agentInfo.IsIPv6() {
+		return fmt.Sprintf("[%s]:%d", agentInfo.Ip, agentInfo.Port)
+	}
 	return fmt.Sprintf("%s:%d", agentInfo.Ip, agentInfo.Port)
 }
 
@@ -199,21 +221,76 @@ func NewAgentInfo(ip string, port int) *AgentInfo {
 	}
 }
 
-func NewAgentInfoByString(info string) *AgentInfo {
-	portIndex := strings.LastIndex(info, ":")
-	if portIndex == -1 {
-		return nil
+func ConvertAddressToAgentInfo(host string) (*AgentInfo, error) {
+	if host == "" {
+		return nil, errors.New("host is empty")
+	}
+	if strings.Contains(host, ".") {
+		// If the host contains '.', it might be an IPv4 address, but further validation is needed.
+		return convertIPv4ToAgentInfo(host)
+	} else {
+		// If the host contains '.', it might be an IPv6 address, but further validation is needed.
+		return convertIPv6ToAgentInfo(host)
+	}
+}
+
+func convertIPv4ToAgentInfo(host string) (*AgentInfo, error) {
+	var ip string
+	var err error
+	var port = constant.DEFAULT_AGENT_PORT
+	matches := strings.Split(host, ":")
+	if len(matches) == 1 {
+		return NewAgentInfo(matches[0], constant.DEFAULT_AGENT_PORT), nil
+	} else if len(matches) == 2 {
+		if port, err = strconv.Atoi(matches[1]); err != nil || !utils.IsValidPortValue(port) {
+			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", matches[1])
+		}
+		ip = matches[0]
+	} else {
+		return nil, errors.Errorf("Invalid server format: %s", host)
 	}
 
-	ip := info[:portIndex]
-	port, err := strconv.Atoi(info[portIndex+1:])
-	if err != nil {
-		return nil
+	ipv4 := net.ParseIP(ip)
+	if ipv4 == nil || ipv4.To4() == nil {
+		return nil, errors.Errorf("%s is not a valid IP address", ip)
 	}
-	return &AgentInfo{
-		Ip:   ip,
-		Port: port,
+	return NewAgentInfo(ip, port), nil
+}
+
+func convertIPv6ToAgentInfo(host string) (*AgentInfo, error) {
+	re := regexp.MustCompile(`(?:\[([0-9a-fA-F:]+)\]|([0-9a-fA-F:]+))(?:\:(\d+))?`)
+	matches := re.FindStringSubmatch(host)
+
+	if matches == nil {
+		return nil, errors.Errorf("Invalid server format: %s", host)
 	}
+
+	var ip string
+	var err error
+	var port = constant.DEFAULT_AGENT_PORT
+	if matches[1] != "" {
+		ip = matches[1]
+	} else {
+		ip = matches[2]
+	}
+
+	if matches[3] != "" {
+		if port, err = strconv.Atoi(matches[3]); err != nil || !utils.IsValidPortValue(port) {
+			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", matches[1])
+		}
+	}
+
+	ipv6 := net.ParseIP(ip)
+	if ipv6 == nil || ipv6.To4() != nil {
+		return nil, errors.Errorf("%s is not a valid IP address", ip)
+	}
+	return NewAgentInfo(ip, port), nil
+}
+
+func NewAgentInfoByString(info string) *AgentInfo {
+	// if err != nil, agent will be nil. So, no need to check err.
+	agent, _ := ConvertAddressToAgentInfo(info)
+	return agent
 }
 
 func NewAgentInfoByInterface(agentInfo AgentInfoInterface) *AgentInfo {

@@ -126,7 +126,11 @@ func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
 
 	for retryCount := 1; retryCount <= maxRetries; retryCount++ {
 		time.Sleep(retryInterval)
-		t.ExecuteLogf("observer health check, retry [%d/%d]", retryCount, maxRetries)
+		if retryCount%10 == 0 {
+			t.TimeoutCheck()
+		} else {
+			t.ExecuteLogf("observer health check, retry [%d/%d]", retryCount, maxRetries)
+		}
 
 		// Check if the observer process exists
 		if exist, err := process.CheckObserverProcess(); !exist || err != nil {
@@ -275,6 +279,7 @@ func fillStartConfig(config map[string]string) {
 
 func generateStartOpitonCmd(config map[string]string) string {
 	cmd := ""
+	agentIp := config[constant.CONFIG_LOCAL_IP]
 	for name, value := range startOptionsMap {
 		if val, ok := config[name]; ok {
 			if name == constant.CONFIG_RS_LIST {
@@ -284,6 +289,10 @@ func generateStartOpitonCmd(config map[string]string) string {
 			}
 			delete(config, name)
 		}
+	}
+
+	if meta.NewAgentInfo(agentIp, 0).IsIPv6() {
+		cmd += "--ipv6 "
 	}
 	return cmd
 }
@@ -495,14 +504,15 @@ func (t *CheckObserverForStartTask) checkObsvrProcConfig() error {
 
 func (t *AlterStartServerTask) Execute() error {
 	t.ExecuteInfoLog("exec start server sql")
-	conf, err := observerService.GetObConfigByName(constant.CONFIG_RPC_PORT)
-	if err != nil {
+	var rpcPort int
+	if err := observerService.GetObConfigValueByName(constant.CONFIG_RPC_PORT, &rpcPort); err != nil {
 		return errors.Wrap(err, "get rpc port failed")
 	}
 	if err := getOceanbaseInstance(); err != nil {
 		return err
 	}
-	sql := fmt.Sprintf("alter system start server '%s:%s'", meta.OCS_AGENT.GetIp(), conf.Value)
+
+	sql := fmt.Sprintf("alter system start server '%s'", meta.NewAgentInfo(meta.OCS_AGENT.GetIp(), rpcPort).String())
 	log.Info(sql)
 	if err := obclusterService.ExecuteSql(sql); err != nil {
 		return errors.Wrap(err, "alter start server failed")

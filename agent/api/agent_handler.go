@@ -35,18 +35,18 @@ var (
 	agentService = agentservice.AgentService{}
 )
 
-// @Summary		join the specified agent
-// @Description	join the specified agent
-// @Tags			agent
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string				true	"Authorization"
-// @Param			body			body	param.JoinApiParam	true	"agent info with zone name"
-// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure		400				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/agent [post]
-// @Router			/api/v1/agent/join [post]
+//	@Summary		join the specified agent
+//	@Description	join the specified agent
+//	@Tags			agent
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			body			body	param.JoinApiParam	true	"agent info with zone name"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/agent [post]
+//	@Router			/api/v1/agent/join [post]
 func agentJoinHandler(c *gin.Context) {
 	var param param.JoinApiParam
 	if err := c.BindJSON(&param); err != nil {
@@ -54,7 +54,7 @@ func agentJoinHandler(c *gin.Context) {
 		return
 	}
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not single agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not single agent", meta.OCS_AGENT.String()))
 		return
 	}
 
@@ -96,18 +96,18 @@ func agentJoinHandler(c *gin.Context) {
 	common.SendResponse(c, task.NewDagDetailDTO(dag), nil)
 }
 
-// @Summary		remove the specified agent
-// @Description	remove the specified agent
-// @Tags			agent
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string			true	"Authorization"
-// @Param			body			body	meta.AgentInfo	true	"agent info"
-// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure		400				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/agent [delete]
-// @Router			/api/v1/agent/remove [post]
+//	@Summary		remove the specified agent
+//	@Description	remove the specified agent
+//	@Tags			agent
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string			true	"Authorization"
+//	@Param			body			body	meta.AgentInfo	true	"agent info"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/agent [delete]
+//	@Router			/api/v1/agent/remove [post]
 func agentRemoveHandler(c *gin.Context) {
 	var param meta.AgentInfo
 	if err := c.BindJSON(&param); err != nil {

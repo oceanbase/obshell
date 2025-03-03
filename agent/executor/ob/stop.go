@@ -18,8 +18,6 @@ package ob
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -239,12 +237,10 @@ func (t *ExecStopSqlTask) stopServer() (err error) {
 	}
 	for _, server := range t.scope.Target {
 		t.ExecuteLogf("Stop %s", server)
-		info := strings.Split(server, ":")
-		ip := info[0]
-		port, _ := strconv.Atoi(info[1])
+		serverInfo, err := meta.ConvertAddressToAgentInfo(server)
 		for _, agent := range agents {
-			if ip == agent.Ip && port == agent.Port {
-				sql := fmt.Sprintf("alter system stop server '%s:%d'", ip, agent.RpcPort)
+			if serverInfo.Ip == agent.Ip && serverInfo.Port == agent.Port {
+				sql := fmt.Sprintf("alter system stop server '%s'", serverInfo.String())
 				log.Info(sql)
 				if err = obclusterService.ExecuteSql(sql); err != nil {
 					return err

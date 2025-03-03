@@ -17,8 +17,6 @@
 package ob
 
 import (
-	"strconv"
-	"strings"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -62,10 +60,11 @@ func (t *MinorFreezeTask) GetAllObServer() (servers []oceanbase.OBServer, err er
 
 	case SCOPE_SERVER:
 		for _, server := range t.scope.Target {
-			info := strings.Split(server, ":")
-			ip := info[0]
-			port, _ := strconv.Atoi(info[1])
-			server, err := obclusterService.GetOBServerByAgentInfo(meta.AgentInfo{Ip: ip, Port: port})
+			serverInfo, err := meta.ConvertAddressToAgentInfo(server)
+			if err != nil {
+				return nil, errors.Wrap(err, "convert address to agent info failed")
+			}
+			server, err := obclusterService.GetOBServerByAgentInfo(*serverInfo)
 			if err != nil {
 				return nil, errors.Wrap(err, "get server by agent info failed")
 			}
@@ -123,11 +122,11 @@ func (t *MinorFreezeTask) isMinorFreezeOver(servers []oceanbase.OBServer, oldChe
 			// checkpoint_scn is 0, means there is no ls in this server
 			continue
 		} else if checkpointScn > oldCheckpointScn[server] {
-			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn %+v bigger than expired timestamp %+v, check pass ", server.SvrIp, server.SvrPort, checkpointScn, oldCheckpointScn[server])
+			t.ExecuteLogf("[server: %s]smallest checkpoint_scn %+v bigger than expired timestamp %+v, check pass ", meta.NewAgentInfo(server.SvrIp, server.SvrPort).String(), checkpointScn, oldCheckpointScn[server])
 			checkedServer[server] = true
 			continue
 		} else {
-			t.ExecuteLogf("[server: %s:%d]smallest checkpoint_scn: %+v smaller than expired timestamp %+v, waiting...", server.SvrIp, server.SvrPort, checkpointScn, oldCheckpointScn[server])
+			t.ExecuteLogf("[server: %s]smallest checkpoint_scn: %+v smaller than expired timestamp %+v, waiting...", meta.NewAgentInfo(server.SvrIp, server.SvrPort).String(), checkpointScn, oldCheckpointScn[server])
 			return false, nil
 		}
 	}

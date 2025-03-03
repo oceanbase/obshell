@@ -394,7 +394,7 @@ func (s *AgentService) CheckCanBeTakeOverMaster() (bool, error) {
 	}
 
 	if !self_exist {
-		return false, fmt.Errorf("%s:%d not in cluster", meta.OCS_AGENT.GetIp(), meta.RPC_PORT)
+		return false, fmt.Errorf("%s not in cluster", meta.NewAgentInfo(meta.OCS_AGENT.GetIp(), meta.RPC_PORT).String())
 	}
 
 	return other_exist, nil

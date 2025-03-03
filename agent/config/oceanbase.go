@@ -21,12 +21,13 @@ import (
 	"strings"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/meta"
 )
 
 func NewObDataSourceConfig() *ObDataSourceConfig {
 	return &ObDataSourceConfig{
 		username:        constant.DB_USERNAME,
-		ip:              constant.LOCAL_IP,
+		ip:              meta.OCS_AGENT.GetLocalIp(),
 		dBName:          constant.DB_OCS,
 		charset:         constant.DB_DEFAULT_CHARSET,
 		parseTime:       true,
@@ -182,7 +183,7 @@ func (config *ObDataSourceConfig) GetSkipPwdCheck() bool {
 }
 
 func (config *ObDataSourceConfig) GetDSN() string {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/", config.username, config.password, config.ip, config.port)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/", config.username, config.password, meta.NewAgentInfo(config.ip, config.port).String())
 	if config.dBName != "" {
 		dsn += config.dBName
 	}

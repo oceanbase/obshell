@@ -104,7 +104,7 @@ func sendRequsetForForward(c *gin.Context, ctx context.Context, agentInfo meta.A
 	}
 	request.SetBody(body)
 
-	uri := fmt.Sprintf("%s://%s:%d%s", global.Protocol, agentInfo.GetIp(), agentInfo.GetPort(), c.Request.URL)
+	uri := fmt.Sprintf("%s://%s%s", global.Protocol, agentInfo.String(), c.Request.URL)
 	response, err := request.Execute(c.Request.Method, uri)
 	if err != nil {
 		log.WithError(err).Errorf("API response failed : [%v %v, client=%v, agent=%v]", c.Request.Method, c.Request.URL, c.ClientIP(), agentInfo.String())

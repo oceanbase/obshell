@@ -126,7 +126,7 @@ func (t *AgentBeFollowerTask) Execute() error {
 func AddFollowerAgent(param param.JoinMasterParam) *errors.OcsAgentError {
 	targetToken, err := secure.Crypter.Decrypt(param.Token)
 	if err != nil {
-		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s:%d' failed: %v", param.JoinApiParam.AgentInfo.GetIp(), param.JoinApiParam.AgentInfo.GetPort(), err)
+		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.JoinApiParam.AgentInfo.String(), err)
 	}
 
 	agentInstance := meta.NewAgentInstanceByAgentInfo(&param.JoinApiParam.AgentInfo, param.JoinApiParam.ZoneName, meta.FOLLOWER, param.Version)
@@ -144,7 +144,7 @@ func UpdateFollowerAgent(agentInstance meta.Agent, param param.JoinMasterParam) 
 
 	targetToken, err := secure.Crypter.Decrypt(param.Token)
 	if err != nil {
-		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s:%d' failed: %v", param.JoinApiParam.AgentInfo.GetIp(), param.JoinApiParam.AgentInfo.GetPort(), err)
+		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.JoinApiParam.AgentInfo.String(), err)
 	}
 
 	if err = agentService.UpdateAgent(agentInstance, param.HomePath, param.Os, param.Architecture, param.PublicKey, targetToken); err != nil {

@@ -90,7 +90,8 @@ func (t *ClusterBoostrapTask) generateBootstrapCmd() (string, error) {
 		if !ok {
 			return "", fmt.Errorf("zone %s has no rs", zone)
 		}
-		list = append(list, fmt.Sprintf("ZONE '%s' SERVER '%s:%d'", zone, observerInfo.Ip, observerInfo.Port))
+		agent := meta.NewAgentInfo(observerInfo.Ip, observerInfo.Port)
+		list = append(list, fmt.Sprintf("ZONE '%s' SERVER '%s'", zone, agent.String()))
 	}
 	bootstrapCmd = bootstrapCmd + strings.Join(list, ", ")
 	return bootstrapCmd, nil
@@ -113,7 +114,8 @@ func (t *ClusterBoostrapTask) execBootstrap(cmd string) error {
 func (t *ClusterBoostrapTask) addServers() error {
 	for zone, serverList := range t.unRS {
 		for _, server := range serverList {
-			sql := fmt.Sprintf("ALTER SYSTEM ADD SERVER '%s:%d' ZONE '%s'", server.Ip, server.Port, zone)
+			agent := meta.NewAgentInfo(server.Ip, server.Port)
+			sql := fmt.Sprintf("ALTER SYSTEM ADD SERVER '%s' ZONE '%s'", agent.String(), zone)
 			t.ExecuteInfoLogf("add server: %s", sql)
 			if err := obclusterService.ExecuteSqlWithoutIdentityCheck(sql); err != nil {
 				return err

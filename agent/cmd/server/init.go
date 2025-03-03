@@ -98,14 +98,12 @@ func (a *Agent) initSqlite() (err error) {
 // initServerForUpgrade will only start the unix socket service  When upgrading.
 func (a *Agent) initServerForUpgrade() error {
 	log.Info("init local server [upgrade mode]")
-	serverConfig := config.ServerConfig{
-		Ip:          "0.0.0.0",
-		Port:        meta.OCS_AGENT.GetPort(),
-		Address:     fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
-		RunDir:      path.RunDir(),
-		UpgradeMode: true,
+	serverConfig, err := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), true)
+	if err != nil {
+		return err
 	}
-	a.server = web.NewServerOnlyLocal(config.DebugMode, serverConfig)
+
+	a.server = web.NewServerOnlyLocal(config.DebugMode, *serverConfig)
 	socketListener, err := a.server.NewUnixListener()
 	if err != nil {
 		return err
@@ -227,14 +225,9 @@ func (a *Agent) checkAgentInfo() {
 // initServer will only initialize the Server and will not start the service.
 func (a *Agent) initServer() {
 	log.Info("init server")
-	serverConfig := config.ServerConfig{
-		Ip:      "0.0.0.0",
-		Port:    meta.OCS_AGENT.GetPort(),
-		Address: fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
-		RunDir:  path.RunDir(),
-	}
+	serverConfig, _ := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), false)
 	log.Infof("server config is %v", serverConfig)
-	a.server = web.NewServer(config.DebugMode, serverConfig)
+	a.server = web.NewServer(config.DebugMode, *serverConfig)
 	a.startChan = make(chan bool, 1)
 }
 

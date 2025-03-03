@@ -25,6 +25,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -71,7 +72,7 @@ func newRemoveCmd() *cobra.Command {
 }
 
 func agentRemove(flags *AgentRemoveFlags) error {
-	targetAgent, err := NewAgentByString(flags.server)
+	targetAgent, err := meta.ConvertAddressToAgentInfo(flags.server)
 	if err != nil {
 		return err
 	}

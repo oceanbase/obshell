@@ -27,6 +27,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/global"
@@ -110,7 +111,7 @@ func clusterScaleIn(cmd *cobra.Command, flags *ClusterScaleInFlags) (err error) 
 }
 
 func deleteServer(server string, forceKill bool) (*task.DagDetailDTO, error) {
-	targetAgentInfo, err := NewAgentByString(server)
+	targetAgentInfo, err := meta.ConvertAddressToAgentInfo(server)
 	if err != nil {
 		return nil, err
 	}

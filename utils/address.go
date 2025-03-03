@@ -14,29 +14,28 @@
  * limitations under the License.
  */
 
-package constant
+package utils
 
-const (
-	// source config default value
-	DB_USERNAME = "root"
-	LOCAL_IP    = "127.0.0.1"
-	LOCAL_IP_V6 = "::1"
-
-	DB_DEFAILT_TIMEOUT  = 10
-	DB_DEFAULT_CHARSET  = "utf8mb4"
-	DB_DEFAULT_LOCATION = "Local"
-
-	// gorm config default value
-	DB_DEFAULT_MAX_IDLE_CONNS    = 1
-	DB_DEFAULT_MAX_OPEN_CONNS    = 5
-	DB_DEFAULT_CONN_MAX_LIFETIME = 0
-
-	// create table default value
-	DB_SINGULAR_TABLE = true
+import (
+	"net"
+	"strconv"
 )
 
-const (
-	MAX_GET_INSTANCE_RETRIES      = 600
-	GET_INSTANCE_RETRY_INTERVAL   = 1
-	UPGRADE_BINARY_RETRY_INTERVAL = 10
-)
+func IsValidIp(ip string) bool {
+	return net.ParseIP(ip) != nil
+}
+
+func IsValidPort(port string) bool {
+	if port == "" {
+		return true
+	}
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return false
+	}
+	return IsValidPortValue(p)
+}
+
+func IsValidPortValue(p int) bool {
+	return p > 1024 && p < 65536
+}

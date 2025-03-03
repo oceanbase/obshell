@@ -564,7 +564,7 @@ func CreateSubTaskInstance(
 		},
 		executeTimes:  executeTimes,
 		executerAgent: executerAgent,
-		localAgentKey: fmt.Sprintf("%s:%d", executerAgent.GetIp(), executerAgent.GetPort()),
+		localAgentKey: executerAgent.String(),
 	}
 
 	taskInstance := reflect.New(TASK_TYPE[taskType]).Elem()

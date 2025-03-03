@@ -182,7 +182,7 @@ func (s *taskService) StartSubTask(subtask task.ExecutableTask) error {
 		} else if taskInstanceBO.ExecuteTimes != subtask.GetExecuteTimes() {
 			return fmt.Errorf("failed to start task: sub task %d execute times is %d now", subtask.GetID(), taskInstanceBO.ExecuteTimes)
 		} else if taskInstanceBO.ExecuterAgentIp != subtask.GetExecuteAgent().Ip || taskInstanceBO.ExecuterAgentPort != subtask.GetExecuteAgent().Port {
-			return fmt.Errorf("failed to start task: sub task %d execute agent is %s:%d now", subtask.GetID(), taskInstanceBO.ExecuterAgentIp, taskInstanceBO.ExecuterAgentPort)
+			return fmt.Errorf("failed to start task: sub task %d execute agent is %s now", subtask.GetID(), meta.NewAgentInfo(taskInstanceBO.ExecuterAgentIp, taskInstanceBO.ExecuterAgentPort).String())
 		}
 	}
 	subtask.SetState(taskInstanceBO.State)

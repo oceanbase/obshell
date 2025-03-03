@@ -32,7 +32,7 @@ import (
 
 func agentJoinHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsMasterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not master", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not master", meta.OCS_AGENT.String()))
 		return
 	}
 
@@ -53,7 +53,7 @@ func agentJoinHandler(c *gin.Context) {
 	}
 
 	if agentInstance != nil {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d already exists", agentInstance.Ip, agentInstance.Port))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s already exists", agentInstance.String()))
 		return
 	} else {
 		if err := agent.AddFollowerAgent(param); err != nil {
@@ -73,7 +73,7 @@ func agentRemoveHandler(c *gin.Context) {
 	} else if meta.OCS_AGENT.IsSingleAgent() {
 		common.SendResponse(c, task.DagDetailDTO{}, nil)
 	} else {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is %s", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), meta.OCS_AGENT.GetIdentity()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is %s", meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity()))
 	}
 }
 
@@ -132,7 +132,7 @@ func updateAllAgentsHandler(c *gin.Context) {
 
 func obServerDeployHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsFollowerAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not follower agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not follower agent", meta.OCS_AGENT.String()))
 		return
 	}
 	var dirs param.DeployTaskParams
@@ -151,7 +151,7 @@ func obServerDeployHandler(c *gin.Context) {
 
 func obServerDestroyHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsFollowerAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not follower agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not follower agent", meta.OCS_AGENT.String()))
 		return
 	}
 	dag, err := ob.CreateDestroyDag()
@@ -228,7 +228,7 @@ func agentUpdateHandler(c *gin.Context) {
 
 func takeOverAgentUpdateBinaryHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsTakeover() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not takeover agent", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not takeover agent", meta.OCS_AGENT.String()))
 		return
 	}
 

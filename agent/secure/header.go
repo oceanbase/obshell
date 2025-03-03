@@ -20,13 +20,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oceanbase/obshell/agent/lib/json"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/crypto"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -50,7 +49,7 @@ func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, 
 	headers := make(map[string]string)
 	pk := GetAgentPublicKey(agentInfo)
 	if pk == "" {
-		log.Warnf("no key for agent '%s:%d'", agentInfo.GetIp(), agentInfo.GetPort())
+		log.Warnf("no key for agent '%s'", agentInfo.String())
 		return nil
 	}
 

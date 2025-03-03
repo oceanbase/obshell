@@ -104,11 +104,17 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
+	rpcPort, err := strconv.Atoi(param.ObConfigs[constant.CONFIG_RPC_PORT])
+	if err != nil {
+		return nil, errors.Occur(errors.ErrIllegalArgument, "rpc_port is not a number")
+	}
+	srvInfo := meta.NewAgentInfo(param.AgentInfo.Ip, rpcPort)
+
 	// Check the server is not already in the cluster.
-	if exist, err := obclusterService.IsServerExist(param.AgentInfo.Ip, param.ObConfigs[constant.CONFIG_RPC_PORT]); err != nil {
+	if exist, err := obclusterService.IsServerExist(*srvInfo); err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	} else if exist {
-		return nil, errors.Occurf(errors.ErrBadRequest, "server %s:%s already exists in the cluster", param.AgentInfo.Ip, param.ObConfigs[constant.CONFIG_RPC_PORT])
+		return nil, errors.Occurf(errors.ErrBadRequest, "server %s already exists in the cluster", srvInfo.String())
 	}
 
 	// Create Cluster Scale Out Dag
@@ -1207,9 +1213,15 @@ func (t *AddServerTask) Execute() error {
 		return errors.New("get zone failed")
 	}
 
-	err := obclusterService.AddServer(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone)
+	port, err := strconv.Atoi(configs[constant.CONFIG_MYSQL_PORT])
 	if err != nil {
-		return errors.Errorf("add server %s:%s failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
+		return errors.Wrap(err, "convert port to integer failed")
+	}
+
+	serverInfo := meta.NewAgentInfo(agentInfo.Ip, port)
+	err = obclusterService.AddServer(*serverInfo, zone)
+	if err != nil {
+		return errors.Errorf("add server %s failed", serverInfo.String())
 	}
 
 	t.GetContext().SetParam(PARAM_ADD_SERVER_SUCCEED, true)
@@ -1248,17 +1260,23 @@ func (t *AddServerTask) Rollback() error {
 		return errors.New("get zone failed")
 	}
 
-	// Check whether addserver task execute successfully.
-	exist, err := obclusterService.IsServerExistWithZone(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone)
+	port, err := strconv.Atoi(configs[constant.CONFIG_RPC_PORT])
 	if err != nil {
-		return errors.Errorf("check server %s:%s exist failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
+		return errors.Wrap(err, "convert rpc port to integer failed")
+	}
+	serverInfo := meta.NewAgentInfo(agentInfo.Ip, port)
+
+	// Check whether addserver task execute successfully.
+	exist, err := obclusterService.IsServerExistWithZone(*serverInfo, zone)
+	if err != nil {
+		return errors.Errorf("check server %s exist failed", agentInfo.String())
 	}
 	if !exist {
 		return nil
 	}
 
-	if err = obclusterService.DeleteServerInZone(agentInfo.Ip, configs[constant.CONFIG_RPC_PORT], zone); err != nil {
-		return errors.Errorf("delete server %s:%s failed", agentInfo.Ip, configs[constant.CONFIG_RPC_PORT])
+	if err = obclusterService.DeleteServerInZone(*serverInfo, zone); err != nil {
+		return errors.Errorf("delete server %s failed", serverInfo.String())
 	}
 	return nil
 }

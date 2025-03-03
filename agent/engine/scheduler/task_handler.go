@@ -238,7 +238,7 @@ func (s *Scheduler) updateExecuterAgent(node *task.Node, subTask task.Executable
 		ctx := node.GetContext()
 		agents := ctx.GetParam(task.EXECUTE_AGENTS)
 		if agents == nil { // Not specified execute agent.
-			log.withScheduler(s).Infof("subtask %d update executer agent %s:%d to %s:%d\n", subTask.GetID(), subTask.GetExecuteAgent().Ip, subTask.GetExecuteAgent().Port, meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort())
+			log.withScheduler(s).Infof("subtask %d update executer agent %s to %s\n", subTask.GetID(), subTask.GetExecuteAgent().String(), meta.OCS_AGENT.String())
 			subTask.SetExecuteAgent(*meta.NewAgentInfoByInterface(meta.OCS_AGENT))
 		}
 	}
@@ -278,14 +278,14 @@ func (s *Scheduler) runSubTask(subTask *task.RemoteTask) error {
 		}
 	} else {
 		if err := s.sendRunSubTaskRpc(subTask); err != nil {
-			return errors.Wrapf(err, "send run sub task rpc to %s:%d error", agentInfo.Ip, agentInfo.Port)
+			return errors.Wrapf(err, "send run sub task rpc to %s error", agentInfo.String())
 		}
 	}
 	return nil
 }
 
 func (s *Scheduler) sendRunSubTaskRpc(subTask *task.RemoteTask) error {
-	log.withScheduler(s).Infof("send run sub task %d to %s:%d", subTask.TaskID, subTask.ExecuterAgent.Ip, subTask.ExecuterAgent.Port)
+	log.withScheduler(s).Infof("send run sub task %d to %s", subTask.TaskID, subTask.ExecuterAgent.String())
 	return secure.SendPostRequest(&subTask.ExecuterAgent, constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK, subTask, nil)
 }
 

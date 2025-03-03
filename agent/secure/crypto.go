@@ -88,19 +88,19 @@ func GetAgentPublicKey(agent meta.AgentInfoInterface) string {
 	pk, err := getPublicKeyByAgentInfo(agent)
 	if err != nil {
 		// Need to query sqlite instead.
-		log.WithError(err).Errorf("query oceanbase '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+		log.WithError(err).Errorf("query oceanbase '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 	}
 	if pk != "" {
 		err = updateAgentPublicKey(agent, pk)
 		if err != nil {
-			log.WithError(err).Errorf("update sqlite '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+			log.WithError(err).Errorf("update sqlite '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 		}
 		// Although backup failed, the key should be returned.
 		return pk
 	}
 	pk, err = getPublicKeyByAgentInfo(agent)
 	if err != nil {
-		log.WithError(err).Errorf("query sqlite '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+		log.WithError(err).Errorf("query sqlite '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 	}
 	if pk != "" {
 		return pk

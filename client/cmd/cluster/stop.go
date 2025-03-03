@@ -116,7 +116,7 @@ func clusterStop(flags *ClusterStopFlags) (err error) {
 	}
 
 	if flags.server == "" && flags.zone == "" && !flags.global {
-		flags.server = fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.Agent.GetPort())
+		flags.server = agentStatus.Agent.String()
 	}
 
 	if err = CheckAllAgentMaintenance(); err != nil {

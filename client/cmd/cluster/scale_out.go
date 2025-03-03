@@ -18,8 +18,6 @@ package cluster
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -107,7 +105,7 @@ func clusterScaleOut(cmd *cobra.Command, flags *ClusterScaleOutFlags) (err error
 		return err
 	}
 
-	targetAgentInfo, err := NewAgentByString(flags.agent)
+	targetAgentInfo, err := meta.ConvertAddressToAgentInfo(flags.agent)
 	if err != nil {
 		return err
 	}
@@ -172,30 +170,4 @@ func buildScaleOutParam(flags *ClusterScaleOutFlags) (*param.ScaleOutParam, erro
 
 func scaleOutCmdExample() string {
 	return `  obshell cluster scale-out -s 192.168.1.1:2886 -z zone1 --rp ****`
-}
-
-func NewAgentByString(str string) (*meta.AgentInfo, error) {
-	stdio.Verbosef("Parse target agent info from string: %s", str)
-	info := strings.Split(str, ":")
-	if !isValidIp(info[0]) {
-		return nil, errors.Errorf("Invalid ip address: %s", info[0])
-	}
-	//If the observer provides a port number, use the port number,
-	//otherwise use the default port number 2886
-	agent := &meta.AgentInfo{
-		Ip:   info[0],
-		Port: constant.DEFAULT_AGENT_PORT,
-	}
-	if len(info) > 1 {
-		if info[1] == "" {
-			return nil, errors.Errorf("Invalid server format: '%s:'", info[0])
-		}
-		port, err := strconv.Atoi(info[1])
-		if err != nil || !isValidPortStr(info[1]) {
-			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", info[1])
-		}
-		agent.Port = port
-	}
-	stdio.Verbosef("Parsed target agent info: %v", agent)
-	return agent, nil
 }

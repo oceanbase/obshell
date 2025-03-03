@@ -86,7 +86,7 @@ func EncryptBodyWithRsa(agentInfo meta.AgentInfoInterface, body interface{}) (en
 	}
 	pk := GetAgentPublicKey(agentInfo)
 	if pk == "" {
-		log.Warnf("no key for agent '%s:%d'", agentInfo.GetIp(), agentInfo.GetPort())
+		log.Warnf("no key for agent '%s'", agentInfo.String())
 		return
 	}
 	encryptedBody, err = crypto.RSAEncrypt(mBody, pk)

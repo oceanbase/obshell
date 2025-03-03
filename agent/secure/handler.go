@@ -34,7 +34,7 @@ func GetSecret(ctx context.Context) *meta.AgentSecret {
 }
 
 func sendGetSecretApi(agentInfo meta.AgentInfoInterface) *meta.AgentSecret {
-	log.Infof("Send get secret request from '%s:%d'", agentInfo.GetIp(), agentInfo.GetPort())
+	log.Infof("Send get secret request from '%s'", agentInfo.String())
 	ret := &meta.AgentSecret{}
 	err := http.SendGetRequest(agentInfo, "/api/v1/secret", nil, ret)
 	if err != nil {

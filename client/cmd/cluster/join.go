@@ -17,7 +17,6 @@
 package cluster
 
 import (
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -29,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -93,7 +93,7 @@ func agentJoin(cmd *cobra.Command, flags *AgentJoinFlags) error {
 	}
 	stdio.StopLoading()
 
-	targetAgent, err := NewAgentByString(flags.server)
+	targetAgent, err := meta.ConvertAddressToAgentInfo(flags.server)
 	if err != nil {
 		return err
 	}
@@ -172,36 +172,12 @@ func isValidRsList(rsList string) bool {
 	servers := strings.Split(rsList, ";")
 	for _, server := range servers {
 		if server != "" {
-			arr := strings.Split(server, ":")
-			if len(arr) != 3 {
-				return false
-			}
-			if !isValidIp(arr[0]) || !isValidPortStr(arr[1]) || !isValidPortStr(arr[2]) {
+			if _, err := meta.ConvertAddressToAgentInfo(server); err != nil {
 				return false
 			}
 		}
 	}
 	return true
-}
-
-func isValidIp(ip string) bool {
-	ipRegexp := regexp.MustCompile(`^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$`)
-	return ipRegexp.MatchString(ip)
-}
-
-func isValidPortStr(port string) bool {
-	if port == "" {
-		return true
-	}
-	p, err := strconv.Atoi(port)
-	if err != nil {
-		return false
-	}
-	return isValidPort(p)
-}
-
-func isValidPort(port int) bool {
-	return port > 1024 && port < 65536
 }
 
 func isValidLogLevel(level string) bool {
@@ -221,14 +197,14 @@ func checkServerConfigFlags(config map[string]string) error {
 	stdio.Verbose("Check whether the configs is valid")
 	if mysqlPort, ok := config[constant.CONFIG_MYSQL_PORT]; ok {
 		stdio.Verbosef("Check mysql port: %s", mysqlPort)
-		if !isValidPortStr(mysqlPort) {
+		if !utils.IsValidPort(mysqlPort) {
 			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", mysqlPort)
 		}
 	}
 
 	if rpcPort, ok := config[constant.CONFIG_RPC_PORT]; ok {
 		stdio.Verbosef("Check rpc port: %s", rpcPort)
-		if !isValidPortStr(rpcPort) {
+		if !utils.IsValidPort(rpcPort) {
 			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", rpcPort)
 		}
 	}

@@ -32,6 +32,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/script"
 	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/lib/path"
+	"github.com/oceanbase/obshell/agent/meta"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
@@ -266,18 +267,20 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 		if err != nil {
 			return err
 		}
-		log.Infof("server %s:%d used resource: %v", server.SvrIp, server.SvrPort, gatheredUnitInfo)
+
+		serverStr := meta.NewAgentInfo(server.SvrIp, server.SvrPort).String()
+		log.Infof("server %s used resource: %v", serverStr, gatheredUnitInfo)
 		if server.CpuCapacity-gatheredUnitInfo.MinCpu < unit.MinCpu ||
 			server.CpuCapacityMax-gatheredUnitInfo.MaxCpu < unit.MaxCpu {
-			checkErr = errors.Errorf("server %s:%d CPU resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s CPU resource not enough", serverStr)
 			continue
 		}
 		if server.MemCapacity-gatheredUnitInfo.MemorySize < unit.MemorySize {
-			checkErr = errors.Errorf("server %s:%d MEMORY_SIZE resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s MEMORY_SIZE resource not enough", serverStr)
 			continue
 		}
 		if server.LogDiskCapacity-gatheredUnitInfo.LogDiskSize < unit.LogDiskSize {
-			checkErr = errors.Errorf("server %s:%d LOG_DISK_SIZE resource not enough", server.SvrIp, server.SvrPort)
+			checkErr = errors.Errorf("server %s LOG_DISK_SIZE resource not enough", serverStr)
 			continue
 		}
 		validServer += 1
@@ -298,7 +301,7 @@ type gatheredUnitInfo struct {
 func gatherAllUnitsOnServer(svrIp string, svrPort int) (*gatheredUnitInfo, error) {
 	units, err := obclusterService.GetObUnitsOnServer(svrIp, svrPort)
 	if err != nil {
-		return nil, errors.Errorf("Get all units on server %s:%d failed.", svrIp, svrPort)
+		return nil, errors.Errorf("Get all units on server %s failed.", meta.NewAgentInfo(svrIp, svrPort).String())
 	}
 	used := &gatheredUnitInfo{}
 	for _, unit := range units {

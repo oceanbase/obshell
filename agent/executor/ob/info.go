@@ -217,16 +217,11 @@ func IsValidScope(s *param.Scope) (err error) {
 			return errors.New("server scope must have target")
 		}
 		for _, server := range s.Target {
-			info := strings.Split(server, ":")
-			if len(info) != 2 {
-				return errors.Errorf("invalid server '%s'", server)
-			}
-			port, err := strconv.Atoi(info[1])
+			agentInfo, err := meta.ConvertAddressToAgentInfo(server)
 			if err != nil {
-				return errors.Errorf("invalid server '%s' port '%s'", server, info[1])
+				return err
 			}
-			agentInfo := meta.AgentInfo{Ip: info[0], Port: port}
-			exist, err := agentService.IsAgentExist(&agentInfo)
+			exist, err := agentService.IsAgentExist(agentInfo)
 			if err != nil {
 				return err
 			}
@@ -269,14 +264,14 @@ func GetObAgents() (agents []meta.AgentInfo, err error) {
 		}
 
 		for _, server := range serversWithRpcPort {
-			agents = append(agents, meta.AgentInfo{Ip: server[0], Port: meta.OCS_AGENT.GetPort()})
+			agents = append(agents, *meta.NewAgentInfo(server.GetIp(), server.GetPort()))
 		}
 	}
 	return
 
 }
 
-func GetAllServerFromOBConf() (serversWithRpcPort [][2]string, err error) {
+func GetAllServerFromOBConf() (serversWithRpcPort []meta.AgentInfoInterface, err error) {
 	f := path.ObConfigPath()
 	log.Info("get conf from ", f)
 	file, err := os.Open(f)
@@ -291,7 +286,7 @@ func GetAllServerFromOBConf() (serversWithRpcPort [][2]string, err error) {
 	}
 	re := regexp.MustCompile("\x00*([_a-zA-Z]+)=(.*)")
 
-	var servers, items []string
+	var servers []string
 	for scanner.Scan() {
 		line := scanner.Text()
 		match := re.FindStringSubmatch(line)
@@ -301,15 +296,11 @@ func GetAllServerFromOBConf() (serversWithRpcPort [][2]string, err error) {
 		if match[1] == ETC_KEY_ALL_SERVER_LIST {
 			servers = strings.Split(match[2], ",")
 			for _, server := range servers {
-				items = strings.Split(server, ":")
-				if len(items) != 2 {
-					return nil, errors.Errorf("invalid server '%s'", server)
-				}
-				_, err = strconv.Atoi(items[1])
+				serverInfo, err := meta.ConvertAddressToAgentInfo(server)
 				if err != nil {
-					return nil, errors.Wrapf(err, "invalid server '%s' port '%s'", server, items[1])
+					return nil, err
 				}
-				serversWithRpcPort = append(serversWithRpcPort, [2]string{items[0], items[1]})
+				serversWithRpcPort = append(serversWithRpcPort, serverInfo)
 			}
 			log.Infof("get servers from ob.conf %v", serversWithRpcPort)
 			return
