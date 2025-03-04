@@ -104,9 +104,15 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
-	rpcPort, err := strconv.Atoi(param.ObConfigs[constant.CONFIG_RPC_PORT])
-	if err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, "rpc_port is not a number")
+	var rpcPort int
+	rpcPortStr, ok := param.ObConfigs[constant.CONFIG_RPC_PORT]
+	if ok {
+		var err error
+		if rpcPort, err = strconv.Atoi(rpcPortStr); err != nil {
+			return nil, errors.Occur(errors.ErrIllegalArgument, "rpc_port is not a number")
+		}
+	} else {
+		rpcPort = constant.DEFAULT_RPC_PORT
 	}
 	srvInfo := meta.NewAgentInfo(param.AgentInfo.Ip, rpcPort)
 
