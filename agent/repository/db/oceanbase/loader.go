@@ -281,3 +281,12 @@ func loadObGormForTest(dsConfig *config.ObDataSourceConfig) error {
 	}
 	return nil
 }
+
+func LoadTempOceanbaseInstance(dsConfig *config.ObDataSourceConfig) (*gorm.DB, error) {
+	db, err := gorm.Open(driver.Open(dsConfig.GetDSN()))
+	if err != nil {
+		log.WithError(err).Error("open ob db failed")
+		return nil, err
+	}
+	return db, nil
+}

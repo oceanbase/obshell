@@ -21,6 +21,7 @@ type Template struct {
 	nodes       []*Node
 	Name        string
 	maintenance Maintainer
+	Type        string
 }
 
 func (template *Template) AddNode(node *Node) {
@@ -87,5 +88,10 @@ func (builder *TemplateBuilder) AddTemplate(template *Template) *TemplateBuilder
 
 func (builder *TemplateBuilder) SetMaintenance(maintenanceType Maintainer) *TemplateBuilder {
 	builder.Template.maintenance = maintenanceType
+	return builder
+}
+
+func (builder *TemplateBuilder) SetType(dagType DagType) *TemplateBuilder {
+	builder.Template.Type = DAG_TYPE_MAP[dagType]
 	return builder
 }

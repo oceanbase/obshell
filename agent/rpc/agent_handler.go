@@ -30,6 +30,34 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
+func agentAddTokenHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsMasterAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not master", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		return
+	}
+	var param param.AddTokenParam
+	ip := c.RemoteIP()
+	if err := c.Bind(&param); err != nil {
+		return
+	}
+	if param.AgentInfo.Ip == "" {
+		param.AgentInfo.Ip = ip
+	}
+
+	agentService := agentservice.AgentService{}
+	agentInstance, err := agentService.FindAgentInstance(&param.AgentInfo)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	if agentInstance != nil {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d already exists", agentInstance.Ip, agentInstance.Port))
+		return
+	}
+
+	common.SendResponse(c, nil, agent.AddSingleToken(param))
+}
+
 func agentJoinHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsMasterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not master", meta.OCS_AGENT.String()))

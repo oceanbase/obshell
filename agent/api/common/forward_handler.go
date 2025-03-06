@@ -44,7 +44,7 @@ func autoForward(c *gin.Context) {
 	agentService := agentservice.AgentService{}
 	master := agentService.GetMasterAgentInfo()
 	if master == nil {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "master agent not found"))
 		return
 	}
 
@@ -62,13 +62,13 @@ func autoForward(c *gin.Context) {
 
 	headerByte, exist := c.Get(constant.OCS_HEADER)
 	if headerByte == nil || !exist {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header not found"))
 		return
 	}
 
 	header, ok := headerByte.(secure.HttpHeader)
 	if !ok {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
 		return
 	}
 

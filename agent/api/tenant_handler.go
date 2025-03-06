@@ -53,6 +53,8 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, getTenantVariable)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, createUserHandler)
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, dropUserHandler)
 
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
@@ -586,4 +588,67 @@ func getTenantOverView(c *gin.Context) {
 	}
 	tenants, err := tenant.GetTenantsOverView()
 	common.SendResponse(c, tenants, err)
+}
+
+//	@ID				createUser
+//	@Summary		create user
+//	@Description	create user
+//	@Tags			tenant
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			body			body	param.CreateUserParam	true	"create user params"
+//	@Success		200				object	http.OcsAgentResponse
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/tenant/{name}/user [post]
+func createUserHandler(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	var param param.CreateUserParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, nil, tenant.CreateUser(name, param))
+}
+
+//	@ID				dropUser
+//	@Summary		drop user
+//	@Description	drop user
+//	@Tags			tenant
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			name			path	string				true	"tenant name"
+//	@Param			user			path	string				true	"user name"
+//	@Param			body			body	param.DropUserParam	true	"drop user params"
+//	@Success		200				object	http.OcsAgentResponse
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/tenant/{name}/user/{user} [delete]
+func dropUserHandler(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	userName := c.Param(constant.URI_PARAM_USER)
+	if userName == "" {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "User name is empty."))
+		return
+	}
+
+	var param param.DropUserParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	common.SendResponse(c, nil, tenant.DropUser(name, userName, param.RootPassword))
 }

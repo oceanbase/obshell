@@ -44,6 +44,7 @@ const (
 	NOT_UNDER_MAINTENANCE
 	GLOBAL_MAINTENANCE
 	TENANT_MAINTENANCE
+	OBPROXY_MAINTENACE
 )
 
 func UnMaintenance() Maintainer {
@@ -62,6 +63,12 @@ func TenantMaintenance(tenantName string) Maintainer {
 	return &maintenance{
 		maintenanceType: TENANT_MAINTENANCE,
 		maintenanceKey:  tenantName,
+	}
+}
+
+func ObproxyMaintenance() Maintainer {
+	return &maintenance{
+		maintenanceType: OBPROXY_MAINTENACE,
 	}
 }
 

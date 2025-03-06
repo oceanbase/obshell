@@ -71,7 +71,7 @@ func (s *taskService) convertNodeInstance(bo *bo.NodeInstance) (*task.Node, erro
 		return nil, err
 	}
 
-	return task.NewNodeWithId(bo.Id, bo.Name, bo.Type, bo.State, bo.Operator, bo.StructName, ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
+	return task.NewNodeWithId(bo.Id, bo.Name, int(bo.DagId), bo.Type, bo.State, bo.Operator, bo.StructName, ctx, s.isLocal, bo.StartTime, bo.EndTime), nil
 }
 
 // convertSubTaskInstance convert SubTaskInstance to task.ExecutableTask.

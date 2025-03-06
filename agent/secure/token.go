@@ -26,7 +26,13 @@ import (
 
 // NewToken generates a token for the agent to join/scale-out an existing cluster
 func NewToken(targetAgent meta.AgentInfoInterface) (string, error) {
-	token := uuid.New().String()
+	token, err := getTokenByAgentInfo(meta.OCS_AGENT)
+	if err != nil {
+		return "", err
+	}
+	if token == "" {
+		token = uuid.New().String()
+	}
 	if err := updateToken(meta.OCS_AGENT, token); err != nil {
 		return "", err
 	}
@@ -42,7 +48,7 @@ func VerifyToken(token string) error {
 	if err != nil {
 		return err
 	}
-	if agentToken != token {
+	if agentToken != token || token == "" {
 		return errors.New("wrong token")
 	}
 	return nil

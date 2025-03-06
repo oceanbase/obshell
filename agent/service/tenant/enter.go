@@ -28,6 +28,7 @@ const (
 	DBA_OB_UNIT_CONFIGS          = "oceanbase.DBA_OB_UNIT_CONFIGS"
 	DBA_OB_CLUSTER_EVENT_HISTORY = "oceanbase.DBA_OB_CLUSTER_EVENT_HISTORY"
 	DBA_RECYCLEBIN               = "oceanbase.DBA_RECYCLEBIN"
+	DBA_OB_USERS                 = "oceanbase.DBA_OB_USERS"
 
 	CDB_OB_SYS_VARIABLES        = "oceanbase.CDB_OB_SYS_VARIABLES"
 	CDB_OB_ARCHIVELOG           = "oceanbase.CDB_OB_ARCHIVELOG"

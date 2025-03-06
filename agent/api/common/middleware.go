@@ -31,6 +31,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	ocshttp "github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
@@ -307,20 +308,30 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		}
 
 		var err error
-		encryptedHeader := c.Request.Header.Get(constant.OCS_HEADER)
-		if encryptedHeader == "" {
+		if c.Request.Header.Get(constant.OCS_HEADER) == "" && c.Request.Header.Get(constant.OCS_AGENT_HEADER) == "" {
 			c.Next()
 			return
 		}
 		var header secure.HttpHeader
-		header, err = secure.DecryptHeader(c.Request.Header.Get(constant.OCS_HEADER))
-		if err != nil {
-			log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
-			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
-			return
+		if c.Request.Header.Get(constant.OCS_AGENT_HEADER) != "" {
+			header, err = secure.DecryptHeader(c.Request.Header.Get(constant.OCS_AGENT_HEADER))
+			if err != nil {
+				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
+				c.Abort()
+				SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "header decrypt failed"))
+				return
+			}
+			c.Set(constant.OCS_AGENT_HEADER, header)
+		} else {
+			header, err = secure.DecryptHeader(c.Request.Header.Get(constant.OCS_HEADER))
+			if err != nil {
+				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
+				c.Abort()
+				SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "header decrypt failed"))
+				return
+			}
+			c.Set(constant.OCS_HEADER, header)
 		}
-		c.Set(constant.OCS_HEADER, header)
 
 		for _, route := range secure.GetSkipBodyEncryptRoutes() {
 			if route == c.Request.RequestURI {
@@ -334,7 +345,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("read body failed, err: %v", err)
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+			SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "read body failed"))
 			return
 		}
 		if len(encryptedBody) == 0 {
@@ -345,7 +356,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("body decrypt failed, err: %v", err)
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+			SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "body decrypt failed"))
 			return
 		}
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
@@ -355,91 +366,210 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 	}
 }
 
-func Verify(skipRoutes ...string) func(*gin.Context) {
-	return func(c *gin.Context) {
-		log.WithContext(NewContextWithTraceId(c)).Infof("verfiy request: %s", c.Request.RequestURI)
-		for _, route := range skipRoutes {
-			if route == c.Request.RequestURI {
-				c.Next()
+func VerifyObRouters(c *gin.Context, curTs int64, header *secure.HttpHeader, passwordType secure.VerifyType) {
+	pass := false
+	var err error
+	switch meta.OCS_AGENT.GetIdentity() {
+	case meta.SINGLE:
+		if err = secure.VerifyToken(header.Token); err == nil {
+			pass = true
+			break
+		}
+		if meta.AGENT_PWD.Inited() {
+			if passwordType == secure.AGENT_PASSWORD {
+				if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
+					pass = true
+				} else {
+					decryptAgentPassword, err1 := secure.Decrypt(header.Auth)
+					if err1 == nil && secure.VerifyAuth(decryptAgentPassword, header.Ts, curTs, secure.AGENT_PASSWORD) == nil {
+						pass = true
+					}
+				}
+			} else {
+				err = errors.New("agent password has been set, use agent password to verify")
+			}
+		} else {
+			pass = true
+		}
+	case meta.FOLLOWER:
+		// Follower verify token only.
+		if err = secure.VerifyToken(header.Token); err == nil {
+			pass = true
+		} else {
+			if IsApiRoute(c) && header.ForwardType != secure.ManualForward {
+				// If the request is api and is not manual forwarded, auto forward it.
+				autoForward(c)
+				c.Abort()
 				return
 			}
 		}
-		var header secure.HttpHeader
-		headerByte, exist := c.Get(constant.OCS_HEADER)
+	case meta.MASTER:
+		if header.ForwardType == secure.ManualForward {
+			// When a request is manually forwarded, it must have a valid follower token.
+			if err = secure.VerifyTokenByAgentInfo(header.Token, header.ForwardAgent); err == nil {
+				pass = true
+			}
+			break
+		} else if header.ForwardType == secure.AutoForward {
+			// If the request is auto-forwarded, set IsAutoForwardedFlag to true for parse password.
+			c.Set(IsAutoForwardedFlag, true)
+			c.Set(FollowerAgentOfForward, header.ForwardAgent)
+		}
+		fallthrough
+	default:
+		if passwordType == secure.OCEANBASE_PASSWORD {
+			if !meta.OCEANBASE_PASSWORD_INITIALIZED && meta.AGENT_PWD.Inited() {
+				err = errors.New("oceanbase password is not initialized, use agent password to verify")
+			} else {
+				if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.OCEANBASE_PASSWORD); err == nil {
+					pass = true
+				}
+			}
+		} else {
+			if meta.OCEANBASE_PASSWORD_INITIALIZED && !meta.AGENT_PWD.Inited() {
+				err = errors.New("agent password is not initialized, use oceanbase password to verify")
+			} else if !meta.AGENT_PWD.Inited() {
+				pass = true
+			} else if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
+				pass = true
+			}
+		}
+	}
+	if !pass {
+		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
+		c.Abort()
+		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		return
+	}
+}
 
-		if headerByte == nil || !exist {
+func VerifyForSetAgentPassword(c *gin.Context, curTs int64, header *secure.HttpHeader, passwordType secure.VerifyType) {
+	pass := false
+	var err error
+	if meta.AGENT_PWD.Inited() {
+		if passwordType == secure.AGENT_PASSWORD {
+			if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
+				pass = true
+			}
+		} else {
+			err = errors.New("agent password has been set, use agent password to verify")
+		}
+	} else if meta.OCS_AGENT.IsClusterAgent() {
+		if passwordType == secure.OCEANBASE_PASSWORD {
+			if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.OCEANBASE_PASSWORD); err == nil {
+				pass = true
+			}
+		} else {
+			err = errors.New("oceanbase password has been set, use oceanbase password to verify")
+		}
+	} else if meta.OCS_AGENT.IsSingleAgent() {
+		pass = true
+	}
+	if !pass {
+		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
+		c.Abort()
+		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		return
+	}
+}
+
+func VerifyAgentRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, passwordType secure.VerifyType) {
+	pass := false
+	var err error
+	if passwordType != secure.AGENT_PASSWORD {
+		err = errors.New("Please use agent password to verify")
+	} else {
+		if meta.AGENT_PWD.Inited() {
+			if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
+				pass = true
+			}
+		} else {
+			err = errors.New("agent password is not initialized")
+		}
+	}
+	if !pass {
+		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
+		c.Abort()
+		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		return
+	}
+}
+
+func VerifyTaskRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, passwordType secure.VerifyType) {
+	id := c.Param("id")
+	if id == "" {
+		VerifyObRouters(c, curTs, header, passwordType)
+		return
+	}
+	if task.IsObproxyTask(id) {
+		VerifyAgentRoutes(c, curTs, header, passwordType)
+		return
+	} else {
+		VerifyObRouters(c, curTs, header, passwordType)
+		return
+	}
+}
+
+func Verify(routeType ...secure.RouteType) func(*gin.Context) {
+	return func(c *gin.Context) {
+		log.WithContext(NewContextWithTraceId(c)).Infof("verfiy request: %s", c.Request.RequestURI)
+		var header secure.HttpHeader
+		obHeaderByte, _ := c.Get(constant.OCS_HEADER)
+		agentHeaderByte, _ := c.Get(constant.OCS_AGENT_HEADER)
+		var headerByte any
+		var passwordType secure.VerifyType
+		if agentHeaderByte != nil {
+			passwordType = secure.AGENT_PASSWORD
+			headerByte = agentHeaderByte
+		} else if obHeaderByte != nil {
+			passwordType = secure.OCEANBASE_PASSWORD
+			headerByte = obHeaderByte
+		} else {
 			log.WithContext(NewContextWithTraceId(c)).Error("header not found")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header not found"))
 			return
 		}
-		pass := false
+		if passwordType != secure.AGENT_PASSWORD && len(routeType) != 0 && routeType[0] == secure.ROUTE_OBPROXY {
+			log.WithContext(NewContextWithTraceId(c)).Error("agent header not found")
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "aegnt header not found"))
+			return
+		}
 
 		header, ok := headerByte.(secure.HttpHeader)
 		if !ok {
 			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
-			return
-		}
-
-		switch meta.OCS_AGENT.GetIdentity() {
-		case meta.SINGLE:
-			pass = true
-		case meta.FOLLOWER:
-			// Follower verify token only.
-			if secure.VerifyToken(header.Token) == nil {
-				pass = true
-			} else {
-				if IsApiRoute(c) && header.ForwardType != secure.ManualForward {
-					// If the request is api and is not manual forwarded, auto forward it.
-					autoForward(c)
-					c.Abort()
-					return
-				}
-			}
-		case meta.MASTER:
-			if header.ForwardType == secure.ManualForward {
-				// When a request is manually forwarded, it must have a valid follower token.
-				if err := secure.VerifyTokenByAgentInfo(header.Token, header.ForwardAgent); err == nil {
-					pass = true
-				}
-				break
-			} else if header.ForwardType == secure.AutoForward {
-				// If the request is auto-forwarded, set IsAutoForwardedFlag to true for parse password.
-				c.Set(IsAutoForwardedFlag, true)
-				c.Set(FollowerAgentOfForward, header.ForwardAgent)
-			}
-			fallthrough
-		default:
-			curTs := time.Now().Unix()
-			if r, ok := c.Get(constant.REQUEST_RECEIVED_TIME); ok {
-				if receivedTs, ok := r.(int64); ok {
-					curTs = receivedTs
-				}
-			}
-			if err := secure.VerifyAuth(header.Auth, header.Ts, curTs); err != nil {
-				log.WithContext(NewContextWithTraceId(c)).Error(err.Error())
-			} else {
-				pass = true
-			}
-		}
-		if !pass {
-			log.WithContext(NewContextWithTraceId(c)).Error("Security verification failed")
-			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized))
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
 			return
 		}
 
 		// Verify the URI in the header matches the URI of the request.
 		if header.Uri != c.Request.RequestURI {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("verify uri failed, uri: %s, expect: %s", header.Uri, c.Request.RequestURI)
-			authErr := errors.Occur(errors.ErrUnauthorized)
+			authErr := errors.Occurf(errors.ErrUnauthorized, "uri mismatch")
 			c.Abort()
 			SendResponse(c, nil, authErr)
 			return
 		}
 
+		curTs := time.Now().Unix()
+		if r, ok := c.Get(constant.REQUEST_RECEIVED_TIME); ok {
+			if receivedTs, ok := r.(int64); ok {
+				curTs = receivedTs
+			}
+		}
+
+		if c.Request.RequestURI == constant.URI_AGENT_API_PREFIX+constant.URI_PASSWORD {
+			VerifyForSetAgentPassword(c, curTs, &header, passwordType)
+		} else if len(routeType) != 0 && routeType[0] == secure.ROUTE_OBPROXY {
+			VerifyAgentRoutes(c, curTs, &header, passwordType)
+		} else if len(routeType) != 0 && routeType[0] == secure.ROUTE_TASK {
+			VerifyTaskRoutes(c, curTs, &header, passwordType)
+		} else {
+			VerifyObRouters(c, curTs, &header, passwordType)
+		}
 		// Verification succeeded, continue to the next middleware.
 		c.Next()
 	}

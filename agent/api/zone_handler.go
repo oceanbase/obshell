@@ -25,7 +25,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-//	@ID				DeleteZone
+// @ID				DeleteZone
 //
 //	@Summary		delete zone
 //	@Description	delete zone

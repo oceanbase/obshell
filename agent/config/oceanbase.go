@@ -38,6 +38,19 @@ func NewObDataSourceConfig() *ObDataSourceConfig {
 	}
 }
 
+func NewObproxyDataSourceConfig() *ObDataSourceConfig {
+	return &ObDataSourceConfig{
+		username:        constant.DB_PROXYSYS_USERNAME,
+		ip:              constant.LOCAL_IP,
+		charset:         constant.DB_DEFAULT_CHARSET,
+		parseTime:       true,
+		location:        constant.DB_DEFAULT_LOCATION,
+		maxIdleConns:    constant.DB_DEFAULT_MAX_IDLE_CONNS,
+		maxOpenConns:    constant.DB_DEFAULT_MAX_OPEN_CONNS,
+		connMaxLifetime: constant.DB_DEFAULT_CONN_MAX_LIFETIME,
+	}
+}
+
 type ObDataSourceConfig struct {
 	// dsn config
 	username          string

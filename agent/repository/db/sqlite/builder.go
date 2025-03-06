@@ -119,6 +119,7 @@ var SqliteTables = []interface{}{
 	sqlite.AllAgent{},
 	sqlite.ObSysParameter{},
 	sqlite.OcsInfo{},
+	sqlite.ObproxyInfo{},
 	sqlite.ObGlobalConfig{},
 	sqlite.ObZoneConfig{},
 	sqlite.ObServerConfig{},
@@ -130,6 +131,8 @@ var SqliteTables = []interface{}{
 	sqlite.SubTaskLog{},
 	sqlite.DagInstance{},
 	sqlite.NodeInstance{},
+	sqlite.UpgradePkgInfo{},
+	sqlite.UpgradePkgChunk{},
 }
 
 // MigrateSqliteTables will check if the sqlite tables exist, if not, it will create them.

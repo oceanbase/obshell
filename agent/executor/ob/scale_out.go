@@ -169,8 +169,14 @@ func CreateClusterScaleOutDag(param param.ClusterScaleOutParam, targetVersion st
 	if err != nil {
 		return nil, errors.Wrap(err, "check zone exist failed")
 	}
+	// get target agent pk
+	encryptAgentPassword, err := secure.EncryptForAgent(param.TargetAgentPassword, &param.AgentInfo)
+	if err != nil {
+		return nil, errors.Wrap(err, "encrypt agent password failed")
+	}
+
 	template := buildClusterScaleOutTaskTemplate(param, !isZoneExist)
-	context := buildClusterScaleOutDagContext(param, !isZoneExist, targetVersion)
+	context := buildClusterScaleOutDagContext(param, !isZoneExist, targetVersion, encryptAgentPassword)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
 		return nil, errors.Wrap(err, "create dag instance failed")
@@ -245,13 +251,14 @@ func buildLocalScaleOutTaskTemplate(param param.LocalScaleOutParam) *task.Templa
 		Build()
 }
 
-func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone bool, targetVersion string) *task.TaskContext {
+func buildClusterScaleOutDagContext(param param.ClusterScaleOutParam, isNewZone bool, targetVersion string, targetAgentPassword string) *task.TaskContext {
 	context := task.NewTaskContext().
 		SetParam(PARAM_ZONE, param.Zone).
 		SetParam(PARAM_IS_NEW_ZONE, isNewZone).
 		SetParam(PARAM_AGENT_INFO, param.AgentInfo).
 		SetParam(PARAM_CONFIG, param.ObConfigs).
-		SetParam(PARAM_TARGET_AGENT_VERSION, targetVersion)
+		SetParam(PARAM_TARGET_AGENT_VERSION, targetVersion).
+		SetParam(PARAM_TARGET_AGENT_PASSWORD, targetAgentPassword)
 	return context
 }
 
@@ -738,6 +745,7 @@ func (t *IntegrateSingleObConfigTask) Execute() error {
 
 type CreateLocalScaleOutDagTask struct {
 	scaleCoordinateTask
+	targetAgentPassword string
 }
 
 func newCreateLocalScaleOutDagTask() *CreateLocalScaleOutDagTask {
@@ -753,6 +761,9 @@ func (t *CreateLocalScaleOutDagTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
 		return errors.Wrap(err, "get agent info failed")
 	}
+	if err := t.GetContext().GetParamWithValue(PARAM_TARGET_AGENT_PASSWORD, &t.targetAgentPassword); err != nil {
+		return errors.Wrap(err, "get target agent password failed")
+	}
 	// Send rpc to target agent.
 	param, err := t.buildLocalScaleOutParam()
 	if err != nil {
@@ -764,7 +775,7 @@ func (t *CreateLocalScaleOutDagTask) Execute() error {
 	}
 
 	var resp LocalScaleOutResp
-	if err := secure.SendPostRequest(&agentInfo, constant.URI_OB_RPC_PREFIX+constant.URI_SCALE_OUT, param, &resp); err != nil {
+	if err := secure.SendRequestWithPassword(&agentInfo, constant.URI_OB_RPC_PREFIX+constant.URI_SCALE_OUT, http.POST, t.targetAgentPassword, param, &resp); err != nil {
 		return errors.Wrap(err, "send scale out rpc to target agent failed")
 	}
 	t.ExecuteLogf("create local scale out dag success, genericID:%s", resp.GenericID)

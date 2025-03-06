@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/param"
@@ -30,13 +31,29 @@ import (
 
 type AgentJoinMasterTask struct {
 	task.Task
+	masterPassword string
 }
 
 type AgentBeFollowerTask struct {
 	task.Task
 }
 
-func CreateJoinMasterDag(masterAgent meta.AgentInfo, zone string) (*task.Dag, error) {
+func SendTokenToMaster(agentInfo meta.AgentInfo, masterPassword string) error {
+	token, err := secure.NewToken(&agentInfo)
+	if err != nil {
+		return errors.Wrap(err, "get token failed")
+	}
+	param := param.AddTokenParam{
+		AgentInfo: *meta.NewAgentInfoByInterface(meta.OCS_AGENT),
+		Token:     token,
+	}
+	if err := secure.SendRequestWithPassword(&agentInfo, constant.URI_AGENT_RPC_PREFIX+constant.URI_TOKEN, http.POST, masterPassword, param, nil); err != nil {
+		return errors.Wrap(err, "send post request failed")
+	}
+	return nil
+}
+
+func CreateJoinMasterDag(masterAgent meta.AgentInfo, zone string, masterPassword string) (*task.Dag, error) {
 	// Agent receive api to join master, then create a task to be follower.
 	builder := task.NewTemplateBuilder(DAG_JOIN_TO_MASTER)
 
@@ -53,8 +70,16 @@ func CreateJoinMasterDag(masterAgent meta.AgentInfo, zone string) (*task.Dag, er
 	builder.AddTask(beFollowerAgent, false)
 
 	builder.SetMaintenance(task.GlobalMaintenance())
+
+	// Encrypt master agent password.
+	agentPassword, err := secure.Encrypt(masterPassword)
+	if err != nil {
+		return nil, errors.Wrap(err, "encrypt master password failed")
+	}
 	template := builder.Build()
-	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone).SetParam(PARAM_MASTER_AGENT, masterAgent)
+	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone).SetParam(PARAM_MASTER_AGENT, masterAgent).
+		SetParam(PARAM_MASTER_AGENT_PASSWORD, agentPassword)
+
 	return localTaskService.CreateDagInstanceByTemplate(template, ctx)
 }
 
@@ -63,6 +88,14 @@ func (t *AgentJoinMasterTask) Execute() error {
 	taskCtx := t.GetContext()
 	if err := taskCtx.GetParamWithValue(PARAM_MASTER_AGENT, &masterAgent); err != nil {
 		return errors.Wrapf(err, "Get Param %s failed", PARAM_MASTER_AGENT)
+	}
+	if err := taskCtx.GetParamWithValue(PARAM_MASTER_AGENT_PASSWORD, &t.masterPassword); err != nil {
+		return errors.Wrapf(err, "Get Param %s failed", PARAM_MASTER_AGENT_PASSWORD)
+	}
+	// Decrypt master agent password.
+	masterPassword, err := secure.Decrypt(t.masterPassword)
+	if err != nil {
+		return errors.Wrap(err, "decrypt master password failed")
 	}
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
@@ -89,8 +122,9 @@ func (t *AgentJoinMasterTask) Execute() error {
 		Token:        token,
 	}
 	t.ExecuteLog("send join rpc to master")
+
 	var masterAgentInstance meta.AgentInstance
-	if err := secure.SendPostRequest(&masterAgent, constant.URI_AGENT_RPC_PREFIX, param, &masterAgentInstance); err != nil {
+	if err := secure.SendRequestWithPassword(&masterAgent, constant.URI_AGENT_RPC_PREFIX, http.POST, masterPassword, param, &masterAgentInstance); err != nil {
 		return errors.Wrap(err, "send post request failed")
 	}
 	t.ExecuteLog(fmt.Sprintf("join to master success, master agent info: %v", masterAgentInstance))
@@ -136,19 +170,14 @@ func AddFollowerAgent(param param.JoinMasterParam) *errors.OcsAgentError {
 	return nil
 }
 
-func UpdateFollowerAgent(agentInstance meta.Agent, param param.JoinMasterParam) *errors.OcsAgentError {
-	// Agent already exists.
-	if agentInstance.GetIdentity() != meta.FOLLOWER || agentInstance.GetVersion() != param.Version || agentInstance.GetZone() != param.JoinApiParam.ZoneName {
-		return errors.Occur(errors.ErrBadRequest, "agent already exists")
-	}
-
+func AddSingleToken(param param.AddTokenParam) *errors.OcsAgentError {
 	targetToken, err := secure.Crypter.Decrypt(param.Token)
 	if err != nil {
-		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.JoinApiParam.AgentInfo.String(), err)
+		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.AgentInfo.String(), err)
 	}
 
-	if err = agentService.UpdateAgent(agentInstance, param.HomePath, param.Os, param.Architecture, param.PublicKey, targetToken); err != nil {
-		return errors.Occurf(errors.ErrKnown, "update agent failed: %v", err)
+	if err = agentService.AddSingleToken(&param.AgentInfo, targetToken); err != nil {
+		return errors.Occurf(errors.ErrKnown, "insert token failed: %v", err)
 	}
 	return nil
 }

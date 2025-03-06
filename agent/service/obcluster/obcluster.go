@@ -737,7 +737,7 @@ func (ObclusterService *ObclusterService) IsLsMultiPaxosAlive(lsId int, tenantId
 
 // GetLogInfosInServer returns the log stat in target server
 // only contains tenant_id and ls_id.
-func (ObclusterService *ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logStats []oceanbase.ObLogStat, err error) {
+func (*ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logStats []oceanbase.ObLogStat, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -746,7 +746,7 @@ func (ObclusterService *ObclusterService) GetLogInfosInServer(svrInfo meta.Obser
 	return
 }
 
-func (ObclusterService *ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
+func (*ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return false, err
@@ -754,4 +754,35 @@ func (ObclusterService *ObclusterService) HasUnitInZone(zone string) (exist bool
 	var count int64
 	err = oceanbaseDb.Table(DBA_OB_UNITS).Where("ZONE = ?", zone).Count(&count).Error
 	return count > 0, err
+}
+
+func (obclusterService *ObclusterService) CreateProxyroUser(password string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	sqlText := fmt.Sprintf("CREATE USER IF NOT EXISTS `%s`@`%s`", constant.SYS_USER_PROXYRO, "%")
+	if password != "" {
+		sqlText += fmt.Sprintf(" IDENTIFIED BY '%s'", strings.ReplaceAll(password, "'", "'\"'\"'"))
+	}
+	if err = oceanbaseDb.Exec(sqlText).Error; err != nil {
+		return err
+	}
+	if err := oceanbaseDb.Exec(fmt.Sprintf("GRANT SELECT ON oceanbase.* TO %s", constant.SYS_USER_PROXYRO)).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obclusterService *ObclusterService) GetRsListStr() (rsListStr string, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return "", err
+	}
+	err = oceanbaseDb.Table(GV_OB_PARAMETERS).
+		Select("VALUE").
+		Where("NAME = ?", "rootservice_list").
+		Scan(&rsListStr).Error
+	return
 }

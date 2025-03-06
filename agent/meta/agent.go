@@ -155,6 +155,7 @@ type AgentStatus struct {
 	HomePath  string `json:"homePath"`
 	OBVersion string `json:"obVersion"`
 	AgentInstance
+	Security      bool     `json:"security"`
 	SupportedAuth []string `json:"supportedAuth"`
 }
 
@@ -383,13 +384,14 @@ func NewAgentSecretByAgentInfo(agent AgentInfoInterface, publicKey string) *Agen
 	}
 }
 
-func NewAgentStatus(agent Agent, pid int, state int32, startAt int64, homePath string, obVersion string) *AgentStatus {
+func NewAgentStatus(agent Agent, pid int, state int32, startAt int64, homePath string, obVersion string, isAgentPasswordSet bool) *AgentStatus {
 	return &AgentStatus{
 		Pid:           pid,
 		State:         state,
 		StartAt:       startAt,
 		HomePath:      homePath,
 		OBVersion:     obVersion,
+		Security:      isAgentPasswordSet,
 		AgentInstance: *NewAgentInstanceByAgent(agent),
 		SupportedAuth: []string{AUTH_V2},
 	}

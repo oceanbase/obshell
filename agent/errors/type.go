@@ -27,3 +27,7 @@ func IsTaskNotFoundErr(err error) bool {
 func IsUnkonwnTimeZoneErr(err error) bool {
 	return strings.Contains(err.Error(), "Unknown or incorrect time zone")
 }
+
+func IsRecordNotFoundErr(err error) bool {
+	return strings.Contains(err.Error(), "record not found")
+}

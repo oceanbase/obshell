@@ -79,17 +79,23 @@ func (a *Agent) restoreSecure() (err error) {
 			log.WithError(err).Error("reinit secure failed")
 			return err
 		}
-	} else {
-		log.Info("restore secure info successed, check password in sqlite")
-		err = secure.LoadPassword(a.GetRootPassword())
-		if err != nil {
-			log.WithError(err).Info("check password in sqlite failed")
-			if !meta.OCS_AGENT.IsClusterAgent() {
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, "check password in sqlite failed: not cluster agent")
-			}
-		} else {
-			log.Info("check password in sqlite successed")
+	}
+
+	log.Info("restore secure info successed, check password of root@sys in sqlite")
+	err = secure.LoadOceanbasePassword(a.GetRootPassword())
+	if err != nil {
+		log.WithError(err).Info("check password of root@sys in sqlite failed")
+		if !meta.OCS_AGENT.IsClusterAgent() {
+			process.ExitWithFailure(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, "check password of root@sys in sqlite failed: not cluster agent")
 		}
+	} else {
+		log.Info("check password of root@sys in sqlite successed")
+	}
+
+	log.Info("check agent password from sqlite")
+	err = secure.LoadAgentPassword()
+	if err != nil {
+		log.WithError(err).Error("check agent password from sqlite failed")
 	}
 	return nil
 }

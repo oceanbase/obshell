@@ -78,6 +78,8 @@ const (
 	PROC_OBSHELL_CLIENT = "client"
 
 	PROC_OBSERVER = "observer"
+
+	PROC_OBPROXY = "obproxy"
 )
 
 // upload pkg names
@@ -85,6 +87,7 @@ const (
 	PKG_OBSHELL           = "obshell"
 	PKG_OCEANBASE_CE      = "oceanbase-ce"
 	PKG_OCEANBASE_CE_LIBS = "oceanbase-ce-libs"
+	PKG_OBPROXY_CE        = "obproxy-ce"
 )
 
 var SUPPORT_PKG_NAMES = []string{

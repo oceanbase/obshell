@@ -26,6 +26,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
+	"github.com/oceanbase/obshell/agent/secure"
 )
 
 func (s *AgentService) UpdatePort(mysqlPort, rpcPort int) error {
@@ -104,4 +105,27 @@ func (s *AgentService) getOBConifg(db *gorm.DB, name string, value interface{}) 
 		}
 	}
 	return err
+}
+
+func (s *AgentService) SetAgentPassword(password string) error {
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	encrptyPassword, err := secure.Encrypt(password)
+	if err != nil {
+		return err
+	}
+
+	if err := sqliteDb.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoUpdates: clause.AssignmentColumns([]string{"value"}),
+	}).Create(&sqlite.OcsInfo{
+		Name:  constant.CONFIG_AGENT_PASSWORD,
+		Value: encrptyPassword}).Error; err != nil {
+		return err
+	}
+
+	meta.AGENT_PWD.SetPassword(password)
+	return nil
 }

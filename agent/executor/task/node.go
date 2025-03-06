@@ -60,6 +60,9 @@ func GetNodeDetail(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(nodeDTOParam.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
@@ -86,6 +89,7 @@ func GetNodeDetail(c *gin.Context) {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
 		return
 	}
+
 	if *param.ShowDetails {
 		_, err = service.GetSubTasks(node)
 		if err != nil {
@@ -93,7 +97,16 @@ func GetNodeDetail(c *gin.Context) {
 			return
 		}
 
-		nodeDetailDTO, err = getNodeDetail(service, node)
+		dag, err := service.GetDagInstance(int64(node.GetDagId()))
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+			return
+		}
+		if task.ConvertToGenericID(dag, dag.GetDagType())[0] != nodeDTOParam.GenericID[0] {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "node type not match"))
+			return
+		}
+		nodeDetailDTO, err = getNodeDetail(service, node, dag.GetDagType())
 		if err != nil {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
 			return
@@ -103,12 +116,12 @@ func GetNodeDetail(c *gin.Context) {
 	common.SendResponse(c, nodeDetailDTO, nil)
 }
 
-func getNodeDetail(service taskservice.TaskServiceInterface, node *task.Node) (nodeDetailDTO *task.NodeDetailDTO, err error) {
-	nodeDetailDTO = task.NewNodeDetailDTO(node)
+func getNodeDetail(service taskservice.TaskServiceInterface, node *task.Node, dagType string) (nodeDetailDTO *task.NodeDetailDTO, err error) {
+	nodeDetailDTO = task.NewNodeDetailDTO(node, dagType)
 	subTasks := node.GetSubTasks()
 	n := len(subTasks)
 	for i := 0; i < n; i++ {
-		taskDetailDTO, err := getSubTaskDetail(service, subTasks[i])
+		taskDetailDTO, err := getSubTaskDetail(service, subTasks[i], dagType)
 		if err != nil {
 			return nil, err
 		}

@@ -16,9 +16,30 @@
 
 package meta
 
+type AgentPwd struct {
+	inited   bool
+	password string
+}
+
 var (
-	OCEANBASE_PWD     string
+	OCEANBASE_PWD                  string
+	OBPROXY_SYS_PWD                string
+	AGENT_PWD                      AgentPwd
+	OCEANBASE_PASSWORD_INITIALIZED bool // Which means the oceanbase password has been initialized
 )
+
+func (p *AgentPwd) Inited() bool {
+	return p.inited
+}
+
+func (p *AgentPwd) GetPassword() string {
+	return p.password
+}
+
+func (p *AgentPwd) SetPassword(pwd string) {
+	p.password = pwd
+	p.inited = true
+}
 
 func GetOceanbasePwd() string {
 	if OCS_AGENT != nil && (OCS_AGENT.IsClusterAgent() || OCS_AGENT.IsTakeover()) {
@@ -29,4 +50,15 @@ func GetOceanbasePwd() string {
 
 func SetOceanbasePwd(pwd string) {
 	OCEANBASE_PWD = pwd
+	if !OCEANBASE_PASSWORD_INITIALIZED {
+		OCEANBASE_PASSWORD_INITIALIZED = true
+	}
+}
+
+func GetObproxySysPwd() string {
+	return OBPROXY_SYS_PWD
+}
+
+func SetObproxySysPwd(pwd string) {
+	OBPROXY_SYS_PWD = pwd
 }

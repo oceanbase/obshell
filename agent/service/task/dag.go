@@ -56,7 +56,7 @@ func (s *taskService) GetDagDetail(dagId int64) (dagDetailDTO *task.DagDetailDTO
 			return nil, err
 		}
 
-		nodeDetailDTO, err := getNodeDetail(s, nodes[i])
+		nodeDetailDTO, err := getNodeDetail(s, nodes[i], dag.GetDagType())
 		if err != nil {
 			return nil, err
 		}
@@ -65,12 +65,12 @@ func (s *taskService) GetDagDetail(dagId int64) (dagDetailDTO *task.DagDetailDTO
 	return dagDetailDTO, nil
 }
 
-func getNodeDetail(service TaskServiceInterface, node *task.Node) (nodeDetailDTO *task.NodeDetailDTO, err error) {
-	nodeDetailDTO = task.NewNodeDetailDTO(node)
+func getNodeDetail(service TaskServiceInterface, node *task.Node, dagType string) (nodeDetailDTO *task.NodeDetailDTO, err error) {
+	nodeDetailDTO = task.NewNodeDetailDTO(node, dagType)
 	subTasks := node.GetSubTasks()
 	n := len(subTasks)
 	for i := 0; i < n; i++ {
-		taskDetailDTO, err := getSubTaskDetail(service, subTasks[i])
+		taskDetailDTO, err := getSubTaskDetail(service, subTasks[i], dagType)
 		if err != nil {
 			return nil, err
 		}
@@ -79,8 +79,8 @@ func getNodeDetail(service TaskServiceInterface, node *task.Node) (nodeDetailDTO
 	return
 }
 
-func getSubTaskDetail(service TaskServiceInterface, subTask task.ExecutableTask) (taskDetailDTO *task.TaskDetailDTO, err error) {
-	taskDetailDTO = task.NewTaskDetailDTO(subTask)
+func getSubTaskDetail(service TaskServiceInterface, subTask task.ExecutableTask, dagType string) (taskDetailDTO *task.TaskDetailDTO, err error) {
+	taskDetailDTO = task.NewTaskDetailDTO(subTask, dagType)
 	if subTask.IsRunning() || subTask.IsFinished() {
 		taskDetailDTO.TaskLogs, err = service.GetSubTaskLogsByTaskID(subTask.GetID())
 	}
@@ -140,25 +140,29 @@ func (s *taskService) FindLastMaintenanceDag() (*task.Dag, error) {
 	return dag, err
 }
 
-func (s *taskService) GetDagIDBySubTaskId(taskID int64) (dagID int64, err error) {
+// notice: GetDagBySubTaskId will occur error if the task is remote.
+func (s *taskService) GetDagBySubTaskId(taskID int64) (*task.Dag, error) {
 	db, err := s.getDbInstance()
 	if err != nil {
-		return
+		return nil, err
 	}
 	var nodeID int64
 	if err = db.Model(s.getSubTaskModel()).Select("node_id").Where("id=?", taskID).First(&nodeID).Error; err != nil {
-		return
+		return nil, err
 	}
-	err = db.Model(s.getNodeModel()).Select("dag_id").Where("id=?", nodeID).First(&dagID).Error
-	return
+	var dagID int64
+	if err = db.Model(s.getNodeModel()).Select("dag_id").Where("id=?", nodeID).First(&dagID).Error; err != nil {
+		return nil, err
+	}
+	return s.GetDagInstance(dagID)
 }
 
 func (s *taskService) GetDagGenericIDBySubTaskId(taskID int64) (dagGenericID string, err error) {
-	var dagID int64
-	if dagID, err = s.GetDagIDBySubTaskId(taskID); err != nil {
+	dag, err := s.GetDagBySubTaskId(taskID)
+	if err != nil {
 		return
 	}
-	dagGenericID = task.ConvertIDToGenericID(dagID, s.isLocal)
+	dagGenericID = task.ConvertIDToGenericID(dag.GetID(), s.isLocal, dag.GetDagType())
 	return
 }
 
@@ -245,6 +249,7 @@ func (s *taskService) newDagInstanceBO(template *task.Template, ctx *task.TaskCo
 	return &bo.DagInstance{
 		Name:            template.Name,
 		Stage:           1,
+		Type:            template.Type,
 		MaxStage:        len(template.GetNodes()),
 		State:           task.READY,
 		Operator:        task.RUN,

@@ -103,3 +103,21 @@ type CreateResourcePoolTaskParam struct {
 	UnitConfigName string
 	UnitNum        int
 }
+
+type CreateUserParam struct {
+	UserName         string             `json:"user_name" binding:"required"`
+	Password         string             `json:"password" binding:"required"`
+	RootPassword     string             `json:"root_password"`
+	GlobalPrivileges []string           `json:"global_privileges"`
+	DbPrivileges     []DbPrivilegeParam `json:"db_privileges"`
+	HostName         string             `json:"host_name"`
+}
+
+type DbPrivilegeParam struct {
+	DbName     string   `json:"db_name" binding:"required"`
+	Privileges []string `json:"privileges" binding:"required"`
+}
+
+type DropUserParam struct {
+	RootPassword string `json:"root_password"`
+}

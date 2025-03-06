@@ -248,6 +248,6 @@ func sendGetDagDetailRequest(id string) (*task.DagDetailDTO, error) {
 }
 
 func getDagGenericIDBySubTaskId(id int64) (string, error) {
-	dagID, err := localTaskService.GetDagIDBySubTaskId(id)
-	return task.ConvertLocalIDToGenericID(dagID), err
+	dag, err := localTaskService.GetDagBySubTaskId(id)
+	return task.ConvertLocalIDToGenericID(dag.GetID(), dag.GetDagType()), err
 }

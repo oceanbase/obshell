@@ -36,9 +36,11 @@ import (
 )
 
 type ClusterInitFlags struct {
-	password     string
-	verbose      bool
-	importScript bool
+	password          string
+	verbose           bool
+	importScript      bool
+	createProxyroUser bool
+	proxyroPassword   string
 	ObserverConfigFlags
 }
 
@@ -77,6 +79,8 @@ func newInitCmd() *cobra.Command {
 	initCmd.VarsPs(&opts.optStr, []string{FLAG_OPT_STR, FLAG_OPT_STR_SH}, "", "Additional parameters for the observer, use the format key=value for each configuration, separated by commas.", false)
 	initCmd.VarsPs(&opts.rsList, []string{FLAG_RS_LIST, FLAG_RS_LIST_ALIAS}, "", "Root service list", false)
 	initCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Import the observer's scripts for sys tenant.", false)
+	initCmd.VarsPs(&opts.createProxyroUser, []string{FLAG_CREATE_PROXYRO_USER}, false, "Create the default user 'proxyro'.", false)
+	initCmd.VarsPs(&opts.proxyroPassword, []string{FLAG_PROXYRO_PASSWORD}, "", "Password for the default user 'proxyro'.", false)
 
 	initCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
 
@@ -108,7 +112,9 @@ func clusterInit(cmd *cobra.Command, flags *ClusterInitFlags) error {
 
 func buildInitParams(flags *ClusterInitFlags) *param.ObInitParam {
 	return &param.ObInitParam{
-		ImportScript: flags.importScript,
+		ImportScript:      flags.importScript,
+		CreateProxyroUser: flags.createProxyroUser,
+		ProxyroPassword:   flags.proxyroPassword,
 	}
 }
 

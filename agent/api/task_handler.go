@@ -22,16 +22,18 @@ import (
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/executor/task"
+	"github.com/oceanbase/obshell/agent/secure"
 )
 
 func InitTaskRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	group := r.Group(constant.URI_TASK_GROUP)
 	if !isLocalRoute {
-		group.Use(common.Verify())
+		group.Use(common.Verify(secure.ROUTE_TASK))
 	}
 	group.GET(constant.URI_SUB_TASK+"/:id", task.GetSubTaskDetail)
 	group.GET(constant.URI_NODE+"/:id", task.GetNodeDetail)
 	group.GET(constant.URI_DAG+"/:id", task.GetDagDetail)
+	group.POST(constant.URI_DAG+"/:id", task.DagHandler)
 	group.GET(constant.URI_DAG+constant.URI_MAINTAIN+constant.URI_OB_GROUP, task.GetObLastMaintenanceDag)
 	group.GET(constant.URI_DAG+constant.URI_MAINTAIN+constant.URI_AGENT_GROUP, task.GetAgentLastMaintenanceDag)
 	group.GET(constant.URI_DAG+constant.URI_MAINTAIN+constant.URI_AGENTS_GROUP, task.GetAllAgentLastMaintenanceDag)
@@ -39,5 +41,4 @@ func InitTaskRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	group.GET(constant.URI_DAG+constant.URI_OB_GROUP+constant.URI_UNFINISH, task.GetClusterUnfinishDags)
 	group.GET(constant.URI_DAG+constant.URI_AGENT_GROUP+constant.URI_UNFINISH, task.GetAgentUnfinishDags)
 
-	group.POST(constant.URI_DAG+"/:id", task.DagHandler)
 }

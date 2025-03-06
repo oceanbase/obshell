@@ -20,6 +20,20 @@ import (
 	"time"
 )
 
+type DagType uint8
+
+const (
+	DAG_OB DagType = iota
+	DAG_OBPROXY
+)
+
+var (
+	DAG_TYPE_MAP = map[DagType]string{
+		DAG_OB:      "ob",
+		DAG_OBPROXY: "obproxy",
+	}
+)
+
 type Dag struct {
 	dagType  string
 	stage    int

@@ -24,8 +24,9 @@ import (
 )
 
 type JoinApiParam struct {
-	AgentInfo meta.AgentInfo `json:"agentInfo" binding:"required"`
-	ZoneName  string         `json:"zoneName" binding:"required"`
+	AgentInfo      meta.AgentInfo `json:"agentInfo" binding:"required"`
+	ZoneName       string         `json:"zoneName" binding:"required"`
+	MasterPassword string         `json:"masterPassword"`
 }
 
 type JoinMasterParam struct {
@@ -42,4 +43,13 @@ type AllAgentsSyncData struct {
 	Maintainer   meta.AgentInfo       `json:"maintainer" binding:"required"`
 	AllAgents    []oceanbase.AllAgent `json:"all_agents" binding:"required"`
 	LastSyncTime time.Time            `json:"last_sync_time" binding:"required"`
+}
+
+type SetAgentPasswordParam struct {
+	Password string `json:"password" binding:"required"`
+}
+
+type AddTokenParam struct {
+	AgentInfo meta.AgentInfo `json:"agentInfo" binding:"required"`
+	Token     string         `json:"token" binding:"required"`
 }

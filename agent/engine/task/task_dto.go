@@ -204,28 +204,28 @@ func NewTaskStatusDTO(task *TaskInfo) *TaskStatusDTO {
 
 func NewDagDetailDTO(dag *Dag) *DagDetailDTO {
 	return &DagDetailDTO{
-		GenericDTO: newGenericDTO(dag),
+		GenericDTO: newGenericDTO(dag, dag.GetDagType()),
 		DagDetail:  NewDagDetail(dag),
 	}
 }
 
-func NewNodeDetailDTO(node *Node) *NodeDetailDTO {
+func NewNodeDetailDTO(node *Node, dagType string) *NodeDetailDTO {
 	return &NodeDetailDTO{
-		GenericDTO: newGenericDTO(node),
+		GenericDTO: newGenericDTO(node, dagType),
 		NodeDetail: NewNodeDetail(node),
 	}
 }
 
-func NewTaskDetailDTO(task ExecutableTask) *TaskDetailDTO {
+func NewTaskDetailDTO(task ExecutableTask, dagType string) *TaskDetailDTO {
 	return &TaskDetailDTO{
-		GenericDTO: newGenericDTO(task),
+		GenericDTO: newGenericDTO(task, dagType),
 		TaskDetail: NewTaskDetail(task),
 	}
 }
 
-func newGenericDTO(instance TaskInfoInterface) *GenericDTO {
+func newGenericDTO(instance TaskInfoInterface, dagType string) *GenericDTO {
 	return &GenericDTO{
-		GenericID: ConvertToGenericID(instance),
+		GenericID: ConvertToGenericID(instance, dagType),
 	}
 }
 
@@ -268,23 +268,37 @@ func NewTaskDetail(task ExecutableTask) *TaskDetail {
 }
 
 // ConvertToGenericID will convert task instance id to generic dto id.
-func ConvertToGenericID(instance TaskInfoInterface) string {
+func ConvertToGenericID(instance TaskInfoInterface, dagType string) string {
 	if instance.IsLocalTask() {
-		return ConvertLocalIDToGenericID(instance.GetID())
+		return ConvertLocalIDToGenericID(instance.GetID(), dagType)
 	}
 	return fmt.Sprintf("1%d", instance.GetID())
 }
 
-func ConvertIDToGenericID(dagID int64, isLocal bool) string {
+func ConvertIDToGenericID(dagID int64, isLocal bool, dagType string) string {
 	if isLocal {
-		return ConvertLocalIDToGenericID(dagID)
+		return ConvertLocalIDToGenericID(dagID, dagType)
 	} else {
 		return fmt.Sprintf("1%d", dagID)
 	}
 }
 
+func ConvertObproxyIDToGenericID(id int64) string {
+	ipParsed := net.ParseIP(meta.OCS_AGENT.GetIp())
+	if ipParsed.To4() != nil {
+		bigInt := new(big.Int).SetBytes(ipParsed.To4())
+		return fmt.Sprintf("4%010d%05d%d", bigInt, meta.OCS_AGENT.GetPort(), id)
+	} else {
+		bigInt := new(big.Int).SetBytes(ipParsed.To16())
+		return fmt.Sprintf("5%039d%05d%d", bigInt, meta.OCS_AGENT.GetPort(), id)
+	}
+}
+
 // ConvertLocalIDToGenericID will convert id of local task to generic id.
-func ConvertLocalIDToGenericID(id int64) string {
+func ConvertLocalIDToGenericID(id int64, dagType string) string {
+	if DAG_TYPE_MAP[DAG_OBPROXY] == dagType {
+		return ConvertObproxyIDToGenericID(id)
+	}
 	ipParsed := net.ParseIP(meta.OCS_AGENT.GetIp())
 	if ipParsed.To4() != nil {
 		bigInt := new(big.Int).SetBytes(ipParsed.To4())
@@ -295,11 +309,17 @@ func ConvertLocalIDToGenericID(id int64) string {
 	}
 }
 
+func IsObproxyTask(genericID string) bool {
+	return genericID[0] == constant.OBPROXY_TASK_IPV4_ID_PREFIX || genericID[0] == constant.OBPROXY_TASK_IPV6_ID_PREFIX
+}
+
 // ConvertGenericID will  onvert dto id to instance id.
 func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface, err error) {
 	if genericID[0] == constant.CLUSTER_TASK_ID_PREFIX && len(genericID) <= 1 ||
-		genericID[0] == constant.LOCAL_TASK_IPV4_ID_PREFIX && len(genericID) <= 16 ||
-		genericID[0] == constant.LOCAL_TASK_IPV6_ID_PREFIX && len(genericID) <= 45 {
+		(genericID[0] == constant.LOCAL_TASK_IPV4_ID_PREFIX ||
+			genericID[0] == constant.OBPROXY_TASK_IPV4_ID_PREFIX) && len(genericID) <= 16 ||
+		(genericID[0] == constant.LOCAL_TASK_IPV6_ID_PREFIX ||
+			genericID[0] == constant.OBPROXY_TASK_IPV6_ID_PREFIX) && len(genericID) <= 45 {
 		err = fmt.Errorf("invalid id: %s", genericID)
 		return
 	}
@@ -309,10 +329,10 @@ func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface
 	switch genericID[0] {
 	case constant.CLUSTER_TASK_ID_PREFIX:
 		idIdx = 1
-	case constant.LOCAL_TASK_IPV4_ID_PREFIX:
+	case constant.LOCAL_TASK_IPV4_ID_PREFIX, constant.OBPROXY_TASK_IPV4_ID_PREFIX:
 		// Ipv4 address.
 		ipIdx, portIdx, idIdx = 11, 16, 16
-	case constant.LOCAL_TASK_IPV6_ID_PREFIX:
+	case constant.LOCAL_TASK_IPV6_ID_PREFIX, constant.OBPROXY_TASK_IPV6_ID_PREFIX:
 		// Ipv6 address.
 		ipIdx, portIdx, idIdx, isV6 = 40, 45, 45, true
 	default:

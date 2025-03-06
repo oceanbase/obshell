@@ -26,6 +26,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/shirou/gopsutil/v3/net"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/lib/path"
@@ -72,6 +73,28 @@ type ProcessInfo struct {
 
 func getObserverProcess() (*ProcessInfo, error) {
 	pid, err := getPid(obServerPidPath)
+	if err != nil {
+		return nil, err
+	}
+	return &ProcessInfo{
+		pid:      fmt.Sprint(pid),
+		procPath: fmt.Sprintf("/proc/%d", pid),
+	}, nil
+}
+
+func getObproxyProcess() (*ProcessInfo, error) {
+	pid, err := getPid(path.ObproxyPidPath())
+	if err != nil {
+		return nil, err
+	}
+	return &ProcessInfo{
+		pid:      fmt.Sprint(pid),
+		procPath: fmt.Sprintf("/proc/%d", pid),
+	}, nil
+}
+
+func getObproxydProcess() (*ProcessInfo, error) {
+	pid, err := getPid(path.ObproxydPidPath())
 	if err != nil {
 		return nil, err
 	}
@@ -133,6 +156,22 @@ func (p *ProcessInfo) Pid() (string, error) {
 
 func CheckObserverProcess() (bool, error) {
 	process, err := getObserverProcess()
+	if err != nil {
+		return false, err
+	}
+	return process.Exist()
+}
+
+func CheckObproxyProcess() (bool, error) {
+	process, err := getObproxyProcess()
+	if err != nil {
+		return false, err
+	}
+	return process.Exist()
+}
+
+func CheckObproxydProcess() (bool, error) {
+	process, err := getObproxydProcess()
 	if err != nil {
 		return false, err
 	}
@@ -207,4 +246,66 @@ func ExecuteBinary(binaryPath string, inputs []string) (err error) {
 
 	// Wait for command execution to complete.
 	return cmd.Wait()
+}
+
+// for obproxy
+func GetObproxyPid() (string, error) {
+	process, err := getObproxyProcess()
+	if err != nil {
+		return "", err
+	}
+	return process.Pid()
+}
+
+// for obproxy
+func GetObproxydPid() (string, error) {
+	process, err := getObproxydProcess()
+	if err != nil {
+		return "", err
+	}
+	return process.Pid()
+}
+
+// writePid writes the pid to the specified path atomically.
+// If the file already exists, an error is returned.
+func WritePid(path string, pid int) (err error) {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC|syscall.O_CLOEXEC, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = fmt.Fprint(f, pid)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// writePid writes the pid to the specified path atomically.
+func WritePidForce(path string, pid int) (err error) {
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC|os.O_SYNC|syscall.O_CLOEXEC, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	_, err = fmt.Fprint(f, pid)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func FindPIDByPort(port uint32) (int32, error) {
+	// NOTICE: use inet6 to support ipv6
+	connections, err := net.Connections("inet")
+	if err != nil {
+		return 0, err
+	}
+
+	for _, conn := range connections {
+		if conn.Laddr.Port == port {
+			return conn.Pid, nil
+		}
+	}
+	return 0, fmt.Errorf("no process found on port %d", port)
 }

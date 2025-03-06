@@ -59,6 +59,9 @@ func GetSubTaskDetail(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(taskDTOParam.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
@@ -85,7 +88,22 @@ func GetSubTaskDetail(c *gin.Context) {
 		return
 	}
 
-	taskDetailDTO, err = getSubTaskDetail(service, subTask)
+	dagType := ""
+	if subTask.IsLocalTask() {
+		dag, err := service.GetDagBySubTaskId(subTask.GetID())
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			return
+		}
+		dagType = dag.GetDagType()
+		if task.ConvertToGenericID(dag, dag.GetDagType())[0] != taskDTOParam.GenericID[0] {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "sub task type not match"))
+			return
+		}
+
+	}
+
+	taskDetailDTO, err = getSubTaskDetail(service, subTask, dagType)
 	if err != nil {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
 		return
@@ -94,8 +112,8 @@ func GetSubTaskDetail(c *gin.Context) {
 	common.SendResponse(c, taskDetailDTO, nil)
 }
 
-func getSubTaskDetail(service taskservice.TaskServiceInterface, subTask task.ExecutableTask) (taskDetailDTO *task.TaskDetailDTO, err error) {
-	taskDetailDTO = task.NewTaskDetailDTO(subTask)
+func getSubTaskDetail(service taskservice.TaskServiceInterface, subTask task.ExecutableTask, dagType string) (taskDetailDTO *task.TaskDetailDTO, err error) {
+	taskDetailDTO = task.NewTaskDetailDTO(subTask, dagType)
 	if subTask.IsRunning() || subTask.IsFinished() {
 		taskDetailDTO.TaskLogs, err = service.GetSubTaskLogsByTaskID(subTask.GetID())
 	}

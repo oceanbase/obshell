@@ -86,7 +86,13 @@ func agentJoinHandler(c *gin.Context) {
 				param.AgentInfo.String(), agentStatus.OBVersion, meta.OCS_AGENT.String(), obVersion))
 			return
 		}
-		dag, err = agent.CreateJoinMasterDag(param.AgentInfo, param.ZoneName)
+		// send token to master early.
+		if err = agent.SendTokenToMaster(param.AgentInfo, param.MasterPassword); err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+			return
+		}
+
+		dag, err = agent.CreateJoinMasterDag(param.AgentInfo, param.ZoneName, param.MasterPassword)
 	}
 
 	if err != nil {
@@ -177,4 +183,14 @@ func agentRemoveHandler(c *gin.Context) {
 		return
 	}
 	common.SendResponse(c, task.NewDagDetailDTO(dag), nil)
+}
+
+func agentSetPasswordHandler(c *gin.Context) {
+	var param param.SetAgentPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	common.SendResponse(c, nil, agentService.SetAgentPassword(param.Password))
 }

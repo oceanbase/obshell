@@ -308,6 +308,7 @@ func (s *AgentService) BeScalingOutAgent(zone string) error {
 	})
 }
 
+
 func (s *AgentService) SyncAgentData() (err error) {
 	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
 	if err != nil {

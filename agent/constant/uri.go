@@ -34,6 +34,7 @@ const (
 	URI_POOL_GROUP       = "/resource-pool"
 	URI_POOLS_GROUP      = "/resource-pools"
 	URI_RECYCLEBIN_GROUP = "/recyclebin"
+	URI_OBPROXY_GROUP    = "/obproxy"
 
 	URI_INFO     = "/info"
 	URI_TIME     = "/time"
@@ -41,8 +42,10 @@ const (
 	URI_STATUS   = "/status"
 	URI_SECRET   = "secret"
 
-	URI_JOIN   = "/join"
-	URI_REMOVE = "/remove"
+	URI_JOIN     = "/join"
+	URI_REMOVE   = "/remove"
+	URI_PASSWORD = "/password"
+	URI_TOKEN    = "/token"
 
 	URI_SYNC_BIN = "/sync-bin"
 
@@ -90,6 +93,7 @@ const (
 	URI_PARAMETER    = "/parameter"
 	URI_OVERVIEW     = "/overview"
 	URI_TENANT       = "/tenant"
+	URI_USER         = "/user"
 
 	URI_PARAM_NAME      = "name"
 	URI_PATH_PARAM_NAME = "/:" + URI_PARAM_NAME
@@ -97,6 +101,8 @@ const (
 	URI_PATH_PARAM_VAR  = "/:" + URI_PARAM_VAR
 	URI_PARAM_PARA      = "parameter"
 	URI_PATH_PARAM_PARA = "/:" + URI_PARAM_PARA
+	URI_PARAM_USER      = "user"
+	URI_PATH_PARAM_USER = "/:" + URI_PARAM_USER
 
 	// Used for backup
 	URI_ARCHIVE = "/log"
@@ -112,6 +118,7 @@ const (
 	URI_OBSERVER_API_PREFIX  = URI_API_V1 + URI_OBSERVER_GROUP
 	URI_ZONE_API_PREFIX      = URI_API_V1 + URI_ZONE_GROUP
 	URI_TENANT_API_PREFIX    = URI_API_V1 + URI_TENANT_GROUP
+	URI_OBPROXY_API_PREFIX   = URI_API_V1 + URI_OBPROXY_GROUP
 
 	URI_TASK_RPC_PREFIX     = URI_RPC_V1 + URI_TASK_GROUP
 	URI_AGENT_RPC_PREFIX    = URI_RPC_V1 + URI_AGENT_GROUP
