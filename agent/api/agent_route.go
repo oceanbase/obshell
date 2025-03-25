@@ -138,10 +138,10 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	agents.GET(constant.URI_STATUS, GetAllAgentStatus(s))
 
 	// obcluster routes
-	obcluster.PUT(constant.URI_CONFIG, obclusterConfigHandler(true))
+	obcluster.POST(constant.URI_CONFIG, obclusterConfigHandler(true))
 
 	// observer routes
-	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))
+	observer.POST(constant.URI_CONFIG, obServerConfigHandler(true))
 	observer.DELETE("", obClusterScaleInHandler)
 
 	// zone routes
