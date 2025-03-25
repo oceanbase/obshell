@@ -61,7 +61,6 @@ func parseRootPwd(pwd string, isForward bool) (string, error) {
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		500				object	http.OcsAgentResponse
 //	@Router			/api/v1/obcluster/config [put]
-//	@Router			/api/v1/obcluster/config [post]
 func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObClusterConfigParams
@@ -133,7 +132,6 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 //	@Failure		401				object	http.OcsAgentResponse
 //	@Failure		500				object	http.OcsAgentResponse
 //	@Router			/api/v1/observer/config [put]
-//	@Router			/api/v1/observer/config [post]
 func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObServerConfigParams
