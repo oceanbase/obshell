@@ -307,7 +307,7 @@ func obStartHandler(c *gin.Context) {
 //	@Success		200	object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		401	object	http.OcsAgentResponse
 //	@Failure		500	object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/scale_out [get]
+//	@Router			/api/v1/ob/scale_out [POST]
 func obClusterScaleOutHandler(c *gin.Context) {
 	var param param.ClusterScaleOutParam
 	if err := c.BindJSON(&param); err != nil {
