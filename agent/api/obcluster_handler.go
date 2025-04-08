@@ -60,8 +60,7 @@ func parseRootPwd(pwd string, isForward bool) (string, error) {
 //	@Failure		401				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/config [put]
-//	@Router			/api/v1/obcluster/config [post]
+//	@Router			/api/v1/obcluster/config [POST]
 func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObClusterConfigParams
@@ -132,8 +131,7 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		401				object	http.OcsAgentResponse
 //	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/observer/config [put]
-//	@Router			/api/v1/observer/config [post]
+//	@Router			/api/v1/observer/config [POST]
 func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObServerConfigParams
@@ -309,7 +307,7 @@ func obStartHandler(c *gin.Context) {
 //	@Success		200	object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		401	object	http.OcsAgentResponse
 //	@Failure		500	object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/scale_out [get]
+//	@Router			/api/v1/ob/scale_out [POST]
 func obClusterScaleOutHandler(c *gin.Context) {
 	var param param.ClusterScaleOutParam
 	if err := c.BindJSON(&param); err != nil {
