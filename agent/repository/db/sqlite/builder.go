@@ -144,13 +144,10 @@ func MigrateSqliteTables(forUpgrade bool) (err error) {
 	}
 
 	// Check if sqlite tables exist.
-	var count int
-	err = ocs_db_sqlite.Raw("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").Scan(&count).Error
-	if err != nil {
-		return err
-	}
-	if count < len(SqliteTables) {
-		return ocs_db_sqlite.AutoMigrate(SqliteTables...)
+	for _, table := range SqliteTables {
+		if !ocs_db_sqlite.Migrator().HasTable(table) {
+			return ocs_db_sqlite.AutoMigrate(SqliteTables...)
+		}
 	}
 
 	// Check if agent has been initialized.
