@@ -56,7 +56,10 @@ func newDeleteObproxyTask() *DeleteObproxyTask {
 	newTask := &DeleteObproxyTask{
 		Task: *task.NewSubTask(TASK_DELETE_OBPROXY),
 	}
-	newTask.SetCanRetry().SetCanContinue().SetCanCancel()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -76,7 +79,10 @@ func newCleanObproxyDirTask() *CleanObproxyDirTask {
 	newTask := &CleanObproxyDirTask{
 		Task: *task.NewSubTask(TASK_CLEAN_OBPROXY_DIR),
 	}
-	newTask.SetCanRetry().SetCanContinue().SetCanCancel()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 

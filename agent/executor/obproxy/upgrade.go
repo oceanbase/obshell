@@ -149,7 +149,11 @@ func newCopyConfigDbFileTask() *CopyConfigDbFileTask {
 	newTask := &CopyConfigDbFileTask{
 		Task: *task.NewSubTask(TASK_COPY_CONFIG_DB_FILE),
 	}
-	newTask.SetCanContinue().SetCanRetry().SetCanRollback()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -187,7 +191,11 @@ func newHotRestartObproxyTask() *HotRestartObproxyTask {
 	newTask := &HotRestartObproxyTask{
 		Task: *task.NewSubTask(TASK_HOT_RESTART_OBPROXY),
 	}
-	newTask.SetCanContinue().SetCanRetry().SetCanCancel()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -204,7 +212,11 @@ func newRecordObproxyInfoTask() *RecordObproxyInfoTask {
 	newTask := &RecordObproxyInfoTask{
 		Task: *task.NewSubTask(TASK_RECORD_OBPROXY_INFO),
 	}
-	newTask.SetCanContinue().SetCanRetry().SetCanRollback()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -234,7 +246,11 @@ func newWaitHotRestartObproxyFinishTask() *WaitHotRestartObproxyFinishTask {
 	newTask := &WaitHotRestartObproxyFinishTask{
 		Task: *task.NewSubTask(TASK_WAIT_HOT_RESTART_OBPROXY_FINISH),
 	}
-	newTask.SetCanContinue().SetCanRetry().SetCanCancel()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 

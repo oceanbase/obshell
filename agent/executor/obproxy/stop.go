@@ -56,7 +56,11 @@ func newStopObproxyTask() *StopObproxyTask {
 	newTask := &StopObproxyTask{
 		Task: *task.NewSubTask(TASK_STOP_OBPROXY),
 	}
-	newTask.SetCanRetry().SetCanContinue()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 

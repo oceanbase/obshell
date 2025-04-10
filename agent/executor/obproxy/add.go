@@ -332,7 +332,11 @@ func newStartObproxyTask() *StartObproxyTask {
 	newTask := &StartObproxyTask{
 		Task: *task.NewSubTask(TASK_START_OBPROXY),
 	}
-	newTask.SetCanRetry().SetCanContinue()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanRollback().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -459,7 +463,6 @@ type PersistObproxyInfoTask struct {
 	task.Task
 	homePath                 string
 	sqlPort                  int
-	version                  string
 	encryptedSysPwd          string
 	encryptedProxyroPassword string
 }
@@ -468,7 +471,10 @@ func newPersistObproxyInfoTask() *PersistObproxyInfoTask {
 	newTask := &PersistObproxyInfoTask{
 		Task: *task.NewSubTask(TASK_PERSIST_OBPROXY_INFP),
 	}
-	newTask.SetCanRetry().SetCanContinue()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanCancel().
+		SetCanPass()
 	return newTask
 }
 
@@ -503,7 +509,10 @@ func newPrepareForObproxyAgentNode(expectObproxyAgent bool) *task.Node {
 	newTask := &PrepareForAddObproxyTask{
 		Task: *task.NewSubTask(TASK_CHECK_OBPROXY_STATUS),
 	}
-	newTask.SetCanRetry().SetCanContinue()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanCancel().
+		SetCanPass()
 
 	ctx := task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true).SetParam(PARAM_EXPECT_OBPROXY_AGENT, expectObproxyAgent)
 	return task.NewNodeWithContext(newTask, false, ctx)
@@ -543,7 +552,10 @@ func NewSetObproxyUserPasswordForObNode(encryptedProxyroPassword string) *task.N
 	newTask := &SetObproxyUserPasswordForObTask{
 		Task: *task.NewSubTask(TASK_SET_OBPROXY_USER_PASSWORD),
 	}
-	newTask.SetCanRetry().SetCanContinue()
+	newTask.SetCanContinue().
+		SetCanRetry().
+		SetCanCancel().
+		SetCanPass()
 	ctx := task.NewTaskContext().SetParam(PARAM_OBPROXY_PROXYRO_PASSWORD, encryptedProxyroPassword)
 	return task.NewNodeWithContext(newTask, false, ctx)
 }
