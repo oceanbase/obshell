@@ -62,9 +62,9 @@ func TimeHandler(c *gin.Context) {
 //	@Router			/api/v1/info [get]
 func InfoHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		obVersion, err := binary.GetMyOBVersion()
-		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion, meta.AGENT_PWD.Inited())
-		common.SendResponse(c, agentStatus, err)
+		obVersion, _ := binary.GetMyOBVersion() // when occur err, obVersion is empty
+		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion, meta.AGENT_PWD.Inited(), meta.IsObproxyAgent())
+		common.SendResponse(c, agentStatus, nil)
 	}
 }
 
