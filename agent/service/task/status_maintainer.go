@@ -188,17 +188,28 @@ type agentStatusMaintainer struct {
 }
 
 func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, oldStatus int) error {
-	var resp *gorm.DB
-	if newStatus == task.OBPROXY_MAINTENACE {
-		resp = tx.Model(&sqlite.ObproxyInfo{}).Where("name=? and value=?", constant.OBPROXY_INFO_STATUS, oldStatus).Update("value", strconv.Itoa(newStatus))
-		if resp.Error != nil {
-			return resp.Error
+	resp := tx.Model(&sqlite.OcsInfo{}).Where("name=? and value=?", constant.OBPROXY_INFO_STATUS, oldStatus).Update("value", strconv.Itoa(newStatus))
+	if resp.Error != nil {
+		return resp.Error
+	}
+	if resp.RowsAffected == 0 {
+		if newStatus == task.NOT_UNDER_MAINTENANCE {
+			var nowStatus int
+			if err := tx.Set("gorm:query_option", "FOR UPDATE").Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", "status").First(&nowStatus).Error; err != nil {
+				return err
+			} else if nowStatus == newStatus {
+				return nil
+			}
 		}
-	} else {
-		resp = tx.Model(&sqlite.OcsInfo{}).Where("name=? and value=?", constant.OCS_INFO_STATUS, oldStatus).Update("value", strconv.Itoa(newStatus))
-		if resp.Error != nil {
-			return resp.Error
-		}
+		return fmt.Errorf("failed to set status to %d: agent status is not %d", newStatus, oldStatus)
+	}
+	return nil
+}
+
+func (maintainer *agentStatusMaintainer) setObproxyStatus(tx *gorm.DB, newStatus int, oldStatus int) error {
+	resp := tx.Model(&sqlite.ObproxyInfo{}).Where("name=? and value=?", constant.OBPROXY_INFO_STATUS, oldStatus).Update("value", strconv.Itoa(newStatus))
+	if resp.Error != nil {
+		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
 		if newStatus == task.NOT_UNDER_MAINTENANCE {
@@ -218,7 +229,14 @@ func (maintainer *agentStatusMaintainer) StartMaintenance(tx *gorm.DB, dag task.
 	if !dag.IsMaintenance() {
 		return nil
 	}
-	return maintainer.setStatus(tx, dag.GetMaintenanceType(), task.NOT_UNDER_MAINTENANCE)
+	switch dag.GetMaintenanceType() {
+	case task.GLOBAL_MAINTENANCE:
+		return maintainer.setStatus(tx, dag.GetMaintenanceType(), task.NOT_UNDER_MAINTENANCE)
+	case task.OBPROXY_MAINTENACE:
+		return maintainer.setObproxyStatus(tx, dag.GetMaintenanceType(), task.NOT_UNDER_MAINTENANCE)
+	default:
+		return nil
+	}
 }
 
 func (maintainer *agentStatusMaintainer) UpdateMaintenanceTask(tx *gorm.DB, dag *task.Dag) error {
@@ -230,7 +248,7 @@ func (maintainer *agentStatusMaintainer) StopMaintenance(tx *gorm.DB, dag task.M
 	case task.GLOBAL_MAINTENANCE:
 		return maintainer.setStatus(tx, task.NOT_UNDER_MAINTENANCE, task.GLOBAL_MAINTENANCE)
 	case task.OBPROXY_MAINTENACE:
-		return maintainer.setStatus(tx, task.NOT_UNDER_MAINTENANCE, task.OBPROXY_MAINTENACE)
+		return maintainer.setObproxyStatus(tx, task.NOT_UNDER_MAINTENANCE, task.OBPROXY_MAINTENACE)
 	default:
 		return nil
 	}

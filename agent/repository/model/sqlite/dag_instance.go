@@ -45,7 +45,11 @@ type DagInstance struct {
 func (d *DagInstance) ToBO() *bo.DagInstance {
 	MaintenanceType := task.NOT_UNDER_MAINTENANCE
 	if d.IsMaintenance {
-		MaintenanceType = task.GLOBAL_MAINTENANCE
+		if task.DAG_TYPE_MAP[task.DAG_OBPROXY] == d.Type {
+			MaintenanceType = task.OBPROXY_MAINTENACE
+		} else {
+			MaintenanceType = task.GLOBAL_MAINTENANCE
+		}
 	}
 	return &bo.DagInstance{
 		Id:                d.Id,
