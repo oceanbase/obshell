@@ -479,16 +479,13 @@ func (t *PersistObproxyInfoTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_OBPROXY_SQL_PORT, &t.sqlPort); err != nil {
 		return err
 	}
-	if err := t.GetContext().GetParamWithValue(PARAM_OBPROXY_VERSION, &t.version); err != nil {
-		return err
-	}
 	if err := t.GetContext().GetParamWithValue(PARAM_OBPROXY_SYS_PASSWORD, &t.encryptedSysPwd); err != nil {
 		return err
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_OBPROXY_PROXYRO_PASSWORD, &t.encryptedProxyroPassword); err != nil {
 		return err
 	}
-	if err := agentService.AddObproxy(t.homePath, t.sqlPort, t.version, t.encryptedSysPwd, t.encryptedProxyroPassword); err != nil {
+	if err := agentService.AddObproxy(t.homePath, t.sqlPort, t.encryptedSysPwd, t.encryptedProxyroPassword); err != nil {
 		return err
 	}
 

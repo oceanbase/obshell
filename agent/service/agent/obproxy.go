@@ -43,7 +43,7 @@ func (*AgentService) DeleteObproxy() error {
 	})
 }
 
-func (*AgentService) AddObproxy(homePath string, sqlPort int, version, enObproxySysPwd, enObproxyProxyroPwd string) error {
+func (*AgentService) AddObproxy(homePath string, sqlPort int, enObproxySysPwd, enObproxyProxyroPwd string) error {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
@@ -53,7 +53,6 @@ func (*AgentService) AddObproxy(homePath string, sqlPort int, version, enObproxy
 	infos[constant.OBPROXY_INFO_PROXYRO_PASSWORD] = enObproxyProxyroPwd
 	infos[constant.OBPROXY_INFO_HOME_PATH] = homePath
 	infos[constant.OBPROXY_INFO_SQL_PORT] = strconv.Itoa(sqlPort)
-	infos[constant.OBPROXY_INFO_VERSION] = version
 
 	return db.Transaction(func(tx *gorm.DB) error {
 		for k, v := range infos {
