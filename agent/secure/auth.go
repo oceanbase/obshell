@@ -64,7 +64,6 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 
 	if verifyType == AGENT_PASSWORD {
 		if pwd != meta.AGENT_PWD.GetPassword() {
-			log.Infof("agent password is incorrect, pwd:%v, agentPwd:%v", pwd, meta.AGENT_PWD.GetPassword())
 			return fmt.Errorf("access denied: %s", "agent password is incorrect")
 		}
 	} else if verifyType == OCEANBASE_PASSWORD {

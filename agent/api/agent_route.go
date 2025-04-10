@@ -53,7 +53,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_RESTORE,
 			constant.URI_API_V1+constant.URI_RESTORE+constant.URI_WINDOWS,
 			// init cluster
-			constant.URI_API_V1+constant.URI_INIT,
+			constant.URI_OB_API_PREFIX+constant.URI_INIT,
 			constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK,
 			// create tenant
 			constant.URI_API_V1+constant.URI_TENANT_GROUP,
