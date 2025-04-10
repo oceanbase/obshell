@@ -20,3 +20,7 @@ vendor
 *.iml
 .vscode/*
 .OWNERS
+.meta
+etc/
+log_obshell/
+run/

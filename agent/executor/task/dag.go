@@ -193,9 +193,9 @@ func convertDagDetailDTO(dag *task.Dag, fillDeatil bool) (dagDetailDTO *task.Dag
 //	@Tags			task
 //	@Accept			application/json
 //	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			id				path	string	true	"dag id"
-//	@Param			operator		body	string	true	"operator(rollback/retry/cancel/pass)"	example({"operator": "rollback"})
+//	@Param			X-OCS-Header	header	string				true	"Authorization"
+//	@Param			id				path	string				true	"dag id"
+//	@Param			body			body	task.DagOperator	true	"dag operator, supported values are (rollback/retry/cancel/pass)"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		404				object	http.OcsAgentResponse
@@ -276,17 +276,17 @@ func DagHandler(c *gin.Context) {
 	common.SendResponse(c, nil, nil)
 }
 
-// @ID				GetObLastMaintenanceDag
-// @Summary		get ob last maintenance dag
-// @Description	get ob last maintenance dag
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string	true	"Authorization"
-// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure		404				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/maintain/ob [get]
+//	@ID				GetObLastMaintenanceDag
+//	@Summary		get ob last maintenance dag
+//	@Description	get ob last maintenance dag
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		404				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/maintain/ob [get]
 func GetObLastMaintenanceDag(c *gin.Context) {
 	param := getTaskQueryParams(c)
 	dag, err := clusterTaskService.FindLastMaintenanceDag()
@@ -303,17 +303,17 @@ func GetObLastMaintenanceDag(c *gin.Context) {
 	common.SendResponse(c, dagDetailDTO, err)
 }
 
-// @ID				GetAgentLastMaintenanceDag
-// @Summary		get agent last maintenance dag
-// @Description	get agent last maintenance dag
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string	true	"Authorization"
-// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Failure		404				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/maintain/agent [get]
+//	@ID				GetAgentLastMaintenanceDag
+//	@Summary		get agent last maintenance dag
+//	@Description	get agent last maintenance dag
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Failure		404				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/maintain/agent [get]
 func GetAgentLastMaintenanceDag(c *gin.Context) {
 	param := getTaskQueryParams(c)
 	if meta.OCS_AGENT.IsMasterAgent() {
@@ -341,17 +341,17 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 	common.SendResponse(c, dagDetailDTO, err)
 }
 
-// @ID				GetAllAgentsLastMaintenanceDag
-// @Summary		get agent last maintenance dag
-// @Description	get agent last maintenance dag
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string	true	"Authorization"
-// @Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
-// @Failure		404				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/maintain/agents [get]
+//	@ID				GetAllAgentsLastMaintenanceDag
+//	@Summary		get agent last maintenance dag
+//	@Description	get agent last maintenance dag
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
+//	@Failure		404				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/maintain/agents [get]
 func GetAllAgentLastMaintenanceDag(c *gin.Context) {
 	param := getTaskQueryParams(c)
 	dagDetailDTOs := make([]*task.DagDetailDTO, 0)
@@ -384,17 +384,17 @@ func GetAllAgentLastMaintenanceDag(c *gin.Context) {
 	common.SendResponse(c, dagDetailDTOs, nil)
 }
 
-// @ID				GetUnfinishedDags
-// @Summary		get unfinished dags
-// @Description	get unfinished dags
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string					true	"Authorization"
-// @Param			showDetails		query	param.TaskQueryParams	true	"show details"
-// @Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
-// @Failure		400				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/unfinish [get]
+//	@ID				GetUnfinishedDags
+//	@Summary		get unfinished dags
+//	@Description	get unfinished dags
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			showDetails		query	param.TaskQueryParams	true	"show details"
+//	@Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/unfinish [get]
 func GetUnfinishedDags(c *gin.Context) {
 	ctx := common.NewContextWithTraceId(c)
 	switch meta.OCS_AGENT.GetIdentity() {
@@ -424,18 +424,18 @@ func GetUnfinishedDags(c *gin.Context) {
 	}
 }
 
-// @ID				GetClusterUnfinishDags
-// @Summary		get cluster unfinished dags
-// @Description	get cluster unfinished dags
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string					true	"Authorization"
-// @Param			showDetails		query	param.TaskQueryParams	true	"show details"
-// @Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
-// @Failure		400				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/ob/unfinish [get]
+//	@ID				GetClusterUnfinishDags
+//	@Summary		get cluster unfinished dags
+//	@Description	get cluster unfinished dags
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			showDetails		query	param.TaskQueryParams	true	"show details"
+//	@Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/ob/unfinish [get]
 func GetClusterUnfinishDags(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "only cluster agent can get cluster unfinished dags"))
@@ -447,17 +447,17 @@ func GetClusterUnfinishDags(c *gin.Context) {
 	common.SendResponse(c, dagDetailDTOs, err)
 }
 
-// @ID				GetAgentUnfinishDags
-// @Summary		get agent unfinished dags
-// @Description	get agent unfinished dags
-// @Tags			task
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string					true	"Authorization"
-// @Param			showDetails		query	param.TaskQueryParams	true	"show details"
-// @Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/task/dag/agent/unfinish [get]
+//	@ID				GetAgentUnfinishDags
+//	@Summary		get agent unfinished dags
+//	@Description	get agent unfinished dags
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string					true	"Authorization"
+//	@Param			showDetails		query	param.TaskQueryParams	true	"show details"
+//	@Success		200				object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/dag/agent/unfinish [get]
 func GetAgentUnfinishDags(c *gin.Context) {
 	param := getTaskQueryParams(c)
 	dagDetailDTOs, err := getAgentUnfinishDags(*param.ShowDetails)
