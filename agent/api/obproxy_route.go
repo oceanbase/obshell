@@ -38,7 +38,7 @@ func InitObproxyRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	obproxy.DELETE("", obproxyDeleteHandler)
 	obproxy.POST(constant.URI_START, obproxyStartHandler)
 	obproxy.POST(constant.URI_STOP, obproxyStopHandler)
-	obproxy.POST("package", obproxyPkgUploadHandler)
+	obproxy.POST(constant.URI_PACKAGE, obproxyPkgUploadHandler)
 	obproxy.POST(constant.URI_UPGRADE, obproxyUpgradeHandler)
 }
 

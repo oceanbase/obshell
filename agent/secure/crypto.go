@@ -123,7 +123,7 @@ func LoadOceanbasePassword(password *string) error {
 		log.Info("get password from environment variable")
 		password = &rootPwd
 	} else {
-		log.Infof("get password from command line: %s", *password)
+		log.Infof("get password from command line.")
 	}
 
 	// clear root password, avoid to cover sqlite when agent restart
