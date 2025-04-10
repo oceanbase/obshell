@@ -55,6 +55,11 @@ func SetOceanbasePwd(pwd string) {
 	}
 }
 
+func ClearOceanbasePwd() {
+	OCEANBASE_PWD = ""
+	OCEANBASE_PASSWORD_INITIALIZED = false
+}
+
 func GetObproxySysPwd() string {
 	return OBPROXY_SYS_PWD
 }

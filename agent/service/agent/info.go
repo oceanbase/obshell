@@ -277,6 +277,7 @@ func (s *AgentService) BeSingleAgent() error {
 			return err
 		}
 		ocsAgent.MasterAgent = nil
+		meta.ClearOceanbasePwd()
 		return nil
 	})
 }
@@ -307,7 +308,6 @@ func (s *AgentService) BeScalingOutAgent(zone string) error {
 		return
 	})
 }
-
 
 func (s *AgentService) SyncAgentData() (err error) {
 	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
