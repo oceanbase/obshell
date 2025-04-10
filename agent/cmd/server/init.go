@@ -226,7 +226,10 @@ func (a *Agent) checkAgentInfo() {
 // initServer will only initialize the Server and will not start the service.
 func (a *Agent) initServer() {
 	log.Info("init server")
-	serverConfig, _ := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), false)
+	serverConfig, err := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), false)
+	if err != nil {
+		process.ExitWithFailure(constant.EXIT_CODE_ERROR_INVAILD_AGENT, fmt.Sprintf("init server failed, err: %v", err))
+	}
 	log.Infof("server config is %v", serverConfig)
 	a.server = web.NewServer(config.DebugMode, *serverConfig)
 	a.startChan = make(chan bool, 1)

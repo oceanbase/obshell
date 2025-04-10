@@ -109,7 +109,6 @@ func tenantCheckWithName(c *gin.Context) (string, error) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			name			path	string					true	"tenant name"
 //	@Param			body			body	param.DropTenantParam	true	"drop tenant params"
 //	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -142,7 +141,6 @@ func tenantDropHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			name			path	string					true	"tenant name"
 //	@Param			body			body	param.RenameTenantParam	true	"rename tenant params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
@@ -171,7 +169,6 @@ func tenantRenameHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		401				object	http.OcsAgentResponse
@@ -193,7 +190,6 @@ func tenantLockHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		401				object	http.OcsAgentResponse
@@ -215,7 +211,6 @@ func tenantUnlockHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string								true	"Authorization"
-//	@Param			name			path	string								true	"tenant name"
 //	@Param			body			body	param.ScaleOutTenantReplicasParam	true	"add tenant replicas params"
 //	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -244,7 +239,6 @@ func tenantAddReplicasHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string								true	"Authorization"
-//	@Param			name			path	string								true	"tenant name"
 //	@Param			body			body	param.ScaleInTenantReplicasParam	true	"remove tenant replicas params"
 //	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -276,7 +270,6 @@ func tenantRemoveReplicasHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			name			path	string						true	"tenant name"
 //	@Param			body			body	param.ModifyReplicasParam	true	"modify tenant replicas params"
 //	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -309,7 +302,6 @@ func tenantModifyReplicasHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string								true	"Authorization"
-//	@Param			name			path	string								true	"tenant name"
 //	@Param			body			body	param.ModifyTenantWhitelistParam	true	"modify whitelist params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
@@ -342,7 +334,6 @@ func tenantModifyWhitelistHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string								true	"Authorization"
-//	@Param			name			path	string								true	"tenant name"
 //	@Param			body			body	param.ModifyTenantRootPasswordParam	true	"modify tenant root password params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
@@ -374,7 +365,6 @@ func tenantModifyPasswordHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string								true	"Authorization"
-//	@Param			name			path	string								true	"tenant name"
 //	@Param			body			body	param.ModifyTenantPrimaryZoneParam	true	"modify tenant primary zone params"
 //	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -403,7 +393,6 @@ func tenantModifyPrimaryZoneHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			name			path	string							true	"tenant name"
 //	@Param			body			body	param.SetTenantParametersParam	true	"set tenant parameters params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
@@ -431,7 +420,6 @@ func tenantSetParametersHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			name			path	string							true	"tenant name"
 //	@Param			body			body	param.SetTenantVariablesParam	true	"set tenant global variables params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
@@ -459,7 +447,6 @@ func tenantSetVariableHandler(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Success		200				object	http.OcsAgentResponse{data=bo.TenantInfo}
 //	@Failure		400				object	http.OcsAgentResponse
 //	@Failure		401				object	http.OcsAgentResponse
@@ -482,7 +469,6 @@ func getTenantInfo(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Param			para			path	string	true	"parameter name"
 //	@Success		200				object	http.OcsAgentResponse{data=oceanbase.GvObParameter}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -513,7 +499,6 @@ func getTenantParameter(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Param			filter			query	string	false	"filter format"
 //	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.GvObParameter}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -538,7 +523,6 @@ func getTenantParameters(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Param			var				path	string	true	"variable name"
 //	@Success		200				object	http.OcsAgentResponse{data=oceanbase.CdbObSysVariable}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -569,7 +553,6 @@ func getTenantVariable(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"tenant name"
 //	@Param			filter			query	string	false	"filter format"
 //	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.CdbObSysVariable}
 //	@Failure		400				object	http.OcsAgentResponse
@@ -614,7 +597,6 @@ func getTenantOverView(c *gin.Context) {
 //	@Accept			application/json
 //	@Produce		application/json
 //	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			name			path	string					true	"tenant name"
 //	@Param			body			body	param.CreateUserParam	true	"create user params"
 //	@Success		200				object	http.OcsAgentResponse
 //	@Failure		400				object	http.OcsAgentResponse
