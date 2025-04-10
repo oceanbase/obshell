@@ -18,9 +18,7 @@ package main
 
 import (
 	"os"
-	"os/signal"
 	"runtime"
-	"syscall"
 
 	"github.com/spf13/cobra"
 
@@ -39,7 +37,6 @@ import (
 	"github.com/oceanbase/obshell/client/cmd/tenant"
 	"github.com/oceanbase/obshell/client/cmd/unit"
 	"github.com/oceanbase/obshell/client/command"
-	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 func main() {
@@ -75,11 +72,6 @@ func main() {
 
 	agentcmd.PreHandler()
 
-	defer func() {
-		stdio.LoadFailedWithoutMsg()
-	}()
-	go gracefulTermination()
-
 	if err := cmds.Execute(); err != nil {
 		os.Exit(-1)
 	}
@@ -96,16 +88,4 @@ func newCmd() *cobra.Command {
 	})
 	cmd.SetHelpCommand(&cobra.Command{Hidden: true})
 	return cmd.Command
-}
-
-func gracefulTermination() {
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
-	sig := <-sigs
-	stdio.StopLoading()
-	if sig == syscall.SIGINT {
-		os.Exit(130)
-	} else {
-		os.Exit(143)
-	}
 }
