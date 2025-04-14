@@ -23,12 +23,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/swaggo/files v1.0.1
 	github.com/swaggo/gin-swagger v1.6.0
-	github.com/swaggo/swag v1.16.2
 	github.com/ulikunitz/xz v0.5.11
-	golang.org/x/crypto v0.27.0
-	golang.org/x/sys v0.25.0
-	golang.org/x/term v0.24.0
-	golang.org/x/text v0.18.0
+	golang.org/x/crypto v0.31.0
+	golang.org/x/sys v0.28.0
+	golang.org/x/term v0.27.0
+	golang.org/x/text v0.21.0
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1
 	gopkg.in/yaml.v2 v2.4.0
 	gorm.io/driver/mysql v1.5.1-0.20230509030346-3715c134c25b
@@ -44,7 +43,8 @@ require (
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
 	github.com/mozillazg/go-httpheader v0.2.1 // indirect
-	golang.org/x/sync v0.8.0 // indirect
+	github.com/swaggo/swag v1.16.2 // indirect
+	golang.org/x/sync v0.10.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 )
 
