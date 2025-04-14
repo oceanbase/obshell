@@ -48,19 +48,19 @@ func parseRootPwd(pwd string, isForward bool) (string, error) {
 	return pwd, nil
 }
 
-//	@ID				obclusterConfig
-//	@Summary		put ob cluster configs
-//	@Description	put ob cluster configs
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			body			body	param.ObClusterConfigParams	true	"obcluster configs"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/config [POST]
+// @ID obclusterConfig
+// @Summary put ob cluster configs
+// @Description put ob cluster configs
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ObClusterConfigParams true "obcluster configs"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/config [POST]
 func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObClusterConfigParams
@@ -119,19 +119,19 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 	}
 }
 
-//	@ID				obServerConfig
-//	@Summary		put observer configs
-//	@Description	put observer configs
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			body			body	param.ObServerConfigParams	true	"ob server configs"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/observer/config [POST]
+// @ID obServerConfig
+// @Summary put observer configs
+// @Description put observer configs
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ObServerConfigParams true "ob server configs"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/observer/config [POST]
 func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		var params param.ObServerConfigParams
@@ -176,18 +176,18 @@ func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 	}
 }
 
-//	@ID				obInit
-//	@Summary		init ob cluster
-//	@Description	init ob cluster
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/init [post]
+// @ID obInit
+// @Summary init ob cluster
+// @Description init ob cluster
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/init [post]
 func obInitHandler(c *gin.Context) {
 	var param param.ObInitParam
 	if err := c.BindJSON(&param); err != nil {
@@ -212,19 +212,19 @@ func obInitHandler(c *gin.Context) {
 	}
 }
 
-//	@ID				obStop
-//	@Summary		stop observers
-//	@Description	stop observers or the whole cluster, use param to specify
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string				true	"Authorization"
-//	@Param			body			body	param.ObStopParam	true	"use 'Scope' to specify the servers/zones/cluster, use 'Force'(optional) to specify whether alter system, use 'ForcePassDag'(optional) to force pass the prev stop dag if need"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/stop [post]
+// @ID obStop
+// @Summary stop observers
+// @Description stop observers or the whole cluster, use param to specify
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ObStopParam true "use 'Scope' to specify the servers/zones/cluster, use 'Force'(optional) to specify whether alter system, use 'ForcePassDag'(optional) to force pass the prev stop dag if need"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/stop [post]
 func obStopHandler(c *gin.Context) {
 	var param param.ObStopParam
 	if err := c.BindJSON(&param); err != nil {
@@ -245,19 +245,19 @@ func obStopHandler(c *gin.Context) {
 	}
 }
 
-//	@ID				obStart
-//	@Summary		start observers
-//	@Description	start observers or the whole cluster, use param to specify
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string				true	"Authorization"
-//	@Param			body			body	param.StartObParam	true	"use 'Scope' to specify the servers/zones/cluster, use 'ForcePassDag'(optional) to force pass the prev start dag if need"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/start [post]
+// @ID obStart
+// @Summary start observers
+// @Description start observers or the whole cluster, use param to specify
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.StartObParam true "use 'Scope' to specify the servers/zones/cluster, use 'ForcePassDag'(optional) to force pass the prev start dag if need"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/start [post]
 func obStartHandler(c *gin.Context) {
 	var param param.StartObParam
 	if err := c.BindJSON(&param); err != nil {
@@ -296,18 +296,18 @@ func obStartHandler(c *gin.Context) {
 	}
 }
 
-//	@ID				ScaleOut
-//	@Summary		cluster scale-out
-//	@Description	cluster scale-out
-//	@Tags			ob
-//	@Accept			application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			body			body	param.ClusterScaleOutParam	true	"scale-out param"
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		401	object	http.OcsAgentResponse
-//	@Failure		500	object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/scale_out [POST]
+// @ID ScaleOut
+// @Summary cluster scale-out
+// @Description cluster scale-out
+// @Tags ob
+// @Accept application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ClusterScaleOutParam true "scale-out param"
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/scale_out [POST]
 func obClusterScaleOutHandler(c *gin.Context) {
 	var param param.ClusterScaleOutParam
 	if err := c.BindJSON(&param); err != nil {
@@ -318,19 +318,19 @@ func obClusterScaleOutHandler(c *gin.Context) {
 	common.SendResponse(c, data, err)
 }
 
-//	@Summary		cluster scale-in
-//	@Description	cluster scale-in
-//	@Tags			ob
-//	@Accept			application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			body			body	param.ClusterScaleInParam	true	"scale-in param"
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Success		204	object	http.OcsAgentResponse
-//	@Failure		401	object	http.OcsAgentResponse
-//	@Failure		500	object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/scale_in [post]
-//	@Router			/api/v1/observer [delete]
+// @Summary cluster scale-in
+// @Description cluster scale-in
+// @Tags ob
+// @Accept application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ClusterScaleInParam true "scale-in param"
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Success 204 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/scale_in [post]
+// @Router /api/v1/observer [delete]
 func obClusterScaleInHandler(c *gin.Context) {
 	var param param.ClusterScaleInParam
 	if err := c.BindJSON(&param); err != nil {
@@ -357,15 +357,15 @@ func obClusterScaleInHandler(c *gin.Context) {
 	}
 }
 
-//	@ID				GetObInfo
-//	@Summary		get ob and agent info
-//	@Description	get ob and agent info
-//	@Tags			ob
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=param.ObInfoResp}
-//	@Failure		500	object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/info [get]
+// @ID GetObInfo
+// @Summary get ob and agent info
+// @Description get ob and agent info
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=param.ObInfoResp}
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/info [get]
 func obInfoHandler(c *gin.Context) {
 	if meta.OCS_AGENT.IsFollowerAgent() {
 		master := agentService.GetMasterAgentInfo()
@@ -390,19 +390,19 @@ func isEmergencyMode(c *gin.Context, scope *param.Scope) (res bool, agentErr *er
 	return false, nil
 }
 
-//	@ID				agentUpgradeCheck
-//	@Summary		check agent upgrade
-//	@Description	check agent upgrade
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			body			body	param.UpgradeCheckParam	true	"agent upgrade check params"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/agent/upgrade/check [post]
+// @ID agentUpgradeCheck
+// @Summary check agent upgrade
+// @Description check agent upgrade
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.UpgradeCheckParam true "agent upgrade check params"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/agent/upgrade/check [post]
 func agentUpgradeCheckHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
 	if err := c.BindJSON(&param); err != nil {
@@ -413,19 +413,19 @@ func agentUpgradeCheckHandler(c *gin.Context) {
 	common.SendResponse(c, task, err)
 }
 
-//	@ID				obUpgradeCheck
-//	@Summary		check ob upgrade
-//	@Description	check ob upgrade
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			body			body	param.UpgradeCheckParam	true	"ob upgrade check params"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/upgrade/check [post]
+// @ID obUpgradeCheck
+// @Summary check ob upgrade
+// @Description check ob upgrade
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.UpgradeCheckParam true "ob upgrade check params"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/upgrade/check [post]
 func obUpgradeCheckHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
 	if err := c.BindJSON(&param); err != nil {
@@ -436,18 +436,18 @@ func obUpgradeCheckHandler(c *gin.Context) {
 	common.SendResponse(c, task, err)
 }
 
-//	@ID				UpgradePkgUpload
-//	@Summary		upload upgrade package
-//	@Description	upload upgrade package
-//	@Tags			upgrade
-//	@Accept			multipart/form-data
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header		string	true	"Authorization"
-//	@Param			file			formData	file	true	"ob upgrade package"
-//	@Success		200				object		http.OcsAgentResponse{data=oceanbase.UpgradePkgInfo}
-//	@Failure		401				object		http.OcsAgentResponse
-//	@Failure		500				object		http.OcsAgentResponse
-//	@Router			/api/v1/upgrade/package [post]
+// @ID UpgradePkgUpload
+// @Summary upload upgrade package
+// @Description upload upgrade package
+// @Tags upgrade
+// @Accept multipart/form-data
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param file formData file true "ob upgrade package"
+// @Success 200 object http.OcsAgentResponse{data=oceanbase.UpgradePkgInfo}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/upgrade/package [post]
 func pkgUploadHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to proceed with package upload. Please ensure the 'init' command is executed before attempting to upload."))
@@ -463,53 +463,53 @@ func pkgUploadHandler(c *gin.Context) {
 	common.SendResponse(c, &data, agentErr)
 }
 
-//	@ID				ParamsBackup
-//	@Summary		backup params
-//	@Description	backup params
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.ObParameters}
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/upgrade/params/backup [post]
+// @ID ParamsBackup
+// @Summary backup params
+// @Description backup params
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]oceanbase.ObParameters}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/upgrade/params/backup [post]
 func paramsBackupHandler(c *gin.Context) {
 	data, err := ob.ParamsBackup()
 	common.SendResponse(c, data, err)
 }
 
-//	@ID				ParamsRestore
-//	@Summary		restore params
-//	@Description	restore params
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string				true	"Authorization"
-//	@Param			body			body	param.RestoreParams	true	"restore params"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/upgrade/params/restore [post]
+// @ID ParamsRestore
+// @Summary restore params
+// @Description restore params
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.RestoreParams true "restore params"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/upgrade/params/restore [post]
 func paramsRestoreHandler(c *gin.Context) {
 	var param param.RestoreParams
 	err := ob.ParamsRestore(param)
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				agentUpgrade
-//	@Summary		upgrade agent
-//	@Description	upgrade agent
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			body			body	param.UpgradeCheckParam	true	"agent upgrade check params"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/agent/upgrade [post]
+// @ID agentUpgrade
+// @Summary upgrade agent
+// @Description upgrade agent
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.UpgradeCheckParam true "agent upgrade check params"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/agent/upgrade [post]
 func agentUpgradeHandler(c *gin.Context) {
 	var param param.UpgradeCheckParam
 	if err := c.BindJSON(&param); err != nil {
@@ -520,19 +520,19 @@ func agentUpgradeHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				obUpgrade
-//	@Summary		upgrade ob
-//	@Description	upgrade ob
-//	@Tags			upgrade
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			body			body	param.ObUpgradeParam	true	"ob upgrade params"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/ob/upgrade [post]
+// @ID obUpgrade
+// @Summary upgrade ob
+// @Description upgrade ob
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ObUpgradeParam true "ob upgrade params"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/upgrade [post]
 func obUpgradeHandler(c *gin.Context) {
 	var param param.ObUpgradeParam
 	if err := c.BindJSON(&param); err != nil {

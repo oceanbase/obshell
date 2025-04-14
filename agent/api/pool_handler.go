@@ -25,19 +25,19 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-//	@ID				poolDrop
-//	@Summary		drop resource pool
-//	@Description	drop resource pool which is not used by any tenant
-//	@Tags			resource-pool
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"resource pool name"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/resource-pool/{name} [delete]
+// @ID poolDrop
+// @Summary drop resource pool
+// @Description drop resource pool which is not used by any tenant
+// @Tags resource-pool
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "resource pool name"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/resource-pool/{name} [delete]
 func poolDropHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
@@ -52,18 +52,18 @@ func poolDropHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				poolList
-//	@Summary		list all resource pools
-//	@Description	list all resource pools in the cluster
-//	@Tags			resource-pool
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.DbaObResourcePool}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/resources-pool [get]
+// @ID poolList
+// @Summary list all resource pools
+// @Description list all resource pools in the cluster
+// @Tags resource-pool
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]oceanbase.DbaObResourcePool}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/resources-pool [get]
 func poolListHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))

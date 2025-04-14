@@ -26,18 +26,18 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-//	@ID				unitConfigCreate
-//	@Summary		create resource unit config
-//	@Description	create resource unit config
-//	@Tags			unit
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			body	body	param.CreateResourceUnitConfigParams	true	"Resource unit config"
-//	@Success		200		object	http.OcsAgentResponse
-//	@Failure		400		object	http.OcsAgentResponse
-//	@Failure		401		object	http.OcsAgentResponse
-//	@Failure		500		object	http.OcsAgentResponse
-//	@Router			/api/v1/unit/config [post]
+// @ID unitConfigCreate
+// @Summary create resource unit config
+// @Description create resource unit config
+// @Tags unit
+// @Accept application/json
+// @Produce application/json
+// @Param body body param.CreateResourceUnitConfigParams true "Resource unit config"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/unit/config [post]
 func unitConfigCreateHandler(c *gin.Context) {
 	var param param.CreateResourceUnitConfigParams
 	if err := c.BindJSON(&param); err != nil {
@@ -56,18 +56,18 @@ func unitConfigCreateHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				unitConfigDrop
-//	@Summary		drop resource unit config
-//	@Description	drop resource unit config
-//	@Tags			unit
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			name	path	string	true	"resource unit name"
-//	@Success		200		object	http.OcsAgentResponse
-//	@Failure		400		object	http.OcsAgentResponse
-//	@Failure		401		object	http.OcsAgentResponse
-//	@Failure		500		object	http.OcsAgentResponse
-//	@Router			/api/v1/unit/config/{name} [delete]
+// @ID unitConfigDrop
+// @Summary drop resource unit config
+// @Description drop resource unit config
+// @Tags unit
+// @Accept application/json
+// @Produce application/json
+// @Param name path string true "resource unit name"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/unit/config/{name} [delete]
 func unitConfigDropHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
@@ -82,18 +82,18 @@ func unitConfigDropHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				unitConfigList
-//	@Summary		get all resource unit configs
-//	@Description	get all resource unit configs in the cluster
-//	@Tags			unit
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=[]oceanbase.DbaObUnitConfig}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/units/config [get]
+// @ID unitConfigList
+// @Summary get all resource unit configs
+// @Description get all resource unit configs in the cluster
+// @Tags unit
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]oceanbase.DbaObUnitConfig}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/units/config [get]
 func unitConfigListHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
@@ -103,18 +103,18 @@ func unitConfigListHandler(c *gin.Context) {
 	common.SendResponse(c, units, err)
 }
 
-//	@ID				unitConfigGet
-//	@Summary		get resource unit config
-//	@Description	get resource unit config
-//	@Tags			unit
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			name	path	string	true	"resource unit name"
-//	@Success		200		object	http.OcsAgentResponse{data=oceanbase.DbaObUnitConfig}
-//	@Failure		400		object	http.OcsAgentResponse
-//	@Failure		401		object	http.OcsAgentResponse
-//	@Failure		500		object	http.OcsAgentResponse
-//	@Router			/api/v1/unit/config/{name} [get]
+// @ID unitConfigGet
+// @Summary get resource unit config
+// @Description get resource unit config
+// @Tags unit
+// @Accept application/json
+// @Produce application/json
+// @Param name path string true "resource unit name"
+// @Success 200 object http.OcsAgentResponse{data=oceanbase.DbaObUnitConfig}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/unit/config/{name} [get]
 func unitConfigGetHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {

@@ -27,6 +27,7 @@ LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.GitCommitTime=$(shell g
 LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.BuildFlags=${BUILD_FLAG}"
 LDFLAGS_DEBUG = -X "github.com/oceanbase/obshell/agent/config.Mode=debug"
 LDFLAGS_RELEASE = -X "github.com/oceanbase/obshell/agent/config.Mode=release"
+LDFLAGS_DISABLE_ENCRYPTION = -X "github.com/oceanbase/obshell/agent/config.EncryptionDisabled=true"
 OBSHELL_LDFLAGS = $(LDFLAGS) -X "github.com/oceanbase/obshell/agent/config.CurProcess=obshell"
 
 GOFILES ?= $(shell git ls-files '*.go')

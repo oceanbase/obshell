@@ -1,6 +1,6 @@
 module github.com/oceanbase/obshell
 
-go 1.18
+go 1.23
 
 require (
 	github.com/GmSSL/GmSSL-Go v1.3.1

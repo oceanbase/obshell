@@ -44,7 +44,6 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 		common.PostHandlers("/debug/pprof", "/swagger"),
 		common.BodyDecrypt(), // decrypt request body
 		common.PaddingBody(), // if the response body is empty, the response body is padded with "{}"
-
 		common.PreHandlers(
 			constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG,

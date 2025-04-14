@@ -38,28 +38,28 @@ var localTaskService = task.NewLocalTaskService()
 
 // TimeHandler returns the current time
 //
-//	@ID				getTime
-//	@Summary		get current time
-//	@Description	get current time
-//	@Tags			v1
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=time.Time}
-//	@Router			/api/v1/time [get]
+// @ID getTime
+// @Summary get current time
+// @Description get current time
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=time.Time}
+// @Router /api/v1/time [get]
 func TimeHandler(c *gin.Context) {
 	common.SendResponse(c, time.Now(), nil)
 }
 
 // InfoHandler returns the agent info
 //
-//	@ID				getAgentInfo
-//	@Summary		get agent info
-//	@Description	get agent info
-//	@Tags			v1
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=meta.AgentStatus}
-//	@Router			/api/v1/info [get]
+// @ID getAgentInfo
+// @Summary get agent info
+// @Description get agent info
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=meta.AgentStatus}
+// @Router /api/v1/info [get]
 func InfoHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		obVersion, _ := binary.GetMyOBVersion() // when occur err, obVersion is empty
@@ -70,14 +70,14 @@ func InfoHandler(s *http.State) gin.HandlerFunc {
 
 // GitInfoHandler returns the agent git info
 //
-//	@ID				getGitInfo
-//	@Summary		get git info
-//	@Description	get git info
-//	@Tags			v1
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=config.GitInfo}
-//	@Router			/api/v1/git-info [get]
+// @ID getGitInfo
+// @Summary get git info
+// @Description get git info
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=config.GitInfo}
+// @Router /api/v1/git-info [get]
 func GitInfoHandler(c *gin.Context) {
 	common.SendResponse(c, config.GetGitInfo(), nil)
 }
@@ -102,14 +102,14 @@ func GetAgentStatus(s *http.State) (http.AgentStatus, error) {
 
 // StatusHandler returns the agent status
 //
-//	@ID				getStatus
-//	@Summary		get agent status
-//	@Description	get agent status
-//	@Tags			v1
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{data=http.AgentStatus}
-//	@Router			/api/v1/status [get]
+// @ID getStatus
+// @Summary get agent status
+// @Description get agent status
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=http.AgentStatus}
+// @Router /api/v1/status [get]
 func StatusHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		status, err := GetAgentStatus(s)
@@ -119,14 +119,14 @@ func StatusHandler(s *http.State) gin.HandlerFunc {
 
 // StatusHandler returns the agent status
 //
-//	@ID				getAllAgentsStatus
-//	@Summary		get all agent status
-//	@Description	get all agent status
-//	@Tags			v1
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Success		200	object	http.OcsAgentResponse{dat=map[string]http.AgentStatus}
-//	@Router			/api/v1/agents/status [get]
+// @ID getAllAgentsStatus
+// @Summary get all agent status
+// @Description get all agent status
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{dat=map[string]http.AgentStatus}
+// @Router /api/v1/agents/status [get]
 func GetAllAgentStatus(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		agentsStatus := make(map[string]http.AgentStatus)

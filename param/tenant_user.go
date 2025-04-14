@@ -14,25 +14,16 @@
  * limitations under the License.
  */
 
-package api
+package param
 
-import (
-	"github.com/gin-gonic/gin"
+type ModifyUserGlobalPrivilegeParam struct {
+	GlobalPrivileges []string `json:"global_privileges"`
+}
 
-	"github.com/oceanbase/obshell/agent/api/common"
-	"github.com/oceanbase/obshell/agent/secure"
-)
+type ModifyUserDbPrivilegeParam struct {
+	DbPrivileges []DbPrivilegeParam `json:"db_privileges"`
+}
 
-// @ID getSecret
-// @Summary get secret
-// @Description get secret
-// @Tags v1
-// @Accept application/json
-// @Produce application/json
-// @Success 200 object http.OcsAgentResponse{data=meta.AgentSecret}
-// @Router /api/v1/secret [get]
-func secretHandler(c *gin.Context) {
-	ctx := common.NewContextWithTraceId(c)
-	data := secure.GetSecret(ctx)
-	common.SendResponse(c, data, nil)
+type ChangeUserPasswordParam struct {
+	NewPassword string `json:"new_password"`
 }

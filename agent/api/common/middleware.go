@@ -30,6 +30,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -300,6 +301,11 @@ func SetContentType(c *gin.Context) {
 
 func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
+		// check encryption config
+		if config.IsEncryptionDisabled() {
+			c.Next()
+			return
+		}
 		for _, route := range skipRoutes {
 			if route == c.Request.RequestURI {
 				c.Next()
@@ -512,6 +518,10 @@ func VerifyTaskRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, pa
 
 func Verify(routeType ...secure.RouteType) func(*gin.Context) {
 	return func(c *gin.Context) {
+		if config.IsEncryptionDisabled() {
+			c.Next()
+			return
+		}
 		log.WithContext(NewContextWithTraceId(c)).Infof("verfiy request: %s", c.Request.RequestURI)
 		var header secure.HttpHeader
 		obHeaderByte, _ := c.Get(constant.OCS_HEADER)

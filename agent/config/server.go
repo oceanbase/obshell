@@ -20,7 +20,14 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 )
+
+var EncryptionDisabled string = "false"
+
+func IsEncryptionDisabled() bool {
+	return strings.ToUpper(EncryptionDisabled) == "TRUE"
+}
 
 type AgentMode = string
 

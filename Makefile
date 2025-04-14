@@ -20,8 +20,14 @@ build-release: set-release-flags obshell buildsucc
 
 build-with-swagger: enable-swagger build-release
 
+build-for-test: enable-swagger set-disable-encryption-flags build-debug
+
 rpm:
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec
+
+set-disable-encryption-flags:
+	@echo Build with encryption disabled flags
+	$(eval LDFLAGS += $(LDFLAGS_DISABLE_ENCRYPTION))
 
 set-debug-flags:
 	@echo Build with debug flags
