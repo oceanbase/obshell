@@ -35,7 +35,7 @@ import (
 )
 
 var shortHeader = []string{"Name", "Id", "Mode", "Locality", "Primary Zone", "Status", "Locked"}
-var longHeader = []string{"Name", "Id", "Mode", "Locality", "Primary Zone", "Status", "Unit Num(Each Zone)", "Unit Config", "Locked", "Whitelist", "Create Time"}
+var longHeader = []string{"Name", "Id", "Mode", "Locality", "Primary Zone", "Status", "Unit Num(Each Zone)", "Unit Config", "Locked", "Readonly", "Whitelist", "Create Time"}
 
 type tenantShowFlags struct {
 	showDetail bool
@@ -99,7 +99,11 @@ func tenantShow(showDetails bool, name ...string) error {
 				for _, pool := range info.Pools {
 					unitConfigs += fmt.Sprintf("%s(%s);", pool.ZoneList, pool.Unit.Name)
 				}
-				data = append(data, []string{tenant.TenantName, fmt.Sprint(tenant.TenantID), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, fmt.Sprint(info.Pools[0].UnitNum), unitConfigs, tenant.Locked, info.Whitelist, tenant.CreatedTime.Format(time.DateTime)})
+				readOnly := "false"
+				if info.ReadOnly {
+					readOnly = "true"
+				}
+				data = append(data, []string{tenant.TenantName, fmt.Sprint(tenant.TenantID), tenant.Mode, tenant.Locality, tenant.PrimaryZone, tenant.Status, fmt.Sprint(info.Pools[0].UnitNum), unitConfigs, tenant.Locked, readOnly, info.Whitelist, tenant.CreatedTime.Format(time.DateTime)})
 			}
 		}
 	}

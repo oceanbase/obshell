@@ -122,4 +122,5 @@ type TenantInfo struct {
 	Collation    string                  `json:"collation"` // Only for ORACLE tenant
 	Whitelist    string                  `json:"whitelist"`
 	Pools        []*ResourcePoolWithUnit `json:"pools"`
+	ReadOnly     bool                    `json:"read_only"` // Default to false.
 }

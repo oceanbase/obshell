@@ -17,6 +17,7 @@
 package tenant
 
 import (
+	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
@@ -26,6 +27,13 @@ func GetTenantsOverView() ([]oceanbase.DbaObTenant, *errors.OcsAgentError) {
 	tenants, err := tenantService.GetTenantsOverView()
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	for i := range tenants {
+		readOnly, err := tenantService.GetTenantVariable(tenants[i].TenantName, constant.VARIABLE_READ_ONLY)
+		if err != nil {
+			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		}
+		tenants[i].ReadOnly = (readOnly.Value == "1")
 	}
 	return tenants, nil
 }
@@ -65,6 +73,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		pools = append(pools, &poolWithUnit)
 	}
 
+	readOnly, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_READ_ONLY)
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+
 	return &bo.TenantInfo{
 		Name:         tenant.TenantName,
 		Id:           tenant.TenantID,
@@ -77,5 +90,6 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		InRecyclebin: tenant.InRecyclebin,
 		Whitelist:    whitelist.Value,
 		Pools:        pools,
+		ReadOnly:     readOnly.Value == "1",
 	}, nil
 }

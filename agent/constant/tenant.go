@@ -49,6 +49,7 @@ const (
 
 	VARIABLE_TIME_ZONE            = "time_zone"
 	VARIABLE_OB_TCP_INVITED_NODES = "ob_tcp_invited_nodes"
+	VARIABLE_READ_ONLY            = "read_only"
 
 	PARAMETER_ENABLE_REBALANCE = "enable_rebalance"
 
