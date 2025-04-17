@@ -687,13 +687,13 @@ func (obclusterService *ObclusterService) GetServerByZone(name string) (servers 
 	return
 }
 
-func (obclusterService *ObclusterService) GetCharsetAndCollation(charset string, collation string) (*oceanbase.Collations, error) {
+func (obclusterService *ObclusterService) GetCharsetAndCollation(charset string, collation string) (*oceanbase.ObCollation, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
 	}
 
-	var charsetInfo *oceanbase.Collations
+	var charsetInfo *oceanbase.ObCollation
 	if collation == "" {
 		err = oceanbaseDb.Table(COLLATIONS).Select("CHARACTER_SET_NAME, COLLATION_NAME").Where("CHARACTER_SET_NAME = ?", charset).Scan(&charsetInfo).Error
 		return charsetInfo, err
@@ -704,6 +704,24 @@ func (obclusterService *ObclusterService) GetCharsetAndCollation(charset string,
 		err = oceanbaseDb.Table(COLLATIONS).Select("CHARACTER_SET_NAME, COLLATION_NAME").Where("CHARACTER_SET_NAME = ? AND COLLATION_NAME = ?", charset, collation).Scan(&charsetInfo).Error
 		return charsetInfo, err
 	}
+}
+
+func (*ObclusterService) GetAllCharsets() (charsets []oceanbase.ObCharset, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Raw("SHOW CHARACTER SET").Scan(&charsets).Error
+	return
+}
+
+func (*ObclusterService) GetAllCollations() (collations []oceanbase.ObCollation, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(COLLATIONS).Select(("*")).Scan(&collations).Error
+	return
 }
 
 func (ObclusterService *ObclusterService) GetObUnitsOnServer(svrIp string, svrPort int) (units []oceanbase.DbaObUnit, err error) {

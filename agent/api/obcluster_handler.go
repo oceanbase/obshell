@@ -556,3 +556,23 @@ func obAgentsHandler(c *gin.Context) {
 	data, err := ob.GetObAgents()
 	common.SendResponse(c, data, err)
 }
+
+// @ID getObclusterCharsets
+// @Summary get obcluster charsets
+// @Description get obcluster charsets
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]bo.CharsetInfo}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/charsets [get]
+func getObclusterCharsets(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		return
+	}
+	charsets, err := ob.GetObclusterCharsets()
+	common.SendResponse(c, charsets, err)
+}

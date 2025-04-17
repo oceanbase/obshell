@@ -67,12 +67,6 @@ type DbaRecyclebin struct {
 	CanPurge     string `gorm:"column:CAN_PURGE" json:"can_purge"`
 }
 
-// select * from information_schema.collations
-type Collations struct {
-	Charset   string `gorm:"column:CHARACTER_SET_NAME"`
-	Collation string `gorm:"column:COLLATION_NAME"`
-}
-
 type ObServerCapacity struct {
 	Zone            string  `gorm:"column:ZONE" json:"zone"`
 	SvrIp           string  `gorm:"column:SVR_IP" json:"svr_ip"`

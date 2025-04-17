@@ -69,6 +69,7 @@ const (
 	URI_SCALE_OUT   = "/scale_out"
 	URI_SCALE_IN    = "/scale_in"
 	URI_AGENTS      = "/agents"
+	URI_CHARSETS    = "/charsets"
 
 	// Used for upgrade
 	URI_UPGRADE = "/upgrade"

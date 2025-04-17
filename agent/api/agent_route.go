@@ -157,6 +157,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	// obcluster routes
 	obcluster.PUT(constant.URI_CONFIG, obclusterConfigHandler(true))
 	obcluster.POST(constant.URI_CONFIG, obclusterConfigHandler(true))
+	obcluster.GET(constant.URI_CHARSETS, getObclusterCharsets)
 
 	// observer routes
 	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))
