@@ -18,6 +18,8 @@ package common
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"io"
 	"net"
 	"net/http"
@@ -299,7 +301,7 @@ func SetContentType(c *gin.Context) {
 	c.Next()
 }
 
-func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
+func HeaderDecrypt(skipRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// check encryption config
 		if config.IsEncryptionDisabled() {
@@ -338,12 +340,41 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 			}
 			c.Set(constant.OCS_HEADER, header)
 		}
+		c.Next()
+	}
+}
 
-		for _, route := range secure.GetSkipBodyEncryptRoutes() {
+func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
+	return func(c *gin.Context) {
+		// check encryption config
+		if config.IsEncryptionDisabled() {
+			c.Next()
+			return
+		}
+		for _, route := range skipRoutes {
 			if route == c.Request.RequestURI {
 				c.Next()
 				return
 			}
+		}
+		obHeaderByte, _ := c.Get(constant.OCS_HEADER)
+		agentHeaderByte, _ := c.Get(constant.OCS_AGENT_HEADER)
+		var headerByte any
+		if agentHeaderByte != nil {
+			headerByte = agentHeaderByte
+		} else if obHeaderByte != nil {
+			headerByte = obHeaderByte
+		} else {
+			c.Next()
+			return
+		}
+
+		header, ok := headerByte.(secure.HttpHeader)
+		if !ok {
+			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
+			return
 		}
 
 		// Decrypts the request body on routes where encryption is expected.
@@ -513,6 +544,50 @@ func VerifyTaskRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, pa
 	} else {
 		VerifyObRouters(c, curTs, header, passwordType)
 		return
+	}
+}
+
+func calculateSHA256(reader io.Reader) string {
+	hash := sha256.New()
+
+	_, err := io.Copy(hash, reader)
+	if err != nil {
+		return ""
+	}
+	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func VerifyFile() func(*gin.Context) {
+	return func(c *gin.Context) {
+		if config.IsEncryptionDisabled() {
+			c.Next()
+			return
+		}
+		file, _, err := c.Request.FormFile("file")
+		if err != nil {
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+			return
+		}
+		defer file.Close()
+		// calculate the file sha256
+		sha256 := calculateSHA256(file)
+		encryptedSHA := c.Request.Header.Get("X-OCS-File-SHA256")
+		// decrypt the file sha256
+		accept, err := secure.Decrypt(encryptedSHA)
+		if err != nil {
+			log.WithContext(NewContextWithTraceId(c)).Errorf("decrypt file sha256 failed, err: %v", err)
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "decrypt file sha256 failed"))
+			return
+		}
+		if accept != sha256 {
+			log.WithContext(NewContextWithTraceId(c)).Errorf("file sha256 not match, expect: %s, actual: %s", accept, sha256)
+			c.Abort()
+			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "file sha256 not match"))
+			return
+		}
+		c.Next()
 	}
 }
 

@@ -42,8 +42,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	r.Use(
 		gin.CustomRecovery(common.Recovery), // gin's crash-free middleware
 		common.PostHandlers("/debug/pprof", "/swagger"),
-		common.BodyDecrypt(), // decrypt request body
-		common.PaddingBody(), // if the response body is empty, the response body is padded with "{}"
+		common.HeaderDecrypt(),
+		common.BodyDecrypt(constant.URI_API_V1+constant.URI_PACKAGE), // decrypt request body
+		common.PaddingBody(),                                         // if the response body is empty, the response body is padded with "{}"
 		common.PreHandlers(
 			constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG,
@@ -103,6 +104,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	pool := v1.Group(constant.URI_POOL_GROUP)
 	recyclebin := v1.Group(constant.URI_RECYCLEBIN_GROUP)
 	zone := v1.Group(constant.URI_ZONE_GROUP)
+	pkg := v1.Group(constant.URI_PACKAGE)
 
 	if !isLocalRoute {
 		ob.Use(common.Verify())
@@ -171,6 +173,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	upgrade.POST(constant.URI_PACKAGE, pkgUploadHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_BACKUP, paramsBackupHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_RESTORE, paramsRestoreHandler)
+
+	pkg.POST("", common.VerifyFile(), newPkgUploadHandler)
 
 	// unit routes
 	unit.POST("", unitConfigCreateHandler)

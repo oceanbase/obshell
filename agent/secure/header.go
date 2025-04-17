@@ -41,6 +41,7 @@ type HttpHeader struct {
 	Token        string
 	Uri          string
 	Keys         []byte
+	Sha256       string
 	ForwardType  int
 	ForwardAgent meta.AgentInfo
 }

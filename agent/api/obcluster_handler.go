@@ -463,6 +463,34 @@ func pkgUploadHandler(c *gin.Context) {
 	common.SendResponse(c, &data, agentErr)
 }
 
+// @ID NewPkgUpload
+// @Summary upload upgrade package without body encryption
+// @Description upload upgrade package without body encryption
+// @Tags package
+// @Accept multipart/form-data
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param X-OCS-File-SHA256 header string true "SHA256 of the file"
+// @Param file formData file true "ob upgrade package"
+// @Success 200 object http.OcsAgentResponse{data=oceanbase.UpgradePkgInfo}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/package [post]
+func newPkgUploadHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to proceed with package upload. Please ensure the 'init' command is executed before attempting to upload."))
+		return
+	}
+	file, _, err := c.Request.FormFile("file")
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+		return
+	}
+	defer file.Close()
+	data, agentErr := ob.UpgradePkgUpload(file)
+	common.SendResponse(c, &data, agentErr)
+}
+
 // @ID ParamsBackup
 // @Summary backup params
 // @Description backup params
