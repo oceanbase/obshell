@@ -10,8 +10,8 @@
  * See the Mulan PSL v2 for more details.
  */
 
-import { formatMessage } from "@/util/intl";
-import { history } from "umi";
+import { formatMessage } from '@/util/intl';
+import { history } from 'umi';
 import {
   Alert,
   Button,
@@ -26,40 +26,40 @@ import {
   Switch,
   Table,
   Tooltip,
-} from "@oceanbase/design";
-import type { Route } from "@oceanbase/design/es/breadcrumb/Breadcrumb";
-import React, { useEffect, useState } from "react";
-import { uniq, uniqueId, uniqWith } from "lodash";
-import { findBy, isNullValue } from "@oceanbase/util";
-import { PageContainer } from "@oceanbase/ui";
-import { useRequest } from "ahooks";
-import * as IamController from "@/service/ocp-express/IamController";
-import * as ObTenantController from "@/service/ocp-express/ObTenantController";
-import * as ObClusterController from "@/service/ocp-express/ObClusterController";
-import { NAME_RULE, PASSWORD_REGEX } from "@/constant";
-import { REPLICA_TYPE_LIST } from "@/constant/oceanbase";
-import { TENANT_MODE_LIST } from "@/constant/tenant";
-import { getTextLengthRule, validatePassword } from "@/util";
-import { getUnitSpecLimit, getResourcesLimit } from "@/util/cluster";
-import encrypt from "@/util/encrypt";
-import { getMinServerCount } from "@/util/tenant";
-import { validateUnitCount } from "@/util/oceanbase";
-import { breadcrumbItemRender } from "@/util/component";
-import useDocumentTitle from "@/hook/useDocumentTitle";
-import MyInput from "@/component/MyInput";
-import MyCard from "@/component/MyCard";
-import MySelect from "@/component/MySelect";
-import Password from "@/component/Password";
-import WhitelistInput from "@/component/WhitelistInput";
-import ContentWithQuestion from "@/component/ContentWithQuestion";
-import FormPrimaryZone from "@/component/FormPrimaryZone";
-import SetParameterEditableProTable from "@/component/ParameterTemplate/SetParameterEditableProTable";
-import useStyles from "./index.style";
-import { getObclusterCharsets, getObInfo } from "@/service/obshell/ob";
-import { tenantCreate } from "@/service/obshell/tenant";
-import { unitConfigCreate } from "@/service/obshell/unit";
-import { message } from "antd";
-import { obclusterInfo } from "@/service/obshell/obcluster";
+} from '@oceanbase/design';
+import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
+import React, { useEffect, useState } from 'react';
+import { uniq, uniqueId, uniqWith } from 'lodash';
+import { findBy, isNullValue } from '@oceanbase/util';
+import { PageContainer } from '@oceanbase/ui';
+import { useRequest } from 'ahooks';
+import * as IamController from '@/service/ocp-express/IamController';
+import * as ObTenantController from '@/service/ocp-express/ObTenantController';
+import * as ObClusterController from '@/service/ocp-express/ObClusterController';
+import { NAME_RULE, PASSWORD_REGEX } from '@/constant';
+import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
+import { TENANT_MODE_LIST } from '@/constant/tenant';
+import { getTextLengthRule, validatePassword } from '@/util';
+import { getUnitSpecLimit, getResourcesLimit } from '@/util/cluster';
+import encrypt from '@/util/encrypt';
+import { getMinServerCount } from '@/util/tenant';
+import { validateUnitCount } from '@/util/oceanbase';
+import { breadcrumbItemRender } from '@/util/component';
+import useDocumentTitle from '@/hook/useDocumentTitle';
+import MyInput from '@/component/MyInput';
+import MyCard from '@/component/MyCard';
+import MySelect from '@/component/MySelect';
+import Password from '@/component/Password';
+import WhitelistInput from '@/component/WhitelistInput';
+import ContentWithQuestion from '@/component/ContentWithQuestion';
+import FormPrimaryZone from '@/component/FormPrimaryZone';
+import SetParameterEditableProTable from '@/component/ParameterTemplate/SetParameterEditableProTable';
+import useStyles from './index.style';
+import { getObInfo } from '@/service/obshell/ob';
+import { tenantCreate } from '@/service/obshell/tenant';
+import { unitConfigCreate, unitConfigList } from '@/service/obshell/unit';
+import { message } from 'antd';
+import { obclusterInfo } from '@/service/obshell/obcluster';
 
 const { Option } = MySelect;
 
@@ -90,7 +90,7 @@ const New: React.FC<NewProps> = ({
   const isClone = !isNullValue(defaultTenantId);
 
   const [passed, setPassed] = useState(true);
-  const [currentMode, setCurrentMode] = useState("MYSQL");
+  const [currentMode, setCurrentMode] = useState('MYSQL');
   const [collations, setCollations] = useState<API.Collation[]>([]);
 
   // const [initParameters, setInitParameters] = useState([]);
@@ -101,14 +101,8 @@ const New: React.FC<NewProps> = ({
   // 推荐
   useDocumentTitle(
     isClone
-      ? formatMessage({
-          id: "ocp-express.Tenant.New.CopyTenant",
-          defaultMessage: "复制租户",
-        })
-      : formatMessage({
-          id: "ocp-express.Tenant.New.CreateATenant",
-          defaultMessage: "新建租户",
-        })
+      ? formatMessage({ id: 'ocp-express.Tenant.New.CopyTenant', defaultMessage: '复制租户' })
+      : formatMessage({ id: 'ocp-express.Tenant.New.CreateATenant', defaultMessage: '新建租户' })
   );
 
   const {
@@ -124,7 +118,7 @@ const New: React.FC<NewProps> = ({
   const clusterData = obclusterInfoRes?.data || {};
   const minServerCount = getMinServerCount(zones);
 
-  console.log(minServerCount, zones, "minServerCount");
+  console.log(minServerCount, zones, 'minServerCount');
   // 获取 unit 规格的限制规则
   const { data: clusterUnitSpecLimitData } = useRequest(
     ObClusterController.getClusterUnitSpecLimit,
@@ -140,7 +134,7 @@ const New: React.FC<NewProps> = ({
   };
 
   const { data: charsetListData, runAsync: listCharsets } = useRequest(
-    getObclusterCharsets,
+    ObClusterController.listCharsets,
     {
       manual: false,
     }
@@ -152,9 +146,9 @@ const New: React.FC<NewProps> = ({
     getClusterData({}).then(() => {
       // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
       listCharsets({
-        tenantMode: "MYSQL",
-      }).then((charsetRes) => {
-        handleCharsetChange("utf8mb4", charsetRes.data?.contents || []);
+        tenantMode: 'MYSQL',
+      }).then(charsetRes => {
+        handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
       });
       if (isClone) {
         getTenantData({
@@ -167,111 +161,98 @@ const New: React.FC<NewProps> = ({
   useEffect(() => {
     if (!isClone) {
       setFieldsValue({
-        zones: (zones || []).map((item) => ({
+        zones: (zones || []).map(item => ({
           checked: true,
           name: item.name,
-          replicaType: "FULL",
+          replicaType: 'FULL',
           unitCount: 1,
         })),
 
-        mode: "MYSQL",
-        charset: "utf8mb4",
-        primaryZone: "",
+        mode: 'MYSQL',
+        charset: 'utf8mb4',
+        primaryZone: '',
       });
     }
   }, [clusterData]);
 
   // 获取租户数据: 仅在复制租户时调用
-  const { data: tenantInfo, run: getTenantData } = useRequest(
-    ObTenantController.getTenant,
-    {
-      manual: true,
-      onSuccess: (res) => {
-        if (res.successful) {
-          const sourceTenantData = res?.data || {};
+  const { data: tenantInfo, run: getTenantData } = useRequest(ObTenantController.getTenant, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        const sourceTenantData = res?.data || {};
 
-          const sourceZones = (sourceTenantData?.zones || []).map((item) => ({
-            name: item.name,
-            replicaType: item.replicaType,
-            unitCount: item.resourcePool?.unitCount,
-            unitConfig: item.resourcePool?.unitConfig,
-            ...item?.unitSpec,
-          }));
+        const sourceZones = (sourceTenantData?.zones || []).map(item => ({
+          name: item.name,
+          replicaType: item.replicaType,
+          unitCount: item.resourcePool?.unitCount,
+          unitConfig: item.resourcePool?.unitConfig,
+          ...item?.unitSpec,
+        }));
 
-          const charset = sourceTenantData.charset || "utf8mb4";
-          setFieldsValue({
-            name: `${sourceTenantData.name}_clone`,
-            zonesUnitCount:
-              tenantData.zones?.map((item) => item.units?.length)?.[0] || 1,
-            zones: (clusterData.zones || []).map((zone) => {
-              const replicaZone = sourceZones.find(
-                (item) => item.name === zone.name
-              );
+        const charset = sourceTenantData.charset || 'utf8mb4';
+        setFieldsValue({
+          name: `${sourceTenantData.name}_clone`,
+          zonesUnitCount: tenantData.zones?.map(item => item.units?.length)?.[0] || 1,
+          zones: (clusterData.zones || []).map(zone => {
+            const replicaZone = sourceZones.find(item => item.name === zone.name);
 
-              return {
-                name: zone.name,
-                cpuCore: replicaZone?.unitConfig?.maxCpuCoreCount,
-                memorySize: replicaZone?.unitConfig?.maxMemorySize,
-                ...(replicaZone
-                  ? {
-                      // 已分布副本的 Zone，已勾选
-                      checked: true,
-                      ...replicaZone,
-                    }
-                  : {
-                      // 未分布副本的 Zone，未勾选
-                      checked: false,
-                      replicaType: "FULL",
-                    }),
-              };
-            }),
-            mode: sourceTenantData.mode,
-            charset,
-            collation: sourceTenantData.collation || "utf8mb4_general_ci",
-            primaryZone: sourceTenantData.primaryZone,
-            comment: sourceTenantData.comment,
-            whitelist: sourceTenantData.whitelist,
-          });
+            return {
+              name: zone.name,
+              cpuCore: replicaZone?.unitConfig?.maxCpuCoreCount,
+              memorySize: replicaZone?.unitConfig?.maxMemorySize,
+              ...(replicaZone
+                ? {
+                    // 已分布副本的 Zone，已勾选
+                    checked: true,
+                    ...replicaZone,
+                  }
+                : {
+                    // 未分布副本的 Zone，未勾选
+                    checked: false,
+                    replicaType: 'FULL',
+                  }),
+            };
+          }),
+          mode: sourceTenantData.mode,
+          charset,
+          collation: sourceTenantData.collation || 'utf8mb4_general_ci',
+          primaryZone: sourceTenantData.primaryZone,
+          comment: sourceTenantData.comment,
+          whitelist: sourceTenantData.whitelist,
+        });
 
-          // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
-          listCharsets({
-            tenantMode: sourceTenantData.mode,
-          }).then((charsetRes) => {
-            // 需要从 charsetRes 获取最新的字符集列表
-            const newChartsetList = charsetRes.data?.contents || [];
-            setCollations(
-              findBy(newChartsetList, "name", charset)?.collations || []
-            );
-          });
-        }
-      },
-    }
-  );
+        // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
+        listCharsets({
+          tenantMode: sourceTenantData.mode,
+        }).then(charsetRes => {
+          // 需要从 charsetRes 获取最新的字符集列表
+          const newChartsetList = charsetRes.data?.contents || [];
+          setCollations(findBy(newChartsetList, 'name', charset)?.collations || []);
+        });
+      }
+    },
+  });
 
   const tenantData = tenantInfo?.data || {};
 
   // 创建租户更改为异步
-  const { run: addTenant, loading: createTenantLoading } = useRequest(
-    tenantCreate,
-    {
-      manual: true,
-      onSuccess: (res) => {
-        if (res.successful) {
-          message.success("创建租户成功");
-          history.push(`/tenant`);
-          // const taskId = res?.data?.id;
-          // history.push(`/tenant/result/${taskId}`);
-        }
-      },
-    }
-  );
-
-  const { runAsync: unitConfigCreateFn } = useRequest(unitConfigCreate, {
+  const { run: addTenant, loading: createTenantLoading } = useRequest(tenantCreate, {
     manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        message.success('创建租户成功');
+        history.push(`/tenant`);
+        // const taskId = res?.data?.id;
+        // history.push(`/tenant/result/${taskId}`);
+      }
+    },
   });
 
+  const { runAsync: unitConfigCreateFn } = useRequest(unitConfigCreate, {});
+
   const handleSubmit = () => {
-    validateFields().then((values) => {
+    validateFields().then(values => {
       const {
         zones,
         zonesUnitCount,
@@ -284,30 +265,29 @@ const New: React.FC<NewProps> = ({
 
       const realParameters = {};
       const zoneUnitMap = {};
-      const checkZones = zones.filter((item) => !!item.checked);
+      const checkZones = zones.filter(item => !!item.checked);
 
-      parameters.forEach((parameter) => {
+      parameters.forEach(parameter => {
         realParameters[parameter.name] = parameter.value;
       });
 
-      console.log(values, realParameters, "values");
+      console.log(values, realParameters, 'values');
 
       uniqWith(checkZones, (a, b) => {
         return a.cpuCore === b.cpuCore && a.memorySize === b.memorySize;
       }).map(({ cpuCore, memorySize }) => {
-        zoneUnitMap["" + cpuCore + memorySize] = {
+        zoneUnitMap['' + cpuCore + memorySize] = {
           name: `tenant_unit_${Date.now()}_${uniqueId()}`,
           cpuCore: Number(cpuCore),
-          memorySize: memorySize + "GB",
+          memorySize: memorySize + 'GB',
         };
       });
 
-      const zoneList = checkZones?.map((zone) => {
+      const zoneList = checkZones?.map(zone => {
         return {
           name: zone.name,
           replica_type: zone.replicaType,
-          unit_config_name:
-            zoneUnitMap["" + zone.cpuCore + zone.memorySize]?.name,
+          unit_config_name: zoneUnitMap['' + zone.cpuCore + zone.memorySize]?.name,
           unit_num: zone.unitCount,
         };
       });
@@ -320,9 +300,9 @@ const New: React.FC<NewProps> = ({
             name: item.name,
           });
         })
-      ).then((res) => {
-        console.log(res, "res");
-        if (!res.some((item) => item.successful === false)) {
+      ).then(res => {
+        console.log(res, 'res');
+        if (!res.some(item => item.successful === false)) {
           addTenant({
             ...restValues,
             zone_list: zoneList,
@@ -357,93 +337,80 @@ const New: React.FC<NewProps> = ({
     });
   };
 
-  const handleCharsetChange = (
-    charset: string,
-    newCharsetList: API.Charset[]
-  ) => {
-    const newCollations =
-      findBy(newCharsetList, "name", charset)?.collations || [];
-    const defaultCollation = findBy(newCollations, "isDefault", true);
+  const handleCharsetChange = (charset: string, newCharsetList: API.Charset[]) => {
+    const newCollations = findBy(newCharsetList, 'name', charset)?.collations || [];
+    const defaultCollation = findBy(newCollations, 'isDefault', true);
     setCollations(newCollations);
     setFieldsValue({ collation: defaultCollation.name });
   };
 
   const replicaTypeTooltipConfig = {
-    color: "#fff",
+    color: '#fff',
     overlayStyle: {
       maxWidth: 400,
     },
     title: formatMessage({
-      id: "ocp-express.Tenant.New.CurrentlyOnlyFullFunctionReplicasAreSupported",
-      defaultMessage: "当前仅支持全功能型副本",
+      id: 'ocp-express.Tenant.New.CurrentlyOnlyFullFunctionReplicasAreSupported',
+      defaultMessage: '当前仅支持全功能型副本',
     }),
   };
 
   const routes: Route[] = [
     {
-      path: "/tenant",
+      path: '/tenant',
       breadcrumbName: formatMessage({
-        id: "ocp-express.Tenant.New.Tenant",
-        defaultMessage: "租户",
+        id: 'ocp-express.Tenant.New.Tenant',
+        defaultMessage: '租户',
       }),
     },
 
     {
       breadcrumbName: isClone
-        ? formatMessage({
-            id: "ocp-express.Tenant.New.CopyTenant",
-            defaultMessage: "复制租户",
-          })
-        : formatMessage({
-            id: "ocp-express.Tenant.New.CreateATenant",
-            defaultMessage: "新建租户",
-          }),
+        ? formatMessage({ id: 'ocp-express.Tenant.New.CopyTenant', defaultMessage: '复制租户' })
+        : formatMessage({ id: 'ocp-express.Tenant.New.CreateATenant', defaultMessage: '新建租户' }),
     },
   ];
 
   const columns = [
     {
-      title: " ",
-      dataIndex: "checked",
+      title: ' ',
+      dataIndex: 'checked',
       width: 24,
     },
     {
-      title: formatMessage({
-        id: "ocp-express.Tenant.New.ZoneName",
-        defaultMessage: "Zone 名称",
-      }),
-      dataIndex: "name",
+      title: formatMessage({ id: 'ocp-express.Tenant.New.ZoneName', defaultMessage: 'Zone 名称' }),
+      dataIndex: 'name',
     },
 
     {
       title: (
         <ContentWithQuestion
           content={formatMessage({
-            id: "ocp-express.Tenant.New.ReplicaType",
-            defaultMessage: "副本类型",
+            id: 'ocp-express.Tenant.New.ReplicaType',
+            defaultMessage: '副本类型',
           })}
           tooltip={replicaTypeTooltipConfig}
         />
       ),
 
-      dataIndex: "replicaType",
+      dataIndex: 'replicaType',
     },
 
     {
       title: formatMessage({
-        id: "ocp-express.Tenant.New.UnitSpecifications",
-        defaultMessage: "Unit 规格",
+        id: 'ocp-express.Tenant.New.UnitSpecifications',
+        defaultMessage: 'Unit 规格',
       }),
 
-      dataIndex: "unitSpecName",
+      dataIndex: 'unitSpecName',
     },
 
     {
       title: formatMessage({
-        id: "ocp-express.Tenant.New.UnitQuantity",
-        defaultMessage: "Unit 数量",
+        id: 'ocp-express.Tenant.New.UnitQuantity',
+        defaultMessage: 'Unit 数量',
       }),
-      dataIndex: "unitCount",
+      dataIndex: 'unitCount',
     },
   ];
 
@@ -454,16 +421,13 @@ const New: React.FC<NewProps> = ({
       header={{
         title: isClone
           ? formatMessage({
-              id: "ocp-express.Tenant.New.ReplicationTenant",
-              defaultMessage: "复制租户",
+              id: 'ocp-express.Tenant.New.ReplicationTenant',
+              defaultMessage: '复制租户',
             })
-          : formatMessage({
-              id: "ocp-express.Tenant.New.NewTenant",
-              defaultMessage: "新建租户",
-            }),
+          : formatMessage({ id: 'ocp-express.Tenant.New.NewTenant', defaultMessage: '新建租户' }),
         breadcrumb: { routes, itemRender: breadcrumbItemRender },
         onBack: () => {
-          history.push("/tenant");
+          history.push('/tenant');
         },
       }}
       footer={[
@@ -474,13 +438,10 @@ const New: React.FC<NewProps> = ({
           data-aspm-param={``}
           data-aspm-expo
           onClick={() => {
-            history.push("/tenant");
+            history.push('/tenant');
           }}
         >
-          {formatMessage({
-            id: "ocp-express.Tenant.New.Cancel",
-            defaultMessage: "取消",
-          })}
+          {formatMessage({ id: 'ocp-express.Tenant.New.Cancel', defaultMessage: '取消' })}
         </Button>,
         <Button
           key="submit"
@@ -492,10 +453,7 @@ const New: React.FC<NewProps> = ({
           loading={createTenantLoading}
           onClick={handleSubmit}
         >
-          {formatMessage({
-            id: "ocp-express.Tenant.New.Submitted",
-            defaultMessage: "提交",
-          })}
+          {formatMessage({ id: 'ocp-express.Tenant.New.Submitted', defaultMessage: '提交' })}
         </Button>,
       ]}
     >
@@ -510,8 +468,8 @@ const New: React.FC<NewProps> = ({
           <Col span={24}>
             <MyCard
               title={formatMessage({
-                id: "ocp-express.Tenant.New.BasicInformation",
-                defaultMessage: "基本信息",
+                id: 'ocp-express.Tenant.New.BasicInformation',
+                defaultMessage: '基本信息',
               })}
               bordered={false}
             >
@@ -519,14 +477,13 @@ const New: React.FC<NewProps> = ({
                 <Col span={8}>
                   <Form.Item
                     label={formatMessage({
-                      id: "ocp-express.Tenant.New.TenantMode",
-                      defaultMessage: "租户模式",
+                      id: 'ocp-express.Tenant.New.TenantMode',
+                      defaultMessage: '租户模式',
                     })}
                     tooltip={{
                       title: formatMessage({
-                        id: "ocp-express.Tenant.New.OracleTenantModeIsSupported",
-                        defaultMessage:
-                          "社区版 OceanBase 不支持 Oracle 租户模式",
+                        id: 'ocp-express.Tenant.New.OracleTenantModeIsSupported',
+                        defaultMessage: '社区版 OceanBase 不支持 Oracle 租户模式',
                       }),
                     }}
                     name="mode"
@@ -535,53 +492,45 @@ const New: React.FC<NewProps> = ({
                       {
                         required: true,
                         message: formatMessage({
-                          id: "ocp-express.Tenant.New.SelectTenantMode",
-                          defaultMessage: "请选择租户模式",
+                          id: 'ocp-express.Tenant.New.SelectTenantMode',
+                          defaultMessage: '请选择租户模式',
                         }),
                       },
                     ]}
                   >
                     <MySelect
-                      onChange={(value) => {
+                      onChange={value => {
                         setFieldsValue({
-                          charset: "utf8mb4",
+                          charset: 'utf8mb4',
                         });
 
                         setCurrentMode(value);
-                        const clusterId = getFieldValue("clusterId");
+                        const clusterId = getFieldValue('clusterId');
                         // 以获取最新的 mode 值
                         if (!isNullValue(clusterId)) {
                           listCharsets({
                             tenantMode: value,
-                          }).then((charsetRes) => {
-                            handleCharsetChange(
-                              "utf8mb4",
-                              charsetRes.data?.contents || []
-                            );
+                          }).then(charsetRes => {
+                            handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
                           });
                         }
                       }}
                     >
-                      {TENANT_MODE_LIST.map((item) => (
+                      {TENANT_MODE_LIST.map(item => (
                         <Option
                           key={item.value}
                           value={item.value}
-                          disabled={
-                            clusterData?.communityEdition &&
-                            item.value === "ORACLE"
-                          }
+                          disabled={clusterData?.communityEdition && item.value === 'ORACLE'}
                         >
-                          {clusterData?.communityEdition &&
-                          item.value === "ORACLE" ? (
+                          {clusterData?.communityEdition && item.value === 'ORACLE' ? (
                             <Tooltip
                               placement="topLeft"
                               title={formatMessage({
-                                id: "ocp-express.Tenant.New.CommunityEditionOceanbaseDoesNotSupportOracleTenants",
-                                defaultMessage:
-                                  "社区版 OceanBase 暂不支持 Oracle 租户",
+                                id: 'ocp-express.Tenant.New.CommunityEditionOceanbaseDoesNotSupportOracleTenants',
+                                defaultMessage: '社区版 OceanBase 暂不支持 Oracle 租户',
                               })}
                             >
-                              <div style={{ width: "100%" }}>{item.label}</div>
+                              <div style={{ width: '100%' }}>{item.label}</div>
                             </Tooltip>
                           ) : (
                             item.label
@@ -594,16 +543,16 @@ const New: React.FC<NewProps> = ({
                 <Col span={8}>
                   <Form.Item
                     label={formatMessage({
-                      id: "ocp-express.Tenant.New.TenantName",
-                      defaultMessage: "租户名称",
+                      id: 'ocp-express.Tenant.New.TenantName',
+                      defaultMessage: '租户名称',
                     })}
                     name="name"
                     rules={[
                       {
                         required: true,
                         message: formatMessage({
-                          id: "ocp-express.Tenant.New.EnterTheTenantName",
-                          defaultMessage: "请输入租户名称",
+                          id: 'ocp-express.Tenant.New.EnterTheTenantName',
+                          defaultMessage: '请输入租户名称',
                         }),
                       },
 
@@ -612,8 +561,8 @@ const New: React.FC<NewProps> = ({
                   >
                     <MyInput
                       placeholder={formatMessage({
-                        id: "ocp-express.Tenant.New.PleaseEnter",
-                        defaultMessage: "请输入",
+                        id: 'ocp-express.Tenant.New.PleaseEnter',
+                        defaultMessage: '请输入',
                       })}
                     />
                   </Form.Item>
@@ -623,16 +572,16 @@ const New: React.FC<NewProps> = ({
                 <Col span={8}>
                   <Form.Item
                     label={formatMessage({
-                      id: "ocp-express.Tenant.New.AdministratorInitialPassword",
-                      defaultMessage: "管理员初始密码",
+                      id: 'ocp-express.Tenant.New.AdministratorInitialPassword',
+                      defaultMessage: '管理员初始密码',
                     })}
                     name="rootPassword"
                     rules={[
                       {
                         required: true,
                         message: formatMessage({
-                          id: "ocp-express.Tenant.New.PleaseEnterOrRandomlyGenerate",
-                          defaultMessage: "请输入或随机生成管理员初始密码",
+                          id: 'ocp-express.Tenant.New.PleaseEnterOrRandomlyGenerate',
+                          defaultMessage: '请输入或随机生成管理员初始密码',
                         }),
                       },
 
@@ -641,44 +590,37 @@ const New: React.FC<NewProps> = ({
                       },
                     ]}
                   >
-                    <Password
-                      generatePasswordRegex={PASSWORD_REGEX}
-                      onValidate={setPassed}
-                    />
+                    <Password generatePasswordRegex={PASSWORD_REGEX} onValidate={setPassed} />
                   </Form.Item>
                 </Col>
 
                 <Col span={8}>
                   <Form.Item
                     label={formatMessage({
-                      id: "ocp-express.Tenant.New.CharacterSet",
-                      defaultMessage: "字符集",
+                      id: 'ocp-express.Tenant.New.CharacterSet',
+                      defaultMessage: '字符集',
                     })}
                     name="charset"
                     rules={[
                       {
                         required: true,
                         message: formatMessage({
-                          id: "ocp-express.Tenant.New.SelectACharacterSet",
-                          defaultMessage: "请选择字符集",
+                          id: 'ocp-express.Tenant.New.SelectACharacterSet',
+                          defaultMessage: '请选择字符集',
                         }),
                       },
                     ]}
                   >
                     <MySelect
-                      onChange={(value) => {
+                      onChange={value => {
                         handleCharsetChange(value, charsetList);
                       }}
                       showSearch={true}
                       optionLabelProp="label"
                       dropdownClassName="select-dropdown-with-description"
                     >
-                      {charsetList.map((item) => (
-                        <Option
-                          key={item.name}
-                          value={item.name}
-                          label={item.name}
-                        >
+                      {charsetList.map(item => (
+                        <Option key={item.name} value={item.name} label={item.name}>
                           <span>{item.name}</span>
                         </Option>
                       ))}
@@ -686,16 +628,12 @@ const New: React.FC<NewProps> = ({
                   </Form.Item>
                 </Col>
                 {/* 如果是 oracle 模式，不展示 collation */}
-                {currentMode === "MYSQL" && (
+                {currentMode === 'MYSQL' && (
                   <Col span={8}>
                     <Form.Item label="Collation" name="collation">
                       <MySelect>
-                        {collations?.map((item) => (
-                          <Option
-                            key={item.name}
-                            value={item.name}
-                            label={item.name}
-                          >
+                        {collations?.map(item => (
+                          <Option key={item.name} value={item.name} label={item.name}>
                             <span>{item.name}</span>
                           </Option>
                         ))}
@@ -708,8 +646,8 @@ const New: React.FC<NewProps> = ({
                 <Col span={10}>
                   <Form.Item
                     label={formatMessage({
-                      id: "ocp-express.Tenant.New.Remarks",
-                      defaultMessage: "备注",
+                      id: 'ocp-express.Tenant.New.Remarks',
+                      defaultMessage: '备注',
                     })}
                     name="comment"
                     rules={[getTextLengthRule(0, 200)]}
@@ -719,8 +657,8 @@ const New: React.FC<NewProps> = ({
                       showCount={true}
                       maxLength={200}
                       placeholder={formatMessage({
-                        id: "ocp-express.Tenant.New.PleaseEnter",
-                        defaultMessage: "请输入",
+                        id: 'ocp-express.Tenant.New.PleaseEnter',
+                        defaultMessage: '请输入',
                       })}
                     />
                   </Form.Item>
@@ -731,8 +669,8 @@ const New: React.FC<NewProps> = ({
           <Col span={24}>
             <MyCard
               title={formatMessage({
-                id: "ocp-express.Tenant.New.ZoneInformation",
-                defaultMessage: "Zone 信息",
+                id: 'ocp-express.Tenant.New.ZoneInformation',
+                defaultMessage: 'Zone 信息',
               })}
               bordered={false}
             >
@@ -742,14 +680,14 @@ const New: React.FC<NewProps> = ({
                     <Col span={12}>
                       <Form.Item
                         label={formatMessage({
-                          id: "ocp-express.Tenant.New.NumberOfUnitsInEachZone",
-                          defaultMessage: "各 Zone 的 Unit 数量",
+                          id: 'ocp-express.Tenant.New.NumberOfUnitsInEachZone',
+                          defaultMessage: '各 Zone 的 Unit 数量',
                         })}
                         extra={formatMessage(
                           {
-                            id: "ocp-express.Tenant.New.TheMaximumNumberOfCurrentKesheIsMinservercount",
+                            id: 'ocp-express.Tenant.New.TheMaximumNumberOfCurrentKesheIsMinservercount',
                             defaultMessage:
-                              "当前可设最大个数为 {minServerCount} (Zone 中最少 OBServer 数决定 Unit 可设最大个数)",
+                              '当前可设最大个数为 {minServerCount} (Zone 中最少 OBServer 数决定 Unit 可设最大个数)',
                           },
                           { minServerCount: minServerCount }
                         )}
@@ -760,8 +698,8 @@ const New: React.FC<NewProps> = ({
                             // 仅勾选行需要必填
                             required: true,
                             message: formatMessage({
-                              id: "ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty",
-                              defaultMessage: "请输入 Unit 数量",
+                              id: 'ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty',
+                              defaultMessage: '请输入 Unit 数量',
                             }),
                           },
                         ]}
@@ -769,19 +707,19 @@ const New: React.FC<NewProps> = ({
                         <InputNumber
                           min={1}
                           max={minServerCount}
-                          onChange={(value) => {
-                            const currentZones = getFieldValue("zones");
+                          onChange={value => {
+                            const currentZones = getFieldValue('zones');
                             setFieldsValue({
-                              zones: currentZones?.map((item) => ({
+                              zones: currentZones?.map(item => ({
                                 ...item,
                                 unitCount: value,
                               })),
                             });
                           }}
-                          style={{ width: "30%" }}
+                          style={{ width: '30%' }}
                           placeholder={formatMessage({
-                            id: "ocp-express.Tenant.New.Enter",
-                            defaultMessage: "请输入",
+                            id: 'ocp-express.Tenant.New.Enter',
+                            defaultMessage: '请输入',
                           })}
                         />
                       </Form.Item>
@@ -797,8 +735,8 @@ const New: React.FC<NewProps> = ({
                         {
                           required: true,
                           message: formatMessage({
-                            id: "ocp-express.Tenant.New.PleaseSetACopy",
-                            defaultMessage: "请设置副本",
+                            id: 'ocp-express.Tenant.New.PleaseSetACopy',
+                            defaultMessage: '请设置副本',
                           }),
                         },
                       ]}
@@ -808,53 +746,37 @@ const New: React.FC<NewProps> = ({
                           <>
                             {fields.map((field, index: number) => {
                               const currentChecked = getFieldValue([
-                                "zones",
+                                'zones',
                                 field.name,
-                                "checked",
+                                'checked',
                               ]);
 
-                              const currentZoneName = getFieldValue([
-                                "zones",
-                                field.name,
-                                "name",
-                              ]);
-                              const zoneData = findBy(
-                                zones || [],
-                                "name",
-                                currentZoneName
-                              );
+                              const currentZoneName = getFieldValue(['zones', field.name, 'name']);
+                              const zoneData = findBy(zones || [], 'name', currentZoneName);
 
                               let idleCpuCore;
                               let idleMemoryInBytes;
-                              if (
-                                zoneData?.servers?.length > 0 &&
-                                zoneData?.servers[0]?.stats
-                              ) {
-                                const {
-                                  idleCpuCoreTotal,
-                                  idleMemoryInBytesTotal,
-                                } = getUnitSpecLimit(
-                                  zoneData?.servers[0]?.stats
-                                );
+                              if (zoneData?.servers?.length > 0 && zoneData?.servers[0]?.stats) {
+                                const { idleCpuCoreTotal, idleMemoryInBytesTotal } =
+                                  getUnitSpecLimit(zoneData?.servers[0]?.stats);
                                 idleCpuCore = idleCpuCoreTotal;
                                 idleMemoryInBytes = idleMemoryInBytesTotal;
                               }
 
-                              const { cpuLowerLimit, memoryLowerLimit } =
-                                clusterUnitSpecLimit;
+                              const { cpuLowerLimit, memoryLowerLimit } = clusterUnitSpecLimit;
 
                               return (
                                 <div
                                   key={field.key}
                                   style={{
-                                    display: "flex",
+                                    display: 'flex',
                                   }}
                                 >
                                   <Form.Item
                                     style={{ marginBottom: 8, width: 24 }}
                                     {...field}
-                                    label={index === 0 && " "}
-                                    name={[field.name, "checked"]}
+                                    label={index === 0 && ' '}
+                                    name={[field.name, 'checked']}
                                     rules={[
                                       {
                                         required: true,
@@ -877,11 +799,11 @@ const New: React.FC<NewProps> = ({
                                         label={
                                           index === 0 &&
                                           formatMessage({
-                                            id: "ocp-express.Tenant.New.ZoneName",
-                                            defaultMessage: "Zone 名称",
+                                            id: 'ocp-express.Tenant.New.ZoneName',
+                                            defaultMessage: 'Zone 名称',
                                           })
                                         }
-                                        name={[field.name, "name"]}
+                                        name={[field.name, 'name']}
                                         rules={[
                                           {
                                             // 仅勾选行需要必填
@@ -899,19 +821,19 @@ const New: React.FC<NewProps> = ({
                                         label={
                                           index === 0 &&
                                           formatMessage({
-                                            id: "ocp-express.Tenant.New.ReplicaType",
-                                            defaultMessage: "副本类型",
+                                            id: 'ocp-express.Tenant.New.ReplicaType',
+                                            defaultMessage: '副本类型',
                                           })
                                         }
                                         tooltip={replicaTypeTooltipConfig}
-                                        name={[field.name, "replicaType"]}
+                                        name={[field.name, 'replicaType']}
                                         rules={[
                                           {
                                             // 仅勾选行需要必填
                                             required: currentChecked,
                                             message: formatMessage({
-                                              id: "ocp-express.Tenant.New.SelectAReplicaType",
-                                              defaultMessage: "请选择副本类型",
+                                              id: 'ocp-express.Tenant.New.SelectAReplicaType',
+                                              defaultMessage: '请选择副本类型',
                                             }),
                                           },
                                         ]}
@@ -920,7 +842,7 @@ const New: React.FC<NewProps> = ({
                                           disabled={!currentChecked}
                                           optionLabelProp="label"
                                         >
-                                          {REPLICA_TYPE_LIST.map((item) => (
+                                          {REPLICA_TYPE_LIST.map(item => (
                                             <Option
                                               key={item.value}
                                               value={item.value}
@@ -933,9 +855,7 @@ const New: React.FC<NewProps> = ({
                                                   maxWidth: 400,
                                                 }}
                                               >
-                                                <div style={{ width: "100%" }}>
-                                                  {item.label}
-                                                </div>
+                                                <div style={{ width: '100%' }}>{item.label}</div>
                                               </Tooltip>
                                             </Option>
                                           ))}
@@ -949,8 +869,8 @@ const New: React.FC<NewProps> = ({
                                         label={
                                           index === 0 &&
                                           formatMessage({
-                                            id: "ocp-express.Tenant.New.UnitSpecifications",
-                                            defaultMessage: "Unit 规格",
+                                            id: 'ocp-express.Tenant.New.UnitSpecifications',
+                                            defaultMessage: 'Unit 规格',
                                           })
                                         }
                                         extra={
@@ -958,9 +878,9 @@ const New: React.FC<NewProps> = ({
                                           idleCpuCore &&
                                           formatMessage(
                                             {
-                                              id: "ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore",
+                                              id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
                                               defaultMessage:
-                                                "当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}",
+                                                '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
                                             },
                                             {
                                               cpuLowerLimit: cpuLowerLimit,
@@ -976,26 +896,25 @@ const New: React.FC<NewProps> = ({
                                             ? 4
                                             : null
                                         }
-                                        name={[field.name, "cpuCore"]}
+                                        name={[field.name, 'cpuCore']}
                                         rules={[
                                           {
                                             // 仅勾选行需要必填
                                             required: currentChecked,
                                             message: formatMessage({
-                                              id: "ocp-express.Tenant.New.EnterTheUnitSpecification",
-                                              defaultMessage:
-                                                "请输入 unit 规格",
+                                              id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
+                                              defaultMessage: '请输入 unit 规格',
                                             }),
                                           },
                                           {
-                                            type: "number",
+                                            type: 'number',
                                             min: cpuLowerLimit,
                                             max: idleCpuCore,
                                             message: formatMessage(
                                               {
-                                                id: "ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore",
+                                                id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
                                                 defaultMessage:
-                                                  "当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}",
+                                                  '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
                                               },
                                               {
                                                 cpuLowerLimit: cpuLowerLimit,
@@ -1008,11 +927,11 @@ const New: React.FC<NewProps> = ({
                                         <InputNumber
                                           disabled={!currentChecked}
                                           addonAfter={formatMessage({
-                                            id: "ocp-express.Tenant.New.Nuclear",
-                                            defaultMessage: "核",
+                                            id: 'ocp-express.Tenant.New.Nuclear',
+                                            defaultMessage: '核',
                                           })}
                                           step={0.5}
-                                          style={{ width: "100%" }}
+                                          style={{ width: '100%' }}
                                         />
                                       </Form.Item>
                                     </Col>
@@ -1020,22 +939,20 @@ const New: React.FC<NewProps> = ({
                                       <Form.Item
                                         style={{ marginBottom: 8 }}
                                         {...field}
-                                        label={index === 0 && " "}
-                                        name={[field.name, "memorySize"]}
+                                        label={index === 0 && ' '}
+                                        name={[field.name, 'memorySize']}
                                         extra={
                                           memoryLowerLimit &&
                                           idleMemoryInBytes &&
                                           formatMessage(
                                             {
-                                              id: "ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes",
+                                              id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
                                               defaultMessage:
-                                                "当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}",
+                                                '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
                                             },
                                             {
-                                              memoryLowerLimit:
-                                                memoryLowerLimit,
-                                              idleMemoryInBytes:
-                                                idleMemoryInBytes,
+                                              memoryLowerLimit: memoryLowerLimit,
+                                              idleMemoryInBytes: idleMemoryInBytes,
                                             }
                                           )
                                         }
@@ -1052,26 +969,23 @@ const New: React.FC<NewProps> = ({
                                             // 仅勾选行需要必填
                                             required: currentChecked,
                                             message: formatMessage({
-                                              id: "ocp-express.Tenant.New.EnterTheUnitSpecification",
-                                              defaultMessage:
-                                                "请输入 unit 规格",
+                                              id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
+                                              defaultMessage: '请输入 unit 规格',
                                             }),
                                           },
                                           {
-                                            type: "number",
+                                            type: 'number',
                                             min: memoryLowerLimit || 0,
                                             max: idleMemoryInBytes || 0,
                                             message: formatMessage(
                                               {
-                                                id: "ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes",
+                                                id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
                                                 defaultMessage:
-                                                  "当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}",
+                                                  '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
                                               },
                                               {
-                                                memoryLowerLimit:
-                                                  memoryLowerLimit,
-                                                idleMemoryInBytes:
-                                                  idleMemoryInBytes,
+                                                memoryLowerLimit: memoryLowerLimit,
+                                                idleMemoryInBytes: idleMemoryInBytes,
                                               }
                                             ),
                                           },
@@ -1079,7 +993,7 @@ const New: React.FC<NewProps> = ({
                                       >
                                         <InputNumber
                                           disabled={!currentChecked}
-                                          style={{ width: "100%" }}
+                                          style={{ width: '100%' }}
                                           addonAfter="GB"
                                         />
                                       </Form.Item>
@@ -1094,36 +1008,27 @@ const New: React.FC<NewProps> = ({
                                               label={
                                                 index === 0 &&
                                                 formatMessage({
-                                                  id: "ocp-express.Tenant.New.UnitQuantity",
-                                                  defaultMessage: "Unit 数量",
+                                                  id: 'ocp-express.Tenant.New.UnitQuantity',
+                                                  defaultMessage: 'Unit 数量',
                                                 })
                                               }
                                               initialValue={1}
-                                              name={[field.name, "unitCount"]}
+                                              name={[field.name, 'unitCount']}
                                               rules={[
                                                 {
                                                   required: true,
                                                   message: formatMessage({
-                                                    id: "ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty",
-                                                    defaultMessage:
-                                                      "请输入 Unit 数量",
+                                                    id: 'ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty',
+                                                    defaultMessage: '请输入 Unit 数量',
                                                   }),
                                                 },
                                                 {
-                                                  validator: (
-                                                    rule,
-                                                    value,
-                                                    callback
-                                                  ) =>
+                                                  validator: (rule, value, callback) =>
                                                     validateUnitCount(
                                                       rule,
                                                       value,
                                                       callback,
-                                                      findBy(
-                                                        zones || [],
-                                                        "name",
-                                                        currentZoneName
-                                                      )
+                                                      findBy(zones || [], 'name', currentZoneName)
                                                     ),
                                                 },
                                               ]}
@@ -1134,10 +1039,10 @@ const New: React.FC<NewProps> = ({
                                                 readOnly={true}
                                                 // 其余样式需要手动去掉
                                                 className="input-number-readonly"
-                                                style={{ width: "100%" }}
+                                                style={{ width: '100%' }}
                                                 placeholder={formatMessage({
-                                                  id: "ocp-express.Tenant.New.Enter",
-                                                  defaultMessage: "请输入",
+                                                  id: 'ocp-express.Tenant.New.Enter',
+                                                  defaultMessage: '请输入',
                                                 })}
                                               />
                                             </Form.Item>
@@ -1155,31 +1060,25 @@ const New: React.FC<NewProps> = ({
                     </Form.List>
                   </Form.Item>
                 ) : (
-                  <Table
-                    className={styles.table}
-                    dataSource={[]}
-                    columns={columns}
-                  />
+                  <Table className={styles.table} dataSource={[]} columns={columns} />
                 )}
 
                 <Form.Item noStyle shouldUpdate={true}>
                   {() => {
-                    const currentZones = getFieldValue("zones");
-                    const checkedZones = (currentZones || []).filter(
-                      (item) => item.checked
-                    );
+                    const currentZones = getFieldValue('zones');
+                    const checkedZones = (currentZones || []).filter(item => item.checked);
                     const uniqueCheckedUnitSpecNameList = uniq(
                       checkedZones
                         // 去掉空值
-                        .filter((item) => !!item.unitSpecName)
-                        .map((item) => item.unitSpecName)
+                        .filter(item => !!item.unitSpecName)
+                        .map(item => item.unitSpecName)
                     );
 
                     const uniqueCheckedUnitCountList = uniq(
                       checkedZones
                         // 去掉空值
-                        .filter((item) => !isNullValue(item.unitCount))
-                        .map((item) => item.unitCount)
+                        .filter(item => !isNullValue(item.unitCount))
+                        .map(item => item.unitCount)
                     );
 
                     // 勾选 Zone 的副本类型或副本数量不同时，展示 alert 提示
@@ -1188,9 +1087,9 @@ const New: React.FC<NewProps> = ({
                         uniqueCheckedUnitCountList.length > 1) && (
                         <Alert
                           message={formatMessage({
-                            id: "ocp-express.Tenant.New.WeRecommendThatYouSetTheSameUnit",
+                            id: 'ocp-express.Tenant.New.WeRecommendThatYouSetTheSameUnit',
                             defaultMessage:
-                              "建议为全能型副本设置相同的 Unit 规格，不同的 Unit 规格可能造成性能或稳定性问题。",
+                              '建议为全能型副本设置相同的 Unit 规格，不同的 Unit 规格可能造成性能或稳定性问题。',
                           })}
                           type="info"
                           showIcon={true}
@@ -1203,30 +1102,29 @@ const New: React.FC<NewProps> = ({
               </Spin>
               <Form.Item noStyle shouldUpdate={true}>
                 {() => {
-                  const currentZones = getFieldValue("zones");
+                  const currentZones = getFieldValue('zones');
                   return (
                     <Form.Item
                       style={{ marginBottom: 0 }}
                       label={formatMessage({
-                        id: "ocp-express.Tenant.New.ZonePrioritySorting",
-                        defaultMessage: "Zone 优先级排序",
+                        id: 'ocp-express.Tenant.New.ZonePrioritySorting',
+                        defaultMessage: 'Zone 优先级排序',
                       })}
                       tooltip={{
                         title: formatMessage({
-                          id: "ocp-express.Tenant.New.PriorityOfTheDistributionOf",
-                          defaultMessage: "租户中主副本分布的优先级",
+                          id: 'ocp-express.Tenant.New.PriorityOfTheDistributionOf',
+                          defaultMessage: '租户中主副本分布的优先级',
                         }),
                       }}
                       extra={formatMessage({
-                        id: "ocp-express.Tenant.New.IfThisParameterIsEmpty",
-                        defaultMessage:
-                          "如果为空，则默认继承 sys 租户的 Zone 优先级",
+                        id: 'ocp-express.Tenant.New.IfThisParameterIsEmpty',
+                        defaultMessage: '如果为空，则默认继承 sys 租户的 Zone 优先级',
                       })}
                       name="primaryZone"
                       rules={[
                         {
                           required: true,
-                          message: "请选择 Zone 优先级排序",
+                          message: '请选择 Zone 优先级排序',
                         },
                       ]}
                     >
@@ -1234,8 +1132,8 @@ const New: React.FC<NewProps> = ({
                         loading={clusterDataLoading}
                         zoneList={(currentZones || [])
                           // 仅勾选的 zone 副本可以设置优先级
-                          .filter((item) => item.checked)
-                          .map((item) => item.name)}
+                          .filter(item => item.checked)
+                          .map(item => item.name)}
                       />
                     </Form.Item>
                   );
@@ -1246,8 +1144,8 @@ const New: React.FC<NewProps> = ({
           <Col span={24}>
             <MyCard
               title={formatMessage({
-                id: "ocp-express.Tenant.New.SecuritySettings",
-                defaultMessage: "安全设置",
+                id: 'ocp-express.Tenant.New.SecuritySettings',
+                defaultMessage: '安全设置',
               })}
               bordered={false}
             >
@@ -1271,17 +1169,17 @@ const New: React.FC<NewProps> = ({
           </Col>
           <Col span={24}>
             <Card
-              className={advanceSettingSwitch ? "" : "card-without-padding"}
+              className={advanceSettingSwitch ? '' : 'card-without-padding'}
               title={
                 <Space>
                   {formatMessage({
-                    id: "ocp-express.Cluster.New.ParameterSettings",
-                    defaultMessage: "参数设置",
+                    id: 'ocp-express.Cluster.New.ParameterSettings',
+                    defaultMessage: '参数设置',
                   })}
 
                   <Switch
                     checked={advanceSettingSwitch}
-                    onChange={(checked) => {
+                    onChange={checked => {
                       setAdvanceSettingSwitch(checked);
                     }}
                   />
@@ -1291,12 +1189,12 @@ const New: React.FC<NewProps> = ({
             >
               {advanceSettingSwitch && (
                 <>
-                  {compatibleOracleAlret && currentMode === "MYSQL" && (
+                  {compatibleOracleAlret && currentMode === 'MYSQL' && (
                     <Alert
                       message={formatMessage({
-                        id: "ocp-express.Tenant.New.DeleteTheParametersMarkedWith",
+                        id: 'ocp-express.Tenant.New.DeleteTheParametersMarkedWith',
                         defaultMessage:
-                          "请删除红色边框标记的参数，这些参数仅适用于 Oracle 模式的租户，当前租户为MySQL",
+                          '请删除红色边框标记的参数，这些参数仅适用于 Oracle 模式的租户，当前租户为MySQL',
                       })}
                       type="error"
                       showIcon={true}
@@ -1309,15 +1207,15 @@ const New: React.FC<NewProps> = ({
                     label={
                       <div
                         style={{
-                          width: "100%",
-                          display: "flex",
-                          justifyContent: "space-between",
+                          width: '100%',
+                          display: 'flex',
+                          justifyContent: 'space-between',
                         }}
                       >
                         <span>
                           {formatMessage({
-                            id: "ocp-express.Tenant.New.ParameterModification",
-                            defaultMessage: "参数修改",
+                            id: 'ocp-express.Tenant.New.ParameterModification',
+                            defaultMessage: '参数修改',
                           })}
                         </span>
                         {/* 一期暂不开放此功能 */}
@@ -1339,8 +1237,8 @@ const New: React.FC<NewProps> = ({
                       {
                         required: true,
                         message: formatMessage({
-                          id: "ocp-express.Tenant.New.SetStartupParameters",
-                          defaultMessage: "请设置租户参数",
+                          id: 'ocp-express.Tenant.New.SetStartupParameters',
+                          defaultMessage: '请设置租户参数',
                         }),
                       },
                     ]}
@@ -1349,12 +1247,12 @@ const New: React.FC<NewProps> = ({
                       type="tenant"
                       drawerType="NEW_TENANT"
                       addButtonText={formatMessage({
-                        id: "ocp-express.Tenant.New.AddStartupParameters",
-                        defaultMessage: "添加租户参数",
+                        id: 'ocp-express.Tenant.New.AddStartupParameters',
+                        defaultMessage: '添加租户参数',
                       })}
                       // initialParameters={initParameters}
                       tenantMode={currentMode}
-                      setCompatibleOracleAlret={(val) => {
+                      setCompatibleOracleAlret={val => {
                         setCompatibleOracleAlret(val);
                       }}
                     />

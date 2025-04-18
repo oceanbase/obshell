@@ -70,8 +70,6 @@ import {
   tenantMajorCompaction,
   tenantPreCheck,
   tenantClearCompactionError,
-  tenantLock,
-  tenantUnlock,
 } from '@/service/obshell/tenant';
 import { getObInfo } from '@/service/obshell/ob';
 import { unitConfigCreate } from '@/service/obshell/unit';
@@ -169,7 +167,6 @@ const Detail: React.FC<NewProps> = ({
   } || { tenant_name: tenantName };
 
   const zones = getZones(tenantData);
-  console.log(tenantData, 'tenantData');
 
   const ocpExpressEmptySuperUserPasswordTime = jsonParse(
     localStorage.getItem(`__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`),
@@ -259,37 +256,43 @@ const Detail: React.FC<NewProps> = ({
     },
   });
 
-  const { run: lockTenant, loading: lockTenantLOading } = useRequest(tenantLock, {
-    manual: true,
-    onSuccess: res => {
-      if (res.successful) {
-        message.success(
-          formatMessage({
-            id: 'ocp-express.src.model.tenant.TenantLockedSuccessfully',
-            defaultMessage: '租户锁定成功',
-          })
-        );
-        setEdiLockStatusModal(false);
-        refresh();
-      }
-    },
-  });
+  const { run: lockTenant, loading: lockTenantLOading } = useRequest(
+    ObTenantController.lockTenant,
+    {
+      manual: true,
+      onSuccess: res => {
+        if (res.successful) {
+          message.success(
+            formatMessage({
+              id: 'ocp-express.src.model.tenant.TenantLockedSuccessfully',
+              defaultMessage: '租户锁定成功',
+            })
+          );
+          setEdiLockStatusModal(false);
+          refresh();
+        }
+      },
+    }
+  );
 
-  const { run: unlockTenant, loading: unlockTenantLOading } = useRequest(tenantUnlock, {
-    manual: true,
-    onSuccess: res => {
-      if (res.successful) {
-        message.success(
-          formatMessage({
-            id: 'ocp-express.src.model.tenant.TenantUnlockedSuccessfully',
-            defaultMessage: '租户解锁成功',
-          })
-        );
-        setEdiLockStatusModal(false);
-        refresh();
-      }
-    },
-  });
+  const { run: unlockTenant, loading: unlockTenantLOading } = useRequest(
+    ObTenantController.unlockTenant,
+    {
+      manual: true,
+      onSuccess: res => {
+        if (res.successful) {
+          message.success(
+            formatMessage({
+              id: 'ocp-express.src.model.tenant.TenantUnlockedSuccessfully',
+              defaultMessage: '租户解锁成功',
+            })
+          );
+          setEdiLockStatusModal(false);
+          refresh();
+        }
+      },
+    }
+  );
 
   const { run: modifyTenantDescription, loading: modifyTenantDescriptionLoading } = useRequest(
     ObTenantController.modifyTenantDescription,
@@ -572,11 +575,11 @@ const Detail: React.FC<NewProps> = ({
                 })}
               </Button>
             </Tooltip>
-            {/* <Dropdown overlay={menu}>
+            <Dropdown overlay={menu}>
               <Button>
                 <EllipsisOutlined />
               </Button>
-            </Dropdown> */}
+            </Dropdown>
           </Space>
         ),
       }}
@@ -671,7 +674,7 @@ const Detail: React.FC<NewProps> = ({
                       },
                     }}
                   >
-                    {tenantData?.locked === 'YES'
+                    {tenantData?.locked
                       ? formatMessage({
                           id: 'ocp-express.Detail.Overview.Locked',
                           defaultMessage: '已锁定',
@@ -701,12 +704,12 @@ const Detail: React.FC<NewProps> = ({
                     <Text
                       style={{ width: '95%', minWidth: 180 }}
                       ellipsis={true}
-                      // editable={{
-                      //   editing: false,
-                      //   onStart: () => {
-                      //     setEdiRemarksModal(true);
-                      //   },
-                      // }}
+                      editable={{
+                        editing: false,
+                        onStart: () => {
+                          setEdiRemarksModal(true);
+                        },
+                      }}
                     >
                       {tenantData?.comment || '-'}
                     </Text>
@@ -1094,13 +1097,13 @@ const Detail: React.FC<NewProps> = ({
         onOk={() => {
           validateFields().then(values => {
             const { locked } = values;
-            if (locked === 'YES') {
+            if (locked) {
               lockTenant({
-                name: tenantData?.tenant_name,
+                tenantName: tenantData?.obtenantName,
               });
             } else {
               unlockTenant({
-                name: tenantData?.tenant_name,
+                tenantName: tenantData?.obtenantName,
               });
             }
           });
@@ -1119,13 +1122,10 @@ const Detail: React.FC<NewProps> = ({
             initialValue={tenantData?.locked}
           >
             <Radio.Group>
-              <Radio value={'YES'}>
-                {formatMessage({
-                  id: 'ocp-express.Detail.Overview.Lock',
-                  defaultMessage: '锁定',
-                })}
+              <Radio value={true}>
+                {formatMessage({ id: 'ocp-express.Detail.Overview.Lock', defaultMessage: '锁定' })}
               </Radio>
-              <Radio value={'NO'}>
+              <Radio value={false}>
                 {formatMessage({
                   id: 'ocp-express.Detail.Overview.Unlock',
                   defaultMessage: '解锁',
