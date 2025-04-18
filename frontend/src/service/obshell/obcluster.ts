@@ -21,13 +21,13 @@ export async function obclusterParameters(options?: { [key: string]: any }) {
   );
 }
 
-/** set obcluster parameters set obcluster parameters PUT /api/v1/obcluster/parameters */
+/** set obcluster parameters set obcluster parameters PATCH /api/v1/obcluster/parameters */
 export async function obclusterSetParameters(
   body: API.SetObclusterParametersParam,
   options?: { [key: string]: any }
 ) {
   return request<any>('/api/v1/obcluster/parameters', {
-    method: 'PUT',
+    method: 'PATCH',
     headers: {
       'Content-Type': 'application/json',
     },

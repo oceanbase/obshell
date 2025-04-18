@@ -211,7 +211,7 @@ declare namespace API {
   type ClusterInfo = {
     cluster_id?: number;
     cluster_name?: string;
-    community_edition?: boolean;
+    is_community_edition?: boolean;
     ob_version?: string;
     stats?: BaseResourceStats;
     status?: string;
@@ -536,7 +536,7 @@ declare namespace API {
 
   type getTenantTopCompactionParams = {
     /** top n */
-    top?: string;
+    limit?: string;
   };
 
   type getTenantTopSlowSqlRankParams = {
@@ -545,7 +545,7 @@ declare namespace API {
     /** end time */
     end_time: string;
     /** top n */
-    top?: string;
+    limit?: string;
   };
 
   type getTenantVariableParams = {

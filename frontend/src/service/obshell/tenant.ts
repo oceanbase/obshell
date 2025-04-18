@@ -66,6 +66,20 @@ export async function tenantDrop(
   });
 }
 
+/** trigger tenant major compaction trigger tenant major compaction POST /api/v1/tenant/${param0}/compact */
+export async function tenantMajorCompaction(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.tenantMajorCompactionParams,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/compact`, {
+    method: 'POST',
+    params: { ...queryParams },
+    ...(options || {}),
+  });
+}
+
 /** get tenant major compaction info get tenant major compaction info GET /api/v1/tenant/${param0}/compaction */
 export async function getTenantCompaction(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -81,20 +95,6 @@ export async function getTenantCompaction(
       ...(options || {}),
     }
   );
-}
-
-/** trigger tenant major compaction trigger tenant major compaction POST /api/v1/tenant/${param0}/compaction */
-export async function tenantMajorCompaction(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.tenantMajorCompactionParams,
-  options?: { [key: string]: any }
-) {
-  const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/compaction`, {
-    method: 'POST',
-    params: { ...queryParams },
-    ...(options || {}),
-  });
 }
 
 /** clear tenant major compaction error clear tenant major compaction error DELETE /api/v1/tenant/${param0}/compaction-error */
@@ -668,14 +668,14 @@ export async function tenantModifyWhitelist(
   });
 }
 
-/** query tenant information ranked by the number of slow SQL statements. query tenant information ranked by the number of slow SQL statements, limited to the top n. GET /api/v1/tenant/slow-sql/top */
-export async function getTenantTopSlowSqlRank(
+/** query tenant information ranked by the cost of major compaction. query tenant information ranked by the cost of major compaction, limited to the top n. GET /api/v1/tenant/top-compactions */
+export async function getTenantTopCompaction(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getTenantTopSlowSqlRankParams,
+  params: API.getTenantTopCompactionParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.OcsAgentResponse & { data?: API.TenantSlowSqlCount[] }>(
-    '/api/v1/tenant/slow-sql/top',
+  return request<API.OcsAgentResponse & { data?: API.TenantCompactionHistory[] }>(
+    '/api/v1/tenant/top-compactions',
     {
       method: 'GET',
       params: {
@@ -686,14 +686,14 @@ export async function getTenantTopSlowSqlRank(
   );
 }
 
-/** query tenant information ranked by the cost of major compaction. query tenant information ranked by the cost of major compaction, limited to the top n. GET /api/v1/tenant/top-compaction */
-export async function getTenantTopCompaction(
+/** query tenant information ranked by the number of slow SQL statements. query tenant information ranked by the number of slow SQL statements, limited to the top n. GET /api/v1/tenant/top-slow-sqls */
+export async function getTenantTopSlowSqlRank(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getTenantTopCompactionParams,
+  params: API.getTenantTopSlowSqlRankParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.OcsAgentResponse & { data?: API.TenantCompactionHistory[] }>(
-    '/api/v1/tenant/top-compaction',
+  return request<API.OcsAgentResponse & { data?: API.TenantSlowSqlCount[] }>(
+    '/api/v1/tenant/top-slow-sqls',
     {
       method: 'GET',
       params: {

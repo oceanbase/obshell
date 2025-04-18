@@ -15,7 +15,8 @@ import AntdMomentWebpackPlugin from '@ant-design/moment-webpack-plugin';
 import routes from './routes';
 
 const ocp = {
-  target: 'http://11.161.204.49:30871', // OBShell 接口地址
+  // target: 'http://11.161.204.49:2886', // OBShell 接口地址
+  target: 'http://11.161.204.49:30871/', // OBShell 接口地址
 };
 
 export default defineConfig({
