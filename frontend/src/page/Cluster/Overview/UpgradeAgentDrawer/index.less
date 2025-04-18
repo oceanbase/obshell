@@ -1,0 +1,110 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
+.upgradePathContainer {
+  .architecture {
+    margin-bottom: 24px;
+    .title {
+      font-family: PingFangSC-Medium;
+    }
+    & > div:not(:last-child) {
+      margin-bottom: 8px;
+    }
+  }
+  .stepsWrapper {
+    padding: 24px;
+    background-color: @colorBgLayout;
+    border-radius: ~'@{borderRadius}px';
+    .steps {
+      padding-left: 36px;
+
+      .dotTagWrapper {
+        position: absolute;
+        top: -6px;
+        right: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        width: 40px;
+        margin-right: -8px;
+
+        .dotTagArrow {
+          width: 5px;
+          height: 5px;
+          background-color: @colorPrimary;
+          transform: translateX(-5px) rotate(45deg);
+        }
+
+        .dotTag {
+          padding: 4px;
+          color: @colorBgContainer;
+          font-size: 12px;
+          background-color: @colorPrimary;
+          border-radius: ~'@{borderRadiusSM}px';
+          transform: scale(0.83);
+        }
+      }
+
+      .dot {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 10px;
+        height: 10px;
+        background-color: @colorPrimary;
+        border-radius: 10px;
+
+        &-error {
+          background-color: @colorError;
+        }
+
+        .innerDot {
+          width: 6px;
+          height: 6px;
+          background-color: white;
+          border-radius: 6px;
+        }
+      }
+
+      .tag {
+        display: inline-block;
+        margin-bottom: 2px;
+        color: @colorTextSecondary;
+        font-size: 12px;
+        /* 对 tag 进行缩放，将 12px 字体缩放为 10px，直接设置 10px 是不生效的，这是 chrome 浏览器的限制*/
+        transform: scale(0.83, 0.83);
+      }
+    }
+
+    :global {
+      .ant-steps {
+        .ant-steps-item-content {
+          width: 400px;
+
+          .ant-steps-item-title {
+            color: @colorTextSecondary;
+            font-weight: normal;
+            font-size: 14px;
+          }
+
+          .ant-steps-item-subtitle {
+            margin-left: 0;
+          }
+
+          .ant-steps-item-description {
+            color: @colorTextTertiary;
+            font-size: 12px;
+          }
+        }
+      }
+
+      .ant-steps-vertical.ant-steps-dot
+        .ant-steps-item
+        > .ant-steps-item-container
+        > .ant-steps-item-tail {
+        top: 6px;
+        left: -8px;
+        padding: 0;
+      }
+    }
+  }
+}
