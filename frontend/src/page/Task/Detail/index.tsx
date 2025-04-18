@@ -17,23 +17,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import {
-  Button,
-  Descriptions,
-  Divider,
-  Radio,
-  Space,
-  Tooltip,
-  Typography,
-  Modal,
-  message,
-  theme,
-} from '@oceanbase/design';
+import { Button, Descriptions, Space, Typography, Modal, message, theme } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
-import { find, flatten, isFunction, toNumber } from 'lodash';
+import { find, flatten, isFunction } from 'lodash';
 import { PageContainer } from '@oceanbase/ui';
 import { isNullValue, findByValue } from '@oceanbase/util';
-import Icon from '@oceanbase/icons';
 import { useRequest, useInterval, useLockFn } from 'ahooks';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import { breadcrumbItemRender, getOperationComponent } from '@/util/component';

@@ -129,11 +129,10 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     },
   });
 
-  // TODO: 待任务接口进行修改
-  // 失败任务
-  const { data: taskListData } = useRequest(getAllClusterDags, {
-    pollingInterval: 10000,
+  const { data: taskListData } = useRequest(getUnfinishedDags, {
+    pollingInterval: 20000,
   });
+
   const failedTaskList = (taskListData?.data?.contents || []).filter(
     item => item.state === 'FAILED'
   );
@@ -183,7 +182,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
 
         onOk: () => {
           dispatch({
-            type: 'iam/logout',
+            type: 'profile/logout',
           });
         },
       });
@@ -196,12 +195,12 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         handleUserMenuClick(key as string);
       }}
     >
-      <Menu.Item key="modifyPassword">
+      {/* <Menu.Item key="modifyPassword">
         {formatMessage({
           id: 'ocp-express.Layout.Header.ChangePassword',
           defaultMessage: '修改密码',
         })}
-      </Menu.Item>
+      </Menu.Item> */}
       <Menu.Item key="logout">
         {formatMessage({
           id: 'ocp-express.Layout.Header.ExitLogin',
@@ -418,7 +417,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         showLocale: true,
         locales: ['zh-CN', 'en-US'],
         appData: {
-          shortName: 'OCP Express',
+          shortName: 'OBShell',
           version: appInfo.buildVersion,
           releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
         },

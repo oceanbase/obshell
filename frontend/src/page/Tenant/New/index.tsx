@@ -252,9 +252,8 @@ const New: React.FC<NewProps> = ({
     onSuccess: res => {
       if (res.successful) {
         message.success('创建租户成功');
-        history.push(`/tenant`);
-        // const taskId = res?.data?.id;
-        // history.push(`/tenant/result/${taskId}`);
+        const taskId = res?.data?.id;
+        history.push(`/tenant/result/${taskId}`);
       }
     },
   });
@@ -282,8 +281,6 @@ const New: React.FC<NewProps> = ({
       parameters.forEach(parameter => {
         realParameters[parameter.name] = parameter.value;
       });
-
-      console.log(values, realParameters, 'values');
 
       uniqWith(checkZones, (a, b) => {
         return a.cpuCore === b.cpuCore && a.memorySize === b.memorySize;
@@ -313,7 +310,6 @@ const New: React.FC<NewProps> = ({
           });
         })
       ).then(res => {
-        console.log(res, 'res');
         if (!res.some(item => item.successful === false)) {
           addTenant({
             ...restValues,
@@ -457,10 +453,6 @@ const New: React.FC<NewProps> = ({
       footer={[
         <Button
           key="cancel"
-          data-aspm-click="c318538.d343245"
-          data-aspm-desc="新建租户-取消"
-          data-aspm-param={``}
-          data-aspm-expo
           onClick={() => {
             history.push('/tenant');
           }}
@@ -470,16 +462,7 @@ const New: React.FC<NewProps> = ({
             defaultMessage: '取消',
           })}
         </Button>,
-        <Button
-          key="submit"
-          data-aspm-click="c318538.d343250"
-          data-aspm-desc="新建租户-提交"
-          data-aspm-param={``}
-          data-aspm-expo
-          type="primary"
-          loading={createTenantLoading}
-          onClick={handleSubmit}
-        >
+        <Button key="submit" type="primary" loading={createTenantLoading} onClick={handleSubmit}>
           {formatMessage({
             id: 'ocp-express.Tenant.New.Submitted',
             defaultMessage: '提交',

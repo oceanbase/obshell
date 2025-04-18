@@ -649,7 +649,7 @@ const Detail: React.FC<NewProps> = ({
                   })}
                 >
                   <RenderConnectionString
-                    connectionStrings={tenantData.obproxyAndConnectionStrings || []}
+                    connectionStrings={tenantData.connection_strings || []}
                     maxWidth={500}
                     callBack={() => {
                       setConnectionStringModalVisible(true);

@@ -63,7 +63,6 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
   // 软件包列表
   const [packageList, setPackageList] = useState<API.UpgradePkgInfo[]>([]);
 
-  console.log(packageList, 'setPackageList');
   const initialData = clusterData?.zones?.map((item, index) => ({
     name: item.name,
     sequenceNumber: index + 1,
@@ -133,15 +132,6 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
             ),
 
             onOk: () => {
-              console.log(
-                {
-                  mode: upgradeMode,
-                  version: currentZonePackage?.version,
-                  release: currentZonePackage?.release_distribution,
-                },
-                '4242424'
-              );
-
               return upgradeObCluster({
                 mode: upgradeMode,
                 version: currentZonePackage?.version,
@@ -149,14 +139,6 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
               });
             },
           });
-
-          console.log(
-            '%cfrontend/src/page/Cluster/Overview/UpgradeDrawer/index.tsx:280 values',
-            'color: #007acc;',
-            values,
-            packageList,
-            currentZonePackage
-          );
         });
       }}
       onCancel={() => onCancel()}

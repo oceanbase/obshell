@@ -67,8 +67,6 @@ const Tenant: React.FC<TenantProps> = ({
 
   const tenantList = tenantListData?.data?.contents || [];
 
-  console.log(tenantList, 'tenantList');
-
   const { runAsync: tenantLockFn } = useRequest(tenantLock, {
     manual: true,
     onSuccess: res => {
@@ -208,7 +206,7 @@ const Tenant: React.FC<TenantProps> = ({
         defaultMessage: '连接字符串',
       }),
 
-      dataIndex: 'obproxyAndConnectionStrings',
+      dataIndex: 'connection_strings',
       render: (obproxyAndConnectionStrings: API.ObproxyAndConnectionString[]) => {
         return (
           <RenderConnectionString

@@ -354,7 +354,8 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
           id={`ocp-subtask-node-${node?.id}`}
           key={node?.id}
           onClick={() => {
-            onSubtaskChange(node?.id);
+            // 父节点不可点击，自动选择首个子节点
+            onSubtaskChange(node?.children ? node.children[0]?.id : node?.id);
           }}
           // 设置选中节点的样式
           className={`${isSubNode ? styles.subNode : styles.node}`}
@@ -424,89 +425,95 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
                 )}
               </Text>
             </Space>
-            <Dropdown
-              overlay={
-                <Menu
-                  style={{ marginBottom: 0, color: 'rgba(0, 0, 0, 0.45)' }}
-                  onClick={({ key, domEvent }) => {
-                    // 点击菜单时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
-                    if (domEvent) {
-                      domEvent.stopPropagation();
-                    }
-                    // 下载日志
-                    if (key === 'downloadLog') {
-                      const promise = TaskController.getSubtaskLog({
-                        taskInstanceId: taskData?.id,
-                        subtaskInstanceId: node?.id,
-                      });
+            {/* 存在子节点的不展示操作 */}
+            {!node?.children && (
+              <Dropdown
+                overlay={
+                  <Menu
+                    style={{ marginBottom: 0, color: 'rgba(0, 0, 0, 0.45)' }}
+                    onClick={({ key, domEvent }) => {
+                      // 点击菜单时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
+                      if (domEvent) {
+                        domEvent.stopPropagation();
+                      }
+                      // 下载日志
+                      if (key === 'downloadLog') {
+                        const promise = TaskController.getSubtaskLog({
+                          taskInstanceId: taskData?.id,
+                          subtaskInstanceId: node?.id,
+                        });
 
-                      promise.then(res => {
-                        if (res.successful) {
-                          const log = res.data?.log;
-                          downloadLog(log, `subtask_${node?.id}.log`);
-                        }
-                      });
-                    } else {
-                      // 其他操作
-                      handleSubtaskOperate(
-                        key as SubtaskOperationKey,
-                        taskData,
-                        node,
-                        onOperationSuccess
-                      );
-                    }
-                  }}
-                >
-                  <div
-                    className={styles.taskIdWrapper}
-                    style={
-                      statusItem.operations?.length > 0 ? { borderBottom: '1px solid #e8e8e8' } : {}
-                    }
-                  >
-                    <Text
-                      copyable={{
-                        text: `${node?.id}`,
-                      }}
-                      onClick={e => {
-                        // 点击 ID 或者复制 icon 时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
-                        e?.stopPropagation();
-                      }}
-                    >
-                      {`ID: ${node?.id}`}
-                    </Text>
-                  </div>
-                  {statusItem.operations?.map(item => {
-                    // 如果属于远程 OCP 发起任务下的子任务，则禁止重试
-                    const disabled = taskData?.isRemote && ['retry'].includes(item.value);
-                    return (
-                      <Menu.Item key={item.value} disabled={disabled}>
-                        <Tooltip
-                          placement="right"
-                          title={
-                            disabled &&
-                            formatMessage({
-                              id: 'ocp-express.Detail.Log.TaskGraph.TheCurrentTaskIsInitiated',
-                              defaultMessage: '当前任务为远程 OCP 发起，请到发起端的 OCP 进行操作',
-                            })
+                        promise.then(res => {
+                          if (res.successful) {
+                            const log = res.data?.log;
+                            downloadLog(log, `subtask_${node?.id}.log`);
                           }
-                        >
-                          <span>{item.label}</span>
-                        </Tooltip>
-                      </Menu.Item>
-                    );
-                  })}
-                </Menu>
-              }
-            >
-              <MoreOutlined
-                style={{
-                  fontSize: 18,
-                  cursor: 'pointer',
-                  // 保证图标垂直对齐
-                  marginTop: 4,
-                }}
-              />
-            </Dropdown>
+                        });
+                      } else {
+                        // 其他操作
+                        handleSubtaskOperate(
+                          key as SubtaskOperationKey,
+                          taskData,
+                          node,
+                          onOperationSuccess
+                        );
+                      }
+                    }}
+                  >
+                    <div
+                      className={styles.taskIdWrapper}
+                      style={
+                        statusItem.operations?.length > 0
+                          ? { borderBottom: '1px solid #e8e8e8' }
+                          : {}
+                      }
+                    >
+                      <Text
+                        copyable={{
+                          text: `${node?.id}`,
+                        }}
+                        onClick={e => {
+                          // 点击 ID 或者复制 icon 时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
+                          e?.stopPropagation();
+                        }}
+                      >
+                        {`ID: ${node?.id}`}
+                      </Text>
+                    </div>
+                    {statusItem.operations?.map(item => {
+                      // 如果属于远程 OCP 发起任务下的子任务，则禁止重试
+                      const disabled = taskData?.isRemote && ['retry'].includes(item.value);
+                      return (
+                        <Menu.Item key={item.value} disabled={disabled}>
+                          <Tooltip
+                            placement="right"
+                            title={
+                              disabled &&
+                              formatMessage({
+                                id: 'ocp-express.Detail.Log.TaskGraph.TheCurrentTaskIsInitiated',
+                                defaultMessage:
+                                  '当前任务为远程 OCP 发起，请到发起端的 OCP 进行操作',
+                              })
+                            }
+                          >
+                            <span>{item.label}</span>
+                          </Tooltip>
+                        </Menu.Item>
+                      );
+                    })}
+                  </Menu>
+                }
+              >
+                <MoreOutlined
+                  style={{
+                    fontSize: 18,
+                    cursor: 'pointer',
+                    // 保证图标垂直对齐
+                    marginTop: 4,
+                  }}
+                />
+              </Dropdown>
+            )}
           </Space>
         </div>
       );

@@ -72,6 +72,18 @@ const model = {
         }
       }
     },
+
+    *logout({}, { put }) {
+      yield put({
+        type: 'update',
+        payload: {
+          password: null,
+        },
+      });
+
+      localStorage.setItem('password', '');
+      history.push('/login');
+    },
   },
 
   reducers: {

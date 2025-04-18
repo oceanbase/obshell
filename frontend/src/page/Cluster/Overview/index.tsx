@@ -53,6 +53,8 @@ import { getObInfo, obStart, obStop } from '@/service/obshell/ob';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
+import { directTo } from '@oceanbase/util';
+import { getStatus } from '@/service/obshell/v1';
 
 export interface DetailProps {
   match: {
@@ -81,7 +83,9 @@ const Detail: React.FC<DetailProps> = ({
   );
 
   const { data: obclusterInfoRes } = useRequest(obclusterInfo);
-  // const { data: obInfoRes } = useRequest(getObInfo);
+  const { data: statusInfo } = useRequest(getStatus);
+
+  console.log(statusInfo, 'statusInfo');
 
   const clusterData = obclusterInfoRes?.data || {};
 
@@ -337,7 +341,7 @@ const Detail: React.FC<DetailProps> = ({
 
               <a
                 onClick={() => {
-                  // directTo(`/task/${res?.data?.id}?backUrl=/task`);
+                  directTo(`/task/${res?.data?.id}?backUrl=/task`);
                 }}
               >
                 {res?.data?.id}
@@ -365,7 +369,7 @@ const Detail: React.FC<DetailProps> = ({
 
               <a
                 onClick={() => {
-                  // directTo(`/task/${res?.data?.id}?backUrl=/task`);
+                  directTo(`/task/${res?.data?.id}?backUrl=/task`);
                 }}
               >
                 {res?.data?.id}
@@ -384,7 +388,7 @@ const Detail: React.FC<DetailProps> = ({
       setUpgradeAgentVisible(true);
     } else if (key === 'start') {
       Modal.confirm({
-        title: `确定要启动 OB 集群 ${clusterData.cluster_name} 吗？`,
+        title: `确定要启动 OB 集群 ${clusterData.cluster_name || ''} 吗？`,
 
         okText: '启动',
         onOk: () => {
@@ -406,7 +410,7 @@ const Detail: React.FC<DetailProps> = ({
             defaultMessage: '确定要停止 OB 集群 {clusterDataName} 吗？',
           },
 
-          { clusterDataName: clusterData.cluster_name }
+          { clusterDataName: clusterData.cluster_name || '' }
         ),
 
         content: (

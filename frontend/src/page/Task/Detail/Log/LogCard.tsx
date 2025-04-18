@@ -211,9 +211,9 @@ const LogCard: React.FC<LogCardProps> = ({
                 {`ID: ${subtask?.id}`}
               </Text>
             </Space>
-            <div className={styles.logNodeWrapper}>
-              {/* 日志节点 */}
+            {/* <div className={styles.logNodeWrapper}>
               {outerLogNodeList.map((item, index) => (
+                // 日志节点
                 <span key={item}>
                   <span
                     onClick={() => {
@@ -238,8 +238,8 @@ const LogCard: React.FC<LogCardProps> = ({
                 </span>
               ))}
 
-              {/* 收起的日志节点 */}
               {collapsedLogNodeList.length > 0 && (
+                // 收起的日志节点
                 <Dropdown
                   placement="bottomRight"
                   overlay={
@@ -277,7 +277,7 @@ const LogCard: React.FC<LogCardProps> = ({
                   </span>
                 </Dropdown>
               )}
-            </div>
+            </div> */}
           </div>
         }
         extra={

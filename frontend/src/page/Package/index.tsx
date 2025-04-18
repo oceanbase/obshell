@@ -60,7 +60,6 @@ const PackagePage: React.FC<PackageProps> = ({
 
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
   const packageList = data?.data?.contents || [];
-  console.log(packageList, 'packageList');
 
   // architecture?: string;
   // chunkCount?: number;

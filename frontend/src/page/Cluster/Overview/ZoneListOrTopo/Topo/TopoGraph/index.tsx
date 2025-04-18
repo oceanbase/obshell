@@ -67,7 +67,6 @@ G6.registerNode(
         },
       });
 
-      console.log(cfg.nodeType, 'cfg.nodeType');
       group.addShape('image', {
         attrs: {
           text: cfg.name || cfg.clusterName,

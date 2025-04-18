@@ -17,7 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import { Modal, message } from '@oceanbase/design';
-import { find, flatten, isArray, uniq } from 'lodash';
+import { find, flatten, groupBy, isArray, uniq } from 'lodash';
 import moment from 'moment';
 import {
   directTo,
@@ -407,6 +407,8 @@ export function getTaskLog(log: any[]) {
   const failedLogList = reverseLog?.map(item => item.subtaskFailedRecord);
   const logList = reverseLog?.map(item => `${formatTime(item.CreateTime)}\n ${item.LogContent}`);
   const formatter = getFormateForTimes(reverseLog?.map(item => item.CreateTime));
+  const logGroupList = groupBy(reverseLog, item => formatTime(item.CreateTime, formatter));
+  console.log(logGroupList, 'logGroupList');
   const logNodeList = uniq(reverseLog?.map(item => `${moment(item.CreateTime).format(formatter)}`));
   return {
     logNodeList,

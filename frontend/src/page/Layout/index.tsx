@@ -57,6 +57,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     onSuccess: res => {
       if (res.successful) {
         const publicKey = res?.data?.public_key || '';
+        localStorage.setItem('publicKey', publicKey);
+
         dispatch({
           type: 'profile/update',
           payload: {

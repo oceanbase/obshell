@@ -222,8 +222,11 @@ request.interceptors.request.use((url, options) => {
 
   const dvaApp = getDvaApp();
   const { profile } = dvaApp?._store?.getState?.() || {};
-  const { password = localStorage.getItem('password'), publicKey } = profile || {};
+  const { password: profilePassword, publicKey: profilePublicKey } = profile || {};
 
+  // 兼容页面刷新
+  const password = profilePassword || localStorage.getItem('password');
+  const publicKey = profilePublicKey || localStorage.getItem('publicKey');
   const isFormData = options.data instanceof FormData;
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */

@@ -24,7 +24,8 @@ import { useRequest, useInterval } from 'ahooks';
 import * as TaskController from '@/service/ocp-express/TaskController';
 import { getTaskProgress } from '@/util/task';
 import PageCard from '@/component/PageCard';
-import useStyles from './Success.style';
+import styles from './Success.less';
+import { getDagDetail, getUnfinishedDags } from '@/service/obshell/task';
 
 export interface TaskSuccessProps {
   match?: {
@@ -39,7 +40,6 @@ export interface TaskSuccessProps {
 }
 
 const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
-  const { styles } = useStyles();
   const taskIdList = Array.isArray(taskId) ? taskId : [taskId];
   // 是否为多个任务，当前页面可以同时支持路由传参
   const isMultipleTask = match?.params?.taskId ? false : taskIdList.length > 1;
@@ -52,18 +52,15 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
   const {
     data,
     refresh,
-    run: getTaskInstance,
-  } = useRequest(TaskController.getTaskInstance, {
-    manual: true,
+    // run: getDagDetailFn,
+  } = useRequest(getDagDetail, {
+    defaultParams: [
+      {
+        id: taskInstanceId,
+      },
+    ],
+    // manual: true,
   });
-
-  useEffect(() => {
-    if (!isMultipleTask && !isNullValue(taskInstanceId)) {
-      getTaskInstance({
-        taskInstanceId,
-      });
-    }
-  }, [isMultipleTask, taskInstanceId]);
 
   const taskData = data?.data || {};
 
@@ -72,7 +69,7 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
       refresh();
     },
     // 任务处于运行态，则轮询任务进度
-    taskData?.status === 'RUNNING' ? 1000 : null,
+    taskData?.state === 'RUNNING' ? 1000 : null
   );
 
   return (

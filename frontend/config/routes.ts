@@ -28,6 +28,12 @@ export default [
         spmb: 'b55540',
       },
       {
+        path: 'tenant/result/:taskId',
+        component: 'Tenant/Result/Success',
+        name: '新建租户任务提交成功',
+        spmb: 'b55555',
+      },
+      {
         path: 'tenant/new',
         component: 'Tenant/New',
         name: '新建租户',
@@ -139,12 +145,6 @@ export default [
             queryTitle: 'scope',
           },
           // 创建租户改为异步任务 结果页
-          {
-            path: 'tenant/result/:taskId',
-            component: 'Tenant/Result/Success',
-            name: '新建租户任务提交成功',
-            spmb: 'b55555',
-          },
           {
             path: 'diagnosis/session',
             component: 'Diagnosis/Session',
