@@ -14,31 +14,23 @@
  * limitations under the License.
  */
 
-import { formatMessage } from "@/util/intl";
-import { connect, useDispatch } from "umi";
-import React, { useState, useEffect } from "react";
-import {
-  Card,
-  Table,
-  Tooltip,
-  Typography,
-  Form,
-  Tag,
-  Modal,
-} from "@oceanbase/design";
-import { PageContainer } from "@oceanbase/ui";
-import { sortByString, sortByMoment, byte2MB } from "@oceanbase/util";
-import { PAGINATION_OPTION_10 } from "@/constant";
-import useDocumentTitle from "@/hook/useDocumentTitle";
-import { isEnglish } from "@/util";
-import { formatTime } from "@/util/datetime";
-import MyInput from "@/component/MyInput";
-import ContentWithReload from "@/component/ContentWithReload";
-import ContentWithQuestion from "@/component/ContentWithQuestion";
-import { useRequest } from "ahooks";
-import { upgradePkgInfo, upgradePkgRoute } from "@/service/obshell/upgrade";
-import { Button } from "antd";
-import UploadPackageDrawer from "@/component/UploadPackageDrawer";
+import { formatMessage } from '@/util/intl';
+import { connect, useDispatch } from 'umi';
+import React, { useState, useEffect } from 'react';
+import { Card, Table, Tooltip, Typography, Form, Tag, Modal } from '@oceanbase/design';
+import { PageContainer } from '@oceanbase/ui';
+import { sortByString, sortByMoment, byte2MB } from '@oceanbase/util';
+import { PAGINATION_OPTION_10 } from '@/constant';
+import useDocumentTitle from '@/hook/useDocumentTitle';
+import { isEnglish } from '@/util';
+import { formatTime } from '@/util/datetime';
+import MyInput from '@/component/MyInput';
+import ContentWithReload from '@/component/ContentWithReload';
+import ContentWithQuestion from '@/component/ContentWithQuestion';
+import { useRequest } from 'ahooks';
+import { upgradePkgInfo, upgradePkgRoute } from '@/service/obshell/upgrade';
+import { Button } from 'antd';
+import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 
 const FormItem = Form.Item;
 
@@ -61,14 +53,14 @@ const PackagePage: React.FC<PackageProps> = ({
 }) => {
   useDocumentTitle(
     formatMessage({
-      id: "ocp-express.page.Package.SystemParameters",
-      defaultMessage: "系统配置",
+      id: 'ocp-express.page.Package.SystemParameters',
+      defaultMessage: '系统配置',
     })
   );
 
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
   const packageList = data?.data?.contents || [];
-  console.log(packageList, "packageList");
+  console.log(packageList, 'packageList');
 
   // architecture?: string;
   // chunkCount?: number;
@@ -88,75 +80,71 @@ const PackagePage: React.FC<PackageProps> = ({
   const [form] = Form.useForm();
   const [keyword, setKeyword] = useState(defaultKeyword);
   const [visible, setVisible] = useState(false);
-  const [currentRecord, setCurrentRecord] = useState<API.PackageMeta | null>(
-    null
-  );
+  const [currentRecord, setCurrentRecord] = useState<API.PackageMeta | null>(null);
 
   const columns = [
     {
       title: formatMessage({
-        id: "ocp-v2.page.Package.PackageName",
-        defaultMessage: "软件包名",
+        id: 'ocp-v2.page.Package.PackageName',
+        defaultMessage: '软件包名',
       }),
-      dataIndex: "name",
+      dataIndex: 'name',
       width: isEnglish() ? 200 : 220,
       sorter: true,
-      render: (text: string) => (
-        <div style={{ wordBreak: "break-all" }}>{text}</div>
-      ),
+      render: (text: string) => <div style={{ wordBreak: 'break-all' }}>{text}</div>,
     },
+
+    // {
+    //   title: formatMessage({
+    //     id: "ocp-v2.page.Package.Type",
+    //     defaultMessage: "类型",
+    //   }),
+    //   dataIndex: "type",
+    //   // filters: PACKAGE_TYPE_LIST.map(item => ({
+    //   //   text: item.label,
+    //   //   value: item.value,
+    //   // })),
+
+    //   // render: (text: string) => findByValue(PACKAGE_TYPE_LIST, text)?.label || '-',
+    // },
 
     {
       title: formatMessage({
-        id: "ocp-v2.page.Package.Type",
-        defaultMessage: "类型",
+        id: 'ocp-v2.page.Package.Version',
+        defaultMessage: '版本',
       }),
-      dataIndex: "type",
-      // filters: PACKAGE_TYPE_LIST.map(item => ({
-      //   text: item.label,
-      //   value: item.value,
-      // })),
-
-      // render: (text: string) => findByValue(PACKAGE_TYPE_LIST, text)?.label || '-',
-    },
-
-    {
-      title: formatMessage({
-        id: "ocp-v2.page.Package.Version",
-        defaultMessage: "版本",
-      }),
-      dataIndex: "version",
-      filters: (data?.data?.versions || []).map((item) => ({
+      dataIndex: 'version',
+      filters: (data?.data?.versions || []).map(item => ({
         text: item,
         value: item,
       })),
     },
 
-    {
-      title: formatMessage({
-        id: "ocp-v2.page.Package.System",
-        defaultMessage: "系统",
-      }),
-      dataIndex: "operatingSystem",
-      filters: (data?.data?.operatingSystems || []).map((item) => ({
-        text: item,
-        value: item,
-      })),
-    },
+    // {
+    //   title: formatMessage({
+    //     id: "ocp-v2.page.Package.System",
+    //     defaultMessage: "系统",
+    //   }),
+    //   dataIndex: "operatingSystem",
+    //   filters: (data?.data?.operatingSystems || []).map((item) => ({
+    //     text: item,
+    //     value: item,
+    //   })),
+    // },
 
     {
       title: formatMessage({
-        id: "ocp-v2.page.Package.HardwareArchitecture",
-        defaultMessage: "硬件架构",
+        id: 'ocp-v2.page.Package.HardwareArchitecture',
+        defaultMessage: '硬件架构',
       }),
 
-      dataIndex: "architecture",
+      dataIndex: 'architecture',
       ...(isEnglish()
         ? {
             width: 120,
           }
         : {}),
-      filters: (data?.data?.architectures || []).map((item) => ({
+      filters: (data?.data?.architectures || []).map(item => ({
         text: item,
         value: item,
       })),
@@ -164,16 +152,16 @@ const PackagePage: React.FC<PackageProps> = ({
 
     {
       title: formatMessage({
-        id: "ocp-v2.page.Package.SizeMb",
-        defaultMessage: "大小（MB）",
+        id: 'ocp-v2.page.Package.SizeMb',
+        defaultMessage: '大小（MB）',
       }),
-      dataIndex: "size",
+      dataIndex: 'size',
       render: (text: number) => <span>{byte2MB(text)}</span>,
     },
 
     {
-      title: "MD5",
-      dataIndex: "md5",
+      title: 'MD5',
+      dataIndex: 'md5',
       ellipsis: true,
       render: (text: string) => (
         <Tooltip placement="topLeft" title={text}>
@@ -184,10 +172,10 @@ const PackagePage: React.FC<PackageProps> = ({
 
     {
       title: formatMessage({
-        id: "ocp-v2.page.Package.UploadTime",
-        defaultMessage: "上传时间",
+        id: 'ocp-v2.page.Package.UploadTime',
+        defaultMessage: '上传时间',
       }),
-      dataIndex: "gmt_modify",
+      dataIndex: 'gmt_modify',
       sorter: true,
       width: 150,
       render: (text: string) => formatTime(text),
@@ -198,13 +186,7 @@ const PackagePage: React.FC<PackageProps> = ({
     <PageContainer
       ghost={true}
       header={{
-        title: (
-          <ContentWithReload
-            content={"软件包"}
-            spin={loading}
-            onClick={refresh}
-          />
-        ),
+        title: <ContentWithReload content={'软件包'} spin={loading} onClick={refresh} />,
       }}
     >
       <Card
@@ -213,10 +195,10 @@ const PackagePage: React.FC<PackageProps> = ({
           <MyInput.Search
             value={keyword}
             allowClear={true}
-            onChange={(e) => {
+            onChange={e => {
               setKeyword(e.target.value);
             }}
-            placeholder={"搜索软件包名称"}
+            placeholder={'搜索软件包名称'}
             className="search-input"
           />
         }
@@ -235,10 +217,10 @@ const PackagePage: React.FC<PackageProps> = ({
         <Table
           loading={loading}
           dataSource={packageList.filter(
-            (item) => !keyword || (item.key && item.key.includes(keyword))
+            item => !keyword || (item.key && item.key.includes(keyword))
           )}
           columns={columns}
-          rowKey={(record) => record.pkg_id}
+          rowKey={record => record.pkg_id}
           pagination={PAGINATION_OPTION_10}
         />
       </Card>

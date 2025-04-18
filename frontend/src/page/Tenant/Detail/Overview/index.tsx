@@ -203,15 +203,20 @@ const Detail: React.FC<NewProps> = ({
   const emptySuperUserPassword = !preCheckResult?.data?.is_password_exists || false;
 
   // 获取 unit 规格的限制规则
-  const { data: clusterUnitSpecLimitData } = useRequest(
-    ObClusterController.getClusterUnitSpecLimit,
-    {
-      manual: false,
-      defaultParams: [{}],
-    }
-  );
+  // const { data: clusterUnitSpecLimitData } = useRequest(
+  //   ObClusterController.getClusterUnitSpecLimit,
+  //   {
+  //     manual: false,
+  //     defaultParams: [{}],
+  //   }
+  // );
 
-  const clusterUnitSpecLimit = clusterUnitSpecLimitData?.data || {};
+  // const clusterUnitSpecLimit = clusterUnitSpecLimitData?.data || {};
+  // TODO: 后续修改
+  const clusterUnitSpecLimit = {
+    cpuLowerLimit: 0,
+    memoryLowerLimit: 0,
+  };
 
   useEffect(() => {
     if (tenantName) {

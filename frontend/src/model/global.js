@@ -58,14 +58,14 @@ const model = {
     },
     // 获取应用信息
     *getAppInfo(_, { call, put }) {
-      const res = yield call(InfoController.info);
-      yield put({
-        type: 'update',
-        payload: {
-          // /api/v1/info 接口的 res 并没有 data 字段，res 本身就包含实际数据
-          appInfo: res || {},
-        },
-      });
+      // const res = yield call(InfoController.info);
+      // yield put({
+      //   type: 'update',
+      //   payload: {
+      //     // /api/v1/info 接口的 res 并没有 data 字段，res 本身就包含实际数据
+      //     appInfo: res || {},
+      //   },
+      // });
     },
     // 获取系统配置
     *getSystemInfo(_, { call, put }) {

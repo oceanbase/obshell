@@ -153,7 +153,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
       {...restProps}
     >
       {children}
-      <TaskBubble tenantName={tenantName} />
+      {/* <TaskBubble tenantName={tenantName} /> */}
     </BasicLayout>
   );
 };

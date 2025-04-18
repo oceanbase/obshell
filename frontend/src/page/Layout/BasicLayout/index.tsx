@@ -14,37 +14,28 @@
  * limitations under the License.
  */
 
-import { formatMessage } from "@/util/intl";
-import { getLocale, history, useDispatch, useSelector } from "umi";
-import React, { useEffect, useState } from "react";
-import {
-  Alert,
-  Badge,
-  Dropdown,
-  Menu,
-  Modal,
-  Space,
-  Tooltip,
-  theme,
-} from "@oceanbase/design";
-import { BasicLayout as OBUIBasicLayout } from "@oceanbase/ui";
-import type { BasicLayoutProps as OBUIBasicLayoutProps } from "@oceanbase/ui/es/BasicLayout";
-import { find } from "lodash";
-import moment from "moment";
-import { LoadingOutlined, UnorderedListOutlined } from "@oceanbase/icons";
-import { DATE_FORMAT_DISPLAY } from "@/constant/datetime";
-import { useBasicMenu } from "@/hook/useMenu";
-import { useRequest } from "ahooks";
-import * as InfoController from "@/service/ocp-express/InfoController";
-import * as TaskController from "@/service/ocp-express/TaskController";
-import { isEnglish } from "@/util";
-import { formatTime } from "@/util/datetime";
-import tracert from "@/util/tracert";
-import ModifyUserPasswordModal from "@/component/ModifyUserPasswordModal";
-import TenantAdminPasswordModal from "@/component/TenantAdminPasswordModal";
-import useStyles from "./index.style";
-import { getTime } from "@/service/obshell/v1";
-import { getUnfinishedDags } from "@/service/obshell/task";
+import { formatMessage } from '@/util/intl';
+import { getLocale, history, useDispatch, useSelector } from 'umi';
+import React, { useEffect, useState } from 'react';
+import { Alert, Badge, Dropdown, Menu, Modal, Space, Tooltip, theme } from '@oceanbase/design';
+import { BasicLayout as OBUIBasicLayout } from '@oceanbase/ui';
+import type { BasicLayoutProps as OBUIBasicLayoutProps } from '@oceanbase/ui/es/BasicLayout';
+import { find } from 'lodash';
+import moment from 'moment';
+import { LoadingOutlined, UnorderedListOutlined } from '@oceanbase/icons';
+import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
+import { useBasicMenu } from '@/hook/useMenu';
+import { useRequest } from 'ahooks';
+import * as InfoController from '@/service/ocp-express/InfoController';
+import * as TaskController from '@/service/ocp-express/TaskController';
+import { isEnglish } from '@/util';
+import { formatTime } from '@/util/datetime';
+import tracert from '@/util/tracert';
+import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
+import TenantAdminPasswordModal from '@/component/TenantAdminPasswordModal';
+import useStyles from './index.style';
+import { getTime } from '@/service/obshell/v1';
+import { getAllClusterDags, getUnfinishedDags } from '@/service/obshell/task';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
   children: React.ReactNode;
@@ -53,7 +44,7 @@ interface BasicLayoutProps extends OBUIBasicLayoutProps {
   };
 }
 
-const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
+const BasicLayout: React.FC<BasicLayoutProps> = props => {
   const { styles } = useStyles();
   const { token } = theme.useToken();
 
@@ -69,13 +60,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
 
   // 全局菜单
   const basicMenus = useBasicMenu();
-  const {
-    location,
-    sideHeader,
-    menus = basicMenus,
-    children,
-    ...restProps
-  } = props;
+  const { location, sideHeader, menus = basicMenus, children, ...restProps } = props;
 
   const { pathname } = location;
   // 是否展示时间差提示
@@ -87,55 +72,55 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
   const [passwordVisible, setPasswordVisible] = useState(false);
 
   const logoUrl = isEnglish()
-    ? themeMode === "dark"
-      ? "/assets/logo/ocp_express_logo_en_dark.svg"
-      : "/assets/logo/ocp_express_logo_en.svg"
-    : themeMode === "dark"
-    ? "/assets/logo/ocp_express_logo_zh_dark.svg"
-    : "/assets/logo/ocp_express_logo_zh.svg";
+    ? themeMode === 'dark'
+      ? '/assets/logo/ocp_express_logo_en_dark.svg'
+      : '/assets/logo/ocp_express_logo_en.svg'
+    : themeMode === 'dark'
+    ? '/assets/logo/ocp_express_logo_zh_dark.svg'
+    : '/assets/logo/ocp_express_logo_zh.svg';
   const simpleLogoUrl = isEnglish()
-    ? themeMode === "dark"
-      ? "/assets/logo/ocp_express_simple_logo_en_dark.svg"
-      : "/assets/logo/ocp_express_simple_logo_en.svg"
-    : themeMode === "dark"
-    ? "/assets/logo/ocp_express_simple_logo_zh_dark.svg"
-    : "/assets/logo/ocp_express_simple_logo_zh.svg";
+    ? themeMode === 'dark'
+      ? '/assets/logo/ocp_express_simple_logo_en_dark.svg'
+      : '/assets/logo/ocp_express_simple_logo_en.svg'
+    : themeMode === 'dark'
+    ? '/assets/logo/ocp_express_simple_logo_zh_dark.svg'
+    : '/assets/logo/ocp_express_simple_logo_zh.svg';
 
   useEffect(() => {
     // 获取当前登录用户数据
     dispatch({
-      type: "profile/getUserData",
+      type: 'profile/getUserData',
     });
 
     // 获取公钥
     dispatch({
-      type: "global/getPublicKey",
+      type: 'global/getPublicKey',
     });
 
     // 获取应用信息
     dispatch({
-      type: "global/getAppInfo",
+      type: 'global/getAppInfo',
     });
 
     // 获取系统配置
     dispatch({
-      type: "global/getSystemInfo",
+      type: 'global/getSystemInfo',
     });
-    getFailedTaskList({
-      status: "FAILED",
-    });
-    getRunningTaskLis({
-      status: "RUNNING",
-    });
+    // getFailedTaskList({
+    //   status: "FAILED",
+    // });
+    // getRunningTaskLis({
+    //   status: "RUNNING",
+    // });
   }, []);
 
   const { refresh, loading } = useRequest(getTime, {
-    onSuccess: (res) => {
+    onSuccess: res => {
       // 客户端时间: 取当前时间即可
       const clientDateTime = moment();
       // 服务端时间: data 为后端返回的 RFC3339 格式的时间戳字符串
       const serverDateTime = moment(res.data);
-      const newOffsetSeconds = clientDateTime.diff(serverDateTime, "seconds");
+      const newOffsetSeconds = clientDateTime.diff(serverDateTime, 'seconds');
       setOffsetSeconds(newOffsetSeconds);
       // 如果时间差大于等于 60s，则展示 Alert
       if (Math.abs(newOffsetSeconds) >= 60) {
@@ -146,68 +131,59 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
 
   // TODO: 待任务接口进行修改
   // 失败任务
-  const { data: failedTaskListData, run: getFailedTaskList } = useRequest(
-    getUnfinishedDags,
-    {
-      // pollingInterval: 10000,
-    }
-  );
-  const failedTaskList = (failedTaskListData?.data?.contents || []).filter(
-    (item) => item.state === "FAILED"
+  const { data: taskListData } = useRequest(getAllClusterDags, {
+    pollingInterval: 10000,
+  });
+  const failedTaskList = (taskListData?.data?.contents || []).filter(
+    item => item.state === 'FAILED'
   );
 
-  // 正在运行中的任务
-  const { data: runningTaskListData, run: getRunningTaskLis } = useRequest(
-    getUnfinishedDags,
-    {
-      // pollingInterval: 10000,
-    }
+  const runningTaskList = (taskListData?.data?.contents || []).filter(
+    item => item.state === 'RUNNING'
   );
-  const runningTaskList = runningTaskListData?.data?.contents || [];
 
   // 时间差是否超出最大限制 60 秒
   const overThreshold = Math.abs(offsetSeconds) >= 60;
   const message = overThreshold
     ? formatMessage(
         {
-          id: "ocp-express.Layout.BasicLayout.TheTimeDifferenceBetweenThe",
+          id: 'ocp-express.Layout.BasicLayout.TheTimeDifferenceBetweenThe',
           defaultMessage:
-            "客户端与服务器时间差过大，时间差为 {offsetSeconds} 秒。请矫正客户端或服务器时间，时间差需小于 60 秒",
+            '客户端与服务器时间差过大，时间差为 {offsetSeconds} 秒。请矫正客户端或服务器时间，时间差需小于 60 秒',
         },
 
         { offsetSeconds }
       )
     : formatMessage(
         {
-          id: "ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient",
-          defaultMessage:
-            "客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OCP 可正常使用",
+          id: 'ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient',
+          defaultMessage: '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OCP 可正常使用',
         },
 
         { offsetSeconds }
       );
 
   const handleUserMenuClick = (key: string) => {
-    if (key === "profile") {
-      history.push("/settings/profile");
-    } else if (key === "modifyPassword") {
+    if (key === 'profile') {
+      history.push('/settings/profile');
+    } else if (key === 'modifyPassword') {
       setPasswordVisible(true);
-    } else if (key === "credential") {
-      history.push("/settings/credential");
-    } else if (key === "logout") {
+    } else if (key === 'credential') {
+      history.push('/settings/credential');
+    } else if (key === 'logout') {
       Modal.confirm({
         title: formatMessage({
-          id: "ocp-express.Layout.Header.ExitLogin",
-          defaultMessage: "退出登录",
+          id: 'ocp-express.Layout.Header.ExitLogin',
+          defaultMessage: '退出登录',
         }),
         content: formatMessage({
-          id: "ocp-express.Layout.Header.AreYouSureYouWant",
-          defaultMessage: "你确定要退出登录吗？退出后，需要重新登录",
+          id: 'ocp-express.Layout.Header.AreYouSureYouWant',
+          defaultMessage: '你确定要退出登录吗？退出后，需要重新登录',
         }),
 
         onOk: () => {
           dispatch({
-            type: "iam/logout",
+            type: 'iam/logout',
           });
         },
       });
@@ -222,32 +198,32 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
     >
       <Menu.Item key="modifyPassword">
         {formatMessage({
-          id: "ocp-express.Layout.Header.ChangePassword",
-          defaultMessage: "修改密码",
+          id: 'ocp-express.Layout.Header.ChangePassword',
+          defaultMessage: '修改密码',
         })}
       </Menu.Item>
       <Menu.Item key="logout">
         {formatMessage({
-          id: "ocp-express.Layout.Header.ExitLogin",
-          defaultMessage: "退出登录",
+          id: 'ocp-express.Layout.Header.ExitLogin',
+          defaultMessage: '退出登录',
         })}
       </Menu.Item>
     </Menu>
   );
 
-  const defaultOpenKey = find(menus, (item) =>
+  const defaultOpenKey = find(menus, item =>
     // 只要子菜单的路径与 pathname 相对应，则当前菜单默认展开
     // 当前只支持一级菜单的默认展开，不过也可以满足需求了，因为现在并没有 >= 三级菜单的场景
-    (item.children || []).map((child) => child.link).includes(pathname)
+    (item.children || []).map(child => child.link).includes(pathname)
   )?.link;
 
   const lightThemText = formatMessage({
-    id: "ocp-express.Layout.BasicLayout.LightThemText",
-    defaultMessage: "浅色主题",
+    id: 'ocp-express.Layout.BasicLayout.LightThemText',
+    defaultMessage: '浅色主题',
   });
   const darkThemText = formatMessage({
-    id: "ocp-express.Layout.BasicLayout.DarkThemText",
-    defaultMessage: "暗黑主题",
+    id: 'ocp-express.Layout.BasicLayout.DarkThemText',
+    defaultMessage: '暗黑主题',
   });
   return (
     <OBUIBasicLayout
@@ -260,7 +236,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
         // OCP 构建版本号，格式为 1.0.0-rc.1
         ocpBuildVersion: appInfo.buildVersion,
         // OCP 版本号
-        ocpVersion: appInfo.buildVersion?.split("-")?.[0],
+        ocpVersion: appInfo.buildVersion?.split('-')?.[0],
         // OCP 语言
         ocpLocale: getLocale(),
         // OCP 主机
@@ -275,7 +251,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
         offsetAlertVisible && (
           <Alert
             message={message}
-            type={overThreshold ? "warning" : "success"}
+            type={overThreshold ? 'warning' : 'success'}
             banner={true}
             showIcon={true}
             icon={
@@ -297,8 +273,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
                 }}
               >
                 {formatMessage({
-                  id: "ocp-express.Layout.BasicLayout.VerifyAgain",
-                  defaultMessage: "再次校验",
+                  id: 'ocp-express.Layout.BasicLayout.VerifyAgain',
+                  defaultMessage: '再次校验',
                 })}
               </a>
             }
@@ -317,7 +293,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
       sideHeader={sideHeader}
       topHeader={{
         title: (
-          <div style={{ float: "right" }}>
+          <div style={{ float: 'right' }}>
             {/* <Dropdown
               overlay={
                 <Menu
@@ -360,8 +336,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
                 failedTaskList.length > 0
                   ? formatMessage(
                       {
-                        id: "ocp-express.Layout.BasicLayout.FailedTaskCount",
-                        defaultMessage: "有 {failedTaskCount} 条失败任务",
+                        id: 'ocp-express.Layout.BasicLayout.FailedTaskCount',
+                        defaultMessage: '有 {failedTaskCount} 条失败任务',
                       },
 
                       { failedTaskCount: failedTaskList.length }
@@ -369,16 +345,15 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
                   : runningTaskList.length > 0
                   ? formatMessage(
                       {
-                        id: "ocp-express.Layout.BasicLayout.RunningTaskCount",
-                        defaultMessage:
-                          "有 {runningTaskCount} 条正在运行中的任务",
+                        id: 'ocp-express.Layout.BasicLayout.RunningTaskCount',
+                        defaultMessage: '有 {runningTaskCount} 条正在运行中的任务',
                       },
 
                       { runningTaskCount: runningTaskList.length }
                     )
                   : formatMessage({
-                      id: "ocp-express.Layout.BasicLayout.TaskCenter",
-                      defaultMessage: "任务中心",
+                      id: 'ocp-express.Layout.BasicLayout.TaskCenter',
+                      defaultMessage: '任务中心',
                     })
               }
             >
@@ -386,12 +361,12 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
                 data-aspm-click="c304248.d308744"
                 data-aspm-desc="顶部导航-任务中心入口"
                 onClick={() => {
-                  history.push("/task");
+                  history.push('/task');
                 }}
                 style={{
-                  cursor: "pointer",
-                  display: "inline-block",
-                  textAlign: "center",
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                  textAlign: 'center',
                   marginRight: 8,
                   fontSize: 12,
                 }}
@@ -427,8 +402,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
                       }}
                     >
                       {formatMessage({
-                        id: "ocp-express.Layout.BasicLayout.Task",
-                        defaultMessage: "任务",
+                        id: 'ocp-express.Layout.BasicLayout.Task',
+                        defaultMessage: '任务',
                       })}
                     </span>
                   </Space>
@@ -441,9 +416,9 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
         username: userData.username,
         userMenu,
         showLocale: true,
-        locales: ["zh-CN", "en-US"],
+        locales: ['zh-CN', 'en-US'],
         appData: {
-          shortName: "OCP Express",
+          shortName: 'OCP Express',
           version: appInfo.buildVersion,
           releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
         },
@@ -471,7 +446,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
         tenantName={tenantAdminPasswordErrorData?.tenantName}
         onCancel={() => {
           dispatch({
-            type: "global/update",
+            type: 'global/update',
             payload: {
               showTenantAdminPasswordModal: false,
               tenantAdminPasswordErrorData: {},
@@ -480,7 +455,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = (props) => {
         }}
         onSuccess={() => {
           dispatch({
-            type: "global/update",
+            type: 'global/update',
             payload: {
               showTenantAdminPasswordModal: false,
               tenantAdminPasswordErrorData: {},
