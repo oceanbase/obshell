@@ -1,17 +1,6 @@
-import { useDispatch, useSelector } from "umi";
-import React, { useRef, useState, useEffect } from "react";
-import {
-  compact,
-  filter,
-  find,
-  flatten,
-  groupBy,
-  includes,
-  some,
-  sum,
-  uniq,
-  uniqBy,
-} from "lodash";
+import { useDispatch, useSelector } from 'umi';
+import React, { useRef, useState, useEffect } from 'react';
+import { compact, filter, find, flatten, groupBy, includes, some, sum, uniq, uniqBy } from 'lodash';
 import {
   Alert,
   Button,
@@ -27,33 +16,33 @@ import {
   token,
   Tooltip,
   Typography,
-} from "@oceanbase/design";
+} from '@oceanbase/design';
 import {
   ExclamationCircleFilled,
   InfoCircleFilled,
   QuestionCircleOutlined,
-} from "@oceanbase/icons";
-import { directTo, isNullValue, joinComponent } from "@oceanbase/util";
-import { ContentWithIcon as OBUIContentWithIcon } from "@oceanbase/ui";
-import { useRequest } from "ahooks";
-import { MODAL_FORM_ITEM_LAYOUT } from "@/constant";
-import BinlogAssociationMsg from "@/component/BinlogAssociationMsg";
+} from '@oceanbase/icons';
+import { directTo, isNullValue, joinComponent } from '@oceanbase/util';
+import { ContentWithIcon as OBUIContentWithIcon } from '@oceanbase/ui';
+import { useRequest } from 'ahooks';
+import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
+import BinlogAssociationMsg from '@/component/BinlogAssociationMsg';
 // import * as ObClusterController from '@/service/ocp-all-in-one/ObClusterController';
-import { buildVersionCompare, versionCompare } from "@/util/package";
-import { taskSuccess } from "@/util/task";
-import ContentWithIcon from "@/component/ContentWithIcon";
-import ContentWithReload from "@/component/ContentWithReload";
-import type { MyDrawerProps } from "@/component/MyDrawer";
-import MyDrawer from "@/component/MyDrawer";
-import MySelect from "@/component/MySelect";
+import { buildVersionCompare, versionCompare } from '@/util/package';
+import { taskSuccess } from '@/util/task';
+import ContentWithIcon from '@/component/ContentWithIcon';
+import ContentWithReload from '@/component/ContentWithReload';
+import type { MyDrawerProps } from '@/component/MyDrawer';
+import MyDrawer from '@/component/MyDrawer';
+import MySelect from '@/component/MySelect';
 // import type { PackageSelectRef } from '@/component/PackageSelect';
-import PackageSelect from "@/component/PackageSelect";
-import UploadPackageDrawer from "@/component/UploadPackageDrawer";
+import PackageSelect from '@/component/PackageSelect';
+import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 // import DraggableTable from '../DraggableTable';
-import styles from "./index.less";
-import { agentUpgrade } from "@/service/obshell/upgrade";
-import { getObInfo } from "@/service/obshell/ob";
-import { getAgentInfo, getStatus } from "@/service/obshell/v1";
+import styles from './index.less';
+import { agentUpgrade } from '@/service/obshell/upgrade';
+import { getObInfo } from '@/service/obshell/ob';
+import { getAgentInfo, getStatus } from '@/service/obshell/v1';
 
 const { Step } = Steps;
 const { TabPane } = Tabs;
@@ -72,7 +61,7 @@ export interface UpgradeDrawerProps extends MyDrawerProps {
 
 export type ExtendedUpgradeNode = API.UpgradeNode & {
   isCurrent?: boolean;
-  noRpms?: API.UpgradeNode["rpms"];
+  noRpms?: API.UpgradeNode['rpms'];
 };
 
 export interface ExtendedOcpCluster extends API.OcpClusterView {
@@ -95,12 +84,12 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
 
   const { runAsync, loading } = useRequest(agentUpgrade, {
     manual: true,
-    onSuccess: (res) => {
+    onSuccess: res => {
       if (res.successful) {
         const taskId = res.data?.id;
         taskSuccess({
           taskId,
-          message: "版本升级的任务提交成功",
+          message: '版本升级的任务提交成功',
         });
 
         if (onSuccess) {
@@ -120,16 +109,14 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   return (
     <MyDrawer
       width={620}
-      title={"Agent 升级版本"}
+      title={'Agent 升级版本'}
       visible={visible}
       destroyOnClose={true}
       onOk={() => {
         validateFields().then(({ fileName }) => {
-          const pkg = packageList.find(
-            (item) => item.pkg_id === fileName.value
-          );
+          const pkg = packageList.find(item => item.pkg_id === fileName.value);
           Modal.confirm({
-            title: "确定要升级吗？",
+            title: '确定要升级吗？',
             onOk: () => {
               if (pkg) {
                 runAsync({
@@ -142,25 +129,20 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         });
       }}
       onCancel={() => onCancel()}
-      okText={"升级"}
+      okText={'升级'}
       confirmLoading={loading}
       {...restProps}
     >
-      <Form
-        form={form}
-        preserve={false}
-        hideRequiredMark={true}
-        className="form-with-small-margin"
-      >
-        <Form.Item label={"已安装版本"}>{agentData?.version}</Form.Item>
-        <Form.Item label={"硬件架构"}>{agentData?.architecture}</Form.Item>
+      <Form form={form} preserve={false} hideRequiredMark={true} className="form-with-small-margin">
+        <Form.Item label={'已安装版本'}>{agentData?.version}</Form.Item>
+        <Form.Item label={'硬件架构'}>{agentData?.architecture}</Form.Item>
         <Form.Item
-          label={"OCP Agent 版本"}
+          label={'OCP Agent 版本'}
           name="fileName"
           rules={[
             {
               required: true,
-              message: "请选择 OCP Agent 版本",
+              message: '请选择 OCP Agent 版本',
             },
           ]}
           style={{ marginBottom: 0 }}
@@ -168,8 +150,9 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
           <PackageSelect
             useType="UPGRADE_AGENT"
             labelInValue={true}
-            style={{ width: "100%" }}
-            onSuccess={(newPackageList) => {
+            style={{ width: '100%' }}
+            currentBuildVersionForUpgrade={agentData?.version}
+            onSuccess={newPackageList => {
               setPackageList(newPackageList);
             }}
           />

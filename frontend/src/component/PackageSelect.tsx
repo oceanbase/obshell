@@ -107,12 +107,16 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
       packageList = packageList.filter(item => {
         return (
           !currentBuildVersionForUpgrade ||
-          versionCompare(item.version, currentBuildVersionForUpgrade, 'gte')
+          buildVersionCompare(
+            `${item.version}-${item.release}`,
+            currentBuildVersionForUpgrade,
+            'gt'
+          )
         );
       });
     } else if (currentObVersion) {
       packageList = packageList.filter(item =>
-        versionCompare(item.version, currentObVersion, 'gte')
+        versionCompare(item.version, currentObVersion, 'gt')
       );
     }
 

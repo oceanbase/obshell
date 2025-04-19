@@ -23,6 +23,7 @@ import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { useRequest } from 'ahooks';
 import MyDrawer from '@/component/MyDrawer';
 import FormPrimaryZone from '@/component/FormPrimaryZone';
+import { taskSuccess } from '@/util/task';
 
 const FormItem = Form.Item;
 
@@ -44,6 +45,7 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
     manual: true,
     onSuccess: res => {
       if (res.successful) {
+        taskSuccess(res.data.id);
         message.success(
           formatMessage({
             id: 'ocp-express.Detail.Component.ModifyPrimaryZoneDrawer.TheZonePriorityHasBeen',

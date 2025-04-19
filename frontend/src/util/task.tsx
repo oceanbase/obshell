@@ -19,14 +19,7 @@ import React from 'react';
 import { Modal, message } from '@oceanbase/design';
 import { find, flatten, groupBy, isArray, uniq } from 'lodash';
 import moment from 'moment';
-import {
-  directTo,
-  toPercent,
-  joinComponent,
-  sortByNumber,
-  formatNumber,
-  formatTime,
-} from '@oceanbase/util';
+import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
 import * as TaskController from '@/service/ocp-express/TaskController';
 import { getFormateForTimes, secondToTime } from '@/util';
 import { dagHandler } from '@/service/obshell/task';
@@ -388,11 +381,13 @@ export function getTaskLog(log: any[]) {
   // TODO：大小写需要修改
   const reverseLog = [...log];
   const failedLogList = reverseLog?.map(item => item.subtaskFailedRecord);
-  const logList = reverseLog?.map(item => `${formatTime(item.CreateTime)}\n ${item.LogContent}`);
-  const formatter = getFormateForTimes(reverseLog?.map(item => item.CreateTime));
-  const logGroupList = groupBy(reverseLog, item => formatTime(item.CreateTime, formatter));
+  const logList = reverseLog?.map(item => `${formatTime(item.create_time)}\n ${item.log_content}`);
+  const formatter = getFormateForTimes(reverseLog?.map(item => item.create_time));
+  const logGroupList = groupBy(reverseLog, item => formatTime(item.create_time, formatter));
   console.log(logGroupList, 'logGroupList');
-  const logNodeList = uniq(reverseLog?.map(item => `${moment(item.CreateTime).format(formatter)}`));
+  const logNodeList = uniq(
+    reverseLog?.map(item => `${moment(item.create_time).format(formatter)}`)
+  );
   return {
     logNodeList,
     logList,
