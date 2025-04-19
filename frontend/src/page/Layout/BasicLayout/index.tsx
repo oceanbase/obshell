@@ -26,16 +26,13 @@ import { LoadingOutlined, UnorderedListOutlined } from '@oceanbase/icons';
 import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import { useBasicMenu } from '@/hook/useMenu';
 import { useRequest } from 'ahooks';
-import * as InfoController from '@/service/ocp-express/InfoController';
-import * as TaskController from '@/service/ocp-express/TaskController';
 import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
 import tracert from '@/util/tracert';
 import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
-import TenantAdminPasswordModal from '@/component/TenantAdminPasswordModal';
 import useStyles from './index.style';
 import { getTime } from '@/service/obshell/v1';
-import { getAllClusterDags, getUnfinishedDags } from '@/service/obshell/task';
+import { getUnfinishedDags } from '@/service/obshell/task';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
   children: React.ReactNode;
@@ -435,31 +432,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         }}
         onSuccess={() => {
           setPasswordVisible(false);
-        }}
-      />
-
-      <TenantAdminPasswordModal
-        visible={showTenantAdminPasswordModal}
-        type={tenantAdminPasswordErrorData?.type}
-        errorMessage={tenantAdminPasswordErrorData?.errorMessage}
-        tenantName={tenantAdminPasswordErrorData?.tenantName}
-        onCancel={() => {
-          dispatch({
-            type: 'global/update',
-            payload: {
-              showTenantAdminPasswordModal: false,
-              tenantAdminPasswordErrorData: {},
-            },
-          });
-        }}
-        onSuccess={() => {
-          dispatch({
-            type: 'global/update',
-            payload: {
-              showTenantAdminPasswordModal: false,
-              tenantAdminPasswordErrorData: {},
-            },
-          });
         }}
       />
     </OBUIBasicLayout>

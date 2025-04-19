@@ -23,7 +23,7 @@ import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
-import { persistTenantRootPassword } from '@/service/obshell/tenant';
+import { changePassword,persistTenantRootPassword } from '@/service/obshell/tenant';
 
 export interface TenantAdminPasswordModalProps {
   onSuccess: () => void;
@@ -52,7 +52,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     }
   };
 
-  const { run: changeDbUserPassword, loading } = useRequest(persistTenantRootPassword, {
+  const { run: changeDbUserPassword, loading } = useRequest(changePassword, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -69,6 +69,10 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     },
   });
 
+  const { run: createOrReplacePassword, loading:persistTenantRootPasswordLoading } = useRequest(persistTenantRootPassword, {
+    manual: true,
+  });
+
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
@@ -78,9 +82,17 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           // username: tenantData?.mode === 'ORACLE' ? 'SYS' : 'root',
         },
         {
-          password: newPassword,
+          old_password: '',
+          new_password: newPassword,
         }
       );
+
+      createOrReplacePassword({
+        name: tenantData?.tenantName,
+
+      },{
+        password: newPassword,
+      });
     });
   };
 

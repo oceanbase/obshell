@@ -16,18 +16,18 @@
 
 import { formatMessage } from '@/util/intl';
 import { history, useSelector, useDispatch } from 'umi';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Badge, Tooltip } from '@oceanbase/design';
-import { toNumber } from 'lodash';
-import { findByValue } from '@oceanbase/util';
+import { findByValue, jsonParse } from '@oceanbase/util';
 import { CaretDownFilled } from '@oceanbase/icons';
 import { TENANT_STATUS_LIST } from '@/constant/tenant';
 import { useBasicMenu, useTenantMenu } from '@/hook/useMenu';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import BasicLayout from '@/page/Layout/BasicLayout';
-import TaskBubble from '@/component/TaskBubble';
 import TenantSelect from '@/component/common/TenantSelect';
+import TenantAdminPasswordModal from '@/component/TenantAdminPasswordModal';
 import useStyles from './index.style';
+import ModifyTenantPasswordModal from '@/page/Tenant/Detail/Component/ModifyTenantPasswordModal';
 
 interface DetailProps {
   location: {
@@ -35,7 +35,7 @@ interface DetailProps {
   };
   match: {
     params: {
-      tenantName: number;
+      tenantName: string;
     };
   };
   children: React.ReactNode;
@@ -50,7 +50,18 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     },
     ...restProps
   } = props;
-  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
+
+  const {
+    location: { pathname },
+  } = restProps;
+
+  const {
+    systemInfo: { monitorInfo: { collectInterval } = {} },
+    showTenantAdminPasswordModal,
+    tenantAdminPasswordErrorData,
+  } = useSelector((state: DefaultRootState) => state.global);
+
   const dispatch = useDispatch();
 
   // 集群详情里面，会返回 oraclePrivilegeManagementSupprted，只对Oracle租户有效
@@ -71,6 +82,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
         name: tenantName,
       },
     });
+
     return () => {
       dispatch({
         type: 'tenant/update',
@@ -85,7 +97,96 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
 
   const statusItem = findByValue(TENANT_STATUS_LIST, tenantData.status);
 
-  console.log(statusItem, tenantData, 'statusItem');
+  const ocpExpressEmptySuperUserPasswordTime = jsonParse(
+    localStorage.getItem(`__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`),
+    []
+  ) as any[];
+
+  const [showTenantPasswordModal, setShowTenantPasswordModal] = useState(false);
+
+  const timeDifference = new Date().getTime() - (ocpExpressEmptySuperUserPasswordTime || 0);
+
+  const checkEmptyPasswordRootPath = [
+    `/tenant/${tenantName}/overview`,
+    `/tenant/${tenantName}/parameter`,
+  ];
+
+  const checkEmptyPasswordPath = [`/tenant/${tenantName}/database`, `/tenant/${tenantName}/user`];
+
+  const isCheckEmptyPasswordRootPath = checkEmptyPasswordRootPath?.some(url =>
+    pathname?.includes(url)
+  );
+  const isCheckEmptyPasswordPath = checkEmptyPasswordPath?.some(url => pathname?.includes(url));
+
+  useEffect(() => {
+    if (
+      (!ocpExpressEmptySuperUserPasswordTime || timeDifference > 86400000) &&
+      tenantName !== 'sys' &&
+      Object.keys(precheckResult)?.length > 0 &&
+      precheckResult?.is_empty_root_password &&
+      isCheckEmptyPasswordRootPath
+    ) {
+      setShowTenantPasswordModal(true);
+    } else {
+      localStorage.removeItem(
+        `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
+      );
+    }
+  }, [precheckResult?.is_empty_root_password, isCheckEmptyPasswordRootPath, pathname]);
+
+  useEffect(() => {
+    if (
+      tenantName !== 'sys' &&
+      Object.keys(precheckResult)?.length > 0 &&
+      isCheckEmptyPasswordPath &&
+      !precheckResult?.is_connectable
+    ) {
+      if (!precheckResult?.is_password_exists) {
+        dispatch({
+          type: 'global/update',
+          payload: {
+            showTenantAdminPasswordModal: true,
+            tenantAdminPasswordErrorData: {
+              type: 'ADD',
+              errorMessage: `连接失败，${tenantName} 租户无法连接，请输入此租户管理员密码`,
+              tenantName,
+            },
+          },
+        });
+      } else {
+        dispatch({
+          type: 'global/update',
+          payload: {
+            showTenantAdminPasswordModal: true,
+            tenantAdminPasswordErrorData: {
+              type: 'EDIT',
+              errorMessage: `连接失败，${tenantName} 租户密码错误，请输入此租户的正确密码`,
+              tenantName,
+            },
+          },
+        });
+      }
+    }
+  }, [
+    precheckResult?.is_password_exists,
+    precheckResult?.is_connectable,
+    isCheckEmptyPasswordPath,
+    pathname,
+  ]);
+
+  const emptySuperUserPassword = !precheckResult?.is_empty_root_password || false;
+
+  useEffect(() => {
+    if (tenantName && tenantName !== 'sys') {
+      dispatch({
+        type: 'tenant/getTenantPreCheck',
+        payload: {
+          name: tenantName,
+        },
+      });
+    }
+  }, [tenantName, pathname]);
+
   return (
     <BasicLayout
       menus={menus}
@@ -154,6 +255,51 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     >
       {children}
       {/* <TaskBubble tenantName={tenantName} /> */}
+
+      <ModifyTenantPasswordModal
+        visible={showTenantPasswordModal}
+        onCancel={() => {
+          if (!ocpExpressEmptySuperUserPasswordTime && emptySuperUserPassword) {
+            localStorage.setItem(
+              `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`,
+              JSON.stringify(new Date().getTime())
+            );
+          }
+          setShowTenantPasswordModal(false);
+        }}
+        onSuccess={() => {
+          localStorage.removeItem(
+            `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
+          );
+          setShowTenantPasswordModal(false);
+        }}
+      />
+
+      <TenantAdminPasswordModal
+        visible={showTenantAdminPasswordModal}
+        // visible={true}
+        type={tenantAdminPasswordErrorData?.type}
+        errorMessage={tenantAdminPasswordErrorData?.errorMessage}
+        tenantName={tenantAdminPasswordErrorData?.tenantName}
+        onCancel={() => {
+          dispatch({
+            type: 'global/update',
+            payload: {
+              showTenantAdminPasswordModal: false,
+              tenantAdminPasswordErrorData: {},
+            },
+          });
+        }}
+        onSuccess={() => {
+          dispatch({
+            type: 'global/update',
+            payload: {
+              showTenantAdminPasswordModal: false,
+              tenantAdminPasswordErrorData: {},
+            },
+          });
+        }}
+      />
     </BasicLayout>
   );
 };

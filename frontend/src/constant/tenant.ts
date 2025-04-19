@@ -291,6 +291,7 @@ export const FORBID_OPERATION_DBLIST = [
   'SYS',
   'LBACSYS',
   'ORAAUDITOR',
+  'ocs'
 ];
 
 // 内置角色

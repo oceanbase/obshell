@@ -110,8 +110,6 @@ const Detail: React.FC<NewProps> = ({
   const [ediLockStatusModal, setEdiLockStatusModal] = useState(false);
   const [ediRemarksModal, setEdiRemarksModal] = useState(false);
 
-  const [showTenantPasswordModal, setShowTenantPasswordModal] = useState(false);
-
   const [currentTenantZone, setCurrentTenantZone] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -175,32 +173,6 @@ const Detail: React.FC<NewProps> = ({
   const zones = getZones(tenantData);
   console.log(tenantData, 'tenantData');
 
-  const ocpExpressEmptySuperUserPasswordTime = jsonParse(
-    localStorage.getItem(`__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`),
-    []
-  ) as any[];
-
-  const timeDifference = new Date().getTime() - (ocpExpressEmptySuperUserPasswordTime || 0);
-
-  const { data: preCheckResult, run: handleTenantPreCheck } = useRequest(tenantPreCheck, {
-    manual: true,
-    onSuccess: res => {
-      if (res.successful) {
-        if (
-          (!ocpExpressEmptySuperUserPasswordTime || timeDifference > 86400000) &&
-          !res?.data?.is_password_exists
-        ) {
-          setShowTenantPasswordModal(true);
-        } else {
-          localStorage.removeItem(
-            `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
-          );
-        }
-      }
-    },
-  });
-
-  const emptySuperUserPassword = !preCheckResult?.data?.is_password_exists || false;
 
   // 获取 unit 规格的限制规则
   // const { data: clusterUnitSpecLimitData } = useRequest(
@@ -223,14 +195,6 @@ const Detail: React.FC<NewProps> = ({
       getTenantData({ name: tenantName });
     }
   }, [tenantName]);
-
-  // TODO：暂时不需要此接口
-  useEffect(() => {
-    // 每间隔大于24小时 || 首次检查
-    if (tenantData?.name && (!ocpExpressEmptySuperUserPasswordTime || timeDifference > 86400000)) {
-      handleTenantPreCheck({ name: tenantName });
-    }
-  }, [tenantData?.name]);
 
   // 获取副本模式，即 3F、2F1L、2F1L1R 的简写形式
   const replicaMode = REPLICA_TYPE_LIST.map(item => ({
@@ -523,7 +487,10 @@ const Detail: React.FC<NewProps> = ({
               defaultMessage: '总览',
             })}
             spin={loading}
-            onClick={refresh}
+            onClick={() => {
+              refresh();
+              getTenantCompactionRefresh();
+            }}
           />
         ),
 
@@ -1189,24 +1156,6 @@ const Detail: React.FC<NewProps> = ({
           </Form.Item>
         </Form>
       </Modal>
-      <ModifyTenantPasswordModal
-        visible={showTenantPasswordModal}
-        onCancel={() => {
-          if (!ocpExpressEmptySuperUserPasswordTime && emptySuperUserPassword) {
-            localStorage.setItem(
-              `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`,
-              JSON.stringify(new Date().getTime())
-            );
-          }
-          setShowTenantPasswordModal(false);
-        }}
-        onSuccess={() => {
-          localStorage.removeItem(
-            `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
-          );
-          setShowTenantPasswordModal(false);
-        }}
-      />
     </PageContainer>
   );
 };

@@ -19,12 +19,10 @@ import React from 'react';
 import { Form, Alert, Modal, message } from '@oceanbase/design';
 import { ExclamationCircleFilled } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
-import * as IamController from '@/service/ocp-express/IamController';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
-import encrypt from '@/util/encrypt';
+import { persistTenantRootPassword } from '@/service/obshell/tenant';
 
 export interface TenantAdminPasswordModalProps {
   tenantName?: string;
@@ -43,76 +41,36 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const { runAsync: getLoginKey } = useRequest(IamController.getLoginKey, {
+  const { run: createOrReplacePassword, loading } = useRequest(persistTenantRootPassword, {
     manual: true,
-  });
-
-  // 验证租户密码
-  const { loading: checkTenantPasswordLoading, runAsync: checkTenantPassword } = useRequest(
-    ObTenantController.checkTenantPassword,
-    {
-      manual: true,
-      defaultParams: [{}],
-      onSuccess: res => {
-        if (res.successful) {
-          if (res.data?.successful) {
-            validateFields().then(values => {
-              const { newPassword } = values;
-              getLoginKey().then(response => {
-                const publicKey = response?.data?.publicKey || '';
-                createOrReplacePassword({
-                  tenantName,
-                  newPassword: encrypt(newPassword ? newPassword : '', publicKey),
-                });
-              });
-            });
-          } else {
-            message.error(
-              formatMessage({
-                id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordVerificationFailed',
-                defaultMessage: '密码校验失败！',
-              })
-            );
-          }
-        }
-      },
-    }
-  );
-
-  const { run: createOrReplacePassword, loading } = useRequest(
-    ObTenantController.createOrReplacePassword,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            type === 'ADD'
-              ? formatMessage({
+    onSuccess: res => {
+      if (res.successful) {
+        message.success(
+          type === 'ADD'
+            ? formatMessage({
                 id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordAddedSuccessfully',
                 defaultMessage: '密码新增成功',
               })
-              : formatMessage({
+            : formatMessage({
                 id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordModifiedSuccessfully',
                 defaultMessage: '密码修改成功',
               })
-          );
-          if (onSuccess) {
-            onSuccess();
-          }
+        );
+        if (onSuccess) {
+          onSuccess();
         }
-      },
-    }
-  );
+      }
+    },
+  });
 
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
-      getLoginKey().then(response => {
-        const publicKey = response?.data?.publicKey || '';
-        checkTenantPassword({
-          tenantName,
-          newPassword: encrypt(newPassword ? newPassword : '', publicKey),
-        });
+      createOrReplacePassword({
+        name: tenantName,
+
+      },{
+        password: newPassword,
       });
     });
   };
@@ -122,17 +80,17 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
       title={
         type === 'ADD'
           ? formatMessage({
-            id: 'ocp-express.src.component.TenantAdminPasswordModal.EnterTheTenantAdministratorPassword',
-            defaultMessage: '录入租户管理员密码',
-          })
+              id: 'ocp-express.src.component.TenantAdminPasswordModal.EnterTheTenantAdministratorPassword',
+              defaultMessage: '录入租户管理员密码',
+            })
           : formatMessage({
-            id: 'ocp-express.src.component.TenantAdminPasswordModal.UpdateTenantAdministratorPassword',
-            defaultMessage: '更新租户管理员密码',
-          })
+              id: 'ocp-express.src.component.TenantAdminPasswordModal.UpdateTenantAdministratorPassword',
+              defaultMessage: '更新租户管理员密码',
+            })
       }
       destroyOnClose={true}
       {...restProps}
-      confirmLoading={checkTenantPasswordLoading || loading}
+      confirmLoading={ loading}
       onOk={handleSubmit}
     >
       <Alert

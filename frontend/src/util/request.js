@@ -151,34 +151,34 @@ const errorHandler = ({ request, response, data }) => {
     } else if (status === 404 && SHOULD_ERROR_PAGE) {
       if (code === 60018) {
         // 60018 租户密码不存在，提示录入租户管理员密码密码。
-        return dispatch({
-          type: 'global/update',
-          payload: {
-            showTenantAdminPasswordModal: true,
-            tenantAdminPasswordErrorData: {
-              type: 'ADD',
-              errorMessage: msg,
-              ...(error?.target || {}),
-            },
-          },
-        });
+        // return dispatch({
+        //   type: 'global/update',
+        //   payload: {
+        //     showTenantAdminPasswordModal: true,
+        //     tenantAdminPasswordErrorData: {
+        //       type: 'ADD',
+        //       errorMessage: msg,
+        //       ...(error?.target || {}),
+        //     },
+        //   },
+        // });
       } else {
         history.push('/error/404');
       }
     } else if (status === 500) {
-      if (code === 60017) {
-        return dispatch({
-          type: 'global/update',
-          payload: {
-            showTenantAdminPasswordModal: true,
-            tenantAdminPasswordErrorData: {
-              type: 'EDIT',
-              errorMessage: msg,
-              ...(error?.target || {}),
-            },
-          },
-        });
-      }
+      // if (code === 60017) {
+      //   return dispatch({
+      //     type: 'global/update',
+      //     payload: {
+      //       showTenantAdminPasswordModal: true,
+      //       tenantAdminPasswordErrorData: {
+      //         type: 'EDIT',
+      //         errorMessage: msg,
+      //         ...(error?.target || {}),
+      //       },
+      //     },
+      //   });
+      // }
     }
   }
   // 一定要返回 data，否则就会在错误处理这一层断掉，后续无法获取响应的数据
@@ -193,7 +193,7 @@ const request = extend({
   credentials: 'include', // 默认请求是否带上cookie
 });
 
-function base64Encode(key, iv) {
+function base64Encode (key, iv) {
   if (!key || !iv) return '';
   try {
     // 将 key 和 iv 合并，并转为 WordArray
@@ -245,11 +245,10 @@ request.interceptors.request.use((url, options) => {
           // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
           Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
           // 请求的 URI
-          Uri: `${url}${
-            Object.keys(options.params).length > 0
+          Uri: `${url}${Object.keys(options.params).length > 0
               ? `?${queryString.stringify(options.params, { sort: false })}`
               : ''
-          }`,
+            }`,
           // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
           ...(options.data ? { Keys: keys } : {}),
         }),
@@ -277,9 +276,9 @@ request.interceptors.request.use((url, options) => {
         ...(skipUrlList.includes(url)
           ? {}
           : {
-              'X-OCS-Header': ocsHeader,
-              ...(isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
-            }),
+            'X-OCS-Header': ocsHeader,
+            ...(isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
+          }),
       },
     },
   };

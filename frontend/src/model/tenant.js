@@ -33,6 +33,7 @@ const model = {
     parameterListData: DEFAULT_LIST_DATA,
     unitSpecList: [],
     unitSpecLimitRule: null,
+    precheckResult: {}
   },
 
   effects: {
@@ -44,6 +45,19 @@ const model = {
           type: 'update',
           payload: {
             tenantListData: res.data || DEFAULT_LIST_DATA,
+          },
+        });
+      }
+    },
+    // 根据集群下的全部租户
+    *getTenantPreCheck ({ payload }, { call, put }) {
+      const res = yield call(ObShellTenantController.tenantPreCheck, payload);
+
+      if (res.successful) {
+        yield put({
+          type: 'update',
+          payload: {
+            precheckResult: res.data || {},
           },
         });
       }
