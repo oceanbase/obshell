@@ -375,6 +375,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                   sha256sum: sha256,
                 }).then(res => {
                   if (res.successful) {
+                    // timer 中有更新 percent 的逻辑，避免和 options.onSuccess 影响，加一个 delay 处理
                     clearInterval(timer);
                     setTimeout(() => {
                       options.onSuccess(res.data);
@@ -382,11 +383,14 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                       onSuccess();
                     }, 500);
                   } else {
-                    setFileList(
-                      fileList.filter(item => {
-                        item.uid !== file.uid;
-                      })
-                    );
+                    clearInterval(timer);
+                    setTimeout(() => {
+                      setFileList(
+                        fileList.filter(item => {
+                          item.uid !== file.uid;
+                        })
+                      );
+                    }, 500);
                   }
                 });
               } catch (error) {
