@@ -103,21 +103,19 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
       return true;
     });
 
-    if (currentObVersion) {
-      packageList = packageList
-        .filter(item => versionCompare(item.version, currentObVersion, 'gte'))
-        .filter(item => `${item.version}-${item.buildNumber}` !== currentBuildVersionForUpgrade);
-    } else {
-      packageList = packageList.filter(
-        item =>
+    if (currentBuildVersionForUpgrade) {
+      packageList = packageList.filter(item => {
+        return (
           !currentBuildVersionForUpgrade ||
-          buildVersionCompare(
-            `${item.version}-${item.buildNumber}`,
-            currentBuildVersionForUpgrade,
-            'gt'
-          )
+          versionCompare(item.version, currentBuildVersionForUpgrade, 'gte')
+        );
+      });
+    } else if (currentObVersion) {
+      packageList = packageList.filter(item =>
+        versionCompare(item.version, currentObVersion, 'gte')
       );
     }
+
     // ob 集群升级版本、obproxy 添加 server，仅可选择与当前集群软件系统相同的软件包
     if (packageOperatingSystem) {
       packageList = packageList.filter(item => item.operatingSystem === packageOperatingSystem);

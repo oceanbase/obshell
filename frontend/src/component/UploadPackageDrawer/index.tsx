@@ -1,21 +1,13 @@
 // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
-import { uniqueId, find } from "lodash";
-import React, { useState, useEffect } from "react";
-import {
-  Button,
-  message,
-  Drawer,
-  Upload,
-  Form,
-  Table,
-  Progress,
-} from "@oceanbase/design";
-import type { UploadFile } from "@oceanbase/design";
-import { UploadOutlined } from "@oceanbase/icons";
-import { useRequest } from "ahooks";
-import CryptoJS from "crypto-js";
-import { newPkgUpload } from "@/service/obshell/package";
-import "./index.less";
+import { uniqueId, find } from 'lodash';
+import React, { useState, useEffect } from 'react';
+import { Button, message, Drawer, Upload, Form, Table, Progress } from '@oceanbase/design';
+import type { UploadFile } from '@oceanbase/design';
+import { UploadOutlined } from '@oceanbase/icons';
+import { useRequest } from 'ahooks';
+import CryptoJS from 'crypto-js';
+import { newPkgUpload } from '@/service/obshell/package';
+import './index.less';
 
 interface UploadPackageDrawerProps {
   open: boolean;
@@ -56,9 +48,9 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     return e && e.fileList;
   };
 
-  const beforeUpload = (file) => {
-    const isFileExists = fileList.some((f) => f.name === file.name);
-    console.log(file, "file");
+  const beforeUpload = file => {
+    const isFileExists = fileList.some(f => f.name === file.name);
+    console.log(file, 'file');
     if (isFileExists) {
       message.warning(`${file.name} 软件包已存在，请重新选择`);
       return false;
@@ -69,12 +61,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   const handleUpload = (info: any) => {
     const currentFile = info?.file;
 
-    const existedFile = find(
-      fileList,
-      (item) => item.name === currentFile.name
-    );
+    console.log(currentFile, 'currentFile');
+    const existedFile = find(fileList, item => item.name === currentFile.name);
 
-    if (info?.file?.status === "uploading") {
+    if (info?.file?.status === 'uploading') {
       if (!existedFile || fileList.length === 0) {
         setFileList([
           ...fileList,
@@ -84,7 +74,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           },
         ]);
       } else if (existedFile && existedFile.key) {
-        const currentFileList = fileList.map((item) => {
+        const currentFileList = fileList.map(item => {
           if (item.name === currentFile.name) {
             return {
               ...existedFile,
@@ -98,18 +88,16 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       }
     }
 
-    if (currentFile.status === "done") {
+    if (currentFile.status === 'done') {
       if (existedFile) {
-        const currentFileList = fileList.map((item) => {
+        const currentFileList = fileList.map(item => {
           if (item.name === currentFile.name) {
             return {
               ...currentFile,
-              key: existedFile.key,
-              id: currentFile.response?.data?.id,
-              md5: currentFile.response?.data?.md5,
+              key: existedFile.uid,
+              id: currentFile.response?.pkg_id,
+              md5: currentFile.response?.md5,
               description: currentFile?.response?.error?.message,
-              // hasSignature: currentFile.response?.data?.hasSignature,
-              // signatureValid: currentFile.response?.data?.signatureValid,
             };
           } else {
             return item;
@@ -117,9 +105,9 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
         });
         setFileList(currentFileList);
       }
-    } else if (info?.file?.status === "error") {
+    } else if (info?.file?.status === 'error') {
       if (existedFile) {
-        const currentFileList = fileList.map((item) => {
+        const currentFileList = fileList.map(item => {
           if (item.name === currentFile.name) {
             return {
               ...currentFile,
@@ -127,7 +115,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               status: currentFile?.status,
               id: existedFile.response?.data?.id,
               md5: existedFile.response?.data?.md5,
-              checkResult: "失败",
+              checkResult: '失败',
               description: currentFile?.response?.error?.message,
               percent: 100,
             };
@@ -172,15 +160,13 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 
   const columns = [
     {
-      title: "软件包名称",
-      dataIndex: "name",
+      title: '软件包名称',
+      dataIndex: 'name',
       ellipsis: true,
       render: (text: string, record) => (
-        <div style={{ maxWidth: "460px" }}>
+        <div style={{ maxWidth: '460px' }}>
           <div>{text}</div>
-          <div
-            style={{ color: "#8592ad", fontSize: "12px", lineHeight: "20px" }}
-          >
+          <div style={{ color: '#8592ad', fontSize: '12px', lineHeight: '20px' }}>
             md5: {record.md5}
           </div>
         </div>
@@ -188,16 +174,16 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     },
 
     {
-      title: "上传进度",
-      dataIndex: "percent",
+      title: '上传进度',
+      dataIndex: 'percent',
       width: 110,
       render: (text, record) => {
         return !record.percent || record.percent === 0 ? (
-          "-"
+          '-'
         ) : (
           <Progress
             percent={text > 0 ? parseFloat(text.toFixed()) : 0}
-            {...(record?.status === "error" && { status: "exception" })}
+            {...(record?.status === 'error' && { status: 'exception' })}
           />
         );
       },
@@ -285,12 +271,12 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 
   return (
     <Drawer
-      title={"上传软件包"}
+      title={'上传软件包'}
       open={open}
       width={800}
       destroyOnClose={true}
       maskClosable={false}
-      okText={"上传"}
+      okText={'上传'}
       onClose={() => {
         onCancel();
       }}
@@ -337,30 +323,40 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           rules={[
             {
               required: true,
-              message: "请选择软件包",
+              message: '请选择软件包',
             },
           ]}
-          extra={"只支持后缀名为 .rpm 的文件"}
+          extra={
+            <div>
+              只支持后缀名为 .rpm 的文件，
+              <a
+                href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
+                target="_blank"
+              >
+                RPM 包下载地址
+              </a>
+            </div>
+          }
         >
           <Upload
             accept=".rpm"
             name="file"
             // action={`${window?.location?.hash}/api/v2/software-packages`}
             beforeUpload={beforeUpload}
-            customRequest={async (options) => {
+            customRequest={async options => {
               const file = options.file;
 
               // 400 MB 等于 120 秒，一秒约等于 3 MB
               const totalMB = file.size / 1024 / 1024;
-              let uploadedMb = 0;
+              let uploadedMb = 2;
 
               // umi 请求使用的 fetch 无法监听上传进度，改为 xhr 会绕过 interceptors 的加密逻辑，改为模拟进度条
               const timer = setInterval(() => {
-                uploadedMb += 3;
+                uploadedMb += totalMB < 300 ? 3 : 2;
                 const percent = (uploadedMb / totalMB) * 100;
-                console.log(totalMB, uploadedMb, "totalMB");
+                console.log(totalMB, uploadedMb, 'totalMB');
 
-                if (percent >= 90) {
+                if (percent >= 95) {
                   clearInterval(timer);
                   return;
                 }
@@ -374,26 +370,28 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               const arrayBuffer = await file.arrayBuffer();
               try {
                 const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
-                const sha256 = CryptoJS.enc.Hex.stringify(
-                  CryptoJS.SHA256(wordArray)
-                );
+                const sha256 = CryptoJS.enc.Hex.stringify(CryptoJS.SHA256(wordArray));
                 upgradePkgUploadFn({}, file, {
                   sha256sum: sha256,
-                }).then((res) => {
+                }).then(res => {
                   if (res.successful) {
-                    options.onSuccess(res.data);
-                    message.success(`${file.name} 上传功能`);
+                    clearInterval(timer);
+                    setTimeout(() => {
+                      options.onSuccess(res.data);
+                      message.success(`${file.name} 上传功能`);
+                      onSuccess();
+                    }, 500);
                   } else {
                     setFileList(
-                      fileList.filter((item) => {
+                      fileList.filter(item => {
                         item.uid !== file.uid;
                       })
                     );
                   }
                 });
               } catch (error) {
-                console.error("file error: ", error);
-                message.warning("上传文件过大，请联系技术同学使用 SDK 上传");
+                console.error('file error: ', error);
+                message.warning('上传文件过大，请联系技术同学使用 SDK 上传');
               }
             }}
             withCredentials={true}
@@ -403,7 +401,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           >
             <Button>
               <UploadOutlined />
-              {"选择软件包"}
+              {'选择软件包'}
             </Button>
           </Upload>
         </Form.Item>
@@ -412,21 +410,16 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
         <>
           <div
             style={{
-              lineHeight: "22px",
-              marginTop: "24px",
-              marginBottom: "4px",
-              color: "#132039",
+              lineHeight: '22px',
+              marginTop: '24px',
+              marginBottom: '4px',
+              color: '#132039',
             }}
           >
-            {"软件包"}
+            {'软件包'}
             {`（${fileList?.length}）`}
           </div>
-          <Table
-            dataSource={fileList}
-            columns={columns}
-            rowKey="key"
-            pagination={false}
-          />
+          <Table dataSource={fileList} columns={columns} rowKey="key" pagination={false} />
         </>
       )}
     </Drawer>

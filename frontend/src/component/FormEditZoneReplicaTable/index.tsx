@@ -138,7 +138,7 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
           const { unitConfig } = (record.resourcePool as API.ResourcePool) || {};
           const { max_cpu: maxCpuCoreCount, memory_size } = (unitConfig as API.UnitConfig) || {};
 
-          const maxMemorySizeGB = byte2GB(memory_size / 8);
+          const maxMemorySizeGB = byte2GB(memory_size);
 
           return (
             <ul>

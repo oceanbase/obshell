@@ -365,8 +365,8 @@ export function getLatestNode(nodes: Node[]) {
   const latestReadyNode = find(flattenNodes, item => item?.state === 'READY');
   // 最新的待执行节点
   const latestPendingNode = find(flattenNodes, item => item?.state === 'PENDING');
-  // 最新的已完成节点
-  const latestSuccessfulNode = find(flattenNodes, item => item?.state === 'SUCCEED');
+  // 最新的已完成节点, 需要反转下数组，查询最近完成的节点
+  const latestSuccessfulNode = find(flattenNodes.reverse(), item => item?.state === 'SUCCEED');
   // 第一个节点
   const firstNode = flattenNodes && flattenNodes[0];
   // 最新节点的优先级: 失败节点 > 运行中节点 > 准备执行节点 > 待执行节点 > 第一个节点
@@ -378,8 +378,8 @@ export function getLatestNode(nodes: Node[]) {
     latestSuccessfulNode ||
     firstNode;
 
-  console.log(flattenNodes, latestNode, 'latestNode');
-  return latestNode as Node | undefined;
+  // 存在 children，使用 children
+  return (latestNode?.children?.[0] || latestNode) as Node | undefined;
 }
 
 export function getTaskLog(log: any[]) {

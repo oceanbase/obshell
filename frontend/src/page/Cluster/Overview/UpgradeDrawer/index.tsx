@@ -279,7 +279,8 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
             isHeterogeneousUpgrade={true}
             type={['OB_SERVER_INSTALL_PACKAGE']}
             currentObVersion={
-              systemInfo?.obUpgradeInfo?.allowDowngrade ? clusterData?.ob_version : null
+              // systemInfo?.obUpgradeInfo?.allowDowngrade ? clusterData?.ob_version : null
+              clusterData?.ob_version
             }
             currentBuildVersionForUpgrade={clusterData.ob_version}
             ref={packageSelectRef}

@@ -31,6 +31,7 @@ import { useRequest } from 'ahooks';
 import { upgradePkgInfo, upgradePkgRoute } from '@/service/obshell/upgrade';
 import { Button } from 'antd';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
+import { uniq } from 'lodash';
 
 const FormItem = Form.Item;
 
@@ -61,6 +62,7 @@ const PackagePage: React.FC<PackageProps> = ({
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
   const packageList = data?.data?.contents || [];
 
+  console.log(packageList, 'packageList');
   // architecture?: string;
   // chunkCount?: number;
   // distribution?: string;
@@ -79,7 +81,6 @@ const PackagePage: React.FC<PackageProps> = ({
   const [form] = Form.useForm();
   const [keyword, setKeyword] = useState(defaultKeyword);
   const [visible, setVisible] = useState(false);
-  const [currentRecord, setCurrentRecord] = useState<API.PackageMeta | null>(null);
 
   const columns = [
     {
@@ -89,7 +90,7 @@ const PackagePage: React.FC<PackageProps> = ({
       }),
       dataIndex: 'name',
       width: isEnglish() ? 200 : 220,
-      sorter: true,
+      sorter: (a, b) => sortByString(a, b, 'name'),
       render: (text: string) => <div style={{ wordBreak: 'break-all' }}>{text}</div>,
     },
 
@@ -113,10 +114,11 @@ const PackagePage: React.FC<PackageProps> = ({
         defaultMessage: '版本',
       }),
       dataIndex: 'version',
-      filters: (data?.data?.versions || []).map(item => ({
+      filters: uniq(packageList.map(item => item.version) || []).map(item => ({
         text: item,
         value: item,
       })),
+      onFilter: (value: string, record: API.UpgradePkgInfo) => record.version === value,
     },
 
     // {
@@ -138,15 +140,11 @@ const PackagePage: React.FC<PackageProps> = ({
       }),
 
       dataIndex: 'architecture',
-      ...(isEnglish()
-        ? {
-            width: 120,
-          }
-        : {}),
-      filters: (data?.data?.architectures || []).map(item => ({
+      filters: uniq(packageList.map(item => item.architecture) || []).map(item => ({
         text: item,
         value: item,
       })),
+      onFilter: (value: string, record: API.UpgradePkgInfo) => record.architecture === value,
     },
 
     {
@@ -175,8 +173,8 @@ const PackagePage: React.FC<PackageProps> = ({
         defaultMessage: '上传时间',
       }),
       dataIndex: 'gmt_modify',
-      sorter: true,
-      width: 150,
+      width: 250,
+      sorter: (a, b) => sortByMoment(a, b, 'gmt_modify'),
       render: (text: string) => formatTime(text),
     },
   ];
@@ -216,7 +214,7 @@ const PackagePage: React.FC<PackageProps> = ({
         <Table
           loading={loading}
           dataSource={packageList.filter(
-            item => !keyword || (item.key && item.key.includes(keyword))
+            item => !keyword || (item.name && item.name.includes(keyword))
           )}
           columns={columns}
           rowKey={record => record.pkg_id}
