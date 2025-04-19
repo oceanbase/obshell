@@ -53,19 +53,6 @@ const DeleteReplicaModal: React.FC<DeleteReplicaModalProps> = ({
         if (onSuccess) {
           onSuccess();
         }
-        dispatch({
-          type: 'tenant/getTenantData',
-          payload: {
-            id: tenantData.clusterId,
-            tenantId: tenantData.id,
-          },
-        });
-        dispatch({
-          type: 'task/update',
-          payload: {
-            runningTaskListDataRefreshDep: taskId,
-          },
-        });
       }
     },
   });

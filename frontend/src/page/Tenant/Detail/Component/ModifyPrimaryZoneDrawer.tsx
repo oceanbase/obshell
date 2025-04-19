@@ -40,8 +40,6 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const dispatch = useDispatch();
-
   const { run, loading } = useRequest(tenantModifyPrimaryZone, {
     manual: true,
     onSuccess: res => {
@@ -55,12 +53,6 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
         if (onSuccess) {
           onSuccess();
         }
-        dispatch({
-          type: 'tenant/getTenantData',
-          payload: {
-            tenantId: tenantData?.obTenantId,
-          },
-        });
       }
     },
   });

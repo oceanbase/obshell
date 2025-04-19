@@ -35,6 +35,7 @@ import {
   Typography,
   Descriptions,
   message,
+  DrawerProps,
 } from '@oceanbase/design';
 import React, { useEffect, useState } from 'react';
 import { flatten, groupBy, isEqual, unionWith, uniq, uniqBy } from 'lodash';
@@ -47,7 +48,7 @@ import styles from './index.less';
 const { Option, OptGroup } = MySelect;
 const { Text } = Typography;
 
-export interface ModifyClusterParameterDrawerProps {
+export interface ModifyClusterParameterDrawerProps extends DrawerProps {
   parameter?: API.ClusterParameter;
   onSuccess?: () => void;
 }
@@ -105,7 +106,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
 
   const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
   const dispatch = useDispatch();
-  console.log(parameter, 'parameter');
 
   const getClusterData = () => {
     dispatch({
@@ -121,14 +121,13 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
   }, []);
 
   const removeSelectDisabled = () => {
-    setAllTenantSelectedStatus('allow');
-    setAllTenantSelectedStatus('allow');
+    setAllTenantSelectedStatus('allowed');
   };
   useEffect(() => {
-    if (!open) {
+    if (!restProps.open) {
       removeSelectDisabled();
     }
-  }, [open]);
+  }, [restProps.open]);
 
   useEffect(() => {
     if (parameter?.scope === 'TENANT') {
@@ -249,8 +248,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
 
   const tenantList = data?.data?.contents || [];
   const editParameter = getFieldValue(['parameter']);
-
-  console.log(tenantList, 'tenantList');
 
   if (parameter?.scope === 'CLUSTER') {
     const serverList: string[] = [];
@@ -436,8 +433,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
     }
   };
 
-  console.log(getParameterValue(), 'getParameterValue');
-
   const confirmColumns = [
     {
       title: formatMessage({
@@ -509,7 +504,7 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
       });
       return selectAllOptions;
     } else {
-      return zoneList.map(zone => ({ value: zone.value, label: zone.label }));
+      return zoneList.map(zone => ({ value: zone.name, label: zone.name }));
     }
   };
 
@@ -517,8 +512,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
     const selectedtenantList: number[] = flatten(
       (tenants && tenants?.map(item => item?.target?.map(o => o?.value) || [])) || []
     );
-
-    console.log(tenantData, tenants, selectedtenantList, 'selectedtenantList');
 
     return tenantData.filter(
       item =>
@@ -824,7 +817,7 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
                                     ]}
                                   >
                                     <MySelect
-                                      mode="tags"
+                                      mode="multiple"
                                       allowClear={true}
                                       labelInValue={true}
                                       maxTagCount={params?.applyTo === 'OBServer' ? 2 : 3}

@@ -38,8 +38,6 @@ const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const dispatch = useDispatch();
-
   const { run, loading } = useRequest(tenantModifyWhitelist, {
     manual: true,
     onSuccess: res => {
@@ -54,12 +52,6 @@ const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({
         if (onSuccess) {
           onSuccess();
         }
-        dispatch({
-          type: 'tenant/getTenantData',
-          payload: {
-            tenantId: tenantData?.obTenantId,
-          },
-        });
       }
     },
   });

@@ -95,19 +95,6 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
         if (onSuccess) {
           onSuccess();
         }
-        dispatch({
-          type: 'tenant/getTenantData',
-          payload: {
-            tenantId: tenantData?.obTenantId,
-          },
-        });
-
-        dispatch({
-          type: 'task/update',
-          payload: {
-            runningTaskListDataRefreshDep: taskId,
-          },
-        });
       }
     },
   });

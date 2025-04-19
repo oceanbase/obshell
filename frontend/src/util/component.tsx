@@ -36,7 +36,7 @@ import {
   token,
 } from '@oceanbase/design';
 import React from 'react';
-import { groupBy, keyBy, noop } from 'lodash';
+import { groupBy, keyBy, noop, uniq } from 'lodash';
 import moment from 'moment';
 import { EllipsisOutlined, SearchOutlined } from '@oceanbase/icons';
 import type { ButtonProps } from '@oceanbase/design/es/button';
@@ -238,23 +238,27 @@ export function getDetailComponentByParameterValue(
 
   console.log(serverValues, tenantValues, zones, 'tenantValues');
   if (parameterType === 'TENANT') {
+    const uniqTenantValues = uniq(
+      tenantValues
+        ?.sort((a, b) => {
+          const nameA = a?.tenant_name?.toUpperCase();
+          const nameB = b?.tenant_name?.toUpperCase();
+          if (nameA < nameB) {
+            return -1;
+          }
+          if (nameA > nameB) {
+            return 1;
+          }
+          return 0;
+        })
+        ?.map(tenantValue => `${tenantValue?.tenant_name}: ${tenantValue?.value}`) || []
+    );
+
     return (
       <>
-        {tenantValues
-          ?.sort((a, b) => {
-            const nameA = a?.tenant_name?.toUpperCase();
-            const nameB = b?.tenant_name?.toUpperCase();
-            if (nameA < nameB) {
-              return -1;
-            }
-            if (nameA > nameB) {
-              return 1;
-            }
-            return 0;
-          })
-          ?.map(tenantValue => (
-            <div>{`${tenantValue?.tenant_name}: ${tenantValue?.value}`}</div>
-          ))}
+        {uniqTenantValues?.map(tenantValue => (
+          <div>{tenantValue}</div>
+        ))}
       </>
     );
   }

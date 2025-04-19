@@ -380,7 +380,7 @@ const List: React.FC<ListProps> = ({}) => {
         </MyDrawer>
         <ModifyClusterParameterDrawer
           parameter={currentRecord || {}}
-          visible={visible}
+          open={visible}
           onCancel={() => {
             setVisible(false);
             setCurrentRecord(null);

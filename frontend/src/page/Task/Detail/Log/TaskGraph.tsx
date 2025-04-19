@@ -21,7 +21,7 @@ import { debounce, some } from 'lodash';
 import Icon, { MoreOutlined } from '@oceanbase/icons';
 import { findByValue, isNullValue } from '@oceanbase/util';
 import { Canvas } from '@antv/g-svg';
-import { useSize, useUpdateEffect } from 'ahooks';
+import { useRequest, useSize, useUpdateEffect } from 'ahooks';
 import scrollIntoView from 'scroll-into-view';
 import useDeepCompareEffect from 'use-deep-compare-effect';
 import * as TaskController from '@/service/ocp-express/TaskController';
@@ -32,6 +32,7 @@ import { downloadLog } from '@/util/log';
 import type { Node, SubtaskOperationKey } from '@/util/task';
 import { getNodes, getLatestNode, getTaskDuration, handleSubtaskOperate } from '@/util/task';
 import styles from './TaskGraph.less';
+import { dagHandler } from '@/service/obshell/task';
 
 const { Text } = Typography;
 
@@ -144,6 +145,9 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     console.log(nodes, subtask, 'nodes');
     const { token } = theme.useToken();
 
+    const { runAsync: dagHandlerFn } = useRequest(dagHandler, {
+      manual: true,
+    });
     // 定位到目标节点
     const setTargetSubtask = (targetSubtaskId?: number) => {
       onSubtaskChange(targetSubtaskId);
@@ -240,13 +244,13 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         // 节点状态对应的 icon，完成状态没有使用 antd 内置的 CheckCircleFilled，是因为会被节点 border 贯穿
         icon: <Icon component={SuccessfulSVG} />,
         operations: [
-          {
-            value: 'downloadLog',
-            label: formatMessage({
-              id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
-              defaultMessage: '下载日志',
-            }),
-          },
+          // {
+          //   value: 'downloadLog',
+          //   label: formatMessage({
+          //     id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
+          //     defaultMessage: '下载日志',
+          //   }),
+          // },
         ],
       },
 
@@ -261,13 +265,13 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         backgroundColor: token.colorInfoBg,
         icon: <Icon component={RunningSVG} />,
         operations: [
-          {
-            value: 'downloadLog',
-            label: formatMessage({
-              id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
-              defaultMessage: '下载日志',
-            }),
-          },
+          // {
+          //   value: 'downloadLog',
+          //   label: formatMessage({
+          //     id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
+          //     defaultMessage: '下载日志',
+          //   }),
+          // },
 
           {
             value: 'stop',
@@ -290,13 +294,13 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         // 节点状态对应的 icon，完成状态没有使用 antd 内置的 CloseCircleFilled，是因为会被节点 border 贯穿
         icon: <Icon component={FailedSVG} />,
         operations: [
-          {
-            value: 'downloadLog',
-            label: formatMessage({
-              id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
-              defaultMessage: '下载日志',
-            }),
-          },
+          // {
+          //   value: 'downloadLog',
+          //   label: formatMessage({
+          //     id: 'ocp-express.Detail.Log.TaskGraph.DownloadLogs',
+          //     defaultMessage: '下载日志',
+          //   }),
+          // },
 
           {
             value: 'retry',
@@ -306,13 +310,13 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
             }),
           },
 
-          {
-            value: 'skip',
-            label: formatMessage({
-              id: 'ocp-express.Detail.Log.TaskGraph.SetToSuccessful',
-              defaultMessage: '设置为成功',
-            }),
-          },
+          // {
+          //   value: 'skip',
+          //   label: formatMessage({
+          //     id: 'ocp-express.Detail.Log.TaskGraph.SetToSuccessful',
+          //     defaultMessage: '设置为成功',
+          //   }),
+          // },
         ],
       },
 
@@ -438,17 +442,16 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
                       }
                       // 下载日志
                       if (key === 'downloadLog') {
-                        const promise = TaskController.getSubtaskLog({
-                          taskInstanceId: taskData?.id,
-                          subtaskInstanceId: node?.id,
-                        });
-
-                        promise.then(res => {
-                          if (res.successful) {
-                            const log = res.data?.log;
-                            downloadLog(log, `subtask_${node?.id}.log`);
-                          }
-                        });
+                        // const promise = TaskController.getSubtaskLog({
+                        //   taskInstanceId: taskData?.id,
+                        //   subtaskInstanceId: node?.id,
+                        // });
+                        // promise.then(res => {
+                        //   if (res.successful) {
+                        //     const log = res.data?.log;
+                        //     downloadLog(log, `subtask_${node?.id}.log`);
+                        //   }
+                        // });
                       } else {
                         // 其他操作
                         handleSubtaskOperate(

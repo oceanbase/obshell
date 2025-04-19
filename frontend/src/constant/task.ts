@@ -164,13 +164,13 @@ export const SUBTASK_STATUS_LIST: Global.StatusItem[] = [
         }),
       },
 
-      {
-        value: 'skip',
-        label: formatMessage({
-          id: 'ocp-express.src.constant.task.SetToSuccessful',
-          defaultMessage: '设置为成功',
-        }),
-      },
+      // {
+      //   value: 'skip',
+      //   label: formatMessage({
+      //     id: 'ocp-express.src.constant.task.SetToSuccessful',
+      //     defaultMessage: '设置为成功',
+      //   }),
+      // },
     ],
   },
 

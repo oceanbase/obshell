@@ -96,19 +96,6 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
         if (onSuccess) {
           onSuccess();
         }
-        dispatch({
-          type: 'tenant/getTenantData',
-          payload: {
-            tenantId: tenantData.obTenantId,
-          },
-        });
-
-        dispatch({
-          type: 'task/update',
-          payload: {
-            runningTaskListDataRefreshDep: taskId,
-          },
-        });
       }
     },
   });

@@ -29,6 +29,7 @@ import {
 } from '@oceanbase/util';
 import * as TaskController from '@/service/ocp-express/TaskController';
 import { getFormateForTimes, secondToTime } from '@/util';
+import { dagHandler } from '@/service/obshell/task';
 
 export function getTaskProgress(task: API.DagDetailDTO) {
   const subtasks = flatten(task?.nodes?.map(item => item.sub_tasks || []) || []);
@@ -219,31 +220,22 @@ export function handleSubtaskOperate(
         defaultMessage: '确定要终止运行吗？',
       }),
 
-      content: formatMessage({
-        id: 'ocp-express.Task.Detail.TaskGraph.ThisWillTerminateTheTask',
-        defaultMessage: '这将会终止当前节点的任务',
-      }),
+      content: '这将会终止整个任务',
 
       onOk: () => {
-        const promise = TaskController.cancelSubtask({
-          taskInstanceId: taskData?.id,
-          subtaskInstanceId: subtask?.id,
-        });
-
-        promise.then(res => {
+        return dagHandler(
+          {
+            id: taskData?.id,
+          },
+          {
+            operator: 'CANCEL',
+          }
+        ).then(res => {
           if (res.successful) {
-            message.success(
-              formatMessage({
-                id: 'ocp-express.src.util.task.TheSubtaskIsTerminated',
-                defaultMessage: '子任务终止成功',
-              })
-            );
-            if (onSuccess) {
-              onSuccess();
-            }
+            message.success('任务终止成功');
+            onSuccess();
           }
         });
-        return promise;
       },
     });
   } else if (key === 'retry') {
@@ -253,31 +245,22 @@ export function handleSubtaskOperate(
         defaultMessage: '确定要重新运行吗？',
       }),
 
-      content: formatMessage({
-        id: 'ocp-express.Task.Detail.TaskGraph.ThisWillReExecuteThe',
-        defaultMessage: '这将会重新执行当前节点的任务',
-      }),
+      content: '这将会重新执行整个任务',
 
       onOk: () => {
-        const promise = TaskController.retrySubtask({
-          taskInstanceId: taskData?.id,
-          subtaskInstanceId: subtask?.id,
-        });
-
-        promise.then(res => {
+        return dagHandler(
+          {
+            id: taskData?.id,
+          },
+          {
+            operator: 'RETRY',
+          }
+        ).then(res => {
           if (res.successful) {
-            message.success(
-              formatMessage({
-                id: 'ocp-express.src.util.task.TheSubtaskIsRetried',
-                defaultMessage: '子任务重试成功',
-              })
-            );
-            if (onSuccess) {
-              onSuccess();
-            }
+            message.success('任务重试成功');
+            onSuccess();
           }
         });
-        return promise;
       },
     });
   } else if (key === 'skip') {
