@@ -21,6 +21,8 @@ import type { PasswordProps } from '@oceanbase/ui/es/Password';
 
 const OCPPassword: React.FC<PasswordProps> = props => {
   // 特殊字符支持 ~!@#%^&*_\-+=`|(){}[]:;',.?/
+  const { hasRule = true } = props;
+
   const ocpPasswordRules = [
     {
       validate: (val?: string) => val?.length >= 8 && val?.length <= 32,
@@ -51,7 +53,7 @@ const OCPPassword: React.FC<PasswordProps> = props => {
     },
   ];
 
-  return <Password rules={ocpPasswordRules} {...props} />;
+  return <Password rules={hasRule ? ocpPasswordRules : []} {...props} />;
 };
 
 export default OCPPassword;

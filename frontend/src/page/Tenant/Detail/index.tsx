@@ -272,6 +272,12 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
             `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
           );
           setShowTenantPasswordModal(false);
+          dispatch({
+            type: 'tenant/update',
+            payload: {
+              precheckResult: {},
+            },
+          });
         }}
       />
 
@@ -289,6 +295,12 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
               tenantAdminPasswordErrorData: {},
             },
           });
+          dispatch({
+            type: 'tenant/update',
+            payload: {
+              precheckResult: {},
+            },
+          });
         }}
         onSuccess={() => {
           dispatch({
@@ -296,6 +308,12 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
             payload: {
               showTenantAdminPasswordModal: false,
               tenantAdminPasswordErrorData: {},
+            },
+          });
+          dispatch({
+            type: 'tenant/update',
+            payload: {
+              precheckResult: {},
             },
           });
         }}

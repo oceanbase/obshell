@@ -23,7 +23,7 @@ import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
-import { changePassword,persistTenantRootPassword } from '@/service/obshell/tenant';
+import { tenantModifyPassword,persistTenantRootPassword } from '@/service/obshell/tenant';
 
 export interface TenantAdminPasswordModalProps {
   onSuccess: () => void;
@@ -52,7 +52,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     }
   };
 
-  const { run: changeDbUserPassword, loading } = useRequest(changePassword, {
+  const { run: changeDbUserPassword, loading } = useRequest(tenantModifyPassword, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {

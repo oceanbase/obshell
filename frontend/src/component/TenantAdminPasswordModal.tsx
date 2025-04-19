@@ -126,7 +126,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           })}
           name="newPassword"
         >
-          <Password />
+          <Password hasRule={false}/>
         </Form.Item>
       </Form>
     </Modal>
