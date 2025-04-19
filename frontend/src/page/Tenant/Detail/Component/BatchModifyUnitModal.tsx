@@ -73,7 +73,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
         setResourcePool({
           unitCount: currentResourcePool?.unit_num,
           cpuCore: currentUnitConfig?.max_cpu,
-          memorySize: byte2GB(currentUnitConfig?.memory_size / 8),
+          memorySize: byte2GB(currentUnitConfig?.memory_size),
         });
       }
     }

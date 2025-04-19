@@ -248,23 +248,25 @@ const Detail: React.FC<NewProps> = ({
   const { runAsync: modifyReplica, loading: modifyUnitLoading } = useRequest(tenantModifyReplicas, {
     manual: true,
     onSuccess: res => {
-      const taskId = res?.data?.id;
-      taskSuccess({
-        taskId,
-        message: formatMessage({
-          id: 'ocp-express.Detail.Overview.TheTaskOfModifyingTheReplicaWasSubmitted',
-          defaultMessage: '修改副本的任务提交成功',
-        }),
-      });
-      setFieldsValue({
-        // 由于表格表单的最新值和展示态的数据格式不一样，因此修改成功后还需要重新设置副本的值
-        zones: (zones || []).map(item => ({
-          key: uniqueId(),
-          name: item.name,
-          replicaType: item.replicaType,
-          resourcePool: item.resourcePool,
-        })),
-      });
+      if (res.successful) {
+        const taskId = res?.data?.id;
+        taskSuccess({
+          taskId,
+          message: formatMessage({
+            id: 'ocp-express.Detail.Overview.TheTaskOfModifyingTheReplicaWasSubmitted',
+            defaultMessage: '修改副本的任务提交成功',
+          }),
+        });
+        setFieldsValue({
+          // 由于表格表单的最新值和展示态的数据格式不一样，因此修改成功后还需要重新设置副本的值
+          zones: (zones || []).map(item => ({
+            key: uniqueId(),
+            name: item.name,
+            replicaType: item.replicaType,
+            resourcePool: item.resourcePool,
+          })),
+        });
+      }
     },
   });
 

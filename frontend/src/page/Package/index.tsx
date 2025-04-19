@@ -114,11 +114,15 @@ const PackagePage: React.FC<PackageProps> = ({
         defaultMessage: '版本',
       }),
       dataIndex: 'version',
+      width: 270,
       filters: uniq(packageList.map(item => item.version) || []).map(item => ({
         text: item,
         value: item,
       })),
       onFilter: (value: string, record: API.UpgradePkgInfo) => record.version === value,
+      render: (text, record: API.UpgradePkgInfo) => {
+        return `${record?.version}-${record.release_distribution}`;
+      },
     },
 
     // {

@@ -767,13 +767,13 @@ const New: React.FC<NewProps> = ({
                               const currentZoneName = getFieldValue(['zones', field.name, 'name']);
                               const zoneData = findBy(zones || [], 'name', currentZoneName);
 
-                              let idleCpuCore;
-                              let idleMemoryInBytes;
+                              let idleCpuCore = 0;
+                              let idleMemoryInBytes = 0;
                               if (zoneData?.servers?.length > 0 && zoneData?.servers[0]?.stats) {
                                 const { idleCpuCoreTotal, idleMemoryInBytesTotal } =
                                   getUnitSpecLimit(zoneData?.servers[0]?.stats);
-                                idleCpuCore = idleCpuCoreTotal;
-                                idleMemoryInBytes = idleMemoryInBytesTotal;
+                                idleCpuCore = idleCpuCoreTotal || 0;
+                                idleMemoryInBytes = idleMemoryInBytesTotal || 0;
                               }
 
                               const { cpuLowerLimit, memoryLowerLimit } = clusterUnitSpecLimit;
