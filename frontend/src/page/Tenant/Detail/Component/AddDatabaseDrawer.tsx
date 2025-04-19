@@ -25,6 +25,7 @@ import MyInput from '@/component/MyInput';
 import MySelect from '@/component/MySelect';
 import { DATABASE_NAME_RULE } from '@/constant';
 import { createDatabase, updateDatabase } from '@/service/obshell/tenant';
+import { getObclusterCharsets } from '@/service/obshell/ob';
 
 const { Option } = Select;
 
@@ -53,13 +54,7 @@ const AddDatabaseDrawer: React.FC<AddDatabaseDrawerProps> = ({
 
   // TODO
   // 获取租户字符集列表
-  const { data, loading } = useRequest(ObClusterController.listCharsets, {
-    defaultParams: [
-      {
-        tenantMode: tenantData?.mode,
-      },
-    ],
-  });
+  const { data, loading } = useRequest(getObclusterCharsets);
 
   const charsetList = data?.data?.contents || [];
 
