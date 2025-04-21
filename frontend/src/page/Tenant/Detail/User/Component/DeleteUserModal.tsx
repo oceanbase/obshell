@@ -19,6 +19,7 @@ import React, { useState } from 'react';
 import { Input, Alert, Descriptions, Modal, message } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { dropUser } from '@/service/obshell/tenant';
 
 /**
  * 参数说明
@@ -49,17 +50,17 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 
   let APIName = ObUserController.deleteDbRole;
   const deleteDbRoleParams = {
-    tenantId: tenantData.obTenantId,
+    tenantId: tenantData.tenant_name,
     roleName,
   };
 
   const deleteDbUserParams = {
-    tenantId: tenantData.obTenantId,
-    username,
+    name: tenantData.tenant_name,
+    user: username,
   };
 
   if (username) {
-    APIName = ObUserController.deleteDbUser;
+    APIName = dropUser;
   } else if (roleName) {
     APIName = ObUserController.deleteDbRole;
   }
