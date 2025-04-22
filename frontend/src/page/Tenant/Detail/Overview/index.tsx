@@ -173,7 +173,6 @@ const Detail: React.FC<NewProps> = ({
   const zones = getZones(tenantData);
   console.log(tenantData, 'tenantData');
 
-
   // 获取 unit 规格的限制规则
   // const { data: clusterUnitSpecLimitData } = useRequest(
   //   ObClusterController.getClusterUnitSpecLimit,
@@ -1004,7 +1003,10 @@ const Detail: React.FC<NewProps> = ({
         }}
         onSuccess={() => {
           setShowDeleteTenantModal(false);
-          history.push('/tenant');
+          // 租户接口第一时间请求的状态不是最新的，加个 delay 兜底
+          setTimeout(() => {
+            history.push('/tenant');
+          }, 700);
         }}
       />
 

@@ -6,9 +6,11 @@
   "scripts": {
     "analyze": "ANALYZE=1 umi dev",
     "build": "NODE_OPTIONS=--max_old_space_size=4096 umi build",
+    "build:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 umi build",
     "cov": "umi test --coverage",
     "dev": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none umi dev",
     "devs": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none umi dev",
+    "devs:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none umi dev",
     "help": "umi help",
     "lint": "NODE_OPTIONS=--max_old_space_size=4096 umi lint --style --eslint.ext='.ts,.tsx,.jsx,.js'",
     "lint:fix": "NODE_OPTIONS=--max_old_space_size=4096 umi lint --style --eslint.ext='.ts,.tsx,.jsx,.js' --fix",

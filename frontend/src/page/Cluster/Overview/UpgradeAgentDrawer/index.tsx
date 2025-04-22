@@ -137,12 +137,12 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         <Form.Item label={'已安装版本'}>{agentData?.version}</Form.Item>
         <Form.Item label={'硬件架构'}>{agentData?.architecture}</Form.Item>
         <Form.Item
-          label={'OCP Agent 版本'}
+          label={'OBShell Agent 版本'}
           name="fileName"
           rules={[
             {
               required: true,
-              message: '请选择 OCP Agent 版本',
+              message: '请选择 OBShell Agent 版本',
             },
           ]}
           style={{ marginBottom: 0 }}

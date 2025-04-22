@@ -25,7 +25,7 @@ import useDocumentTitle from '@/hook/useDocumentTitle';
 import ContentWithReload from '@/component/ContentWithReload';
 import Empty from '@/component/Empty';
 import { getTenantOverView, tenantLock, tenantUnlock } from '@/service/obshell/tenant';
-import { directTo, findByValue, formatTime } from '@oceanbase/util';
+import { directTo, findByValue, formatTime, sortByMoment } from '@oceanbase/util';
 import RenderConnectionString from '@/component/RenderConnectionString';
 import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
@@ -249,7 +249,7 @@ const Tenant: React.FC<TenantProps> = ({
         text: item.label,
         value: item.value,
       })),
-      filteredValue: statusList,
+      onFilter: (value: string, record: API.TenantStatus) => record.status === value,
       render: (text: API.TenantStatus) => {
         const statusItem = findByValue(TENANT_STATUS_LIST, text);
         return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
@@ -263,7 +263,7 @@ const Tenant: React.FC<TenantProps> = ({
       }),
 
       dataIndex: 'created_time',
-      sorter: true,
+      sorter: (a, b) => sortByMoment(a, b, 'created_time'),
       render: (text: string) => <span>{formatTime(text, DATE_FORMAT_DISPLAY)}</span>,
     },
 
