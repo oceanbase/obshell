@@ -599,6 +599,10 @@ func newPkgUploadHandler(c *gin.Context) {
 	}
 	defer file.Close()
 	data, agentErr := ob.UpgradePkgUpload(file)
+	if agentErr != nil || data == nil {
+		common.SendResponse(c, nil, agentErr)
+		return
+	}
 	bo := data.ToBO()
 	common.SendResponse(c, &bo, agentErr)
 }

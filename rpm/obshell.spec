@@ -59,7 +59,7 @@ if [ "$PROXY" ]; then
     flag="$flag -e PROXY=$PROXY"
 fi
 
-make pre-build build-release $flag
+make frontend-dep frontend-build pre-build build-release $flag
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
 cp -f bin/obshell $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
 

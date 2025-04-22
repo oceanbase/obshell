@@ -85,8 +85,7 @@ func GetConnectionWithPassword(tenantName, password string) (*gorm.DB, error) {
 }
 
 func CloseDbConnection(db *gorm.DB) {
-	sysDb, err := oceanbase.GetInstance()
-	if err == nil && db == sysDb {
+	if db == oceanbase.GetRawInstance() {
 		return
 	}
 	if db != nil {

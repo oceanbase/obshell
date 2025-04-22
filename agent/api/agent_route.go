@@ -22,7 +22,6 @@ import (
 
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/constant"
-	"github.com/oceanbase/obshell/agent/errors"
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 )
 
@@ -79,6 +78,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			// upload obproxy package
 			constant.URI_OBPROXY_API_PREFIX+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_PACKAGE,
+			// persist tenant root password
+			constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST,
 		),
 	)
 
@@ -196,9 +197,4 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	recyclebin.GET(constant.URI_TENANTS, recyclebinListTenantHandler)
 	recyclebin.DELETE(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinPurgeTenantHandler)
 	recyclebin.POST(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinFlashbackTenantHandler)
-
-	r.NoRoute(func(c *gin.Context) {
-		err := errors.Occur(errors.ErrBadRequest, "404 not found")
-		common.SendResponse(c, nil, err)
-	})
 }

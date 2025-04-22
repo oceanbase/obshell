@@ -243,11 +243,9 @@ func PaddingBody() func(*gin.Context) {
 // PostHandlers returns a Gin middleware function that logs the response and duration of API requests.
 func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
-		for _, it := range excludeRoutes {
-			if strings.HasPrefix(c.Request.RequestURI, it) {
-				c.Next()
-				return
-			}
+		if !strings.HasPrefix(c.Request.RequestURI, constant.URI_API_V1) && !strings.HasPrefix(c.Request.RequestURI, constant.URI_RPC_V1) {
+			c.Next()
+			return
 		}
 
 		startTime := time.Now()

@@ -19,9 +19,12 @@ package web
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/fs"
 	"net"
 	"net/http"
+	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -31,6 +34,7 @@ import (
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
@@ -86,9 +90,49 @@ func NewServer(mode config.AgentMode, conf config.ServerConfig) *Server {
 	api.InitOcsAgentRoutes(ret.state, localRouter, true)
 	rpc.InitOcsAgentRpcRoutes(ret.state, router, false)
 	rpc.InitOcsAgentRpcRoutes(ret.state, localRouter, true)
-	staticFp, _ := fs.Sub(frontend.Dist, "dist")
-	router.NoRoute(gin.WrapH(http.FileServer(http.FS(staticFp))))
+	router.NoRoute(func(c *gin.Context) {
+		requestedPath := c.Request.URL.Path
+		if strings.Contains(requestedPath, constant.URI_API_V1) || strings.Contains(requestedPath, constant.URI_RPC_V1) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "404 not found"))
+			return
+		}
+
+		staticFp, err := fs.Sub(frontend.Dist, "dist")
+		if err != nil {
+			log.WithError(err).Fatal("Failed to access static filesystem")
+			return
+		}
+		if requestedPath == "/" || strings.TrimSpace(requestedPath) == "" {
+			writeIndexlHtml(c)
+			return
+		}
+		_, err = staticFp.Open(filepath.Clean(strings.TrimPrefix(requestedPath, "/")))
+		if err != nil {
+			writeIndexlHtml(c)
+			return
+		}
+		http.FileServer(http.FS(staticFp)).ServeHTTP(c.Writer, c.Request)
+	})
 	return ret
+}
+
+func writeIndexlHtml(c *gin.Context) {
+	staticFp, _ := fs.Sub(frontend.Dist, "dist")
+	content, err := staticFp.Open("index.html")
+	if err != nil {
+		log.Fatalf("Critical error: %s file not found in the static file system!", "index.html")
+	}
+
+	fileContent, err := io.ReadAll(content)
+	if err != nil {
+		log.Printf("Failed to read index.html content: %v", err)
+		c.String(http.StatusInternalServerError, "Failed to load index.html")
+		return
+	}
+
+	c.Writer.Header().Set("Content-Type", "text/html; charset=utf-8")
+	c.Writer.WriteHeader(http.StatusOK)
+	c.Writer.Write(fileContent)
 }
 
 // NewServerOnlyLocal initializes gin mode, register api and rpc routers for

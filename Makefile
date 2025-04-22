@@ -22,6 +22,12 @@ build-with-swagger: enable-swagger build-release
 
 build-for-test: pre-build enable-swagger set-disable-encryption-flags build-debug
 
+frontend-dep:
+	npm i -g pnpm@7
+
+frontend-build:
+	cd frontend && pnpm i && pnpm build && cd ../
+
 rpm:
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec
 
