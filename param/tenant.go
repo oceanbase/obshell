@@ -16,6 +16,8 @@
 
 package param
 
+import "time"
+
 type CreateTenantParam struct {
 	Name         *string                `json:"name" binding:"required"`      // Tenant name.
 	ZoneList     []ZoneParam            `json:"zone_list" binding:"required"` // Tenant zone list with unit config.
@@ -124,4 +126,10 @@ type DbPrivilegeParam struct {
 
 type DropUserParam struct {
 	RootPassword *string `json:"root_password"`
+}
+
+type QuerySlowSqlRankParam struct {
+	StartTime time.Time
+	EndTime   time.Time
+	Top       int
 }

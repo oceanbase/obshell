@@ -81,11 +81,11 @@ type SubTaskInstance struct {
 }
 
 type SubTaskLog struct {
-	Id           int64
-	SubTaskId    int64
-	ExecuteTimes int
-	LogContent   string
-	IsSync       bool
-	CreateTime   time.Time
-	UpdateTime   time.Time
+	Id           int64     `json:"id"`
+	SubTaskId    int64     `json:"sub_task_id"`
+	ExecuteTimes int       `json:"execute_times"`
+	LogContent   string    `json:"log_content"`
+	IsSync       bool      `json:"is_sync"`
+	CreateTime   time.Time `json:"create_time"`
+	UpdateTime   time.Time `json:"update_time"`
 }

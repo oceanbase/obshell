@@ -17,6 +17,7 @@
 package parse
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -66,4 +67,32 @@ func CapacityParser(capacity string) (int, bool) {
 		}
 	}
 	return 0, false
+}
+
+func FormatCapacity(bytes int64) string {
+	const (
+		KB = 1024
+		MB = KB * 1024
+		GB = MB * 1024
+		TB = GB * 1024
+		PB = TB * 1024
+		EB = PB * 1024
+	)
+
+	switch {
+	case bytes >= EB:
+		return fmt.Sprintf("%.2f EB", float64(bytes)/float64(EB))
+	case bytes >= PB:
+		return fmt.Sprintf("%.2f EB", float64(bytes)/float64(PB))
+	case bytes >= TB:
+		return fmt.Sprintf("%.2f TB", float64(bytes)/float64(TB))
+	case bytes >= GB:
+		return fmt.Sprintf("%.2f GB", float64(bytes)/float64(GB))
+	case bytes >= MB:
+		return fmt.Sprintf("%.2f MB", float64(bytes)/float64(MB))
+	case bytes >= KB:
+		return fmt.Sprintf("%.2f KB", float64(bytes)/float64(KB))
+	default:
+		return fmt.Sprintf("%d bytes", bytes)
+	}
 }

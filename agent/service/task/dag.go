@@ -41,6 +41,27 @@ func (s *taskService) GetDagInstance(dagId int64) (*task.Dag, error) {
 	return s.convertDagInstance(s.convertDagInstanceBO(dest))
 }
 
+func (s *taskService) GetAllDagInstances() ([]*task.Dag, error) {
+	db, err := s.getDbInstance()
+	if err != nil {
+		return nil, err
+	}
+	dest := s.getDagModelSlice()
+	if err = db.Model(s.getDagModel()).Find(dest).Error; err != nil {
+		return nil, err
+	}
+	dagInstancesBO := s.convertDagInstanceBOSlice(dest)
+	dags := make([]*task.Dag, 0, len(dagInstancesBO))
+	for _, dagInstanceBO := range dagInstancesBO {
+		dag, err := s.convertDagInstance(dagInstanceBO)
+		if err != nil {
+			return nil, err
+		}
+		dags = append(dags, dag)
+	}
+	return dags, nil
+}
+
 func (s *taskService) GetDagDetail(dagId int64) (dagDetailDTO *task.DagDetailDTO, err error) {
 	dag, err := s.GetDagInstance(dagId)
 	if err != nil {

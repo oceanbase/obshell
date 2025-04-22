@@ -18,39 +18,81 @@ package oceanbase
 
 import (
 	"time"
+
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
 type ObParameters struct {
-	SvrIp      string `gorm:"column:SVR_IP"`
-	SvrPort    int    `gorm:"column:SVR_PORT"`
-	Zone       string `gorm:"column:ZONE"`
-	Scope      string `gorm:"column:SCOPE"`
-	TenantId   int    `gorm:"column:TENANT_ID"`
-	Name       string `gorm:"column:NAME"`
-	Value      string `gorm:"column:VALUE"`
-	TenantName string
+	SvrIp        string `gorm:"column:SVR_IP"`
+	SvrPort      int    `gorm:"column:SVR_PORT"`
+	Zone         string `gorm:"column:ZONE"`
+	Scope        string `gorm:"column:SCOPE"`
+	Name         string `gorm:"column:NAME"`
+	Value        string `gorm:"column:VALUE"`
+	TenantId     int    `gorm:"column:TENANT_ID"`
+	EditLevel    string `gorm:"column:EDIT_LEVEL"`
+	DefaultValue string `gorm:"column:DEFAULT_VALUE"`
+	Section      string `gorm:"column:SECTION"`
+	Info         string `gorm:"column:INFO"`
+	DataType     string `gorm:"column:DATA_TYPE"`
+}
+
+func (ObParameters) TableName() string {
+	return "oceanbase.GV$OB_PARAMETERS"
+}
+
+type ObShowParameters struct {
+	SvrIp        string `gorm:"column:svr_ip"`
+	SvrPort      int    `gorm:"column:svr_port"`
+	Zone         string `gorm:"column:zone"`
+	Scope        string `gorm:"column:scope"`
+	Name         string `gorm:"column:name"`
+	Value        string `gorm:"column:value"`
+	TenantId     int    `gorm:"column:tenant_id"`
+	EditLevel    string `gorm:"column:edit_level"`
+	DefaultValue string `gorm:"column:default_value"`
+	Section      string `gorm:"column:section"`
+	Info         string `gorm:"column:info"`
+	DataType     string `gorm:"column:data_type"`
 }
 
 type DbaObZones struct {
 	Zone   string `gorm:"column:ZONE"`
 	Status string `gorm:"column:STATUS"`
 	Region string `gorm:"column:REGION"`
+	Idc    string `gorm:"column:IDC"`
 }
 
 type OBServer struct {
-	Zone             string    `gorm:"column:ZONE"`
-	SvrIp            string    `gorm:"column:SVR_IP"`
-	SvrPort          int       `gorm:"column:SVR_PORT"`
-	SqlPort          int       `gorm:"column:SQL_PORT"`
-	StopTime         time.Time `gorm:"column:STOP_TIME"`
-	StartServiceTime time.Time `gorm:"column:START_SERVICE_TIME"`
-	WithRs           string    `gorm:"column:WITH_ROOTSERVER"`
-	Status           string    `gorm:"column:STATUS"`
-	BuildVersion     string    `gorm:"column:BUILD_VERSION"`
+	Zone               string    `gorm:"column:ZONE"`
+	Id                 int64     `gorm:"column:ID"`
+	SvrIp              string    `gorm:"column:SVR_IP"`
+	SvrPort            int       `gorm:"column:SVR_PORT"`
+	SqlPort            int       `gorm:"column:SQL_PORT"`
+	StopTime           time.Time `gorm:"column:STOP_TIME"`
+	StartServiceTime   time.Time `gorm:"column:START_SERVICE_TIME"`
+	WithRs             string    `gorm:"column:WITH_ROOTSERVER"`
+	Status             string    `gorm:"column:STATUS"`
+	BuildVersion       string    `gorm:"column:BUILD_VERSION"`
+	BlockMigrateInTime time.Time `gorm:"column:BLOCK_MIGRATE_IN_TIME"`
 }
 
 func (OBServer) TableName() string {
 	return "oceanbase.DBA_OB_SERVERS"
+}
+
+func (observer *OBServer) ToBo() bo.Observer {
+	return bo.Observer{
+		Id:             observer.Id,
+		Ip:             observer.SvrIp,
+		SvrPort:        observer.SvrPort,
+		SqlPort:        observer.SqlPort,
+		Version:        observer.BuildVersion,
+		InnerStatus:    observer.Status,
+		StartTime:      observer.StartServiceTime,
+		StopTime:       observer.StopTime,
+		WithRootserver: observer.WithRs == "YES",
+	}
 }
 
 type ObLogStat struct {
@@ -79,4 +121,36 @@ type ObLogStat struct {
 
 func (ObLogStat) TableName() string {
 	return "oceanbase.GV$OB_LOG_STAT"
+}
+
+type RootServer struct {
+	Zone    string `gorm:"column:ZONE"`
+	Role    string `gorm:"column:ROLE"`
+	SvrIp   string `gorm:"column:SVR_IP"`
+	SvrPort int    `gorm:"column:SVR_PORT"`
+}
+
+func (r *RootServer) ToBO() bo.RootServer {
+	return bo.RootServer{
+		Ip:      r.SvrIp,
+		Role:    r.Role,
+		SvrPort: r.SvrPort,
+		Zone:    r.Zone,
+	}
+}
+
+type SysStat struct {
+	ConId       int64  `gorm:"column:CON_ID"`
+	SvrIp       string `gorm:"column:SVR_IP"`
+	SvrPort     int    `gorm:"column:SVR_PORT"`
+	StatisticId int64  `gorm:"column:STATISTIC#"`
+	Name        string `gorm:"column:NAME"`
+	Class       int64  `gorm:"column:CLASS"`
+	Value       int64  `gorm:"column:VALUE"`
+	ValueType   string `gorm:"column:VALUE_TYPE"`
+	StatId      int64  `gorm:"column:STAT_ID"`
+}
+
+func (SysStat) TableName() string {
+	return "oceanbase.GV$sysstat"
 }

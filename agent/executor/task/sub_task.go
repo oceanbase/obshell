@@ -119,3 +119,66 @@ func getSubTaskDetail(service taskservice.TaskServiceInterface, subTask task.Exe
 	}
 	return
 }
+
+// get full sub_task logs by id
+//
+//	@ID				getFullSubTaskLogs
+//	@Summary		get full sub_task logs by sub_task_id
+//	@Description	get full sub_task logs by sub_task_id
+//	@Tags			task
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Param			id				path	string	true	"id"
+//	@Success		200				object	http.OcsAgentResponse{data=task.TaskDetailDTO}
+//	@Failure		400				object	http.OcsAgentResponse
+//	@Failure		404				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/task/sub_task/{id}/logs [get]
+func GetFullSubTaskLogs(c *gin.Context) {
+	var taskDTOParam task.TaskDetailDTO
+	var service taskservice.TaskServiceInterface
+
+	if err := c.BindUri(&taskDTOParam); err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+
+	taskID, agent, err := task.ConvertGenericID(taskDTOParam.GenericID)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+
+	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(taskDTOParam.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
+		if meta.OCS_AGENT.IsFollowerAgent() {
+			// forward request to master
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				return
+			}
+			common.ForwardRequest(c, master, nil)
+		} else {
+			common.ForwardRequest(c, agent, nil)
+		}
+		return
+	}
+
+	if agent == nil {
+		service = clusterTaskService
+	} else {
+		service = localTaskService
+	}
+
+	subTaskLogs, err := service.GetFullSubTaskLogsByTaskID(taskID)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		return
+	}
+
+	common.SendResponse(c, subTaskLogs, nil)
+}

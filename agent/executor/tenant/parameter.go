@@ -34,6 +34,7 @@ func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObPara
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
+
 	return parameters, nil
 }
 

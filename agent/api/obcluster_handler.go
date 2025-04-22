@@ -380,6 +380,72 @@ func obInfoHandler(c *gin.Context) {
 	common.SendResponse(c, data, err)
 }
 
+// @ID				obclusterInfo
+// @Summary		get obcluster info
+// @Description	get obcluster info
+// @Tags			obcluster
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse{data=bo.ClusterInfo}
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/info [get]
+func obclusterInfoHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		return
+	}
+	clusterInfo, err := ob.GetObclusterSummary()
+	common.SendResponse(c, clusterInfo, err)
+}
+
+// @ID				obclusterParameters
+// @Summary		get obcluster parameters
+// @Description	get obcluster parameters
+// @Tags			obcluster
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse{data=[]bo.ClusterParameter}
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/parameters [get]
+func obclusterParametersHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		return
+	}
+	clusterInfo, err := ob.GetAllParameters()
+	common.SendResponse(c, clusterInfo, err)
+}
+
+// @ID				obclusterSetParameters
+// @Summary		set obcluster parameters
+// @Description	set obcluster parameters
+// @Tags			obcluster
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string								true	"Authorization"
+// @Param			body			body	param.SetObclusterParametersParam	true	"obcluster parameters"
+// @Success		204				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/parameters [patch]
+func obclusterSetParametersHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		return
+	}
+	var param param.SetObclusterParametersParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, nil, ob.SetObclusterParameters(param.Params))
+}
+
 func isEmergencyMode(c *gin.Context, scope *param.Scope) (res bool, agentErr *errors.OcsAgentError) {
 	if common.IsLocalRoute(c) && ob.ScopeOnlySelf(scope) && !meta.OCS_AGENT.IsClusterAgent() {
 		return true, nil
@@ -436,6 +502,30 @@ func obUpgradeCheckHandler(c *gin.Context) {
 	common.SendResponse(c, task, err)
 }
 
+// @ID UpgradePkgRoute
+// @Summary get upgrade route of target ob package
+// @Description get upgrade route of target ob package
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param version query	string true "version"
+// @Param release query	string true "release"
+// @Success 200	object []ob.RouteNode
+// @Failure 401	object http.OcsAgentResponse
+// @Failure 500	object http.OcsAgentResponse
+// @Router /api/v1/ob/upgrade/route [get]
+func obPkgUpgradeRouteHandler(c *gin.Context) {
+	version := c.Query("version")
+	release := c.Query("release")
+	if version == "" || release == "" {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "version or release is empty"))
+		return
+	}
+	routes, err := ob.GetObPackageUpgradeDepYaml(version, release)
+	common.SendResponse(c, routes, err)
+}
+
 // @ID UpgradePkgUpload
 // @Summary upload upgrade package
 // @Description upload upgrade package
@@ -455,12 +545,33 @@ func pkgUploadHandler(c *gin.Context) {
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed: %s", err))
 		return
 	}
 	defer file.Close()
 	data, agentErr := ob.UpgradePkgUpload(file)
 	common.SendResponse(c, &data, agentErr)
+}
+
+// @ID UpgradePkgInfo
+// @Summary get all upgrade package infos
+// @Description get all upgrade package infos
+// @Tags upgrade
+// @Accept application/json
+// @Produce	 application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]bo.UpgradePkgInfo}
+// @Failure	401	object http.OcsAgentResponse
+// @Failure 500	object http.OcsAgentResponse
+// @Router /api/v1/upgrade/package/info [get]
+func pkgInfoHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to get package infos from ocs database. Please ensure the 'init' command is executed before attempting to upload."))
+		return
+	}
+
+	data, agentErr := ob.GetAllUpgradePkgInfos()
+	common.SendResponse(c, data, agentErr)
 }
 
 // @ID NewPkgUpload
@@ -472,7 +583,7 @@ func pkgUploadHandler(c *gin.Context) {
 // @Param X-OCS-Header header string true "Authorization"
 // @Param X-OCS-File-SHA256 header string true "SHA256 of the file"
 // @Param file formData file true "ob upgrade package"
-// @Success 200 object http.OcsAgentResponse{data=oceanbase.UpgradePkgInfo}
+// @Success 200 object http.OcsAgentResponse{data=bo.UpgradePkgInfo}
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/package [post]
@@ -483,12 +594,13 @@ func newPkgUploadHandler(c *gin.Context) {
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed: %s", err))
 		return
 	}
 	defer file.Close()
 	data, agentErr := ob.UpgradePkgUpload(file)
-	common.SendResponse(c, &data, agentErr)
+	bo := data.ToBO()
+	common.SendResponse(c, &bo, agentErr)
 }
 
 // @ID ParamsBackup

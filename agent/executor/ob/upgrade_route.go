@@ -56,11 +56,11 @@ type UpgradeRoute struct {
 }
 
 type RouteNode struct {
-	Version           string
-	Release           string
-	BuildVersion      string
-	RequireFromBinary bool
-	DeprecatedInfo    []string
+	Version           string   `json:"version"`
+	Release           string   `json:"release"`
+	BuildVersion      string   `json:"build_version"`
+	RequireFromBinary bool     `json:"require_from_binary"`
+	DeprecatedInfo    []string `json:"deprecated_info"`
 }
 
 type Repository struct {

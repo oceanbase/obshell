@@ -149,11 +149,12 @@ type AgentInstance struct {
 }
 
 type AgentStatus struct {
-	Pid       int    `json:"pid"`
-	State     int32  `json:"state"`
-	StartAt   int64  `json:"startAt"`
-	HomePath  string `json:"homePath"`
-	OBVersion string `json:"obVersion"`
+	Pid          int    `json:"pid"`
+	State        int32  `json:"state"`
+	StartAt      int64  `json:"startAt"`
+	HomePath     string `json:"homePath"`
+	OBVersion    string `json:"obVersion"`
+	Architecture string `json:"architecture"`
 	AgentInstance
 	IsObproxyAgent bool     `json:"isObproxyAgent"`
 	Security       bool     `json:"security"`

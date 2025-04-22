@@ -27,8 +27,8 @@ type DbaObUnitConfig struct {
 	Name         string    `gorm:"column:name" json:"name"`
 	MaxCpu       float64   `gorm:"column:max_cpu" json:"max_cpu"`
 	MinCpu       float64   `gorm:"column:min_cpu" json:"min_cpu"`
-	MemorySize   int       `gorm:"column:memory_size" json:"memory_size"`
-	LogDiskSize  int       `gorm:"column:log_disk_size" json:"log_disk_size"`
+	MemorySize   int64     `gorm:"column:memory_size" json:"memory_size"`
+	LogDiskSize  int64     `gorm:"column:log_disk_size" json:"log_disk_size"`
 	MaxIops      uint      `gorm:"column:max_iops" json:"max_iops"`
 	MinIops      uint      `gorm:"column:min_iops" json:"min_iops"`
 	GmtCreate    time.Time `gorm:"column:create_time" json:"create_time"`

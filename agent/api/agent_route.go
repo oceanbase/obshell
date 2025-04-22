@@ -78,6 +78,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			constant.URI_AGENT_RPC_PREFIX+constant.URI_TOKEN,
 			// upload obproxy package
 			constant.URI_OBPROXY_API_PREFIX+constant.URI_PACKAGE,
+			constant.URI_API_V1+constant.URI_PACKAGE,
 		),
 	)
 
@@ -85,6 +86,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 		r.Use(common.SetLocalRouteFlag)
 	} else {
 		initSwagger(r)
+		initFrontendRouter(r)
 	}
 
 	// groups
@@ -140,6 +142,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	ob.POST(constant.URI_SCALE_OUT, obClusterScaleOutHandler)
 	ob.POST(constant.URI_SCALE_IN, obClusterScaleInHandler)
 	ob.POST(constant.URI_UPGRADE, obUpgradeHandler)
+	ob.GET(constant.URI_UPGRADE+constant.URI_ROUTE, obPkgUpgradeRouteHandler)
 	ob.POST(constant.URI_UPGRADE+constant.URI_CHECK, obUpgradeCheckHandler)
 	ob.GET(constant.URI_AGENTS, obAgentsHandler)
 
@@ -158,6 +161,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	// obcluster routes
 	obcluster.PUT(constant.URI_CONFIG, obclusterConfigHandler(true))
 	obcluster.POST(constant.URI_CONFIG, obclusterConfigHandler(true))
+	obcluster.GET(constant.URI_INFO, obclusterInfoHandler)
+	obcluster.GET(constant.URI_PARAMETERS, obclusterParametersHandler)
+	obcluster.PATCH(constant.URI_PARAMETERS, obclusterSetParametersHandler)
 	obcluster.GET(constant.URI_CHARSETS, getObclusterCharsets)
 
 	// observer routes
@@ -170,6 +176,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	// upgrade routes
 	upgrade.POST(constant.URI_PACKAGE, pkgUploadHandler)
+	upgrade.GET(constant.URI_PACKAGE+constant.URI_INFO, pkgInfoHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_BACKUP, paramsBackupHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_RESTORE, paramsRestoreHandler)
 

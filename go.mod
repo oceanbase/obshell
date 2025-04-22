@@ -10,6 +10,7 @@ require (
 	github.com/cavaliergopher/cpio v1.0.1
 	github.com/cavaliergopher/rpm v1.2.0
 	github.com/deckarep/golang-set v1.8.0
+	github.com/gin-contrib/static v1.1.5
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/google/uuid v1.5.0

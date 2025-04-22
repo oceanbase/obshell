@@ -83,13 +83,12 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 		}
 	}
 
-	if unitNum != 0 && nums != replicaNum {
-		return errors.New("Could not modify unit num partially.")
-	}
-
 	currentUnitNum, err := tenantService.GetTenantUnitNum(tenant.TenantID)
 	if err != nil {
 		return err
+	}
+	if unitNum != 0 && nums != replicaNum && unitNum != currentUnitNum {
+		return errors.New("Could not modify unit num partially.")
 	}
 	if unitNum != 0 && unitNum != currentUnitNum {
 		// Check if enable_rebalance is true.

@@ -100,8 +100,8 @@ type ObUnitConfig struct {
 	Name         string    `json:"name"`
 	MaxCpu       float64   `json:"max_cpu"`
 	MinCpu       float64   `json:"min_cpu"`
-	MemorySize   int       `json:"memory_size"`
-	LogDiskSize  int       `json:"log_disk_size"`
+	MemorySize   int64     `json:"memory_size"`
+	LogDiskSize  int64     `json:"log_disk_size"`
 	MaxIops      uint      `json:"max_iops"`
 	MinIops      uint      `json:"min_iops"`
 }
@@ -130,4 +130,32 @@ type TenantInfo struct {
 	Pools             []*ResourcePoolWithUnit      `json:"pools"`
 	ReadOnly          bool                         `json:"read_only"` // Default to false.
 	ConnectionStrings []ObproxyAndConnectionString `json:"connection_strings"`
+}
+
+type TenantCompaction struct {
+	TenantId           int       `json:"tenant_id"`
+	FrozenScn          int64     `json:"frozen_scn"`
+	FrozenTime         time.Time `json:"frozen_time"`
+	GlobalBroadcastScn int64     `json:"global_broadcast_scn"`
+	LastScn            int64     `json:"last_scn"`
+	LastFinishTime     time.Time `json:"last_finish_time"`
+	StartTime          time.Time `json:"start_time"`
+	Status             string    `json:"status"`
+	IsError            string    `json:"is_error"`
+	IsSuspended        string    `json:"is_suspended"`
+}
+
+type TenantCompactionHistory struct {
+	TenantId       int       `json:"tenant_id"`
+	TenantName     string    `json:"tenant_name"`
+	Status         string    `json:"status"`
+	CostTime       int64     `json:"cost_time"`
+	StartTime      time.Time `json:"start_time"`
+	LastFinishTime time.Time `json:"last_finish_time"`
+}
+
+type TenantSlowSqlCount struct {
+	TenantId   int    `json:"tenant_id"`
+	TenantName string `json:"tenant_name"`
+	Count      int    `json:"count"`
 }

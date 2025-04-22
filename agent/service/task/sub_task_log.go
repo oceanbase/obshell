@@ -20,6 +20,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
@@ -89,6 +90,22 @@ func (s *taskService) GetSubTaskLogsByTaskID(taskID int64) (subTaskLogs []string
 	}
 	err = db.Model(s.getSubTaskLogModel()).Select("log_content").Where("sub_task_id=?", taskID).Find(&subTaskLogs).Error
 	return
+}
+
+func (s *taskService) GetFullSubTaskLogsByTaskID(taskID int64) (subTaskLogs []*bo.SubTaskLog, err error) {
+	db, err := s.getDbInstance()
+	if err != nil {
+		return nil, err
+	}
+	dest := s.getSubTaskLogModelSlice()
+	if err = db.Model(s.getSubTaskLogModel()).Where("sub_task_id = ?", taskID).Find(dest).Error; err != nil {
+		return nil, err
+	}
+	subTaskLogsBO := s.convertSubTaskLogBOSlice(dest)
+	if err != nil {
+		return nil, err
+	}
+	return subTaskLogsBO, nil
 }
 
 func (s *SubTaskLogService) GetUnSyncSubTaskLogById(id int64, limit int) (subTaskLogs []sqlite.SubTaskLog, err error) {

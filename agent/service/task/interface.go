@@ -23,6 +23,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
@@ -136,4 +137,5 @@ type SubTaskServiceInterface interface {
 
 type SubTaskLogServiceInterface interface {
 	GetSubTaskLogsByTaskID(int64) ([]string, error)
+	GetFullSubTaskLogsByTaskID(int64) ([]*bo.SubTaskLog, error)
 }

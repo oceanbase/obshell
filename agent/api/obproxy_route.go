@@ -42,18 +42,18 @@ func InitObproxyRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	obproxy.POST(constant.URI_UPGRADE, obproxyUpgradeHandler)
 }
 
-//	@ID			obproxyAdd
-//	@Summary	Add obproxy
-//	@Tags		Obproxy
-//	@Accept		application/json
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header	string					true	"Authorization"
-//	@Param		body				body	param.AddObproxyParam	true	"Add obproxy"
-//	@Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure	400					object	http.OcsAgentResponse
-//	@Failure	401					object	http.OcsAgentResponse
-//	@Failure	500					object	http.OcsAgentResponse
-//	@Router		/api/v1/obproxy [post]
+// @ID			obproxyAdd
+// @Summary	Add obproxy
+// @Tags		Obproxy
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header	string					true	"Authorization"
+// @Param		body				body	param.AddObproxyParam	true	"Add obproxy"
+// @Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure	400					object	http.OcsAgentResponse
+// @Failure	401					object	http.OcsAgentResponse
+// @Failure	500					object	http.OcsAgentResponse
+// @Router		/api/v1/obproxy [post]
 func obproxyAddHandler(c *gin.Context) {
 	var param param.AddObproxyParam
 	if err := c.BindJSON(&param); err != nil {
@@ -64,49 +64,49 @@ func obproxyAddHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID			obproxyStop
-//	@Summary	Stop obproxy
-//	@Tags		Obproxy
-//	@Accept		application/json
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header	string	true	"Authorization"
-//	@Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure	400					object	http.OcsAgentResponse
-//	@Failure	401					object	http.OcsAgentResponse
-//	@Failure	500					object	http.OcsAgentResponse
-//	@Router		/api/v1/obproxy/stop [post]
+// @ID			obproxyStop
+// @Summary	Stop obproxy
+// @Tags		Obproxy
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header	string	true	"Authorization"
+// @Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure	400					object	http.OcsAgentResponse
+// @Failure	401					object	http.OcsAgentResponse
+// @Failure	500					object	http.OcsAgentResponse
+// @Router		/api/v1/obproxy/stop [post]
 func obproxyStopHandler(c *gin.Context) {
 	dag, err := obproxy.StopObproxy()
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID			obproxyStart
-//	@Summary	Start obproxy
-//	@Tags		Obproxy
-//	@Accept		application/json
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header	string	true	"Authorization"
-//	@Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure	400					object	http.OcsAgentResponse
-//	@Failure	401					object	http.OcsAgentResponse
-//	@Failure	500					object	http.OcsAgentResponse
-//	@Router		/api/v1/obproxy/start [post]
+// @ID			obproxyStart
+// @Summary	Start obproxy
+// @Tags		Obproxy
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header	string	true	"Authorization"
+// @Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure	400					object	http.OcsAgentResponse
+// @Failure	401					object	http.OcsAgentResponse
+// @Failure	500					object	http.OcsAgentResponse
+// @Router		/api/v1/obproxy/start [post]
 func obproxyStartHandler(c *gin.Context) {
 	dag, err := obproxy.StartObproxy()
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID			obproxyDelete
-//	@Summary	Delete obproxy
-//	@Tags		Obproxy
-//	@Accept		application/json
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header	string	true	"Authorization"
-//	@Success	204					object	http.OcsAgentResponse
-//	@Failure	400					object	http.OcsAgentResponse
-//	@Failure	401					object	http.OcsAgentResponse
-//	@Failure	500					object	http.OcsAgentResponse
-//	@Router		/api/v1/obproxy [delete]
+// @ID			obproxyDelete
+// @Summary	Delete obproxy
+// @Tags		Obproxy
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header	string	true	"Authorization"
+// @Success	204					object	http.OcsAgentResponse
+// @Failure	400					object	http.OcsAgentResponse
+// @Failure	401					object	http.OcsAgentResponse
+// @Failure	500					object	http.OcsAgentResponse
+// @Router		/api/v1/obproxy [delete]
 func obproxyDeleteHandler(c *gin.Context) {
 	dag, err := obproxy.DeleteObproxy()
 	if dag == nil && err == nil {
@@ -115,18 +115,18 @@ func obproxyDeleteHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID			obproxyUpgrade
-//	@Summary	Upgrade obproxy
-//	@Tags		Obproxy
-//	@Accept		application/json
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header	string						true	"Authorization"
-//	@Param		body				body	param.UpgradeObproxyParam	true	"Upgrade obproxy"
-//	@Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure	400					object	http.OcsAgentResponse
-//	@Failure	401					object	http.OcsAgentResponse
-//	@Failure	500					object	http.OcsAgentResponse
-//	@Router		/api/v1/obproxy/upgrade [post]
+// @ID			obproxyUpgrade
+// @Summary	Upgrade obproxy
+// @Tags		Obproxy
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header	string						true	"Authorization"
+// @Param		body				body	param.UpgradeObproxyParam	true	"Upgrade obproxy"
+// @Success	200					object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure	400					object	http.OcsAgentResponse
+// @Failure	401					object	http.OcsAgentResponse
+// @Failure	500					object	http.OcsAgentResponse
+// @Router		/api/v1/obproxy/upgrade [post]
 func obproxyUpgradeHandler(c *gin.Context) {
 	var param param.UpgradeObproxyParam
 	if err := c.BindJSON(&param); err != nil {
@@ -138,18 +138,18 @@ func obproxyUpgradeHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID			obproxyPkgUpload
-//	@Summary	Upload obproxy package
-//	@Tags		Obproxy
-//	@Accept		multipart/form-data
-//	@Produce	application/json
-//	@Param		X-OCS-Agent-Header	header		string	true	"Authorization"
-//	@Param		file				formData	file	true	"Obproxy package"
-//	@Success	200					object		http.OcsAgentResponse{data=sqlite.UpgradePkgInfo}
-//	@Failure	400					object		http.OcsAgentResponse
-//	@Failure	401					object		http.OcsAgentResponse
-//	@Failure	500					object		http.OcsAgentResponse
-//	@Router		/api/v1/obproxy/package [post]
+// @ID			obproxyPkgUpload
+// @Summary	Upload obproxy package
+// @Tags		Obproxy
+// @Accept		multipart/form-data
+// @Produce	application/json
+// @Param		X-OCS-Agent-Header	header		string	true	"Authorization"
+// @Param		file				formData	file	true	"Obproxy package"
+// @Success	200					object		http.OcsAgentResponse{data=sqlite.UpgradePkgInfo}
+// @Failure	400					object		http.OcsAgentResponse
+// @Failure	401					object		http.OcsAgentResponse
+// @Failure	500					object		http.OcsAgentResponse
+// @Router		/api/v1/obproxy/package [post]
 func obproxyPkgUploadHandler(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {

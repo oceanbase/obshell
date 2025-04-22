@@ -54,3 +54,25 @@ type ServerConfig struct {
 type RestoreParams struct {
 	Params []oceanbase.ObParameters `json:"params" binding:"required"`
 }
+
+type SetObclusterParametersParam struct {
+	Params []SetSingleObclusterParameterParam `json:"params" binding:"required"`
+}
+
+type SetSingleObclusterParameterParam struct {
+	Name          string   `json:"name" binding:"required"`
+	Value         string   `json:"value" binding:"required"`
+	Scope         string   `json:"scope" binding:"required"` // Scope can be “CLUSTER" or "TENANT".
+	Zones         []string `json:"zones"`
+	Servers       []string `json:"servers"`
+	Tenants       []string `json:"tenants"`         // Tenant name list, if not set, it means all tenants.
+	AllUserTenant bool     `json:"all_user_tenant"` // Whether to set all tenants, if true, the Tenants field will be ignored.
+}
+
+type SetParameterParam struct {
+	Name   string
+	Value  string
+	Zone   string
+	Server string
+	Tenant string
+}

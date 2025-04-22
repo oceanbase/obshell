@@ -196,6 +196,22 @@ func (s *taskService) convertSubTaskInstanceBOSlice(model interface{}) []*bo.Sub
 	return subTaskInstancesBO
 }
 
+func (s *taskService) convertSubTaskLogBOSlice(model interface{}) []*bo.SubTaskLog {
+	subTaskLogsBO := make([]*bo.SubTaskLog, 0)
+	if s.isLocal {
+		subTaskLogs := model.(*[]sqlite.SubTaskLog)
+		for _, subTaskLog := range *subTaskLogs {
+			subTaskLogsBO = append(subTaskLogsBO, subTaskLog.ToBO())
+		}
+	} else {
+		subTaskLogs := model.(*[]oceanbase.SubTaskLog)
+		for _, subTaskLog := range *subTaskLogs {
+			subTaskLogsBO = append(subTaskLogsBO, subTaskLog.ToBO())
+		}
+	}
+	return subTaskLogsBO
+}
+
 func (s *taskService) getDagModel() interface{} {
 	if s.isLocal {
 		return &sqlite.DagInstance{}
@@ -243,6 +259,13 @@ func (s *taskService) getSubTaskModelSlice() interface{} {
 		return &[]sqlite.SubtaskInstance{}
 	}
 	return &[]oceanbase.SubtaskInstance{}
+}
+
+func (s *taskService) getSubTaskLogModelSlice() interface{} {
+	if s.isLocal {
+		return &[]sqlite.SubTaskLog{}
+	}
+	return &[]oceanbase.SubTaskLog{}
 }
 
 func (s *taskService) getDbInstance() (*gorm.DB, error) {

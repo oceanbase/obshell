@@ -133,14 +133,10 @@ func preCheckForObUpgradeCheck(param param.UpgradeCheckParam) (upgradeRoute []Ro
 	return upgradeRoute, nil
 }
 
-func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, error) {
+func getTargetObUpgradeDepYaml(targetVersion string, targetRelease string) ([]RouteNode, error) {
 	// Param 'targetRelease' is like '***.**.el7'.
-	targetBuildNumber, targetDistribution, err := pkg.SplitRelease(targetRelease)
+	targetBuildNumber, _, err := pkg.SplitRelease(targetRelease)
 	if err != nil {
-		return nil, err
-	}
-	targetBV := fmt.Sprintf("%s-%s", targetVersion, targetBuildNumber)
-	if err = checkTargetOBVersionSupport(targetBV); err != nil {
 		return nil, err
 	}
 
@@ -158,6 +154,25 @@ func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, 
 	upgradeRoute[len(upgradeRoute)-1].Release = targetBuildNumber
 	upgradeRoute[len(upgradeRoute)-1].BuildVersion = fmt.Sprintf("%s-%s", targetVersion, targetBuildNumber)
 	log.Infof("upgrade route: %v", upgradeRoute)
+	return upgradeRoute, nil
+}
+
+func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, error) {
+	// Param 'targetRelease' is like '***.**.el7'.
+	targetBuildNumber, targetDistribution, err := pkg.SplitRelease(targetRelease)
+	if err != nil {
+		return nil, err
+	}
+
+	targetBV := fmt.Sprintf("%s-%s", targetVersion, targetBuildNumber)
+	if err = checkTargetOBVersionSupport(targetBV); err != nil {
+		return nil, err
+	}
+
+	upgradeRoute, err := getTargetObUpgradeDepYaml(targetVersion, targetRelease)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info("check for all required pkgs")
 	if err = checkForAllRequiredPkgsExist(upgradeRoute, targetDistribution); err != nil {

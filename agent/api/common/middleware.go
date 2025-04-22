@@ -566,7 +566,7 @@ func VerifyFile() func(*gin.Context) {
 		file, _, err := c.Request.FormFile("file")
 		if err != nil {
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+			SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed:%s", err))
 			return
 		}
 		defer file.Close()

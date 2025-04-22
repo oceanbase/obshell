@@ -47,6 +47,10 @@ func GetInstance() (db *gorm.DB, err error) {
 	return getSqlExecutableInstance(TEST_OCEANBASE_SQL)
 }
 
+func GetRawInstance() (db *gorm.DB) {
+	return dbInstance
+}
+
 func ClearInstance() {
 	dbInstance = nil
 }

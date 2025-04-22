@@ -16,6 +16,9 @@
 package api
 
 import (
+	"strconv"
+	"time"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/oceanbase/obshell/agent/api/common"
@@ -70,6 +73,15 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(updateDatabase))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(getDatabase))
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(deleteDatabase))
+
+	// for compaction
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION, getTenantCompactionHandler)
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACT, tenantMajorCompactionHandler)
+	tenant.GET(constant.URI_TOP_COMPACTIONS, getTenantTopCompactionsHandler)
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION_ERROR, clearTenantCompactionErrorHandler)
+
+	// for slow sql
+	tenant.GET(constant.URI_TOP_SLOW_SQLS, getTenantTopSlowSqlRankHandler)
 
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
@@ -410,7 +422,7 @@ func persistTenantRootPassword(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/primaryzone [put]
+// @Router /api/v1/tenant/{name}/primary-zone [put]
 func tenantModifyPrimaryZoneHandler(c *gin.Context) {
 	name, err := tenantCheckWithName(c)
 	if err != nil {
@@ -605,7 +617,7 @@ func getTenantVariable(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/variable/{} [get]
+// @Router /api/v1/tenant/{name}/variables [get]
 func getTenantVariables(c *gin.Context) {
 	name, err := tenantCheckWithName(c)
 	if err != nil {
@@ -798,7 +810,7 @@ func getUserStats(c *gin.Context) {
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
 // @Param name path string true "tenant name"
-// @Success 200 object http.OcsAgentResponse{data=bo.ObUserStats}
+// @Success 200 object http.OcsAgentResponse{data=bo.ObTenantPreCheckResult}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
@@ -1024,4 +1036,155 @@ func createDatabase(c *gin.Context) {
 	}
 	err = tenant.CreateDatabase(name, &createDatabaseParam)
 	common.SendResponse(c, nil, err)
+}
+
+// @ID				getTenantCompaction
+// @Summary		get tenant major compaction info
+// @Description	get tenant major compaction info
+// @Tags			tenant
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse{data=bo.TenantCompaction}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/compaction [get]
+func getTenantCompactionHandler(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	compaction, err := tenant.GetTenantCompaction(name)
+	common.SendResponse(c, compaction, err)
+}
+
+// @ID				tenantMajorCompaction
+// @Summary		trigger tenant major compaction
+// @Description	trigger tenant major compaction
+// @Tags			tenant
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/compact [post]
+func tenantMajorCompactionHandler(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, nil, tenant.TenantMajorCompaction(name))
+}
+
+// @ID				tenantClearCompactionError
+// @Summary		clear tenant major compaction error
+// @Description	clear tenant major compaction error
+// @Tags			tenant
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/compaction-error [delete]
+func clearTenantCompactionErrorHandler(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, nil, tenant.ClearTenantCompactionError(name))
+}
+
+// @ID				getTenantTopCompaction
+// @Summary		query tenant information ranked by the cost of major compaction.
+// @Description	query tenant information ranked by the cost of major compaction, limited to the top n.
+// @Tags			tenant
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			limit				query	string	false	"top n"
+// @Success		200				object	http.OcsAgentResponse{data=[]bo.TenantCompactionHistory}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/top-compactions [get]
+func getTenantTopCompactionsHandler(c *gin.Context) {
+	topStr := c.Query("limit")
+	top := 3
+	if topStr != "" && topStr != "0" {
+		parsedTop, err := strconv.Atoi(topStr)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid top value."))
+			return
+		}
+		top = parsedTop
+	}
+
+	compaction, err := tenant.GetTopCompactions(top)
+	common.SendResponse(c, compaction, err)
+}
+
+// @ID				getTenantTopSlowSqlRank
+// @Summary		query tenant information ranked by the number of slow SQL statements.
+// @Description	query tenant information ranked by the number of slow SQL statements, limited to the top n.
+// @Tags			tenant
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			start_time		query	string	true	"start time"
+// @Param			end_time		query	string	true	"end time"
+// @Param			limit				query	string	false	"top n"
+// @Success		200				object	http.OcsAgentResponse{data=[]bo.TenantSlowSqlCount}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/top-slow-sqls [get]
+func getTenantTopSlowSqlRankHandler(c *gin.Context) {
+	// Require the SQL processing end time to be between start_time and end_time.
+	start_time := c.Query("start_time")
+	end_time := c.Query("end_time")
+	top := c.Query("limit")
+	var param param.QuerySlowSqlRankParam
+	if top == "" {
+		param.Top = 3
+	} else {
+		parsedTop, err := strconv.Atoi(top)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid top value."))
+			return
+		}
+		param.Top = parsedTop
+	}
+	if start_time != "" {
+		parsedTime, err := time.Parse(time.RFC3339, start_time)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid start_time."))
+			return
+		}
+		param.StartTime = parsedTime
+	} else {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "start_time is required."))
+		return
+	}
+	if end_time != "" {
+		parsedTime, err := time.Parse(time.RFC3339, end_time)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid end_time."))
+			return
+		}
+		param.EndTime = parsedTime
+	} else {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "end_time is required."))
+		return
+	}
+
+	res, err := tenantService.GetSlowSqlRank(param.Top, param.StartTime.UnixMicro(), param.EndTime.UnixMicro())
+	common.SendResponse(c, res, err)
 }

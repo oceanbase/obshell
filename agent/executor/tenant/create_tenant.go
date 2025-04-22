@@ -248,7 +248,7 @@ func checkTenantName(name string) error {
 }
 
 func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
-	source, err := tenantService.GetObServerCapacityByZone(zone)
+	source, err := obclusterService.GetObserverCapacityByZone(zone)
 	if err != nil {
 		return errors.New("Get servers's info failed.")
 	}
@@ -294,8 +294,8 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 type gatheredUnitInfo struct {
 	MinCpu      float64
 	MaxCpu      float64
-	MemorySize  int
-	LogDiskSize int
+	MemorySize  int64
+	LogDiskSize int64
 }
 
 func gatherAllUnitsOnServer(svrIp string, svrPort int) (*gatheredUnitInfo, error) {

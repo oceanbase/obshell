@@ -34,6 +34,7 @@ import (
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
+	"github.com/oceanbase/obshell/param"
 )
 
 func (obclusterService *ObclusterService) ExecuteSql(sql string) (err error) {
@@ -97,6 +98,15 @@ func (obclusterService *ObclusterService) GetUTCTime() (t time.Time, err error) 
 		return t, err
 	}
 	err = db.Raw("SELECT UTC_TIMESTAMP(6)").Scan(&t).Error
+	return
+}
+
+func (*ObclusterService) GetCurrentTimestamp() (t time.Time, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return t, err
+	}
+	err = db.Raw("SELECT CURRENT_TIMESTAMP(6)").Scan(&t).Error
 	return
 }
 
@@ -209,6 +219,15 @@ func (ObclusterService *ObclusterService) GetAllArchs() (archs []string, err err
 		return nil, err
 	}
 	err = oceanbaseDb.Model(&oceanbase.AllAgent{}).Distinct("architecture").Pluck("architecture", &archs).Error
+	return
+}
+
+func (ObclusterService *ObclusterService) GetAllUpgradePkgInfos() (pkgInfos []oceanbase.UpgradePkgInfo, err error) {
+	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Find(&pkgInfos).Error
 	return
 }
 
@@ -669,6 +688,45 @@ func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []str
 	return
 }
 
+func (*ObclusterService) GetAllUnhiddenParameters() ([]oceanbase.ObShowParameters, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var params []oceanbase.ObShowParameters
+	err = oceanbaseDb.Raw("SHOW PARAMETERS").Scan(&params).Error
+	if err != nil {
+		return nil, err
+	}
+
+	var unhiddenParams []oceanbase.ObShowParameters
+	for _, param := range params {
+		if param.Name != "" && param.Name[0] != '_' {
+			unhiddenParams = append(unhiddenParams, param)
+		}
+	}
+
+	return unhiddenParams, err
+}
+
+func (obclusterService *ObclusterService) SetParameter(parameter param.SetParameterParam) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	sql := fmt.Sprintf("ALTER SYSTEM SET `%s` = \"%v\"", parameter.Name, parameter.Value)
+	if parameter.Zone != "" {
+		sql += fmt.Sprintf(" ZONE = `%s`", parameter.Zone)
+	} else if parameter.Server != "" {
+		sql += fmt.Sprintf(" SERVER = '%s'", parameter.Server)
+	} else if parameter.Tenant != "" {
+		sql += fmt.Sprintf(" TENANT = `%s`", parameter.Tenant) // when tenant is not empty, zone and server won't influence the sql.
+	}
+	return oceanbaseDb.Exec(sql).Error
+}
+
 func (ObclusterService *ObclusterService) GetAllZonesWithRegion() (zones []oceanbase.DbaObZones, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -803,4 +861,89 @@ func (obclusterService *ObclusterService) GetRsListStr() (rsListStr string, err 
 		Where("NAME = ?", "rootservice_list").
 		Scan(&rsListStr).Error
 	return
+}
+
+func (obclusterService *ObclusterService) IsCommunityEdition() (bool, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = oceanbaseDb.Raw("select version() REGEXP 'OceanBase[\\s_]CE'").Scan(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 1, nil
+}
+
+func (*ObclusterService) GetAllZoneRootServers() (rootServersMap map[string]oceanbase.RootServer, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var rootServers []oceanbase.RootServer
+	err = oceanbaseDb.Table(CDB_OB_LS_LOCATIONS).Select("SVR_IP, SVR_PORT, ZONE, ROLE").Where("LS_ID = 1 AND TENANT_ID = 1").Scan(&rootServers).Error
+	if err != nil {
+		return nil, err
+	}
+	rootServersMap = make(map[string]oceanbase.RootServer)
+	for _, server := range rootServers {
+		rootServersMap[server.Zone] = server
+	}
+	return
+}
+
+func (ObclusterService) GetObserverCapacityByZone(zone string) (servers []oceanbase.ObServerCapacity, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = db.Table(GV_OB_SERVERS).Where("ZONE = ?", zone).Scan(&servers).Error
+	return
+}
+
+func (ObclusterService) GetAllObserverResourceMap() (observerResourceMap map[meta.ObserverSvrInfo]oceanbase.ObServerCapacity, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var serverResources []oceanbase.ObServerCapacity
+	err = db.Table(GV_OB_SERVERS).Scan(&serverResources).Error
+	if err != nil {
+		return nil, err
+	}
+	observerResourceMap = make(map[meta.ObserverSvrInfo]oceanbase.ObServerCapacity)
+	for _, serverResource := range serverResources {
+		observerResourceMap[meta.ObserverSvrInfo{
+			Ip:   serverResource.SvrIp,
+			Port: serverResource.SvrPort,
+		}] = serverResource
+	}
+	return
+}
+
+func (*ObclusterService) GetTenantSysStat(tenantId int, StatId int) (sysStat oceanbase.SysStat, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return sysStat, err
+	}
+	err = oceanbaseDb.Model(oceanbase.SysStat{}).Where("CON_ID = ? AND STAT_ID = ?", tenantId, StatId).Scan(&sysStat).Error
+	return
+}
+
+func (obclusterService *ObclusterService) GetTenantMutilSysStat(tenantId int, StatIds []int) (sysStatMap map[int64]oceanbase.SysStat, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var sysStats []oceanbase.SysStat
+	err = oceanbaseDb.Model(oceanbase.SysStat{}).Select("CON_ID, SVR_IP, SVR_PORT, NAME, CLASS, VALUE_TYPE, STAT_ID, sum(VALUE) AS VALUE").Where("CON_ID = ? AND STAT_ID IN ?", tenantId, StatIds).Group("STAT_ID").Scan(&sysStats).Error
+	if err != nil {
+		return nil, err
+	}
+	sysStatMap = make(map[int64]oceanbase.SysStat)
+	for _, sysStat := range sysStats {
+		sysStatMap[int64(sysStat.StatId)] = sysStat
+	}
+	return sysStatMap, nil
 }

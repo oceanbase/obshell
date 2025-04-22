@@ -26,15 +26,13 @@ import (
 )
 
 const (
+	SYS_STAT_MEMORY_SIZE_STAT_ID  = 140002
+	SYS_STAT_MEMORY_USAGE_STAT_ID = 140003
+	SYS_STAT_MAX_CPU_STAT_ID      = 140005
+	SYS_STAT_CPU_USAGE_STAT_ID    = 140006
 
-	// start check item
-	CHECK_PORT = "checkPort"
-	CHECK_DIR  = "checkDir"
-	CHECK_MEM  = "checkMem"
-	CHECK_DISK = "checkDisk"
-	CHECK_NET  = "checkNet"
-	CHECK_AIO  = "checkAio"
-	CHECK_ULIM = "checkUlimit"
+	PARAMETER_SCOPE_TENANT  = "TENANT"
+	PARAMETER_SCOPE_CLUSTER = "CLUSTER"
 
 	// task context key
 	PARAM_CONFIG     = "config"

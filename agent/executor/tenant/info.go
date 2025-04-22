@@ -43,7 +43,9 @@ func GetTenantsOverView() ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
 		if err != nil {
 			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 		}
-		tenants[i].ReadOnly = (readOnly.Value == "1")
+		if readOnly != nil {
+			tenants[i].ReadOnly = (readOnly.Value == "1")
+		}
 		tenantOverviews = append(tenantOverviews, oceanbase.TenantOverview{
 			DbaObTenant:       tenants[i],
 			ConnectionStrings: connectionStrs,
@@ -53,7 +55,7 @@ func GetTenantsOverView() ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
 }
 
 func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
+	tenant, ocsErr := checkTenantExist(tenantName)
 	if ocsErr != nil {
 		return nil, ocsErr
 	}

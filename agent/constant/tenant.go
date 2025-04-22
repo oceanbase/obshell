@@ -46,6 +46,7 @@ const (
 	CHECK_JOB_INTERVAL            = 10 * time.Second
 	CHECK_TENANT_EXIST_INTERVAL   = 5 * time.Second
 	RESOURCE_UNIT_CONFIG_CPU_MINE = 1
+	SLOW_SQL_THRESHOLD            = 100000
 
 	VARIABLE_TIME_ZONE            = "time_zone"
 	VARIABLE_OB_TCP_INVITED_NODES = "ob_tcp_invited_nodes"

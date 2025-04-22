@@ -59,7 +59,7 @@ func newShowCmd() *cobra.Command {
 	return showCmd.Command
 }
 
-func transferCapacity(capacity int) string {
+func transferCapacity(capacity int64) string {
 	var cap = []string{"B", "KB", "MB", "GB", "TB", "PB"}
 	i := 0
 	for capacity >= 1024 {

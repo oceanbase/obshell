@@ -18,6 +18,7 @@ package tenant
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/go-sql-driver/mysql"
@@ -28,6 +29,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	bo "github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
@@ -237,7 +239,13 @@ func (t *TenantService) SetTenantVariables(tenantName string, variables map[stri
 	variablesSq := ""
 	for k, v := range variables {
 		if val, ok := v.(string); ok {
-			variablesSq += fmt.Sprintf(", "+k+"= `%v`", val)
+			if number, err := strconv.Atoi(val); err == nil {
+				variablesSq += fmt.Sprintf(", "+k+"= %v", number)
+			} else if float, err := strconv.ParseFloat(val, 64); err == nil {
+				variablesSq += fmt.Sprintf(", "+k+"= %v", float)
+			} else {
+				variablesSq += fmt.Sprintf(", "+k+"= `%v`", val)
+			}
 		} else {
 			variablesSq += fmt.Sprintf(", "+k+"= %v", v)
 		}
@@ -401,6 +409,10 @@ func (t *TenantService) GetTenantVariables(tenantName string, filter string) (va
 	tenantIdQuery := db.Table(DBA_OB_TENANTS).Select("TENANT_ID").Where("TENANT_NAME = ?", tenantName)
 	err = db.Table(CDB_OB_SYS_VARIABLES).
 		Where("TENANT_ID = (?) AND NAME LIKE ?", tenantIdQuery, filter).Scan(&variables).Error
+	if err != nil {
+		return nil, err
+	}
+
 	return
 }
 
@@ -412,6 +424,17 @@ func (t *TenantService) GetTenantVariable(tenantName string, variableName string
 	tenantIdQuery := db.Table(DBA_OB_TENANTS).Select("TENANT_ID").Where("TENANT_NAME = ?", tenantName)
 	err = db.Table(CDB_OB_SYS_VARIABLES).
 		Where("TENANT_ID = (?) AND NAME = ?", tenantIdQuery, variableName).Scan(&variable).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: 需要连接租户
+	// var variableValue oceanbase.ObSysVariableWithValue
+	// err = db.Raw(fmt.Sprintf("show global variables like '%s'", variableName)).Scan(&variableValue).Error
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// variable.Value = variableValue.Value
 	return
 }
 
@@ -451,15 +474,6 @@ func (t *TenantService) IsTenantActiveAgent(tenantName string, ip string, rpcPor
 	var count int
 	err = db.Raw(sql, tenantName, ip, rpcPort).Scan(&count).Error
 	return count > 0, err
-}
-
-func (t *TenantService) GetObServerCapacityByZone(zone string) (servers []oceanbase.ObServerCapacity, err error) {
-	db, err := oceanbasedb.GetInstance()
-	if err != nil {
-		return nil, err
-	}
-	err = db.Table(GV_OB_SERVERS).Where("ZONE = ?", zone).Scan(&servers).Error
-	return
 }
 
 func (t *TenantService) IsTimeZoneTableEmpty() (bool, error) {
@@ -675,4 +689,75 @@ func (s *TenantService) LoadModuleData(tenantName string, moduleName string) err
 		sql := fmt.Sprintf("alter system load module data module=%s tenant=%s", moduleName, tenantName)
 		return tx.Exec(sql).Error
 	})
+}
+
+func (s *TenantService) GetTenantCompaction(tenantId int) (compaction *oceanbase.CdbObMajorCompaction, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Where("tenant_id = ?", tenantId).Scan(&compaction).Error
+	return
+}
+
+func (s *TenantService) GetAllMajorCompactions() (compactions []oceanbase.CdbObMajorCompaction, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Scan(&compactions).Error
+	return
+}
+
+func (s *TenantService) TenantMajorCompaction(tenantName string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	return oceanbaseDb.Exec(fmt.Sprintf("ALTER SYSTEM MAJOR FREEZE TENANT = %s", tenantName)).Error
+}
+
+func (s *TenantService) ClearTenantCompactionError(tenantName string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	return oceanbaseDb.Exec(fmt.Sprintf("ALTER SYSTEM CLEAR MERGE ERROR TENANT = %s", tenantName)).Error
+}
+
+func (s *TenantService) GetSlowSqlRank(top int, startTime int64, endTime int64) (res []bo.TenantSlowSqlCount, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	sql :=
+		"select tenant_id, tenant_name, count(distinct db_id, sql_id) as count " +
+			" from oceanbase.GV$OB_SQL_AUDIT where" +
+			" char_length(tenant_name) != 0 and elapsed_time > ? " +
+			" and (request_time + elapsed_time) > ? and (request_time + elapsed_time) < ?" +
+			" group by tenant_id, tenant_name" +
+			" order by count desc limit ?"
+	err = oceanbaseDb.Raw(sql, constant.SLOW_SQL_THRESHOLD, startTime, endTime, top).Find(&res).Error
+	return
+}
+
+func (s *TenantService) GetTenantDataDiskUsageMap() (dataDiskUsageMap map[int]int64, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	sql := "select coalesce(t1.tenant_id, -1) as tenant_id, sum(data_disk_in_use) as data_disk_in_use from (select t1.unit_id, t1.svr_ip, t1.svr_port, t2.tenant_id, t1.data_disk_in_use from (select  unit_id, svr_ip, svr_port, sum(data_disk_in_use) as data_disk_in_use from oceanbase.gv$ob_units  group by unit_id ) t1 join oceanbase.dba_ob_units t2 on t1.unit_id = t2.unit_id) t1 join oceanbase.dba_ob_tenants t2 on t1.tenant_id = t2.tenant_id where tenant_type <>'meta' group by tenant_id"
+	var results []struct {
+		TenantId      int   `gorm:"column:tenant_id"`
+		DataDiskInUse int64 `gorm:"column:data_disk_in_use"`
+	}
+	err = oceanbaseDb.Raw(sql).Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+	dataDiskUsageMap = make(map[int]int64)
+	for _, result := range results {
+		dataDiskUsageMap[result.TenantId] = result.DataDiskInUse
+	}
+	return dataDiskUsageMap, nil
 }

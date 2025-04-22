@@ -96,6 +96,11 @@ type StartObParam struct {
 	ForcePassDagParam ForcePassDagParam `json:"forcePassDag"`
 }
 
+type ObVersion struct {
+	Version string `json:"version" binding:"required"`
+	Release string `json:"release" binding:"required"`
+}
+
 type UpgradeCheckParam struct {
 	Version    string `json:"version" binding:"required"`
 	Release    string `json:"release" binding:"required"`

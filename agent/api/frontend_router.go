@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package obcluster
+package api
 
-type ObserverService struct{}
-type ObclusterService struct{}
-
-const (
-	ob_parameters_view = "oceanbase.V$OB_PARAMETERS"
-
-	COLLATIONS          = "information_schema.collations"
-	DBA_OB_SERVERS      = "oceanbase.DBA_OB_SERVERS"
-	DBA_OB_ZONES        = "oceanbase.DBA_OB_ZONES"
-	DBA_OB_UNITS        = "oceanbase.DBA_OB_UNITS"
-	GV_OB_LOG_STAT      = "oceanbase.GV$OB_LOG_STAT"
-	GV_OB_PARAMETERS    = "oceanbase.GV$OB_PARAMETERS"
-	GV_OB_SERVERS       = "oceanbase.GV$OB_SERVERS"
-	CDB_OB_LS_LOCATIONS = "oceanbase.CDB_OB_LS_LOCATIONS"
+import (
+	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/gin"
 )
+
+func initFrontendRouter(router *gin.Engine) {
+	router.Use(static.Serve("/", static.LocalFile("frontend/dist", false)))
+	router.NoRoute(func(c *gin.Context) {
+		c.Redirect(302, "/")
+	})
+}
