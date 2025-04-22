@@ -33,7 +33,10 @@ import { dropUser } from '@/service/obshell/tenant';
 interface DeleteUserModalProps {
   username?: string;
   roleName?: string;
-  userStats?: API.SessionStats[];
+  userStats?: {
+    total: number;
+    active: number;
+  };
   tenantData: API.TenantInfo;
   onSuccess?: () => void;
 }
@@ -160,7 +163,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
                 defaultMessage: '当前会话总数',
               })}
             >
-              {userStats?.[0]?.total || 0}
+              {userStats?.total || 0}
             </Descriptions.Item>
             <Descriptions.Item
               label={formatMessage({
@@ -168,7 +171,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
                 defaultMessage: '活跃会话数',
               })}
             >
-              {userStats?.[0]?.active || 0}
+              {userStats?.active || 0}
             </Descriptions.Item>
           </>
         )}
