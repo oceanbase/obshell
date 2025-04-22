@@ -29,6 +29,8 @@ const (
 	DBA_OB_CLUSTER_EVENT_HISTORY = "oceanbase.DBA_OB_CLUSTER_EVENT_HISTORY"
 	DBA_RECYCLEBIN               = "oceanbase.DBA_RECYCLEBIN"
 	DBA_OB_USERS                 = "oceanbase.DBA_OB_USERS"
+	DBA_OB_DATABASES             = "oceanbase.DBA_OB_DATABASES"
+	DBA_OBJECTS                  = "oceanbase.DBA_OBJECTS"
 
 	CDB_OB_SYS_VARIABLES        = "oceanbase.CDB_OB_SYS_VARIABLES"
 	CDB_OB_ARCHIVELOG           = "oceanbase.CDB_OB_ARCHIVELOG"
@@ -43,8 +45,13 @@ const (
 
 	GV_OB_PARAMETERS = "oceanbase.GV$OB_PARAMETERS"
 	GV_OB_SERVERS    = "oceanbase.GV$OB_SERVERS"
+	GV_OB_SESSION    = "oceanbase.GV$OB_SESSION"
 
 	MYSQL_TIME_ZONE = "mysql.time_zone"
+	MYSQL_USER      = "mysql.user"
+	MYSQL_DB        = "mysql.db"
+
+	INFOMATION_SCHEMA_COLLATIONS = "information_schema.collations"
 )
 
 const (

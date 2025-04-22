@@ -20,8 +20,7 @@ type Database struct {
 	DbName         string                       `json:"db_name"`
 	Charset        string                       `json:"charset"`
 	Collation      string                       `json:"collation"`
-	ReadOnly       string                       `json:"read_only"`
+	ReadOnly       bool                         `json:"read_only"`
 	CreateTime     int64                        `json:"create_time"`
-	RequiredSize   int64                        `json:"required_size"`
 	ConnectionUrls []ObproxyAndConnectionString `json:"connection_urls"`
 }

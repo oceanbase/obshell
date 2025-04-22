@@ -17,25 +17,39 @@
 package tenant
 
 import (
+	"fmt"
+
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-func GetTenantsOverView() ([]oceanbase.DbaObTenant, *errors.OcsAgentError) {
+func GetTenantsOverView() ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
 	tenants, err := tenantService.GetTenantsOverView()
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
+	tenantOverviews := make([]oceanbase.TenantOverview, 0)
 	for i := range tenants {
+		connectionStr := bo.ObproxyAndConnectionString{
+			Type:             constant.OB_CONNECTION_TYPE_DIRECT,
+			ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenants[i].TenantName),
+		}
+		connectionStrs := make([]bo.ObproxyAndConnectionString, 0)
+		connectionStrs = append(connectionStrs, connectionStr)
 		readOnly, err := tenantService.GetTenantVariable(tenants[i].TenantName, constant.VARIABLE_READ_ONLY)
 		if err != nil {
 			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 		}
 		tenants[i].ReadOnly = (readOnly.Value == "1")
+		tenantOverviews = append(tenantOverviews, oceanbase.TenantOverview{
+			DbaObTenant:       tenants[i],
+			ConnectionStrings: connectionStrs,
+		})
 	}
-	return tenants, nil
+	return tenantOverviews, nil
 }
 
 func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
@@ -78,18 +92,25 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
+	connectionStr := bo.ObproxyAndConnectionString{
+		Type: constant.OB_CONNECTION_TYPE_DIRECT,
+		// the host may be not in the tcp_invited_nodes
+		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName),
+	}
+
 	return &bo.TenantInfo{
-		Name:         tenant.TenantName,
-		Id:           tenant.TenantID,
-		CreatedTime:  tenant.CreatedTime,
-		Mode:         tenant.Mode,
-		Status:       tenant.Status,
-		Locked:       tenant.Locked,
-		PrimaryZone:  tenant.PrimaryZone,
-		Locality:     tenant.Locality,
-		InRecyclebin: tenant.InRecyclebin,
-		Whitelist:    whitelist.Value,
-		Pools:        pools,
-		ReadOnly:     readOnly.Value == "1",
+		Name:              tenant.TenantName,
+		Id:                tenant.TenantID,
+		CreatedTime:       tenant.CreatedTime,
+		Mode:              tenant.Mode,
+		Status:            tenant.Status,
+		Locked:            tenant.Locked,
+		PrimaryZone:       tenant.PrimaryZone,
+		Locality:          tenant.Locality,
+		InRecyclebin:      tenant.InRecyclebin,
+		Whitelist:         whitelist.Value,
+		Pools:             pools,
+		ReadOnly:          readOnly.Value == "1",
+		ConnectionStrings: []bo.ObproxyAndConnectionString{connectionStr},
 	}, nil
 }

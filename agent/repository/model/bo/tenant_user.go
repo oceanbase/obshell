@@ -33,10 +33,18 @@ type ObjectPrivilege struct {
 	Privileges []string `json:"privileges"`
 }
 
+type ObUserSessionStats struct {
+	Total  int64 `json:"total"`
+	Active int64 `json:"active"`
+}
+
+type ObUserStats struct {
+	Session *ObUserSessionStats `json:"session"`
+}
+
 type ObUser struct {
 	UserName            string                       `json:"user_name"`
 	IsLocked            bool                         `json:"is_locked"`
-	CreateTime          int64                        `json:"create_time"`
 	ConnectionStrings   []ObproxyAndConnectionString `json:"connection_strings"`
 	AccessibleDatabases []string                     `json:"accessible_databases"`
 	GrantedRoles        []string                     `json:"granted_roles"`

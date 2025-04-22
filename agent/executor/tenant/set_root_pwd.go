@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -48,6 +49,10 @@ func getExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 		return executeAgent, errors.New("tenant is not active")
 	}
 	return executeAgent, err
+}
+
+func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) {
+	tenant.GetPasswordMap().Set(tenantName, rootPassword)
 }
 
 func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (*errors.OcsAgentError, bool) {

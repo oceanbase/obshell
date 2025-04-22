@@ -3,6 +3,7 @@
   "err.illegal.argument": "Illegal argument: %v",
   "err.unexpected": "Unexpected error: %v",
   "err.known": "Known error: %v",
+  "err.not.found": "Element not found: %v",
   "err.sql.execute.failed": "Execute sql failed: %v",
 
   "err.task.create.failed": "Create task failed: %v",

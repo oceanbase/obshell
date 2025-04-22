@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package param
+package frontend
 
-type CreateDatabaseParam struct {
-	DbName    string  `json:"db_name" binding:"required"`
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
-}
+import (
+	"embed"
+)
 
-type ModifyDatabaseParam struct {
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
-}
+//go:embed dist/*
+var Dist embed.FS

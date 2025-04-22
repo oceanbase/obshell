@@ -42,3 +42,20 @@ vendor
 etc/
 log_obshell/
 run/
+
+# frontend
+/frontend/pids
+/frontend/logs
+/frontend/node_modules
+/frontend/npm-debug.log
+/frontend/coverage/
+/frontend/build/
+/frontend/run
+/frontend/.basement
+/frontend/src/.umi
+/frontend/src/.umi-production
+/frontend/speed-measure.json
+/frontend/dist
+/frontend/unuseful-locale-key.txt
+/frontend/docs.zip
+/frontend/config.local.ts

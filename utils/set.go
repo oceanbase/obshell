@@ -14,15 +14,34 @@
  * limitations under the License.
  */
 
-package param
+package utils
 
-type CreateDatabaseParam struct {
-	DbName    string  `json:"db_name" binding:"required"`
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
-}
+func Difference[T comparable](a, b []T) ([]T, []T) {
+	aMap := make(map[T]bool)
+	bMap := make(map[T]bool)
 
-type ModifyDatabaseParam struct {
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
+	for _, v := range a {
+		aMap[v] = true
+	}
+
+	for _, v := range b {
+		bMap[v] = true
+	}
+
+	var onlyInA []T
+	var onlyInB []T
+
+	for _, v := range a {
+		if !bMap[v] {
+			onlyInA = append(onlyInA, v)
+		}
+	}
+
+	for _, v := range b {
+		if !aMap[v] {
+			onlyInB = append(onlyInB, v)
+		}
+	}
+
+	return onlyInA, onlyInB
 }

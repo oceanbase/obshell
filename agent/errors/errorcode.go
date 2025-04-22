@@ -26,6 +26,7 @@ const (
 	unauthorized    ErrorKind = http.StatusUnauthorized
 	notFound        ErrorKind = http.StatusNotFound
 	unexpected      ErrorKind = http.StatusInternalServerError
+	notfound        ErrorKind = http.StatusNotFound
 	known           ErrorKind = http.StatusInternalServerError
 )
 
@@ -54,12 +55,16 @@ var (
 	ErrBadRequest      = NewErrorCode(1000, badRequest, "err.bad.request")
 	ErrIllegalArgument = NewErrorCode(1001, illegalArgument, "err.illegal.argument")
 	ErrUnexpected      = NewErrorCode(1002, unexpected, "err.unexpected")
+	ErrNotFound        = NewErrorCode(1003, notfound, "err.not.found")
 	ErrKnown           = NewErrorCode(1010, known, "err.known")
 
 	// ob operation error codes, range: 10000 ~ 10999
 	ErrUserPermissionDenied = NewErrorCode(10000, unauthorized, "err.user.permission.denied")
 	ErrUnauthorized         = NewErrorCode(10008, unauthorized, "err.unauthorized")
 	ErrObclusterNotFound    = NewErrorCode(10009, known, "err.obcluster.not.found")
+
+	// tenant obperation err codes, range: 20000 ~ 20999
+	ErrTenantNotConnectable = NewErrorCode(20000, unexpected, "err.tenant.not.connectable")
 
 	// task error codes, range: 2300 ~ 2399
 	ErrTaskNotFound     = NewErrorCode(2300, notFound, "err.task.not.found")

@@ -133,6 +133,28 @@ func LoadGormWithTenant(tenant string, password string) (*gorm.DB, error) {
 	return db, nil
 }
 
+// LoadTmpInstanceWithTenant creates a db instance according to the configuration.
+func LoadGormWithTenantForTest(tenant string, password string) error {
+	dsConfig := config.NewObDataSourceConfig().
+		SetPassword(password).
+		SetParseTime(true).
+		SetUsername("root@" + tenant).
+		SetDBName("").
+		SetTryTimes(10)
+	dsConfig.SetLoggerLevel(logger.Silent)
+	if err := fillConfigPort(dsConfig); err != nil {
+		return errors.Wrap(err, "get port failed")
+	}
+	db, err := createGormDbByConfig(dsConfig)
+	defer func() {
+		if db != nil {
+			oceanbaseDB, _ := db.DB()
+			oceanbaseDB.Close()
+		}
+	}()
+	return err
+}
+
 // LoadOceanbaseInstance creates a db instance according to the configuration.
 // The `config` is a variable-length parameter, and the corresponding operation is selected
 // according to whether the parameter is set or not. If there are no special requirements, do not set config.

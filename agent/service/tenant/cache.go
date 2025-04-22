@@ -14,15 +14,32 @@
  * limitations under the License.
  */
 
-package param
+package tenant
 
-type CreateDatabaseParam struct {
-	DbName    string  `json:"db_name" binding:"required"`
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
+import "sync"
+
+type PasswordMap struct {
+	m sync.Map
 }
 
-type ModifyDatabaseParam struct {
-	Collation *string `json:"collation"`
-	ReadOnly  *bool   `json:"read_only"`
+func (pm *PasswordMap) Set(key, value string) {
+	pm.m.Store(key, value)
+}
+
+func (pm *PasswordMap) Get(key string) (string, bool) {
+	value, ok := pm.m.Load(key)
+	if !ok {
+		return "", false
+	}
+	return value.(string), true
+}
+
+var globalPasswordMap *PasswordMap
+var once sync.Once
+
+func GetPasswordMap() *PasswordMap {
+	once.Do(func() {
+		globalPasswordMap = &PasswordMap{}
+	})
+	return globalPasswordMap
 }

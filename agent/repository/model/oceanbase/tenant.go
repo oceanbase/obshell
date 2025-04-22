@@ -18,7 +18,14 @@ package oceanbase
 
 import (
 	"time"
+
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
+
+type TenantOverview struct {
+	DbaObTenant       `json:",inline"`
+	ConnectionStrings []bo.ObproxyAndConnectionString `json:"connection_strings"`
+}
 
 type DbaObTenant struct {
 	TenantID     int       `gorm:"column:TENANT_ID" json:"tenant_id"`

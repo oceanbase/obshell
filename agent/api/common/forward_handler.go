@@ -18,13 +18,16 @@ package common
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	libhttp "github.com/oceanbase/obshell/agent/lib/http"
@@ -79,6 +82,35 @@ func autoForward(c *gin.Context) {
 	}
 
 	sendRequsetForForward(c, ctx, master, headers, body)
+}
+
+func AutoForwardToMaintainerWrapper(f func(*gin.Context)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		ctx := NewContextWithTraceId(c)
+		var agentInfo meta.AgentInfoInterface
+		if coordinator.OCS_COORDINATOR != nil && coordinator.OCS_COORDINATOR.Maintainer.GetPort() != 0 {
+			agentInfo = coordinator.OCS_COORDINATOR.Maintainer
+			if meta.OCS_AGENT.Equal(agentInfo) {
+				log.WithContext(ctx).Info("Current agent is maintainer")
+				f(c)
+				return
+			}
+			bodyBytes, err := io.ReadAll(c.Request.Body)
+			if err != nil {
+				SendResponse(c, nil, errors.New("Failed to read request body when forwarding request"))
+				return
+			}
+			var bodyInterface interface{}
+			if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
+				SendResponse(c, nil, err)
+				return
+			}
+			ForwardRequest(c, agentInfo, bodyInterface)
+		} else {
+			log.WithContext(ctx).Info("forward request to maintainer but no maintainer found")
+			SendResponse(c, nil, errors.New("forward request to maintainer but no maintainer found"))
+		}
+	}
 }
 
 // ForwardRequest is used by handler to forward the request to other agent.

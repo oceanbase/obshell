@@ -21,6 +21,12 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 )
 
+type ObTenantPreCheckResult struct {
+	IsConnectable       bool `json:"is_connectable"`
+	IsPasswordExists    bool `json:"is_password_exists"`
+	IsEmptyRootPassword bool `json:"is_empty_root_password"`
+}
+
 type DbaObTenantJobBo struct {
 	JobId         int
 	JobType       string
@@ -109,18 +115,19 @@ type ResourcePoolWithUnit struct {
 }
 
 type TenantInfo struct {
-	Name         string                  `json:"tenant_name"`
-	Id           int                     `json:"tenant_id"`
-	CreatedTime  time.Time               `json:"created_time"`
-	Mode         string                  `json:"mode"`
-	Status       string                  `json:"status"`
-	Locked       string                  `json:"locked"`
-	PrimaryZone  string                  `json:"primary_zone"`
-	Locality     string                  `json:"locality"`
-	InRecyclebin string                  `json:"in_recyclebin"`
-	Charset      string                  `json:"charset"`   // Only for ORACLE tenant
-	Collation    string                  `json:"collation"` // Only for ORACLE tenant
-	Whitelist    string                  `json:"whitelist"`
-	Pools        []*ResourcePoolWithUnit `json:"pools"`
-	ReadOnly     bool                    `json:"read_only"` // Default to false.
+	Name              string                       `json:"tenant_name"`
+	Id                int                          `json:"tenant_id"`
+	CreatedTime       time.Time                    `json:"created_time"`
+	Mode              string                       `json:"mode"`
+	Status            string                       `json:"status"`
+	Locked            string                       `json:"locked"`
+	PrimaryZone       string                       `json:"primary_zone"`
+	Locality          string                       `json:"locality"`
+	InRecyclebin      string                       `json:"in_recyclebin"`
+	Charset           string                       `json:"charset"`   // Only for ORACLE tenant
+	Collation         string                       `json:"collation"` // Only for ORACLE tenant
+	Whitelist         string                       `json:"whitelist"`
+	Pools             []*ResourcePoolWithUnit      `json:"pools"`
+	ReadOnly          bool                         `json:"read_only"` // Default to false.
+	ConnectionStrings []ObproxyAndConnectionString `json:"connection_strings"`
 }

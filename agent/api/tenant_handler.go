@@ -44,17 +44,32 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PRIMARYZONE, tenantModifyPrimaryZoneHandler)
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD, tenantModifyPasswordHandler)
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(persistTenantRootPassword)))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_WHITELIST, tenantModifyWhitelistHandler)
 
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantSetParametersHandler)
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, tenantSetVariableHandler)
 	tenant.GET(constant.URI_PATH_PARAM_NAME, getTenantInfo)
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PRECHECK, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(tenantPrecheck)))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETER+constant.URI_PATH_PARAM_PARA, getTenantParameter)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, getTenantVariable)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, createUserHandler)
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, dropUserHandler)
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(createUserHandler)))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(dropUserHandler)))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(listUsers))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(getUser))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_DB_PRIVILEGE, tenantHandlerWrapper(modifyDbPrivilege))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_GLOBAL_PRIVILEGE, tenantHandlerWrapper(modifyGlobalPrivilege))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_PASSWORD, tenantHandlerWrapper(changePassword))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(lockUser))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_STATS, tenantHandlerWrapper(getUserStats))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(unlockUser))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(createDatabase))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(listDatabases))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(updateDatabase))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(getDatabase))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(deleteDatabase))
 
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
@@ -89,17 +104,6 @@ func tenantCreateHandler(c *gin.Context) {
 	}
 	dag, err := tenant.CreateTenant(&param)
 	common.SendResponse(c, dag, err)
-}
-
-func tenantCheckWithName(c *gin.Context) (string, error) {
-	name := c.Param(constant.URI_PARAM_NAME)
-	if name == "" {
-		return "", errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty.")
-	}
-	if !meta.OCS_AGENT.IsClusterAgent() {
-		return "", errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String())
-	}
-	return name, nil
 }
 
 // @ID tenantDrop
@@ -348,7 +352,7 @@ func tenantModifyWhitelistHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/rootpassword [put]
+// @Router /api/v1/tenant/{name}/password [put]
 func tenantModifyPasswordHandler(c *gin.Context) {
 	name, err := tenantCheckWithName(c)
 	if err != nil {
@@ -365,6 +369,32 @@ func tenantModifyPasswordHandler(c *gin.Context) {
 		return
 	}
 	common.SendResponse(c, nil, err)
+}
+
+// @ID persistTenantRootPassword
+// @Summary persist tenant root password
+// @Description persist tenant root password
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param body body param.PersistTenantRootPasswordParam true "persist tenant root password param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/password/persist [POST]
+func persistTenantRootPassword(c *gin.Context) {
+	//all checks are done in the wrapper, just save the password
+	name := c.Param(constant.URI_PARAM_NAME)
+	var param param.PersistTenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	tenant.PersistTenantRootPassword(c, name, param.Password)
+	common.SendResponse(c, nil, nil)
 }
 
 // @ID tenantModifyPrimaryZone
@@ -632,7 +662,7 @@ func createUserHandler(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	common.SendResponse(c, nil, tenant.CreateUser(name, param))
+	common.SendResponse(c, nil, tenant.CreateUser(name, &param))
 }
 
 // @ID dropUser
@@ -668,7 +698,7 @@ func dropUserHandler(c *gin.Context) {
 		return
 	}
 
-	common.SendResponse(c, nil, tenant.DropUser(name, user, param.RootPassword))
+	common.SendResponse(c, nil, tenant.DropUser(name, user, &param))
 }
 
 // @ID listUsers
@@ -685,7 +715,9 @@ func dropUserHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user [GET]
 func listUsers(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	obusers, err := tenant.ListUsers(name)
+	common.SendResponse(c, obusers, err)
 }
 
 // @ID getUser
@@ -703,7 +735,10 @@ func listUsers(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user} [GET]
 func getUser(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	obuser, err := tenant.GetUser(name, user)
+	common.SendResponse(c, obuser, err)
 }
 
 // @ID modifyDbPrivilege
@@ -722,7 +757,60 @@ func getUser(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/db-privilege [PUT]
 func modifyDbPrivilege(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	modifyUserDbPrivilegeParam := param.ModifyUserDbPrivilegeParam{}
+	err := c.BindJSON(&modifyUserDbPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify user db privilege param parse failed"))
+		return
+	}
+	err = tenant.ModifyUserDbPrivilege(name, user, &modifyUserDbPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID getStats
+// @Summary get user stats
+// @Description get user stats
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Success 200 object http.OcsAgentResponse{data=bo.ObUserStats}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/stats [GET]
+func getUserStats(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	userStats, err := tenant.GetUserStats(name, user)
+	common.SendResponse(c, userStats, err)
+}
+
+// @ID tenantPreCheck
+// @Summary check tenant accessibility
+// @Description check tenant accessibility
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Success 200 object http.OcsAgentResponse{data=bo.ObUserStats}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/precheck [GET]
+func tenantPrecheck(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	if name == "" {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty."))
+		return
+	}
+	preCheckResult, err := tenant.TenantPreCheck(name)
+	common.SendResponse(c, preCheckResult, err)
 }
 
 // @ID modifyGlobalPrivilege
@@ -741,7 +829,16 @@ func modifyDbPrivilege(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/global-privilege [PUT]
 func modifyGlobalPrivilege(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	modifyUserGlobalPrivilegeParam := param.ModifyUserGlobalPrivilegeParam{}
+	err := c.BindJSON(&modifyUserGlobalPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify user global privilege param parse failed"))
+		return
+	}
+	err = tenant.ModifyUserGlobalPrivilege(name, user, &modifyUserGlobalPrivilegeParam)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID changePassword
@@ -760,7 +857,16 @@ func modifyGlobalPrivilege(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/password [PUT]
 func changePassword(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	changeUserPasswordParam := param.ChangeUserPasswordParam{}
+	err := c.BindJSON(&changeUserPasswordParam)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Change user password param parse failed"))
+		return
+	}
+	err = tenant.ChangeUserPassword(name, user, &changeUserPasswordParam)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID lockUser
@@ -778,7 +884,10 @@ func changePassword(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/lock [PUT]
 func lockUser(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	err := tenant.LockUser(name, user)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID unlockUser
@@ -796,7 +905,10 @@ func lockUser(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/lock [DELETE]
 func unlockUser(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	err := tenant.UnlockUser(name, user)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID listDatabases
@@ -813,7 +925,9 @@ func unlockUser(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/databases [GET]
 func listDatabases(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	databases, err := tenant.ListDatabases(name)
+	common.SendResponse(c, databases, err)
 }
 
 // @ID getDatabase
@@ -824,14 +938,17 @@ func listDatabases(c *gin.Context) {
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
 // @Param name path string true "tenant name"
-// @Param databaseName path string true "database name"
+// @Param database path string true "database name"
 // @Success 200 object http.OcsAgentResponse{data=bo.Database}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/databases/{databaseName} [GET]
+// @Router /api/v1/tenant/{name}/databases/{database} [GET]
 func getDatabase(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	databaseName := c.Param(constant.URI_PARAM_DATABASE)
+	database, err := tenant.GetDatabase(name, databaseName)
+	common.SendResponse(c, database, err)
 }
 
 // @ID deleteDatabase
@@ -842,14 +959,17 @@ func getDatabase(c *gin.Context) {
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
 // @Param name path string true "tenant name"
-// @Param databaseName path string true "database name"
+// @Param database path string true "database name"
 // @Success 200 object http.OcsAgentResponse
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/databases/{databaseName} [DELETE]
+// @Router /api/v1/tenant/{name}/databases/{database} [DELETE]
 func deleteDatabase(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	databaseName := c.Param(constant.URI_PARAM_DATABASE)
+	err := tenant.DeleteDatabase(name, databaseName)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID updateDatabase
@@ -860,15 +980,24 @@ func deleteDatabase(c *gin.Context) {
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
 // @Param name path string true "tenant name"
-// @Param databaseName path string true "database name"
+// @Param database path string true "database name"
 // @Param body body param.ModifyDatabaseParam true "modify database param"
 // @Success 200 object http.OcsAgentResponse
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/tenant/{name}/databases/{databaseName} [PUT]
+// @Router /api/v1/tenant/{name}/databases/{database} [PUT]
 func updateDatabase(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	databaseName := c.Param(constant.URI_PARAM_DATABASE)
+	modifyDatabaseParam := param.ModifyDatabaseParam{}
+	err := c.BindJSON(&modifyDatabaseParam)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify database param parse failed"))
+		return
+	}
+	err = tenant.AlterDatabase(name, databaseName, &modifyDatabaseParam)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID createDatabase
@@ -886,5 +1015,13 @@ func updateDatabase(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/databases [POST]
 func createDatabase(c *gin.Context) {
-	common.SendResponse(c, nil, nil)
+	name := c.Param(constant.URI_PARAM_NAME)
+	createDatabaseParam := param.CreateDatabaseParam{}
+	err := c.BindJSON(&createDatabaseParam)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Create database param parse failed"))
+		return
+	}
+	err = tenant.CreateDatabase(name, &createDatabaseParam)
+	common.SendResponse(c, nil, err)
 }

@@ -69,19 +69,22 @@ jobs:
       script: |
         #!/bin/bash
         if [[ `uname -m` == aarch64 ]]; then
-          wget https://studygolang.com/dl/golang/go1.20.6.linux-arm64.tar.gz --no-check-certificate
+          wget https://studygolang.com/dl/golang/go1.23.6.linux-arm64.tar.gz --no-check-certificate
           rm -rf /usr/local/go 
-          tar -C /usr/local -xzf go1.20.6.linux-arm64.tar.gz
+          tar -C /usr/local -xzf go1.23.6.linux-arm64.tar.gz
           cp /usr/local/go/bin/go /usr/local/bin/
         else
-          wget https://studygolang.com/dl/golang/go1.20.6.linux-amd64.tar.gz --no-check-certificate
+          wget https://studygolang.com/dl/golang/go1.23.6.linux-amd64.tar.gz --no-check-certificate
           rm -rf /usr/local/go 
-          tar -C /usr/local -xzf go1.20.6.linux-amd64.tar.gz
+          tar -C /usr/local -xzf go1.23.6.linux-amd64.tar.gz
           cp /usr/local/go/bin/go /usr/local/bin/
         fi
+        export PATH=/usr/local/go/bin:$PATH
         go env -w GOPROXY=https://goproxy.cn GOPATH="/usr/local"
         go install github.com/go-bindata/go-bindata/...@v3.1.2+incompatible
         cd "${BASE_WORKSPACE}/codeWorkspace"
+        mkdir -p frontend/dist
+        touch frontend/dist/index.html
         make pre-build build-with-swagger
   
   规范检查:

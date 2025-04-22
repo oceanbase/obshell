@@ -81,29 +81,37 @@ const (
 	URI_WINDOWS = "/windows"
 
 	// Used for tenant
-	URI_TENANTS      = "/tenants"
-	URI_LOCK         = "/lock"
-	URI_NAME         = "/name"
-	URI_REPLICAS     = "/replicas"
-	URI_PRIMARYZONE  = "/primary-zone"
-	URI_ROOTPASSWORD = "/password"
-	URI_WHITELIST    = "/whitelist"
-	URI_PARAMETERS   = "/parameters"
-	URI_VARIABLES    = "/variables"
-	URI_VARIABLE     = "/variable"
-	URI_PARAMETER    = "/parameter"
-	URI_OVERVIEW     = "/overview"
-	URI_TENANT       = "/tenant"
-	URI_USER         = "/user"
+	URI_TENANTS          = "/tenants"
+	URI_LOCK             = "/lock"
+	URI_NAME             = "/name"
+	URI_REPLICAS         = "/replicas"
+	URI_PRIMARYZONE      = "/primary-zone"
+	URI_ROOTPASSWORD     = "/password"
+	URI_WHITELIST        = "/whitelist"
+	URI_PARAMETERS       = "/parameters"
+	URI_VARIABLES        = "/variables"
+	URI_VARIABLE         = "/variable"
+	URI_PARAMETER        = "/parameter"
+	URI_OVERVIEW         = "/overview"
+	URI_TENANT           = "/tenant"
+	URI_USER             = "/user"
+	URI_DATABASES        = "/databases"
+	URI_DB_PRIVILEGE     = "/db-privilege"
+	URI_GLOBAL_PRIVILEGE = "/global-privilege"
+	URI_PERSIST          = "/persist"
+	URI_STATS            = "/stats"
+	URI_PRECHECK         = "/precheck"
 
-	URI_PARAM_NAME      = "name"
-	URI_PATH_PARAM_NAME = "/:" + URI_PARAM_NAME
-	URI_PARAM_VAR       = "variable"
-	URI_PATH_PARAM_VAR  = "/:" + URI_PARAM_VAR
-	URI_PARAM_PARA      = "parameter"
-	URI_PATH_PARAM_PARA = "/:" + URI_PARAM_PARA
-	URI_PARAM_USER      = "user"
-	URI_PATH_PARAM_USER = "/:" + URI_PARAM_USER
+	URI_PARAM_NAME          = "name"
+	URI_PATH_PARAM_NAME     = "/:" + URI_PARAM_NAME
+	URI_PARAM_VAR           = "variable"
+	URI_PATH_PARAM_VAR      = "/:" + URI_PARAM_VAR
+	URI_PARAM_PARA          = "parameter"
+	URI_PATH_PARAM_PARA     = "/:" + URI_PARAM_PARA
+	URI_PARAM_USER          = "user"
+	URI_PATH_PARAM_USER     = "/:" + URI_PARAM_USER
+	URI_PARAM_DATABASE      = "database"
+	URI_PATH_PARAM_DATABASE = "/:" + URI_PARAM_DATABASE
 
 	// Used for backup
 	URI_ARCHIVE = "/log"

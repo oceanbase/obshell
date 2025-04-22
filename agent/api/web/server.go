@@ -19,6 +19,7 @@ package web
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"net"
 	"net/http"
 	"time"
@@ -35,6 +36,7 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
 	"github.com/oceanbase/obshell/agent/rpc"
+	"github.com/oceanbase/obshell/frontend"
 )
 
 type Server struct {
@@ -84,6 +86,8 @@ func NewServer(mode config.AgentMode, conf config.ServerConfig) *Server {
 	api.InitOcsAgentRoutes(ret.state, localRouter, true)
 	rpc.InitOcsAgentRpcRoutes(ret.state, router, false)
 	rpc.InitOcsAgentRpcRoutes(ret.state, localRouter, true)
+	staticFp, _ := fs.Sub(frontend.Dist, "dist")
+	router.NoRoute(gin.WrapH(http.FileServer(http.FS(staticFp))))
 	return ret
 }
 

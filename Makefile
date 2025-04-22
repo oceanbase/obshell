@@ -20,7 +20,7 @@ build-release: set-release-flags obshell buildsucc
 
 build-with-swagger: enable-swagger build-release
 
-build-for-test: enable-swagger set-disable-encryption-flags build-debug
+build-for-test: pre-build enable-swagger set-disable-encryption-flags build-debug
 
 rpm:
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec
