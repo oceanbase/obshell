@@ -688,24 +688,14 @@ func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []str
 	return
 }
 
-func (*ObclusterService) GetAllUnhiddenParameters() ([]oceanbase.ObShowParameters, error) {
+func (*ObclusterService) GetAllUnhiddenParameters() ([]oceanbase.ObParameters, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
 	}
 
-	var params []oceanbase.ObShowParameters
-	err = oceanbaseDb.Raw("SHOW PARAMETERS").Scan(&params).Error
-	if err != nil {
-		return nil, err
-	}
-
-	var unhiddenParams []oceanbase.ObShowParameters
-	for _, param := range params {
-		if param.Name != "" && param.Name[0] != '_' {
-			unhiddenParams = append(unhiddenParams, param)
-		}
-	}
+	var unhiddenParams []oceanbase.ObParameters
+	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME NOT LIKE ?", `\_%`).Find(&unhiddenParams).Error
 
 	return unhiddenParams, err
 }
