@@ -270,8 +270,21 @@ func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 
 		if resp.Successful {
 			if c.Request.RequestURI != statusURI {
-				log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v, data=%+v]",
-					c.Request.Method, c.Request.URL, c.ClientIP(), resp.TraceId, resp.Duration, resp.Status, resp.Data)
+				printResponseData := true
+				for _, route := range excludeRoutes {
+					if strings.HasPrefix(c.Request.RequestURI, route) {
+						printResponseData = false
+						break
+					}
+				}
+				if printResponseData {
+					log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v, data=%+v]",
+						c.Request.Method, c.Request.URL, c.ClientIP(), resp.TraceId, resp.Duration, resp.Status, resp.Data)
+				} else {
+					log.WithContext(ctx).Infof("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v]",
+						c.Request.Method, c.Request.URL, c.ClientIP(), resp.TraceId, resp.Duration, resp.Status)
+				}
+
 			} else {
 				log.WithContext(ctx).Debugf("API response OK: [%v %v, client=%v, traceId=%v, duration=%v, status=%v, data=%+v]",
 					c.Request.Method, c.Request.URL, c.ClientIP(), resp.TraceId, resp.Duration, resp.Status, resp.Data)

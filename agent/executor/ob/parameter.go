@@ -29,6 +29,15 @@ func GetAllParameters() ([]bo.ClusterParameter, *errors.OcsAgentError) {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
+	tenantIdToNameMap := make(map[int]string)
+	tenant, err := tenantService.GetTenantsOverView()
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	for _, t := range tenant {
+		tenantIdToNameMap[t.TenantID] = t.TenantName
+	}
+
 	parametersMap := make(map[string]*bo.ClusterParameter)
 	for _, obParameter := range obParameters {
 		if _, exists := parametersMap[obParameter.Name]; !exists {
@@ -46,10 +55,7 @@ func GetAllParameters() ([]bo.ClusterParameter, *errors.OcsAgentError) {
 
 		var tenantName = ""
 		if obParameter.Scope == PARAMETER_SCOPE_TENANT {
-			tenantName, err = tenantService.GetTenantName(obParameter.TenantId)
-			if err != nil {
-				return nil, errors.Occur(errors.ErrUnexpected, err.Error())
-			}
+			tenantName, _ = tenantIdToNameMap[obParameter.TenantId]
 		}
 
 		// Set server value
