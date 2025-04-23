@@ -74,13 +74,22 @@ func GetTopCompactions(top int) ([]bo.TenantCompactionHistory, *errors.OcsAgentE
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, err.Error())
 	}
+	tenantIdToNameMap, err := tenantService.GetAllNotMetaTenantIdToNameMap()
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
 	tenantCompactionHistories := make([]bo.TenantCompactionHistory, 0)
 	for _, tenantCompaction := range tenantCompactions {
+		tenantName, ok := tenantIdToNameMap[tenantCompaction.TenantId]
+		if !ok {
+			continue
+		}
 		tenantCompactionHistory := bo.TenantCompactionHistory{
 			TenantId:       tenantCompaction.TenantId,
 			StartTime:      tenantCompaction.StartTime,
 			LastFinishTime: tenantCompaction.LastFinishTime,
 			Status:         tenantCompaction.Status,
+			TenantName:     tenantName,
 		}
 		if !tenantCompactionHistory.StartTime.After(tenantCompactionHistory.LastFinishTime) {
 			tenantCompactionHistory.CostTime = int64(tenantCompactionHistory.LastFinishTime.Sub(tenantCompactionHistory.StartTime) / time.Second)
@@ -99,12 +108,6 @@ func GetTopCompactions(top int) ([]bo.TenantCompactionHistory, *errors.OcsAgentE
 	})
 	if len(tenantCompactionHistories) > top {
 		tenantCompactionHistories = tenantCompactionHistories[:top]
-	}
-	for i := range tenantCompactionHistories {
-		tenantCompactionHistories[i].TenantName, err = tenantService.GetTenantName(tenantCompactionHistories[i].TenantId)
-		if err != nil {
-			return nil, errors.Occurf(errors.ErrUnexpected, err.Error())
-		}
 	}
 	return tenantCompactionHistories, nil
 }

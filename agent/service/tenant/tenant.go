@@ -525,6 +525,23 @@ func (s *TenantService) GetAllUserTenants() (res []oceanbase.DbaObTenant, err er
 	return
 }
 
+func (s *TenantService) GetAllNotMetaTenantIdToNameMap() (res map[int]string, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var tenants []oceanbase.DbaObTenant
+	err = oceanbaseDb.Table(DBA_OB_TENANTS).Where(" TENANT_TYPE != ? ", constant.TENANT_TYPE_META).Scan(&tenants).Error
+	if err != nil {
+		return nil, err
+	}
+	res = make(map[int]string)
+	for _, tenant := range tenants {
+		res[tenant.TenantID] = tenant.TenantName
+	}
+	return
+}
+
 func (s *TenantService) GetTenantByID(id int) (res *oceanbase.DbaObTenant, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -735,7 +752,8 @@ func (s *TenantService) GetSlowSqlRank(top int, startTime int64, endTime int64) 
 			" from oceanbase.GV$OB_SQL_AUDIT where" +
 			" char_length(tenant_name) != 0 and elapsed_time > ? " +
 			" and (request_time + elapsed_time) > ? and (request_time + elapsed_time) < ?" +
-			" group by tenant_id, tenant_name" +
+			" and tenant_name NOT LIKE '%$%'" +
+			" group by tenant_name" +
 			" order by count desc limit ?"
 	err = oceanbaseDb.Raw(sql, constant.SLOW_SQL_THRESHOLD, startTime, endTime, top).Find(&res).Error
 	return
