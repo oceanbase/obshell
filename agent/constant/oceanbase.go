@@ -24,9 +24,9 @@ var OB_CONFIG_COMPATIBLE_MAP = map[string]string{
 	CONFIG_MYSQL_PORT: "mysqlPort",
 }
 
-var OB_INNER_USERS = []string{"PUBLIC", "LBACSYS", "OBAAUDITOR", "__oceanbase_inner_standby_user", "ocp_monitor"}
+var OB_INNER_USERS = []string{"PUBLIC", "LBACSYS", "ORAAUDITOR", "__oceanbase_inner_standby_user", "ocp_monitor"}
 var OB_NO_PRIVILEGE_DBS = []string{"information_schema"}
-var OB_RESTRICTED_DBS = []string{"oceanbase", "mysql", "SYS", "LBACSYS", "OBAAUDITOR"}
+var OB_RESTRICTED_DBS = []string{"oceanbase", "mysql", "SYS", "LBACSYS", "ORAAUDITOR"}
 
 const (
 	OB_MYSQL_PRIVILEGE_ALTER          = "ALTER"

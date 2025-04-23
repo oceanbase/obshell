@@ -28,6 +28,9 @@ frontend-dep:
 frontend-build:
 	cd frontend && pnpm i && pnpm build && cd ../
 
+frontend-build-tester:
+	cd frontend && pnpm i && pnpm build:tester && cd ../
+
 rpm:
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec
 
