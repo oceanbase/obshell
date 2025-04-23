@@ -47,10 +47,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
       if (res.successful) {
         message.success(
           type === 'ADD'
-            ? formatMessage({
-                id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordAddedSuccessfully',
-                defaultMessage: '密码新增成功',
-              })
+            ? '密码录入成功'
             : formatMessage({
                 id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordModifiedSuccessfully',
                 defaultMessage: '密码修改成功',
@@ -66,12 +63,14 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
-      createOrReplacePassword({
-        name: tenantName,
-
-      },{
-        password: newPassword,
-      });
+      createOrReplacePassword(
+        {
+          name: tenantName,
+        },
+        {
+          password: newPassword,
+        }
+      );
     });
   };
 
@@ -90,7 +89,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
       }
       destroyOnClose={true}
       {...restProps}
-      confirmLoading={ loading}
+      confirmLoading={loading}
       onOk={handleSubmit}
     >
       <Alert
@@ -126,7 +125,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           })}
           name="newPassword"
         >
-          <Password hasRule={false}/>
+          <Password hasRule={false} />
         </Form.Item>
       </Form>
     </Modal>

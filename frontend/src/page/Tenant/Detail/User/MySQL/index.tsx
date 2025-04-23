@@ -46,7 +46,7 @@ export interface IndexProps {
 }
 
 const Index: React.FC<IndexProps> = ({ tenantName }) => {
-  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [keyword, setKeyword] = useState('');
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
@@ -60,16 +60,20 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
   // 删除Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
+  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+
   const {
     data: dbUserListData,
     refresh,
     loading,
   } = useRequest(listUsers, {
+    ready,
     defaultParams: [
       {
         name: tenantName,
       },
     ],
+    refreshDeps: [ready],
   });
 
   const dbUserList = (dbUserListData?.data?.contents || [])?.map(item => ({

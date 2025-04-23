@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { connect } from 'umi';
+import { connect, useSelector } from 'umi';
 import React, { useEffect, useState } from 'react';
 import { Form, message } from '@oceanbase/design';
 import Password from '@/component/Password';
@@ -54,6 +54,10 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
   charsetList,
   ...restProps
 }) => {
+  const { precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
+
+  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+
   const [form] = Form.useForm();
   const { validateFields, getFieldsValue, setFieldsValue } = form;
   // TODO 这里借助一下深拷贝，来解决在组件内操作时dbUser被篡改的问题；待后期排查优化
@@ -115,11 +119,13 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
     loading: databaseListLoading,
     refresh,
   } = useRequest(listDatabases, {
+    ready,
     defaultParams: [
       {
         name: tenantData?.tenant_name,
       },
     ],
+    refreshDeps: [ready],
     manual: false,
   });
 

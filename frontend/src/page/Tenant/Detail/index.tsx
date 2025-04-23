@@ -50,6 +50,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     },
     ...restProps
   } = props;
+
   const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const {
@@ -176,7 +177,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
 
   const emptySuperUserPassword = !precheckResult?.is_empty_root_password || false;
 
-  useEffect(() => {
+  const handlePreCheck = () => {
     if (tenantName && tenantName !== 'sys') {
       dispatch({
         type: 'tenant/getTenantPreCheck',
@@ -185,6 +186,10 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
         },
       });
     }
+  };
+
+  useEffect(() => {
+    handlePreCheck();
   }, [tenantName, pathname]);
 
   return (
@@ -272,12 +277,8 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
             `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
           );
           setShowTenantPasswordModal(false);
-          dispatch({
-            type: 'tenant/update',
-            payload: {
-              precheckResult: {},
-            },
-          });
+
+          handlePreCheck();
         }}
       />
 
@@ -295,12 +296,8 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
               tenantAdminPasswordErrorData: {},
             },
           });
-          dispatch({
-            type: 'tenant/update',
-            payload: {
-              precheckResult: {},
-            },
-          });
+
+          handlePreCheck();
         }}
         onSuccess={() => {
           dispatch({
@@ -310,12 +307,8 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
               tenantAdminPasswordErrorData: {},
             },
           });
-          dispatch({
-            type: 'tenant/update',
-            payload: {
-              precheckResult: {},
-            },
-          });
+
+          handlePreCheck();
         }}
       />
     </BasicLayout>

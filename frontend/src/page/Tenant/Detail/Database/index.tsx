@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history, connect } from 'umi';
+import { history, connect, useSelector } from 'umi';
 import React, { useState } from 'react';
 import {
   Table,
@@ -61,13 +61,18 @@ const Database: React.FC<DatabaseProps> = ({
   },
   tenantData,
 }) => {
+  const { precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
+
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
   const [keyword, setKeyword] = useState('');
   const [currentDatabase, setCurrentDatabase] = useState<API.Database | null>(null);
   const [IsAllowDel, setIsAllowDel] = useState(false);
+
+  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+
   // 修改参数值的抽屉是否可见
   const [valueVisible, setValueVisible] = useState(false);
-  // 删除Modal
+  // 删除 Modal
   const [deleteDatabaseModalVisible, setDeleteDatabaseModalVisible] = useState(false);
 
   const { data, loading, refresh } = useRequest(listDatabases, {
@@ -76,9 +81,10 @@ const Database: React.FC<DatabaseProps> = ({
         name: tenantName,
       },
     ],
-
-    refreshDeps: [keyword],
+    ready,
+    refreshDeps: [keyword, ready],
   });
+
   const dataSource = (data?.data?.contents || [])?.map(item => ({
     ...item,
     createTime: item?.create_time,
