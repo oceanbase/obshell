@@ -20,9 +20,11 @@ type CreateDatabaseParam struct {
 	DbName    string  `json:"db_name" binding:"required"`
 	Collation *string `json:"collation"`
 	ReadOnly  *bool   `json:"read_only"`
+	TenantRootPasswordParam
 }
 
 type ModifyDatabaseParam struct {
 	Collation *string `json:"collation"`
 	ReadOnly  *bool   `json:"read_only"`
+	TenantRootPasswordParam
 }

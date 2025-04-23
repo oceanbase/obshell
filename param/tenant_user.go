@@ -17,13 +17,16 @@
 package param
 
 type ModifyUserGlobalPrivilegeParam struct {
+	TenantRootPasswordParam
 	GlobalPrivileges []string `json:"global_privileges"`
 }
 
 type ModifyUserDbPrivilegeParam struct {
+	TenantRootPasswordParam
 	DbPrivileges []DbPrivilegeParam `json:"db_privileges"`
 }
 
 type ChangeUserPasswordParam struct {
+	TenantRootPasswordParam
 	NewPassword string `json:"new_password"`
 }

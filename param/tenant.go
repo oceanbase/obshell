@@ -85,6 +85,10 @@ type ModifyTenantRootPasswordParam struct {
 	NewPwd *string `json:"new_password" binding:"required"`
 }
 
+type TenantRootPasswordParam struct {
+	RootPassword *string `json:"root_password"`
+}
+
 type PersistTenantRootPasswordParam struct {
 	Password string `json:"password"`
 }
@@ -111,9 +115,9 @@ type CreateResourcePoolTaskParam struct {
 }
 
 type CreateUserParam struct {
-	UserName         string             `json:"user_name" binding:"required"`
-	Password         string             `json:"password" binding:"required"`
-	RootPassword     *string            `json:"root_password"`
+	UserName string `json:"user_name" binding:"required"`
+	Password string `json:"password" binding:"required"`
+	TenantRootPasswordParam
 	GlobalPrivileges []string           `json:"global_privileges"`
 	DbPrivileges     []DbPrivilegeParam `json:"db_privileges"`
 	HostName         string             `json:"host_name"`
@@ -125,7 +129,7 @@ type DbPrivilegeParam struct {
 }
 
 type DropUserParam struct {
-	RootPassword *string `json:"root_password"`
+	TenantRootPasswordParam
 }
 
 type QuerySlowSqlRankParam struct {

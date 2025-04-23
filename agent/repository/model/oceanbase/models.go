@@ -41,21 +41,6 @@ func (ObParameters) TableName() string {
 	return "oceanbase.GV$OB_PARAMETERS"
 }
 
-type ObShowParameters struct {
-	SvrIp        string `gorm:"column:svr_ip"`
-	SvrPort      int    `gorm:"column:svr_port"`
-	Zone         string `gorm:"column:zone"`
-	Scope        string `gorm:"column:scope"`
-	Name         string `gorm:"column:name"`
-	Value        string `gorm:"column:value"`
-	TenantId     int    `gorm:"column:tenant_id"`
-	EditLevel    string `gorm:"column:edit_level"`
-	DefaultValue string `gorm:"column:default_value"`
-	Section      string `gorm:"column:section"`
-	Info         string `gorm:"column:info"`
-	DataType     string `gorm:"column:data_type"`
-}
-
 type DbaObZones struct {
 	Zone   string `gorm:"column:ZONE"`
 	Status string `gorm:"column:STATUS"`

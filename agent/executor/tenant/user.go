@@ -34,16 +34,9 @@ func CreateUser(tenantName string, param *param.CreateUserParam) *errors.OcsAgen
 	var db *gorm.DB
 	defer CloseDbConnection(db)
 	var err error
-	if param.RootPassword != nil {
-		db, err = GetConnectionWithPassword(tenantName, *param.RootPassword)
-		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
-		}
-	} else {
-		db, err = GetConnection(tenantName)
-		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
-		}
+	db, err = GetConnectionWithPassword(tenantName, param.RootPassword)
+	if err != nil {
+		return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
 	}
 
 	if param.HostName == "" {
@@ -75,16 +68,9 @@ func DropUser(tenantName, userName string, param *param.DropUserParam) *errors.O
 	var db *gorm.DB
 	defer CloseDbConnection(db)
 	var err error
-	if param.RootPassword != nil {
-		db, err = GetConnectionWithPassword(tenantName, *param.RootPassword)
-		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
-		}
-	} else {
-		db, err = GetConnection(tenantName)
-		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
-		}
+	db, err = GetConnectionWithPassword(tenantName, param.RootPassword)
+	if err != nil {
+		return errors.Occurf(errors.ErrUnexpected, "Failed to get connection of tenant %s, error: %s", tenantName, err.Error())
 	}
 
 	// Check user exist.
@@ -102,8 +88,8 @@ func DropUser(tenantName, userName string, param *param.DropUserParam) *errors.O
 	return nil
 }
 
-func ListUsers(tenantName string) ([]bo.ObUser, *errors.OcsAgentError) {
-	db, err := GetConnection(tenantName)
+func ListUsers(tenantName string, password *string) ([]bo.ObUser, *errors.OcsAgentError) {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -157,7 +143,7 @@ func ListUsers(tenantName string) ([]bo.ObUser, *errors.OcsAgentError) {
 }
 
 func ChangeUserPassword(tenantName, userName string, p *param.ChangeUserPasswordParam) *errors.OcsAgentError {
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, p.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -169,8 +155,8 @@ func ChangeUserPassword(tenantName, userName string, p *param.ChangeUserPassword
 	return nil
 }
 
-func GetUserStats(tenantName, userName string) (*bo.ObUserStats, *errors.OcsAgentError) {
-	db, err := GetConnection(tenantName)
+func GetUserStats(tenantName, userName string, password *string) (*bo.ObUserStats, *errors.OcsAgentError) {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -216,11 +202,11 @@ func ModifyUserGlobalPrivilege(tenantName, userName string, p *param.ModifyUserG
 	if err != nil {
 		return errors.Occurf(errors.ErrBadRequest, "Found unsupported privilege, err: %s", err.Error())
 	}
-	obuser, userErr := GetUser(tenantName, userName)
+	obuser, userErr := GetUser(tenantName, userName, p.RootPassword)
 	if userErr != nil {
 		return userErr
 	}
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, p.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -244,11 +230,11 @@ func ModifyUserDbPrivilege(tenantName, userName string, p *param.ModifyUserDbPri
 			return errors.Occurf(errors.ErrBadRequest, "Found unsupported privilege for db %s, err: %s", dbPrivilege.DbName, err.Error())
 		}
 	}
-	obuser, userErr := GetUser(tenantName, userName)
+	obuser, userErr := GetUser(tenantName, userName, p.RootPassword)
 	if userErr != nil {
 		return userErr
 	}
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, p.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -304,8 +290,8 @@ func ModifyUserDbPrivilege(tenantName, userName string, p *param.ModifyUserDbPri
 	return nil
 }
 
-func LockUser(tenantName, userName string) *errors.OcsAgentError {
-	db, err := GetConnection(tenantName)
+func LockUser(tenantName, userName string, password *string) *errors.OcsAgentError {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -317,8 +303,8 @@ func LockUser(tenantName, userName string) *errors.OcsAgentError {
 	return nil
 }
 
-func UnlockUser(tenantName, userName string) *errors.OcsAgentError {
-	db, err := GetConnection(tenantName)
+func UnlockUser(tenantName, userName string, password *string) *errors.OcsAgentError {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -330,8 +316,8 @@ func UnlockUser(tenantName, userName string) *errors.OcsAgentError {
 	return nil
 }
 
-func GetUser(tenantName, userName string) (*bo.ObUser, *errors.OcsAgentError) {
-	db, err := GetConnection(tenantName)
+func GetUser(tenantName, userName string, password *string) (*bo.ObUser, *errors.OcsAgentError) {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())

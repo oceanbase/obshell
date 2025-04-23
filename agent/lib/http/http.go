@@ -128,7 +128,7 @@ func SendRequestAndBuildReturn(agentInfo meta.AgentInfoInterface, uri string, me
 }
 
 func NewClient() *resty.Client {
-	client := resty.New().SetTimeout(TCP_DEFAULT_TIME_OUT)
+	client := resty.New().SetTimeout(TCP_DEFAULT_TIME_OUT).SetAllowGetMethodPayload(true)
 
 	if global.EnableHTTPS {
 		tlsConfig := &tls.Config{

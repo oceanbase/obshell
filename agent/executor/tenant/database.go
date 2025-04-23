@@ -27,8 +27,8 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func DeleteDatabase(tenantName, databaseName string) *errors.OcsAgentError {
-	db, err := GetConnection(tenantName)
+func DeleteDatabase(tenantName, databaseName string, password *string) *errors.OcsAgentError {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -41,7 +41,7 @@ func DeleteDatabase(tenantName, databaseName string) *errors.OcsAgentError {
 }
 
 func CreateDatabase(tenantName string, param *param.CreateDatabaseParam) *errors.OcsAgentError {
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, param.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -57,7 +57,7 @@ func AlterDatabase(tenantName string, databaseName string, param *param.ModifyDa
 	if param.Collation == nil && param.ReadOnly == nil {
 		return nil
 	}
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, param.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
@@ -69,8 +69,8 @@ func AlterDatabase(tenantName string, databaseName string, param *param.ModifyDa
 	return nil
 }
 
-func GetDatabase(tenantName, databaseName string) (*bo.Database, *errors.OcsAgentError) {
-	databases, err := ListDatabases(tenantName)
+func GetDatabase(tenantName, databaseName string, password *string) (*bo.Database, *errors.OcsAgentError) {
+	databases, err := ListDatabases(tenantName, password)
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +82,8 @@ func GetDatabase(tenantName, databaseName string) (*bo.Database, *errors.OcsAgen
 	return nil, errors.Occurf(errors.ErrNotFound, "Database %s of tenant %s", databaseName, tenantName)
 }
 
-func ListDatabases(tenantName string) ([]bo.Database, *errors.OcsAgentError) {
-	db, err := GetConnection(tenantName)
+func ListDatabases(tenantName string, password *string) ([]bo.Database, *errors.OcsAgentError) {
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())

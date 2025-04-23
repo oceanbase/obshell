@@ -29,16 +29,12 @@ import (
 	"gorm.io/gorm"
 )
 
-func TenantPreCheck(tenantName string) (*bo.ObTenantPreCheckResult, *errors.OcsAgentError) {
-	isPasswordExists := false
+func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckResult, *errors.OcsAgentError) {
+	isPasswordExists := password == nil
 	isConnectable := false
-	passwordMap := tenant.GetPasswordMap()
-	_, isPasswordExists = passwordMap.Get(tenantName)
-	// if isPasswordExists {
-	db, err := GetConnection(tenantName)
+	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	isConnectable = (err == nil)
-	// }
 	isEmptyRootPassword, err := IsEmptyRootPassword(tenantName)
 	if err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' password if empty failed", tenantName)
@@ -76,11 +72,15 @@ func IsEmptyRootPassword(tenantName string) (bool, error) {
 	return true, nil
 }
 
-func GetConnectionWithPassword(tenantName, password string) (*gorm.DB, error) {
+func GetConnectionWithPassword(tenantName string, password *string) (*gorm.DB, error) {
 	if tenantName == constant.TENANT_SYS {
 		return oceanbase.GetInstance()
 	} else {
-		return oceanbase.LoadGormWithTenant(tenantName, password)
+		if password != nil {
+			return oceanbase.LoadGormWithTenant(tenantName, *password)
+		} else {
+			return oceanbase.LoadGormWithTenant(tenantName, "")
+		}
 	}
 }
 

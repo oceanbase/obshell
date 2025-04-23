@@ -91,7 +91,7 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 			return errors.Occur(errors.ErrBadRequest, err)
 		}
 	} else {
-		executeAgent, err := getExecuteAgentForTenant(tenantName)
+		executeAgent, err := GetExecuteAgentForTenant(tenantName)
 		if err != nil {
 			return errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error())
 		}

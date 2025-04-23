@@ -53,13 +53,13 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantSetParametersHandler)
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, tenantSetVariableHandler)
 	tenant.GET(constant.URI_PATH_PARAM_NAME, getTenantInfo)
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PRECHECK, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(tenantPrecheck)))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PRECHECK, tenantHandlerWrapper(tenantPrecheck))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETER+constant.URI_PATH_PARAM_PARA, getTenantParameter)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, getTenantVariable)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(createUserHandler)))
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(dropUserHandler)))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(createUserHandler))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(dropUserHandler))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(listUsers))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(getUser))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_DB_PRIVILEGE, tenantHandlerWrapper(modifyDbPrivilege))
@@ -727,8 +727,13 @@ func dropUserHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user [GET]
 func listUsers(c *gin.Context) {
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	name := c.Param(constant.URI_PARAM_NAME)
-	obusers, err := tenant.ListUsers(name)
+	obusers, err := tenant.ListUsers(name, param.RootPassword)
 	common.SendResponse(c, obusers, err)
 }
 
@@ -747,9 +752,14 @@ func listUsers(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user} [GET]
 func getUser(c *gin.Context) {
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
-	obuser, err := tenant.GetUser(name, user)
+	obuser, err := tenant.GetUser(name, user, param.RootPassword)
 	common.SendResponse(c, obuser, err)
 }
 
@@ -796,9 +806,14 @@ func modifyDbPrivilege(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/stats [GET]
 func getUserStats(c *gin.Context) {
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
-	userStats, err := tenant.GetUserStats(name, user)
+	userStats, err := tenant.GetUserStats(name, user, param.RootPassword)
 	common.SendResponse(c, userStats, err)
 }
 
@@ -821,7 +836,12 @@ func tenantPrecheck(c *gin.Context) {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty."))
 		return
 	}
-	preCheckResult, err := tenant.TenantPreCheck(name)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	preCheckResult, err := tenant.TenantPreCheck(name, param.RootPassword)
 	common.SendResponse(c, preCheckResult, err)
 }
 
@@ -896,9 +916,14 @@ func changePassword(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/lock [PUT]
 func lockUser(c *gin.Context) {
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
-	err := tenant.LockUser(name, user)
+	err := tenant.LockUser(name, user, param.RootPassword)
 	common.SendResponse(c, nil, err)
 }
 
@@ -919,7 +944,12 @@ func lockUser(c *gin.Context) {
 func unlockUser(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
-	err := tenant.UnlockUser(name, user)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err := tenant.UnlockUser(name, user, param.RootPassword)
 	common.SendResponse(c, nil, err)
 }
 
@@ -938,7 +968,12 @@ func unlockUser(c *gin.Context) {
 // @Router /api/v1/tenant/{name}/databases [GET]
 func listDatabases(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
-	databases, err := tenant.ListDatabases(name)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	databases, err := tenant.ListDatabases(name, param.RootPassword)
 	common.SendResponse(c, databases, err)
 }
 
@@ -959,7 +994,12 @@ func listDatabases(c *gin.Context) {
 func getDatabase(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	databaseName := c.Param(constant.URI_PARAM_DATABASE)
-	database, err := tenant.GetDatabase(name, databaseName)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	database, err := tenant.GetDatabase(name, databaseName, param.RootPassword)
 	common.SendResponse(c, database, err)
 }
 
@@ -980,7 +1020,12 @@ func getDatabase(c *gin.Context) {
 func deleteDatabase(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	databaseName := c.Param(constant.URI_PARAM_DATABASE)
-	err := tenant.DeleteDatabase(name, databaseName)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err := tenant.DeleteDatabase(name, databaseName, param.RootPassword)
 	common.SendResponse(c, nil, err)
 }
 
