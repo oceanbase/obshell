@@ -27,7 +27,7 @@ import useDocumentTitle from '@/hook/useDocumentTitle';
 import { breadcrumbItemRender, getOperationComponent } from '@/util/component';
 import * as TaskController from '@/service/ocp-express/TaskController';
 import { TASK_STATUS_LIST } from '@/constant/task';
-import { isEnglish } from '@/util';
+import { delayInterfaceWithSentItTwice, isEnglish } from '@/util';
 import { download } from '@/util/export';
 import { formatTime } from '@/util/datetime';
 import { getTaskDuration, getTaskProgress } from '@/util/task';
@@ -77,15 +77,12 @@ const Detail: React.FC<DetailProps> = ({
     query: { backUrl },
   },
 }) => {
-  const { token } = theme.useToken();
-
-  // const [mode, setMode] = useState<'log' | 'flow'>('log');
   const [subtaskId, setSubtaskId] = useState<number | string | undefined>(undefined);
   const logRef = useRef<TaskGraphRef>(null);
-  const flowRef = useRef<TaskGraphRef>(null);
+  // const flowRef = useRef<TaskGraphRef>(null);
 
   // 获取任务详情
-  const { data, refresh, loading } = useRequest(getDagDetail, {
+  const { data, refreshAsync, loading } = useRequest(getDagDetail, {
     defaultParams: [
       {
         id: taskId,
@@ -94,9 +91,8 @@ const Detail: React.FC<DetailProps> = ({
   });
 
   const taskData = data?.data || {};
-  const lockRefresh = useLockFn(refresh);
+  const lockRefresh = useLockFn(refreshAsync);
 
-  console.log(taskData, 'taskData');
   useDocumentTitle(taskData?.name);
 
   const stateItem = findByValue(TASK_STATUS_LIST, taskData.state);
@@ -120,7 +116,6 @@ const Detail: React.FC<DetailProps> = ({
   });
 
   const log = logData?.data?.contents || [];
-  const getSubtaskLogWithLock = useLockFn(getSubtaskLog);
 
   // 由于 ready 仅在第一次生效，当 ready 和 refreshDeps 包含同一变量时，ready 的拦截逻辑不符合预期
   // 属于 ahooks 的一个问题，因此先用 useEffect 实现
@@ -203,7 +198,7 @@ const Detail: React.FC<DetailProps> = ({
             if (res.successful) {
               message.success('任务重试成功');
 
-              refresh();
+              delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
           });
         },
@@ -213,7 +208,7 @@ const Detail: React.FC<DetailProps> = ({
       Modal.confirm({
         title: formatMessage({
           id: 'ocp-express.Task.Detail.AreYouSureYouWant',
-          defaultMessage: '确定要放弃当前任务吗？',
+          defaultMessage: '确定要回滚当前任务吗？',
         }),
 
         content: formatMessage({
@@ -221,7 +216,7 @@ const Detail: React.FC<DetailProps> = ({
           defaultMessage: '这将从失败处开始回滚所有已执行过的任务',
         }),
 
-        okText: formatMessage({ id: 'ocp-express.Task.Detail.GiveUp', defaultMessage: '放弃' }),
+        okText: '回滚',
         okButtonProps: {
           danger: true,
           ghost: true,
@@ -244,7 +239,67 @@ const Detail: React.FC<DetailProps> = ({
                 })
               );
 
-              refresh();
+              delayInterfaceWithSentItTwice(refreshAsync, 800);
+            }
+          });
+        },
+      });
+    } else if (key === 'cancel') {
+      // 放弃任务 = 回滚任务
+      Modal.confirm({
+        title: '确定要取消当前任务吗？',
+
+        content: '这将取消整个任务',
+
+        okText: '取消',
+        okButtonProps: {
+          danger: true,
+          ghost: true,
+        },
+
+        onOk: () => {
+          return dagHandlerFn(
+            {
+              id: taskId,
+            },
+            {
+              operator: 'CANCEL',
+            }
+          ).then(res => {
+            if (res.successful) {
+              message.success('任务取消成功');
+
+              delayInterfaceWithSentItTwice(refreshAsync, 800);
+            }
+          });
+        },
+      });
+    } else if (key === 'pass') {
+      // 放弃任务 = 回滚任务
+      Modal.confirm({
+        title: '确定要跳过当前任务吗？',
+
+        content: '这将跳过整个任务',
+
+        okText: '跳过',
+        okButtonProps: {
+          danger: true,
+          ghost: true,
+        },
+
+        onOk: () => {
+          return dagHandlerFn(
+            {
+              id: taskId,
+            },
+            {
+              operator: 'PASS',
+            }
+          ).then(res => {
+            if (res.successful) {
+              message.success('任务跳过成功');
+
+              delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
           });
         },
@@ -278,7 +333,7 @@ const Detail: React.FC<DetailProps> = ({
             spin={polling ? false : loading}
             content={taskData.name}
             onClick={() => {
-              refresh();
+              refreshAsync();
             }}
           />
         ),
@@ -524,7 +579,7 @@ const Detail: React.FC<DetailProps> = ({
       <Log
         ref={logRef}
         taskData={taskData}
-        onOperationSuccess={refresh}
+        onOperationSuccess={refreshAsync}
         subtask={subtask}
         logData={log}
         logLoading={logLoading}

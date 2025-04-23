@@ -220,7 +220,6 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
             setVisible(false);
           }}
           onSuccess={() => {
-            setVisible(false);
             refresh();
           }}
         />

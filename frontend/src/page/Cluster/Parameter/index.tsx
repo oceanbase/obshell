@@ -21,7 +21,7 @@ import { PageContainer } from '@oceanbase/ui';
 import { uniq } from 'lodash';
 import { Card, Table, Tooltip } from '@oceanbase/design';
 import type { TablePaginationConfig } from '@oceanbase/design/es/table';
-import { getBooleanLabel, isEnglish } from '@/util';
+import { delayInterfaceWithSentItTwice, getBooleanLabel, isEnglish } from '@/util';
 import {
   breadcrumbItemRender,
   getDetailComponentByParameterValue,
@@ -54,7 +54,7 @@ const List: React.FC<ListProps> = ({}) => {
   // 当前编辑的参数项
   const [currentRecord, setCurrentRecord] = useState<API.ClusterParameter | null>(null);
 
-  const { data, loading, refresh } = useRequest(obclusterParameters, {
+  const { data, loading, refreshAsync } = useRequest(obclusterParameters, {
     defaultParams: [],
 
     onSuccess: res => {
@@ -141,7 +141,7 @@ const List: React.FC<ListProps> = ({}) => {
         if (value === 'tenant') {
           return record.scope === 'TENANT';
         } else {
-          return record.scope && record.is_single_value === value;
+          return record.scope !== 'TENANT' && record.is_single_value === value;
         }
       },
       render: (text: API.ClusterParameterValue, record: API.ClusterParameter) => (
@@ -299,7 +299,7 @@ const List: React.FC<ListProps> = ({}) => {
               defaultMessage: '参数管理',
             })}
             onClick={() => {
-              refresh();
+              refreshAsync();
             }}
           />
         ),
@@ -388,7 +388,7 @@ const List: React.FC<ListProps> = ({}) => {
           onSuccess={() => {
             setVisible(false);
             setCurrentRecord(null);
-            refresh();
+            delayInterfaceWithSentItTwice(refreshAsync, 800);
           }}
         />
       </Card>

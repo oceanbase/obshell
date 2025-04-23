@@ -42,13 +42,10 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
     value: 'RUNNING',
     badgeStatus: 'processing',
     operations: [
-      // {
-      //   value: 'downloadLog',
-      //   label: formatMessage({
-      //     id: 'ocp-express.src.constant.task.DownloadLogs',
-      //     defaultMessage: '下载日志',
-      //   }),
-      // },
+      {
+        value: 'cancel',
+        label: '取消任务',
+      },
     ],
   },
 
@@ -64,13 +61,13 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
           defaultMessage: '重试',
         }),
       },
-
+      {
+        value: 'pass',
+        label: '跳过任务',
+      },
       {
         value: 'giveup',
-        label: formatMessage({
-          id: 'ocp-express.src.constant.task.AbandonATask',
-          defaultMessage: '放弃任务',
-        }),
+        label: '回滚任务',
       },
 
       // {

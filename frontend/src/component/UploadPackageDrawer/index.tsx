@@ -21,7 +21,6 @@ const formItemLayout = {
   },
 };
 
-const SoftwarePackageController = {};
 const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   open,
   onCancel,
@@ -328,7 +327,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           ]}
           extra={
             <div>
-              只支持后缀名为 .rpm 的文件，
+              只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件
               <a
                 href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
                 target="_blank"
@@ -346,13 +345,13 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
             customRequest={async options => {
               const file = options.file;
 
-              // 400 MB 等于 120 秒，一秒约等于 3 MB
+              // 400 MB 等于 180 秒，一秒约等于 2 MB
               const totalMB = file.size / 1024 / 1024;
               let uploadedMb = 2;
 
               // umi 请求使用的 fetch 无法监听上传进度，改为 xhr 会绕过 interceptors 的加密逻辑，改为模拟进度条
               const timer = setInterval(() => {
-                uploadedMb += totalMB < 300 ? 3 : 2;
+                uploadedMb += 2;
                 const percent = (uploadedMb / totalMB) * 100;
                 console.log(totalMB, uploadedMb, 'totalMB');
 
@@ -374,12 +373,13 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 upgradePkgUploadFn({}, file, {
                   sha256sum: sha256,
                 }).then(res => {
+                  console.log(res, 'upgradePkgUploadFn response');
                   if (res.successful) {
                     // timer 中有更新 percent 的逻辑，避免和 options.onSuccess 影响，加一个 delay 处理
                     clearInterval(timer);
                     setTimeout(() => {
                       options.onSuccess(res.data);
-                      message.success(`${file.name} 上传功能`);
+                      message.success(`${file.name} 上传成功`);
                       onSuccess();
                     }, 500);
                   } else {

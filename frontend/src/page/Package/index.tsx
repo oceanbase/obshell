@@ -157,7 +157,8 @@ const PackagePage: React.FC<PackageProps> = ({
         defaultMessage: '大小（MB）',
       }),
       dataIndex: 'size',
-      render: (text: number) => <span>{byte2MB(text)}</span>,
+      // 后端返回的是 bit
+      render: (text: number) => <span>{byte2MB(text / 8)}</span>,
     },
 
     {

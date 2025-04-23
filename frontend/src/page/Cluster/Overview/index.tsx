@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { connect, history, useDispatch } from 'umi';
+import { history, useDispatch } from 'umi';
 import React, { useEffect, useRef, useState } from 'react';
 import {
   Space,
@@ -28,10 +28,9 @@ import {
   Dropdown,
   Menu,
   Modal,
-  Checkbox,
 } from '@oceanbase/design';
 import { flatten, reduce } from 'lodash';
-import { ContentWithIcon, PageContainer } from '@oceanbase/ui';
+import { PageContainer } from '@oceanbase/ui';
 import scrollIntoView from 'scroll-into-view';
 import useReload from '@/hook/useReload';
 import useDocumentTitle from '@/hook/useDocumentTitle';
@@ -45,12 +44,9 @@ import type { ZoneListOrTopoRef } from './ZoneListOrTopo';
 import ZoneListOrTopo from './ZoneListOrTopo';
 import { OB_SERVER_STATUS_LIST } from '@/constant/oceanbase';
 import { EllipsisOutlined } from '@oceanbase/icons';
-import RestartModal from './RestartModal';
-import BinlogAssociationMsg from '@/component/BinlogAssociationMsg';
 import UpgradeDrawer from './UpgradeDrawer';
-import { useRequest } from 'ahooks';
-import { getObInfo, obStart, obStop } from '@/service/obshell/ob';
-import { message } from 'antd';
+import { useRafInterval, useRequest } from 'ahooks';
+import { obStart, obStop } from '@/service/obshell/ob';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
 import { directTo } from '@oceanbase/util';
@@ -73,6 +69,9 @@ const Detail: React.FC<DetailProps> = ({
   loading,
 }) => {
   const { token } = theme.useToken();
+  const [clusterStatus, setClusterStatus] = useState<'normal' | 'abnormal'>('normal');
+
+  const isAbnormal = clusterStatus === 'abnormal';
 
   const dispatch = useDispatch();
   useDocumentTitle(
@@ -82,46 +81,39 @@ const Detail: React.FC<DetailProps> = ({
     })
   );
 
-  const { data: obclusterInfoRes } = useRequest(obclusterInfo);
-  const { data: statusInfo } = useRequest(getStatus);
+  const { data: obclusterInfoRes, refresh } = useRequest(
+    () =>
+      obclusterInfo({
+        HIDE_ERROR_MESSAGE: true,
+      }),
+    {
+      onSuccess: res => {
+        if (res.successful) {
+          if (isAbnormal) {
+            setClusterStatus('normal');
+            reload();
+          }
+        } else {
+          setClusterStatus('abnormal');
+        }
+      },
+    }
+  );
 
-  console.log(statusInfo, 'statusInfo');
+  useRafInterval(
+    () => {
+      refresh();
+    },
+    isAbnormal ? 3000 : undefined
+  );
 
   const clusterData = obclusterInfoRes?.data || {};
 
-  // console.log(obclusterInfoData, 'obclusterInfoData');
-
-  // const clusterData = obInfoRes?.data?.obcluster_info || {};
-
-  console.log(clusterData, 'clusterData');
   const [reloading, reload] = useReload(false);
   const zoneListOrTopoRef = useRef<ZoneListOrTopoRef>();
 
   // 使用空字符串兜底，避免文案拼接时出现 undefined
   const obVersion = clusterData.ob_version || '';
-  const ObTenantBinlogController = {};
-
-  // 当前 OB 集群关联的 binlog 实例
-  const { data } = useRequest(ObTenantBinlogController?.listObClusterRelatedBinlogService, {
-    defaultParams: [
-      {
-        id: clusterData.cluster_id,
-      },
-    ],
-  });
-
-  const obClusterRelatedBinlogService = data?.data?.contents || [];
-
-  const getClusterData = () => {
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-    });
-  };
-
-  useEffect(() => {
-    getClusterData();
-  }, []);
 
   const scrollToZoneTable = () => {
     const zoneTable = document.getElementById('ocp-zone-table');
@@ -415,12 +407,6 @@ const Detail: React.FC<DetailProps> = ({
 
         content: (
           <>
-            <BinlogAssociationMsg
-              clusterType="OceanBase"
-              type="text"
-              binlogService={obClusterRelatedBinlogService}
-            />
-
             <div>
               {formatMessage({
                 id: 'ocp-v2.Cluster.Detail.StoppingTheClusterWillCause',
@@ -515,7 +501,7 @@ const Detail: React.FC<DetailProps> = ({
             <ContentWithReload
               content={
                 <Tag
-                  color="geekblue"
+                  color={isAbnormal ? 'warning' : 'geekblue'}
                   style={{
                     fontWeight: 'normal',
                     lineHeight: '24px',
@@ -523,18 +509,20 @@ const Detail: React.FC<DetailProps> = ({
                     top: -4,
                   }}
                 >
-                  {formatMessage(
-                    {
-                      id: 'ocp-express.Cluster.Overview.Obversion',
-                      defaultMessage: '{obVersion} 版本',
-                    },
-                    { obVersion: obVersion }
-                  )}
+                  {isAbnormal
+                    ? '集群状态异常'
+                    : formatMessage(
+                        {
+                          id: 'ocp-express.Cluster.Overview.Obversion',
+                          defaultMessage: '{obVersion} 版本',
+                        },
+                        { obVersion: obVersion }
+                      )}
                 </Tag>
               }
               spin={loading || reloading}
               onClick={() => {
-                getClusterData();
+                refresh();
                 reload();
               }}
             />
@@ -633,12 +621,12 @@ const Detail: React.FC<DetailProps> = ({
             </Col>
           );
         })}
-        <Col span={12}>
+        <Col span={24}>
           <CompactionTimeTop3 />
         </Col>
-        <Col span={12}>
+        {/* <Col span={12}>
           <SlowSQLTop3 />
-        </Col>
+        </Col> */}
         <Col span={24}>
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>
@@ -648,7 +636,6 @@ const Detail: React.FC<DetailProps> = ({
       </Row>
 
       <UpgradeDrawer
-        obClusterRelatedBinlogService={obClusterRelatedBinlogService}
         visible={upgradeVisible}
         clusterData={clusterData}
         onCancel={() => setUpgradeVisible(false)}

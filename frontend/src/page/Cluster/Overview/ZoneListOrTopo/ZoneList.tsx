@@ -132,19 +132,20 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
         title: 'OBServer IP',
         dataIndex: 'ip',
         render: (text: string, expandedRecord: API.Server) => {
-          return (
-            <a
-              data-aspm-click="c304256.d308759"
-              data-aspm-desc="集群拓扑列表-跳转 OBServer 详情"
-              data-aspm-param={``}
-              data-aspm-expo
-              onClick={() => {
-                history.push(`/overview/server/${text}/${expandedRecord.port}`);
-              }}
-            >
-              {text}
-            </a>
-          );
+          return text;
+          // return (
+          //   <a
+          //     data-aspm-click="c304256.d308759"
+          //     data-aspm-desc="集群拓扑列表-跳转 OBServer 详情"
+          //     data-aspm-param={``}
+          //     data-aspm-expo
+          //     onClick={() => {
+          //       history.push(`/overview/server/${text}/${expandedRecord.port}`);
+          //     }}
+          //   >
+          //     {text}
+          //   </a>
+          // );
         },
       },
 

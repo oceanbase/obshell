@@ -161,11 +161,16 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
       if (parameter?.scope === 'TENANT') {
         otherParam = modifyParameter?.map(item => {
           if (item?.target?.filter(o => o.value === 'all')?.length !== 0) {
+            const tenantNameList = uniq(
+              parameter.tenant_value?.map(item => item.tenant_name) || []
+            );
             return {
               name: parameter?.name,
               value: item.value,
               scope: parameter?.scope,
-              all_user_tenant: true,
+              // all_user_tenant 不包含 sys 租户，获取所有 tenantName 进行修改
+              // all_user_tenant: true,
+              tenants: tenantNameList,
             };
           } else {
             return {
@@ -281,6 +286,7 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
 
   // 将整理数据为适合 Tree 渲染的数据
   const getParameterValue = () => {
+    console.log(editParameter, 'editParameter');
     if (editParameter?.length > 0 && editParameter[0] !== undefined) {
       // 修改租户类型参数 数据整理
       if (parameter.scope === 'TENANT') {

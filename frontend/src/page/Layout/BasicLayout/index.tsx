@@ -126,9 +126,19 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     },
   });
 
-  const { data: taskListData } = useRequest(getUnfinishedDags, {
-    pollingInterval: 20000,
-  });
+  const { data: taskListData } = useRequest(
+    () => {
+      return getUnfinishedDags(
+        {},
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      );
+    },
+    {
+      pollingInterval: 30000,
+    }
+  );
 
   const failedTaskList = (taskListData?.data?.contents || []).filter(
     item => item.state === 'FAILED'
@@ -228,20 +238,20 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
       data-aspm-desc="系统信息"
       data-aspm-expo
       // 扩展参数
-      data-aspm-param={tracert.stringify({
-        // OCP 构建版本号，格式为 1.0.0-rc.1
-        ocpBuildVersion: appInfo.buildVersion,
-        // OCP 版本号
-        ocpVersion: appInfo.buildVersion?.split('-')?.[0],
-        // OCP 语言
-        ocpLocale: getLocale(),
-        // OCP 主机
-        ocpHost: window.location.host,
-        // OCP 监控采集间隔
-        ocpMonitorCollectInterval: collectInterval,
-        // 主题
-        themeMode,
-      })}
+      // data-aspm-param={tracert.stringify({
+      //   // OCP 构建版本号，格式为 1.0.0-rc.1
+      //   ocpBuildVersion: appInfo.buildVersion,
+      //   // OCP 版本号
+      //   ocpVersion: appInfo.buildVersion?.split('-')?.[0],
+      //   // OCP 语言
+      //   ocpLocale: getLocale(),
+      //   // OCP 主机
+      //   ocpHost: window.location.host,
+      //   // OCP 监控采集间隔
+      //   ocpMonitorCollectInterval: collectInterval,
+      //   // 主题
+      //   themeMode,
+      // })}
       location={location}
       banner={
         offsetAlertVisible && (

@@ -291,7 +291,7 @@ export const FORBID_OPERATION_DBLIST = [
   'SYS',
   'LBACSYS',
   'ORAAUDITOR',
-  'ocs'
+  'ocs',
 ];
 
 // 内置角色
@@ -422,10 +422,10 @@ export const TENANT_MODE_LIST = [
     value: 'MYSQL',
     label: 'MySQL',
   },
-  // {
-  //   value: 'ORACLE',
-  //   label: 'Oracle',
-  // },
+  {
+    value: 'ORACLE',
+    label: 'Oracle',
+  },
 ];
 
 export const TENANT_STATUS_LIST = [

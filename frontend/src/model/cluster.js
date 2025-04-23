@@ -42,7 +42,9 @@ const model = {
 
   effects: {
     *getClusterData({ onSuccess }, { call, put }) {
-      const res = yield call(obclusterInfo, {});
+      const res = yield call(obclusterInfo, {
+        HIDE_ERROR_MESSAGE: true,
+      });
       if (res.successful) {
         const clusterData = res?.data || {};
 

@@ -849,3 +849,14 @@ export function getFormateForTimes(times: string[]) {
   }
   return 'MM-DD HH:mm:ss';
 }
+
+// 延迟发起请求，第一次请求结束后再发起一次。用来兼容后端接口无法在第一时间查到最新的值
+export function delayInterfaceWithSentItTwice(service: () => Promise<any>, timeout: number = 500) {
+  return setTimeout(async () => {
+    await service();
+    service();
+    // setTimeout(async () => {
+    // service();
+    // }, timeout);
+  }, timeout);
+}

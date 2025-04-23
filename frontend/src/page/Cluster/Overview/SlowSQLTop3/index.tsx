@@ -42,15 +42,20 @@ const SlowSQLTop3: React.FC<SlowSQLTop3Props> = () => {
   // 获取租户 SlowSQL 数 Top3 (最近 6 小时)
   const startTime = moment().subtract(6, 'hour').format(RFC3339_DATE_TIME_FORMAT);
   const endTime = moment().format(RFC3339_DATE_TIME_FORMAT);
-  const { data: topSlowSqlListData, loading } = useRequest(getTenantTopSlowSqlRank, {
-    defaultParams: [
-      {
-        start_time: startTime,
-        end_time: endTime,
-        top: '3',
-      },
-    ],
-  });
+  const { data: topSlowSqlListData, loading } = useRequest(
+    () =>
+      getTenantTopSlowSqlRank(
+        {
+          start_time: startTime,
+          end_time: endTime,
+          top: '3',
+        },
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      ),
+    {}
+  );
 
   let topSlowSqlList = topSlowSqlListData?.data?.contents || [];
   const maxSlowSqlCount = max(topSlowSqlList.map(item => item.count));

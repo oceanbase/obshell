@@ -23,7 +23,6 @@ export interface UpgradeDrawerProps extends MyDrawerProps {
   // 集群的架构列表
   architectureList?: string[];
   clusterData: API.ClusterInfo;
-  obClusterRelatedBinlogService?: API.TenantBinlogService;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -39,7 +38,6 @@ export interface ExtendedOcpCluster extends API.OcpClusterView {
 
 const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
   visible,
-  obClusterRelatedBinlogService,
   isStandAloneCluster,
   architectureList,
   clusterData,
@@ -146,12 +144,6 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
       // confirmLoading={pathLoading || checkBinlogCompatibilityLoading}
       {...restProps}
     >
-      <BinlogAssociationMsg
-        clusterType="OceanBase"
-        type="component"
-        binlogService={obClusterRelatedBinlogService}
-      />
-
       <Descriptions column={1} style={{ marginBottom: 12 }}>
         <Descriptions.Item label={'集群'}>{clusterData.cluster_name}</Descriptions.Item>
         <Descriptions.Item label={'OceanBase 版本'}>{clusterData.ob_version}</Descriptions.Item>

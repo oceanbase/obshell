@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-import { formatMessage } from "@/util/intl";
-import { history } from "umi";
-import React from "react";
-import { Empty, Col, Row, theme as designTheme } from "@oceanbase/design";
-import { TinyArea, useTheme } from "@oceanbase/charts";
-import { orderBy, maxBy } from "lodash";
-import { useRequest } from "ahooks";
-import { formatTime } from "@/util/datetime";
-import MyCard from "@/component/MyCard";
-import ContentWithQuestion from "@/component/ContentWithQuestion";
-import useStyles from "./index.style";
-import { formatDuration } from "@/util";
-import { getTenantTopCompaction } from "@/service/obshell/tenant";
+import { formatMessage } from '@/util/intl';
+import { history } from 'umi';
+import React from 'react';
+import { Empty, Col, Row, theme as designTheme } from '@oceanbase/design';
+import { TinyArea, useTheme } from '@oceanbase/charts';
+import { orderBy, maxBy } from 'lodash';
+import { useRequest } from 'ahooks';
+import { formatTime } from '@/util/datetime';
+import MyCard from '@/component/MyCard';
+import ContentWithQuestion from '@/component/ContentWithQuestion';
+import useStyles from './index.style';
+import { formatDuration } from '@/util';
+import { getTenantTopCompaction } from '@/service/obshell/tenant';
 
 export interface CompactionTimeTop3Props {}
 
@@ -36,21 +36,21 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
   const { token } = designTheme.useToken();
 
   // 获取合并时间 Top3 的租户合并数据
-  const { data: topCompactionListData, loading } = useRequest(
-    getTenantTopCompaction,
-    {
-      defaultParams: [
-        {
-          limit: "3",
-        },
-      ],
-    }
+  const { data: topCompactionListData, loading } = useRequest(() =>
+    getTenantTopCompaction(
+      {
+        limit: '3',
+      },
+      {
+        HIDE_ERROR_MESSAGE: true,
+      }
+    )
   );
 
   let topCompactionList = topCompactionListData?.data?.contents || [];
 
   // 对数据根据cost_time进行降序排序
-  topCompactionList = orderBy(topCompactionList, ["cost_time"], ["desc"]);
+  topCompactionList = orderBy(topCompactionList, ['cost_time'], ['desc']);
 
   // 数据不够，补足三列
   if (topCompactionList.length === 1) {
@@ -59,23 +59,23 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
     topCompactionList = [...topCompactionList, {}];
   }
 
-  console.log(topCompactionList, "topCompactionList");
+  console.log(topCompactionList, 'topCompactionList');
 
   const Statistic = ({ value, unit }) => (
     <span
       style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center",
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
       }}
     >
       <span
         style={{
-          fontFamily: "Avenir-Heavy",
+          fontFamily: 'Avenir-Heavy',
           fontSize: 28,
         }}
       >
-        {value || "-"}
+        {value || '-'}
       </span>
       {unit && (
         <span
@@ -98,28 +98,28 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
       title={
         <ContentWithQuestion
           content={formatMessage({
-            id: "ocp-express.Component.CompactionTimeTop3.TenantMergeTimeTop",
-            defaultMessage: "租户合并时间 Top3",
+            id: 'ocp-express.Component.CompactionTimeTop3.TenantMergeTimeTop',
+            defaultMessage: '租户合并时间 Top3',
           })}
           tooltip={{
             title: (
               <div>
                 <div>
                   {formatMessage({
-                    id: "ocp-express.Component.CompactionTimeTop3.SortByLastMergeTime",
-                    defaultMessage: "按最近 1 次合并时间排序",
+                    id: 'ocp-express.Component.CompactionTimeTop3.SortByLastMergeTime',
+                    defaultMessage: '按最近 1 次合并时间排序',
                   })}
                 </div>
                 <div>
                   {formatMessage({
-                    id: "ocp-express.Component.CompactionTimeTop3.GreenTheLastTwoMergingTimesHaveDecreased",
-                    defaultMessage: "绿色：最近 2 次合并时间下降",
+                    id: 'ocp-express.Component.CompactionTimeTop3.GreenTheLastTwoMergingTimesHaveDecreased',
+                    defaultMessage: '绿色：最近 2 次合并时间下降',
                   })}
                 </div>
                 <div>
                   {formatMessage({
-                    id: "ocp-express.Component.CompactionTimeTop3.RedTheLastTwoMergingTimesHaveIncreased",
-                    defaultMessage: "红色：最近 2 次合并时间上升",
+                    id: 'ocp-express.Component.CompactionTimeTop3.RedTheLastTwoMergingTimesHaveIncreased',
+                    defaultMessage: '红色：最近 2 次合并时间上升',
                   })}
                 </div>
               </div>
@@ -140,11 +140,7 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
               <Col
                 key={item.tenant_name}
                 span={8}
-                className={
-                  index !== topCompactionList.length - 1
-                    ? styles.borderRight
-                    : ""
-                }
+                className={index !== topCompactionList.length - 1 ? styles.borderRight : ''}
               >
                 <div
                   data-aspm-click="c304253.d308755"
@@ -156,21 +152,18 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
                       history.push(`/tenant/${item.tenant_name}`);
                     }
                   }}
-                  className={item.tenant_name ? "ocp-link-hover" : ""}
+                  className={item.tenant_name ? 'ocp-link-hover' : ''}
                   style={{
                     color: token.colorTextTertiary,
-                    display: "inline-block",
+                    display: 'inline-block',
                     marginBottom: 8,
                   }}
                 >
-                  {item.tenant_name || "-"}
+                  {item.tenant_name || '-'}
                 </div>
                 <Row gutter={14}>
                   <Col span={10}>
-                    <Statistic
-                      value={durationData.value}
-                      unit={durationData.unitLabel}
-                    />
+                    <Statistic value={durationData.value} unit={durationData.unitLabel} />
                   </Col>
                 </Row>
               </Col>

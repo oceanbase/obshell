@@ -97,7 +97,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
       }),
       percentValue: stats.memory_assigned_percent,
       totalValue: stats.memory_total,
-      leftValue: byte2GB(stats.memory_in_bytes_total - stats.memory_in_bytes_assigned),
+      leftValue: stats.memory_in_bytes_total - stats.memory_in_bytes_assigned,
     },
     {
       key: 'disk',
@@ -111,7 +111,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
       }),
       percentValue: stats.disk_assigned_percent,
       totalValue: stats.disk_total,
-      leftValue: byte2GB(stats.disk_in_bytes_total - stats.disk_in_bytes_assigned),
+      leftValue: stats.disk_in_bytes_total - stats.disk_in_bytes_assigned,
     },
   ];
 
@@ -259,7 +259,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                           : item.key === 'cpu'
                           ? `${item.totalValue} C`
                           : // 内存和磁盘需要进行单位换算
-                            formatSize(item.totalValue)}
+                            item.totalValue}
                       </Descriptions.Item>
                       <Descriptions.Item label={item.description}>
                         {/* 最多保留 1 位有效小数，需要用 toPercent 处理下 */}
