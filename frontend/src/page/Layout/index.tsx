@@ -32,7 +32,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children }) => {
+const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
 
   const locale = getLocale();
@@ -52,7 +52,8 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   }, []);
 
   // request and save publicKey to global state
-  useRequest(v1Service.getSecret, {
+  const { refresh } = useRequest(v1Service.getSecret, {
+    // manual: true,
     defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
@@ -68,6 +69,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
       }
     },
   });
+
+  useEffect(() => {
+    if (location?.pathname === '/login') {
+      refresh();
+    }
+  }, [location?.pathname]);
 
   return (
     <ConfigProvider
