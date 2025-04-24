@@ -145,7 +145,7 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                 {item.chartData.length > 0 ? (
                   <Row gutter={[0, 8]}>
                     {item.chartData.map(dataItem => (
-                      <Col key={dataItem.ob_tenant_id} span={24}>
+                      <Col key={dataItem.tenant_name} span={24}>
                         <Progress
                           compact={true}
                           title={
@@ -158,7 +158,8 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                                 tooltip: true,
                               }}
                               onClick={() => {
-                                history.push(`/tenant/${dataItem.ob_tenant_id}/monitor`);
+                                // TODO: 不存在监控, 先禁止跳转
+                                // history.push(`/tenant/${dataItem.tenant_name}/monitor`);
                               }}
                               className="ocp-link-hover"
                               style={{ width: 70, color: token.colorTextTertiary }}

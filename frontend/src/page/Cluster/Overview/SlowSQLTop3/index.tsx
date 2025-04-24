@@ -67,8 +67,6 @@ const SlowSQLTop3: React.FC<SlowSQLTop3Props> = () => {
     topSlowSqlList = [...topSlowSqlList, {}];
   }
 
-  console.log(topSlowSqlList, 'topSlowSqlList');
-
   const Statistic = ({ value, unit }) => (
     <span>
       <span

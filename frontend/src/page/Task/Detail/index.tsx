@@ -232,12 +232,7 @@ const Detail: React.FC<DetailProps> = ({
             }
           ).then(res => {
             if (res.successful) {
-              message.success(
-                formatMessage({
-                  id: 'ocp-express.Task.Detail.TaskAbandoned',
-                  defaultMessage: '任务放弃成功',
-                })
-              );
+              message.success('任务回滚成功');
 
               delayInterfaceWithSentItTwice(refreshAsync, 800);
             }

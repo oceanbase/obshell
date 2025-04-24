@@ -50,7 +50,7 @@ import { obStart, obStop } from '@/service/obshell/ob';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
 import { directTo } from '@oceanbase/util';
-import { getStatus } from '@/service/obshell/v1';
+import { getAllAgentsStatus, getStatus } from '@/service/obshell/v1';
 
 export interface DetailProps {
   match: {
@@ -133,14 +133,25 @@ const Detail: React.FC<DetailProps> = ({
     }, 0);
   };
 
+  const { data } = useRequest(getAllAgentsStatus);
+
+  console.log(data, 'getAllAgentsStatus');
+
+  // clusterData zones 中的 servers 不存在 status 属性，单独调个接口请求
+  const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
+    return {
+      ip,
+      ...value,
+      status: value.obState > 2 ? 'RUNNING' : 'UNAVAILABLE',
+    };
+  });
+
+  console.log(realServerList, 'realServerList');
   const ResultStatusContent = ({ type }) => {
     const runningStatus = 'RUNNING';
     const normalStatus = 'NORMAL';
     const unavailableStatus = 'UNAVAILABLE';
-    const data =
-      type === 'tenant'
-        ? clusterData?.tenants || []
-        : flatten(clusterData.zones?.map(item => item.servers || []));
+    const data = type === 'tenant' ? clusterData?.tenants || [] : realServerList;
 
     const normalCount = data?.filter(item => item?.status === normalStatus)?.length || 0;
     const unavailableCount = data?.filter(item => item?.status === unavailableStatus)?.length || 0;
@@ -184,11 +195,13 @@ const Detail: React.FC<DetailProps> = ({
                     status: normalStatus,
                   },
                 });
-              } else if (runningCount > 0) {
-                // OBServer
-                zoneListOrTopoRef.current?.setStatusList([runningStatus]);
-                scrollToZoneTable();
               }
+              // TODO: 先不支持这个功能
+              // if (runningCount > 0) {
+              //   // OBServer
+              //   zoneListOrTopoRef.current?.setStatusList([runningStatus]);
+              //   scrollToZoneTable();
+              // }
             }}
             style={
               (type === 'tenant' ? normalCount : runningCount) === 0
@@ -229,8 +242,8 @@ const Detail: React.FC<DetailProps> = ({
                   });
                 } else {
                   // OBServer
-                  zoneListOrTopoRef.current?.setStatusList([unavailableStatus]);
-                  scrollToZoneTable();
+                  // zoneListOrTopoRef.current?.setStatusList([unavailableStatus]);
+                  // scrollToZoneTable();
                 }
               }
             }}
@@ -263,22 +276,22 @@ const Detail: React.FC<DetailProps> = ({
           <a
             onClick={() => {
               if (otherCount > 0) {
-                // 租户
-                history.push({
-                  pathname: '/tenant',
-                  query: {
-                    excludeStatus: [normalStatus, unavailableStatus].join(','),
-                  },
-                });
                 if (type === 'tenant') {
+                  // 租户
+                  history.push({
+                    pathname: '/tenant',
+                    query: {
+                      excludeStatus: [normalStatus, unavailableStatus].join(','),
+                    },
+                  });
                 } else {
                   // OBServer
-                  zoneListOrTopoRef.current?.setStatusList(
-                    OB_SERVER_STATUS_LIST.map(item => item.value as API.ObServerStatus).filter(
-                      item => ![runningStatus, unavailableStatus].includes(item)
-                    )
-                  );
-                  scrollToZoneTable();
+                  // zoneListOrTopoRef.current?.setStatusList(
+                  //   OB_SERVER_STATUS_LIST.map(item => item.value as API.ObServerStatus).filter(
+                  //     item => ![runningStatus, unavailableStatus].includes(item)
+                  //   )
+                  // );
+                  // scrollToZoneTable();
                 }
               }
             }}
@@ -481,6 +494,8 @@ const Detail: React.FC<DetailProps> = ({
     </Menu>
   );
 
+  const isStandAloneCluster =
+    clusterData?.zones?.length === 1 && clusterData?.zones?.[0]?.servers?.length === 1;
   return (
     <PageContainer
       loading={reloading}
@@ -631,11 +646,16 @@ const Detail: React.FC<DetailProps> = ({
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>
         <Col span={24}>
-          <ZoneListOrTopo ref={zoneListOrTopoRef} clusterData={clusterData} />
+          <ZoneListOrTopo
+            ref={zoneListOrTopoRef}
+            clusterData={clusterData}
+            serverList={realServerList}
+          />
         </Col>
       </Row>
 
       <UpgradeDrawer
+        isStandAloneCluster={isStandAloneCluster}
         visible={upgradeVisible}
         clusterData={clusterData}
         onCancel={() => setUpgradeVisible(false)}

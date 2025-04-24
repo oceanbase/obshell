@@ -30,10 +30,11 @@ export interface ZoneListOrTopoRef extends ZoneListRef {
 
 export interface ZoneListOrTopoProps {
   clusterData: API.ClusterInfo;
+  serverList: any[];
 }
 
 const ZoneListOrTopo = React.forwardRef<ZoneListOrTopoRef, ZoneListOrTopoProps>(
-  ({ clusterData }, ref) => {
+  ({ clusterData, serverList }, ref) => {
     const [type, setType] = useState('LIST');
     const zoneListRef = useRef<ZoneListRef>();
 
@@ -101,7 +102,7 @@ const ZoneListOrTopo = React.forwardRef<ZoneListOrTopoRef, ZoneListOrTopoProps>(
           data-aspm-param={``}
         >
           {type === 'LIST' ? (
-            <ZoneList ref={zoneListRef} clusterData={clusterData} />
+            <ZoneList ref={zoneListRef} serverList={serverList} clusterData={clusterData} />
           ) : (
             <Topo clusterData={clusterData} />
           )}

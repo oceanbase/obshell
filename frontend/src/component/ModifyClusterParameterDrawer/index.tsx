@@ -126,6 +126,9 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
   useEffect(() => {
     if (!restProps.open) {
       removeSelectDisabled();
+    } else {
+      // Form List 无法通过 preserve false 来清除
+      setFieldsValue({ parameter: [{ key: 0 }] });
     }
   }, [restProps.open]);
 
@@ -286,7 +289,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
 
   // 将整理数据为适合 Tree 渲染的数据
   const getParameterValue = () => {
-    console.log(editParameter, 'editParameter');
     if (editParameter?.length > 0 && editParameter[0] !== undefined) {
       // 修改租户类型参数 数据整理
       if (parameter.scope === 'TENANT') {

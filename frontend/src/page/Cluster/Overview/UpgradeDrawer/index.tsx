@@ -54,8 +54,6 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
   const { ocpMultiClusterInfo: { multiClusterEnabled, currentOcpInfo } = {}, ocpMultiClusterList } =
     useSelector((state: DefaultRootState) => state.global);
 
-  console.log(clusterData, 'clusterData');
-
   const [pathVisible, setPathVisible] = useState<boolean>(false);
   const [uploadVisible, setUploadVisible] = useState<boolean>(false);
   // 软件包列表

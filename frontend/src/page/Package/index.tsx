@@ -156,9 +156,9 @@ const PackagePage: React.FC<PackageProps> = ({
         id: 'ocp-v2.page.Package.SizeMb',
         defaultMessage: '大小（MB）',
       }),
-      dataIndex: 'size',
+      dataIndex: 'payload_size',
       // 后端返回的是 bit
-      render: (text: number) => <span>{byte2MB(text / 8)}</span>,
+      render: (text: number) => <span>{byte2MB(text)}</span>,
     },
 
     {

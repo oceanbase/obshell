@@ -244,7 +244,7 @@ const List: React.FC<ListProps> = ({}) => {
       width: isEnglish() ? 130 : 100,
       dataIndex: 'operation',
       render: (text: string, record: API.ClusterParameter) => {
-        if (!record.readonly) {
+        if (record?.edit_level !== 'READONLY') {
           return (
             <a
               data-aspm-click="c304242.d308727"
@@ -349,7 +349,7 @@ const List: React.FC<ListProps> = ({}) => {
               }
               return 0;
             })
-            .filter(item => !keyword || (item && item.name.includes(keyword)))}
+            .filter(item => !keyword || (item && item.name.includes(keyword?.trim())))}
           columns={columns}
           rowKey={record => record.name}
           onChange={newPagination => {

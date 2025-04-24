@@ -36,10 +36,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   // 用于中断 fetch 请求
   const [abortControl, setAbortControl] = useState(new AbortController());
 
-  const { runAsync: upgradePkgUploadFn } = useRequest(newPkgUpload, {
-    manual: true,
-  });
-
   const normFile = (e: any) => {
     if (Array.isArray(e)) {
       return e;
@@ -49,7 +45,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 
   const beforeUpload = file => {
     const isFileExists = fileList.some(f => f.name === file.name);
-    console.log(file, 'file');
     if (isFileExists) {
       message.warning(`${file.name} 软件包已存在，请重新选择`);
       return false;
@@ -60,69 +55,71 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   const handleUpload = (info: any) => {
     const currentFile = info?.file;
 
-    console.log(currentFile, 'currentFile');
     const existedFile = find(fileList, item => item.name === currentFile.name);
 
     if (info?.file?.status === 'uploading') {
       if (!existedFile || fileList.length === 0) {
-        setFileList([
-          ...fileList,
+        setFileList(fList => [
+          ...fList,
           {
             ...currentFile,
             key: uniqueId(),
           },
         ]);
       } else if (existedFile && existedFile.key) {
-        const currentFileList = fileList.map(item => {
-          if (item.name === currentFile.name) {
-            return {
-              ...existedFile,
-              percent: currentFile.percent,
-            };
-          } else {
-            return item;
-          }
-        });
-        setFileList(currentFileList);
+        setFileList(fList =>
+          fList.map(item => {
+            if (item.name === currentFile.name) {
+              return {
+                ...existedFile,
+                percent: currentFile.percent,
+              };
+            } else {
+              return item;
+            }
+          })
+        );
       }
     }
 
     if (currentFile.status === 'done') {
       if (existedFile) {
-        const currentFileList = fileList.map(item => {
-          if (item.name === currentFile.name) {
-            return {
-              ...currentFile,
-              key: existedFile.uid,
-              id: currentFile.response?.pkg_id,
-              md5: currentFile.response?.md5,
-              description: currentFile?.response?.error?.message,
-            };
-          } else {
-            return item;
-          }
-        });
-        setFileList(currentFileList);
+        setFileList(fList =>
+          fList.map(item => {
+            if (item.name === currentFile.name) {
+              return {
+                ...currentFile,
+                key: existedFile.uid,
+                id: currentFile.response?.pkg_id,
+                md5: currentFile.response?.md5,
+                description: currentFile?.response?.error?.message,
+              };
+            } else {
+              return item;
+            }
+          })
+        );
       }
     } else if (info?.file?.status === 'error') {
       if (existedFile) {
-        const currentFileList = fileList.map(item => {
-          if (item.name === currentFile.name) {
-            return {
-              ...currentFile,
-              key: existedFile.key,
-              status: currentFile?.status,
-              id: existedFile.response?.data?.id,
-              md5: existedFile.response?.data?.md5,
-              checkResult: '失败',
-              description: currentFile?.response?.error?.message,
-              percent: 100,
-            };
-          } else {
-            return item;
-          }
-        });
-        setFileList(currentFileList);
+        setFileList(fList =>
+          fList.map(item => {
+            if (item.name === currentFile.name) {
+              return {
+                ...currentFile,
+                key: existedFile.key,
+                status: currentFile?.status,
+                id: existedFile.response?.data?.id,
+                md5: existedFile.response?.data?.md5,
+                checkResult: '失败',
+                description: currentFile?.response?.error?.message,
+                percent: 100,
+              };
+            } else {
+              return item;
+            }
+          })
+        );
       }
     }
   };
@@ -327,7 +324,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           ]}
           extra={
             <div>
-              只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件
+              只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。
               <a
                 href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
                 target="_blank"
@@ -353,7 +350,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               const timer = setInterval(() => {
                 uploadedMb += 2;
                 const percent = (uploadedMb / totalMB) * 100;
-                console.log(totalMB, uploadedMb, 'totalMB');
 
                 if (percent >= 95) {
                   clearInterval(timer);
@@ -370,10 +366,9 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               try {
                 const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
                 const sha256 = CryptoJS.enc.Hex.stringify(CryptoJS.SHA256(wordArray));
-                upgradePkgUploadFn({}, file, {
+                newPkgUpload({}, file, {
                   sha256sum: sha256,
                 }).then(res => {
-                  console.log(res, 'upgradePkgUploadFn response');
                   if (res.successful) {
                     // timer 中有更新 percent 的逻辑，避免和 options.onSuccess 影响，加一个 delay 处理
                     clearInterval(timer);

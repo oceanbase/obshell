@@ -1129,10 +1129,10 @@ const New: React.FC<NewProps> = ({
                           defaultMessage: '租户中主副本分布的优先级',
                         }),
                       }}
-                      extra={formatMessage({
-                        id: 'ocp-express.Tenant.New.IfThisParameterIsEmpty',
-                        defaultMessage: '如果为空，则默认继承 sys 租户的 Zone 优先级',
-                      })}
+                      // extra={formatMessage({
+                      //   id: 'ocp-express.Tenant.New.IfThisParameterIsEmpty',
+                      //   defaultMessage: '如果为空，则默认继承 sys 租户的 Zone 优先级',
+                      // })}
                       name="primaryZone"
                       rules={[
                         {

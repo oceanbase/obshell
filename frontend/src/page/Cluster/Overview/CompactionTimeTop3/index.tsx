@@ -59,8 +59,6 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
     topCompactionList = [...topCompactionList, {}];
   }
 
-  console.log(topCompactionList, 'topCompactionList');
-
   const Statistic = ({ value, unit }) => (
     <span
       style={{
