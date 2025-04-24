@@ -121,5 +121,6 @@ func (t *SetRootPwdTask) Execute() error {
 			return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
 		}
 	}
+	tenant.GetPasswordMap().Set(t.tenantName, t.newPassword)
 	return nil
 }

@@ -19,6 +19,7 @@ package secure
 import (
 	"github.com/go-resty/resty/v2"
 
+	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -130,6 +131,10 @@ func BuildBodyAndHeader(agentInfo meta.AgentInfoInterface, uri string, param int
 }
 
 func BuildBody(agentInfo meta.AgentInfoInterface, param interface{}) (encryptedBody interface{}, Key, Iv []byte, err error) {
+	if config.IsEncryptionDisabled() {
+		encryptedBody = param
+		return
+	}
 	encryptedBody, Key, Iv, err = nil, nil, nil, nil
 	if encryptMethod == "rsa" {
 		encryptedBody, err = EncryptBodyWithRsa(agentInfo, param)

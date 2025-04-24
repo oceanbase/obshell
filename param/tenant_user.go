@@ -23,7 +23,7 @@ type ModifyUserGlobalPrivilegeParam struct {
 
 type ModifyUserDbPrivilegeParam struct {
 	TenantRootPasswordParam
-	DbPrivileges []DbPrivilegeParam `json:"db_privileges"`
+	DbPrivileges []DbPrivilegeParam `json:"db_privileges" binding:"required"`
 }
 
 type ChangeUserPasswordParam struct {
