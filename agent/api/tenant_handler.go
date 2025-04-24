@@ -636,6 +636,7 @@ func getTenantVariables(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
+// @Param mode query string false "tenant compitable mode: MYSQL or ORACLE"
 // @Success 200 object http.OcsAgentResponse{data=[]oceanbase.DbaObTenant}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
@@ -645,7 +646,8 @@ func getTenantOverView(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
 	}
-	tenants, err := tenant.GetTenantsOverView()
+	mode := c.Query("mode")
+	tenants, err := tenant.GetTenantsOverView(mode)
 	common.SendResponse(c, tenants, err)
 }
 

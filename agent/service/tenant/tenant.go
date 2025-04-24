@@ -373,6 +373,25 @@ func (t *TenantService) GetTenantsOverView() (overviews []oceanbase.DbaObTenant,
 	return
 }
 
+func (t *TenantService) GetTenantsOverViewByMode(mode string) (overviews []oceanbase.DbaObTenant, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	if mode == "" {
+		err = db.Table(DBA_OB_TENANTS).
+			Where("TENANT_TYPE != 'META' AND IN_RECYCLEBIN = 'NO'").
+			Scan(&overviews).
+			Error
+		return
+	}
+	err = db.Table(DBA_OB_TENANTS).
+		Where("TENANT_TYPE != 'META' AND IN_RECYCLEBIN = 'NO' AND COMPATIBILITY_MODE = ?", mode).
+		Scan(&overviews).
+		Error
+	return
+}
+
 func (t *TenantService) GetTenantParameters(tenantName string, filter string) (parameters []oceanbase.GvObParameter, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/tenant"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -24,11 +25,12 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
+// only for mysql
 func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 	var info bo.ClusterInfo
 
 	// Get all tenant infos
-	tenantOverviews, err := tenantService.GetTenantsOverView()
+	tenantOverviews, err := tenantService.GetTenantsOverViewByMode(constant.MYSQL_MODE)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}

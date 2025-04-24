@@ -26,8 +26,11 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-func GetTenantsOverView() ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
-	tenants, err := tenantService.GetTenantsOverView()
+func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
+	if mode != "" && mode != constant.MYSQL_MODE && mode != constant.ORACAL_MODE {
+		return nil, errors.Occur(errors.ErrBadRequest, "mode should be mysql or oracle")
+	}
+	tenants, err := tenantService.GetTenantsOverViewByMode(mode)
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
