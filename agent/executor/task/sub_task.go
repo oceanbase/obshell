@@ -176,7 +176,7 @@ func GetFullSubTaskLogs(c *gin.Context) {
 
 	subTaskLogs, err := service.GetFullSubTaskLogsByTaskID(taskID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
 		return
 	}
 
