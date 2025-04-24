@@ -55,7 +55,7 @@ func (maintainer *clusterStatusMaintainer) setStatus(tx *gorm.DB, newStatus int,
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to start maintenance: agent status is not %d", oldStatus)
+		return fmt.Errorf("failed to start maintenance: cluster is under maintenance")
 	}
 	return nil
 }
@@ -85,7 +85,7 @@ func (maintainer *clusterStatusMaintainer) holdPartialLock(tx *gorm.DB, dag task
 				if err1 := maintainer.getPartialLockForUpdate(tx, &paritialLock); err1 != nil {
 					return err1
 				} else if paritialLock.GmtLocked.After(ZERO_TIME) {
-					return fmt.Errorf("failed to start maintenance: %s is already under maintenance", paritialLock.LockName)
+					return fmt.Errorf("failed to start maintenance: %s is under maintenance", paritialLock.LockName)
 				}
 				return nil
 			}
@@ -201,7 +201,7 @@ func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, o
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to set status to %d: agent status is not %d", newStatus, oldStatus)
+		return fmt.Errorf("failed to start maintenance: agent is under maintaince")
 	}
 	return nil
 }
@@ -220,7 +220,7 @@ func (maintainer *agentStatusMaintainer) setObproxyStatus(tx *gorm.DB, newStatus
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to set status to %d: agent status is not %d", newStatus, oldStatus)
+		return fmt.Errorf("failed to start maintenance: agent is under maintenance")
 	}
 	return nil
 }
