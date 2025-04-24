@@ -17,6 +17,8 @@
 package ob
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/errors"
@@ -29,10 +31,16 @@ func GetAllUpgradePkgInfos() ([]bo.UpgradePkgInfo, *errors.OcsAgentError) {
 		return nil, errors.Occur(errors.ErrUnexpected, err)
 	}
 	log.Infof("Get all upgrade pkg infos: %v", upgradePkgInfos)
-	infos := make([]bo.UpgradePkgInfo, len(upgradePkgInfos))
-	for i := range upgradePkgInfos {
-		infos[i] = upgradePkgInfos[i].ToBO()
+	infos := make([]bo.UpgradePkgInfo, 0)
+	onlyMap := make(map[string]bool)
+	for i := len(upgradePkgInfos) - 1; i >= 0; i-- {
+		onlyFlag := fmt.Sprintf("%s-%s-%s.%s", upgradePkgInfos[i].Name, upgradePkgInfos[i].Version, upgradePkgInfos[i].ReleaseDistribution, upgradePkgInfos[i].Architecture)
+		if _, ok := onlyMap[onlyFlag]; !ok {
+			infos = append(infos, upgradePkgInfos[i].ToBO())
+			onlyMap[onlyFlag] = true
+		}
 	}
+
 	return infos, nil
 }
 
