@@ -33,6 +33,7 @@ type AgentStatus struct {
 	StartAt          int64  `json:"startAt"` // timestamp when service started
 	Port             int    `json:"port"`    // Ports process occupied ports
 	OBState          int    `json:"obState"`
+	SqlPort          int    `json:"sqlPort,omitempty"`
 	UnderMaintenance bool   `json:"underMaintenance"`
 }
 
