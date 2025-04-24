@@ -27,6 +27,9 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/lib/http"
+	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/secure"
@@ -425,6 +428,10 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/task/dag/maintain/agents [get]
 func GetAllAgentLastMaintenanceDag(c *gin.Context) {
+	common.SendResponse(c, getAllAgentLastMaintenanceDag, nil)
+}
+
+func getAllAgentLastMaintenanceDag(c *gin.Context) []*task.DagDetailDTO {
 	param := getTaskQueryParams(c)
 	dagDetailDTOs := make([]*task.DagDetailDTO, 0)
 	dag, err := localTaskService.FindLastMaintenanceDag()
@@ -453,7 +460,7 @@ func GetAllAgentLastMaintenanceDag(c *gin.Context) {
 			dagDetailDTOs = append(dagDetailDTOs, dagDetailDTO)
 		}
 	}
-	common.SendResponse(c, dagDetailDTOs, nil)
+	return dagDetailDTOs
 }
 
 // @ID GetUnfinishedDags
@@ -586,5 +593,47 @@ func convertDagDetailDTOs(dags []*task.Dag, fillDetails bool) (dagDetailDTOs []*
 		}
 		dagDetailDTOs = append(dagDetailDTOs, dagDetailDTO)
 	}
+	return
+}
+
+// @ID GetAgentMainDags
+// @Summary get agent main dags
+// @Description get agent main dags
+// @Tags task
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 404 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/task/dag/agent/main_dags [get]
+func GetAgentMainDags(c *gin.Context) {
+	mainDags := make([]*task.DagDetailDTO, 0)
+	allDags := getAllAgentLastMaintenanceDag(c)
+	mainDagIdMap := make(map[string]bool)
+	for _, dag := range allDags {
+		if dag.IsSucceed() {
+			continue
+		}
+		if dag.AdditionalData != nil {
+			data := *(dag.AdditionalData)
+			if mainDagid, ok := data[ob.ADDL_KEY_MAIN_DAG_ID].(string); ok {
+				if _, ok := mainDagIdMap[mainDagid]; ok {
+					continue
+				}
+				// Get Detail
+				var res task.DagDetailDTO
+				if err := http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), constant.URI_TASK_API_PREFIX+constant.URI_DAG+"/"+mainDagid, nil, &res); err != nil {
+					log.WithError(err).Errorf("get main dag %s detail failed", mainDagid)
+					continue
+				} else {
+					mainDags = append(mainDags, &res)
+					mainDagIdMap[mainDagid] = true
+				}
+			}
+		}
+	}
+	common.SendResponse(c, mainDags, nil)
 	return
 }
