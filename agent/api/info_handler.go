@@ -97,6 +97,7 @@ func GetAgentStatus(s *http.State) (http.AgentStatus, error) {
 		status.Agent.Identity = meta.OCS_AGENT.GetIdentity()
 		status.Port = meta.OCS_AGENT.GetPort()
 	}
+	status.SqlPort = meta.MYSQL_PORT
 	status.OBState = oceanbase.GetState()
 	return status, err
 }
