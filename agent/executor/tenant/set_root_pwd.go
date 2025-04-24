@@ -20,9 +20,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
+	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/agent/service/tenant"
 	"github.com/oceanbase/obshell/param"
 )
@@ -51,8 +54,23 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 	return executeAgent, err
 }
 
-func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) {
+func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) *errors.OcsAgentError {
+	// check password connectable by calling precheck api with password
+	body := &param.TenantRootPasswordParam{
+		RootPassword: &rootPassword,
+	}
+	uri := constant.URI_API_V1 + constant.URI_TENANT + "/" + tenantName + constant.URI_PRECHECK
+	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
+	result := &bo.ObTenantPreCheckResult{}
+	err := secure.SendGetRequest(agentInfo, uri, body, result)
+	if err != nil {
+		return errors.Occur(errors.ErrUnexpected, "Failed to check tenant connectable using password.")
+	}
+	if !result.IsConnectable {
+		return errors.Occur(errors.ErrUnexpected, "The provided password is unable to connect to the tenant.")
+	}
 	tenant.GetPasswordMap().Set(tenantName, rootPassword)
+	return nil
 }
 
 func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (*errors.OcsAgentError, bool) {

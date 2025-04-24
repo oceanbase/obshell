@@ -405,8 +405,8 @@ func persistTenantRootPassword(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	tenant.PersistTenantRootPassword(c, name, param.Password)
-	common.SendResponse(c, nil, nil)
+	err := tenant.PersistTenantRootPassword(c, name, param.Password)
+	common.SendResponse(c, nil, err)
 }
 
 // @ID tenantModifyPrimaryZone
