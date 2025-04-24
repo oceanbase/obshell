@@ -56,7 +56,9 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
 }) => {
   const { precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
-  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+  const ready =
+    tenantData?.tenant_name === 'sys' ||
+    (Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable);
 
   const [form] = Form.useForm();
   const { validateFields, getFieldsValue, setFieldsValue } = form;
@@ -171,7 +173,10 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
             user: dbUser?.username,
           },
           {
-            db_privileges: dbPrivileges,
+            db_privileges: dbPrivileges?.map(item => ({
+              db_name: item?.dbName,
+              ...item,
+            })),
           }
         )
       );

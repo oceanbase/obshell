@@ -68,7 +68,9 @@ const Database: React.FC<DatabaseProps> = ({
   const [currentDatabase, setCurrentDatabase] = useState<API.Database | null>(null);
   const [IsAllowDel, setIsAllowDel] = useState(false);
 
-  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+  const ready =
+    tenantData?.tenant_name === 'sys' ||
+    (Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable);
 
   // 修改参数值的抽屉是否可见
   const [valueVisible, setValueVisible] = useState(false);

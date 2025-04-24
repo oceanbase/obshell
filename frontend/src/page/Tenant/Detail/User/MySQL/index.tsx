@@ -60,7 +60,9 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
   // 删除Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const ready = Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable;
+  const ready =
+    tenantData?.tenant_name === 'sys' ||
+    (Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable);
 
   const {
     data: dbUserListData,
