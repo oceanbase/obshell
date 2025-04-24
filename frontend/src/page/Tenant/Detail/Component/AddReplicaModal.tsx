@@ -73,7 +73,7 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
       if (unitConfigList.length === tenantZones?.length) {
         setResourcePool({
           cpuCore: currentUnitConfig?.max_cpu,
-          memorySize: byte2GB(currentUnitConfig?.memory_size / 8),
+          memorySize: byte2GB(currentUnitConfig?.memory_size),
           unitCount: currentResourcePool?.unit_num,
         });
       }

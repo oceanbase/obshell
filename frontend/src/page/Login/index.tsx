@@ -22,7 +22,7 @@ import { Login } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
 import * as obService from '@/service/obshell/ob';
 import useDocumentTitle from '@/hook/useDocumentTitle';
-import { isEnglish } from '@/util';
+import { isEnglish, setEncryptLocalStorage } from '@/util';
 
 interface LoginPageProps {
   location: {
@@ -84,7 +84,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       },
     });
 
-    localStorage.setItem('password', password);
+    setEncryptLocalStorage('password', password);
     getObInfo();
   };
 

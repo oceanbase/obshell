@@ -25,11 +25,12 @@ import CryptoJS from 'crypto-js';
  */
 import { extend } from 'umi-request';
 import Cookies from 'js-cookie';
-import tracert from '@/util/tracert';
+// import tracert from '@/util/tracert';
 import encrypt from '@/util/encrypt';
 import { aesEncrypt } from '@/util/aes';
 import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
+import { getEncryptLocalStorage } from '@/util';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -117,9 +118,9 @@ const errorHandler = ({ request, response, data }) => {
   // 401 状态为未登录情况，不展示接口错误信息，直接跳转登录页，因此需要单独处理
   if (status === 401) {
     // 未登录状态，清空 tracert 的用户标识
-    tracert.set({
-      roleId: null,
-    });
+    // tracert.set({
+    //   roleId: null,
+    // });
     if (window.location.pathname !== '/login') {
       // 将当前的 pathname 和 search 记录在 state 中，以便登录后能跳转到之前访问的页面
       // 如果当前已经是登录页了，则没必要跳转
@@ -229,8 +230,8 @@ request.interceptors.request.use((url, options) => {
   const { password: profilePassword, publicKey: profilePublicKey } = profile || {};
 
   // 兼容页面刷新
-  const password = profilePassword || localStorage.getItem('password');
-  const publicKey = profilePublicKey || localStorage.getItem('publicKey');
+  const password = profilePassword || getEncryptLocalStorage('password');
+  const publicKey = profilePublicKey || getEncryptLocalStorage('publicKey');
   const isFormData = options.data instanceof FormData;
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */

@@ -19,7 +19,7 @@ import { history } from 'umi';
 import { message } from '@oceanbase/design';
 import * as ProfileService from '@/service/ocp-express/ProfileController';
 import { DEFAULT_LIST_DATA } from '@/constant';
-import { isURL } from '@/util';
+import { isURL, setEncryptLocalStorage } from '@/util';
 import tracert from '@/util/tracert';
 
 export const namespace = 'profile';
@@ -81,7 +81,7 @@ const model = {
         },
       });
 
-      localStorage.setItem('password', '');
+      setEncryptLocalStorage('password', '');
       history.push('/login');
     },
   },

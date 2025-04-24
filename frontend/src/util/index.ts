@@ -60,6 +60,7 @@ import type { FormInstance } from '@oceanbase/design/es/form';
 import sqlFormatter from 'sql-formatter';
 import validator from 'validator';
 import moment from 'moment';
+import { Base64 } from 'js-base64';
 
 const sortOrderMap = {
   ascend: 'asc',
@@ -855,8 +856,17 @@ export function delayInterfaceWithSentItTwice(service: () => Promise<any>, timeo
   return setTimeout(async () => {
     await service();
     service();
-    // setTimeout(async () => {
-    // service();
-    // }, timeout);
   }, timeout);
+}
+
+export function setEncryptLocalStorage(key: string, value: any) {
+  const k = Base64.encode(key);
+  const v = isNullValue(value) ? value : Base64.encode(value);
+  localStorage.setItem(k, v);
+}
+
+export function getEncryptLocalStorage(key: string) {
+  const k = Base64.encode(key);
+  const v = localStorage.getItem(k);
+  return isNullValue(v) ? v : Base64.decode(v);
 }

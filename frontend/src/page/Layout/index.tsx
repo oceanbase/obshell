@@ -27,6 +27,7 @@ import * as v1Service from '@/service/obshell/v1';
 import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
 import GlobalStyle from './GlobalStyle';
+import { setEncryptLocalStorage } from '@/util';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -53,13 +54,11 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
 
   // request and save publicKey to global state
   const { refresh } = useRequest(v1Service.getSecret, {
-    // manual: true,
     defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
         const publicKey = res?.data?.public_key || '';
-        localStorage.setItem('publicKey', publicKey);
-
+        setEncryptLocalStorage('publicKey', publicKey);
         dispatch({
           type: 'profile/update',
           payload: {
@@ -70,6 +69,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     },
   });
 
+  console.log(location, 'location');
   useEffect(() => {
     if (location?.pathname === '/login') {
       refresh();
