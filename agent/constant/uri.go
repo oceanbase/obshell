@@ -58,6 +58,7 @@ const (
 	URI_MAINTAIN   = "/maintain"
 	URI_UNFINISH   = "/unfinish"
 	URI_MAINTAINER = "/maintainer"
+	URI_MAIN_DAGS  = "/main_dags"
 
 	// OB api
 	URI_CONFIG      = "/config"
