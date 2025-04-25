@@ -91,6 +91,7 @@ type Observer struct {
 	StartTime      time.Time           `json:"start_time"`
 	StopTime       time.Time           `json:"stop_time"`
 	Stats          ServerResourceStats `json:"stats"`
+	Architecture   string              `json:"architecture"`
 }
 
 type RootServer struct {

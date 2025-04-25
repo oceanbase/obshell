@@ -76,6 +76,12 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
 
+	allAgents, _ := agentService.GetAllAgentsDOFromOB()
+	archMap := make(map[string]string)
+	for _, agent := range allAgents {
+		archMap[meta.NewAgentInfo(agent.Ip, agent.RpcPort).String()] = agent.Architecture
+	}
+
 	for _, zone := range zones {
 		var zoneInfo bo.Zone
 		zoneInfo.Name = zone.Zone
@@ -94,8 +100,10 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 		if err != nil {
 			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 		}
+
 		for _, server := range observers {
 			observerBo := server.ToBo()
+			observerBo.Architecture = archMap[meta.NewAgentInfo(server.SvrIp, server.SvrPort).String()]
 			if baseResourceStat, ok := serverResourceMap[meta.ObserverSvrInfo{
 				Ip:   server.SvrIp,
 				Port: server.SvrPort,
