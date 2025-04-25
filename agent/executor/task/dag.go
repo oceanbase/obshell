@@ -428,7 +428,7 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/task/dag/maintain/agents [get]
 func GetAllAgentLastMaintenanceDag(c *gin.Context) {
-	common.SendResponse(c, getAllAgentLastMaintenanceDag, nil)
+	common.SendResponse(c, getAllAgentLastMaintenanceDag(c), nil)
 }
 
 func getAllAgentLastMaintenanceDag(c *gin.Context) []*task.DagDetailDTO {
