@@ -20,6 +20,7 @@ package oceanbase
 type ObCollation struct {
 	Charset   string `gorm:"column:CHARACTER_SET_NAME"`
 	Collation string `gorm:"column:COLLATION_NAME"`
+	Id        int    `gorm:"column:ID"`
 	IsDefault string `gorm:"column:IS_DEFAULT"`
 }
 

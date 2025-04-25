@@ -768,7 +768,24 @@ func (*ObclusterService) GetAllCollations() (collations []oceanbase.ObCollation,
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Table(COLLATIONS).Select(("*")).Scan(&collations).Error
+	err = oceanbaseDb.Table(COLLATIONS).Scan(&collations).Error
+	return
+}
+
+func (*ObclusterService) GetCollationMap() (collationMap map[int]oceanbase.ObCollation, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var collations []oceanbase.ObCollation
+	err = oceanbaseDb.Table(COLLATIONS).Scan(&collations).Error
+	if err != nil {
+		return nil, err
+	}
+	collationMap = make(map[int]oceanbase.ObCollation)
+	for _, collation := range collations {
+		collationMap[collation.Id] = collation
+	}
 	return
 }
 

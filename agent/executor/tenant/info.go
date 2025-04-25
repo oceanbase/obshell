@@ -18,6 +18,7 @@ package tenant
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -100,7 +101,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName),
 	}
 
-	res := &bo.TenantInfo{
+	tenantInfo := &bo.TenantInfo{
 		Name:              tenant.TenantName,
 		Id:                tenant.TenantID,
 		CreatedTime:       tenant.CreatedTime,
@@ -113,11 +114,28 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		Pools:             pools,
 		ConnectionStrings: []bo.ObproxyAndConnectionString{connectionStr},
 	}
+
+	charset, err := tenantService.GetTenantVariable(tenantName, "CHARACTER_SET_SERVER")
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	collatoinMap, err := obclusterService.GetCollationMap()
+	if err != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	if charset != nil && collatoinMap != nil {
+		id, _ := strconv.Atoi(charset.Value)
+		collation, ok := collatoinMap[id]
+		if ok {
+			tenantInfo.Collation = collation.Collation
+			tenantInfo.Charset = collation.Charset
+		}
+	}
 	if whitelist != nil {
-		res.Whitelist = whitelist.Value
+		tenantInfo.Whitelist = whitelist.Value
 	}
 	if readOnly != nil {
-		res.ReadOnly = (readOnly.Value == "1")
+		tenantInfo.ReadOnly = (readOnly.Value == "1")
 	}
-	return res, nil
+	return tenantInfo, nil
 }
