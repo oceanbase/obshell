@@ -67,9 +67,6 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 	if err != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
 	}
-	if whitelist == nil {
-		return nil, errors.Occur(errors.ErrUnexpected, nil)
-	}
 
 	pools := make([]*bo.ResourcePoolWithUnit, 0)
 	poolInfos, err := tenantService.GetTenantResourcePool(tenant.TenantID)
@@ -103,7 +100,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName),
 	}
 
-	return &bo.TenantInfo{
+	res := &bo.TenantInfo{
 		Name:              tenant.TenantName,
 		Id:                tenant.TenantID,
 		CreatedTime:       tenant.CreatedTime,
@@ -113,9 +110,14 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 		PrimaryZone:       tenant.PrimaryZone,
 		Locality:          tenant.Locality,
 		InRecyclebin:      tenant.InRecyclebin,
-		Whitelist:         whitelist.Value,
 		Pools:             pools,
-		ReadOnly:          readOnly.Value == "1",
 		ConnectionStrings: []bo.ObproxyAndConnectionString{connectionStr},
-	}, nil
+	}
+	if whitelist != nil {
+		res.Whitelist = whitelist.Value
+	}
+	if readOnly != nil {
+		res.ReadOnly = (readOnly.Value == "1")
+	}
+	return res, nil
 }

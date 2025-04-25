@@ -447,13 +447,6 @@ func (t *TenantService) GetTenantVariable(tenantName string, variableName string
 		return nil, err
 	}
 
-	// TODO: 需要连接租户
-	// var variableValue oceanbase.ObSysVariableWithValue
-	// err = db.Raw(fmt.Sprintf("show global variables like '%s'", variableName)).Scan(&variableValue).Error
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// variable.Value = variableValue.Value
 	return
 }
 
