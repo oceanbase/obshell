@@ -472,10 +472,10 @@ const Detail: React.FC<DetailProps> = ({
   const menu = (
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item key="upgrade">
-        <span>升级版本</span>
+        <span>OB 升级</span>
       </Menu.Item>
       <Menu.Item key="upgradeAgent">
-        <span>升级 Agent</span>
+        <span>OBShell 升级</span>
       </Menu.Item>
       {/*
       {(clusterData.status === 'RUNNING' ||

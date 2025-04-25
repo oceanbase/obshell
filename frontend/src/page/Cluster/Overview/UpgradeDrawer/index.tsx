@@ -230,7 +230,7 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
               iconType="question"
               content={'升级版本'}
               tooltip={{
-                title: '可选的版本是根据当前已上传 OCP 软件包的版本集合',
+                title: '可选的版本是根据当前已上传 OB 软件包的版本集合',
               }}
             />
           }
