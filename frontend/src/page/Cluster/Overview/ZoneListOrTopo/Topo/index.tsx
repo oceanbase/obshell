@@ -19,10 +19,17 @@ import TopoGraph from './TopoGraph';
 
 export interface TopoProps {
   clusterData: API.ClusterInfo;
+  serverList: any[];
 }
 
-const Topo: React.FC<TopoProps> = ({ clusterData }) => {
-  return <TopoGraph clusterId={clusterData?.cluster_id} clusterData={clusterData} />;
+const Topo: React.FC<TopoProps> = ({ clusterData, serverList }) => {
+  return (
+    <TopoGraph
+      clusterId={clusterData?.cluster_id}
+      clusterData={clusterData}
+      serverList={serverList}
+    />
+  );
 };
 
 export default Topo;

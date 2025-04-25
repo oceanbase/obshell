@@ -59,52 +59,52 @@ const ZoneListOrTopo = React.forwardRef<ZoneListOrTopoRef, ZoneListOrTopoProps>(
             id: 'ocp-express.Component.ZoneListOrTopo.TopologicalStructure',
             defaultMessage: '拓扑结构',
           })}
-          extra={
-            <Radio.Group
-              optionType="button"
-              value={type}
-              onChange={e => {
-                setType(e.target.value);
-                // 自动滚动到底部，保证拓扑图展示完全
-                setTimeout(() => {
-                  const topoCardElement = document.getElementById('ocp-express-topo-card');
-                  if (topoCardElement) {
-                    scrollIntoView(topoCardElement, {
-                      align: {
-                        topOffset: 50,
-                      },
-                    });
-                  }
-                }, 0);
-              }}
-            >
-              <Radio.Button
-                data-aspm-click="c304258.d308764"
-                data-aspm-desc="集群拓扑-表格切换"
-                data-aspm-param={``}
-                data-aspm-expo
-                value="LIST"
-              >
-                <UnorderedListOutlined />
-              </Radio.Button>
-              <Radio.Button
-                data-aspm-click="c304258.d308761"
-                data-aspm-desc="集群拓扑-图切换"
-                data-aspm-param={``}
-                data-aspm-expo
-                value="TOPO"
-              >
-                <ApartmentOutlined />
-              </Radio.Button>
-            </Radio.Group>
-          }
-          data-aspm-expo
-          data-aspm-param={``}
+          // extra={
+          //   <Radio.Group
+          //     optionType="button"
+          //     value={type}
+          //     onChange={e => {
+          //       setType(e.target.value);
+          //       // 自动滚动到底部，保证拓扑图展示完全
+          //       setTimeout(() => {
+          //         const topoCardElement = document.getElementById('ocp-express-topo-card');
+          //         if (topoCardElement) {
+          //           scrollIntoView(topoCardElement, {
+          //             align: {
+          //               topOffset: 50,
+          //             },
+          //           });
+          //         }
+          //       }, 0);
+          //     }}
+          //   >
+          //     <Radio.Button
+          //       data-aspm-click="c304258.d308764"
+          //       data-aspm-desc="集群拓扑-表格切换"
+          //       data-aspm-param={``}
+          //       data-aspm-expo
+          //       value="LIST"
+          //     >
+          //       <UnorderedListOutlined />
+          //     </Radio.Button>
+          //     <Radio.Button
+          //       data-aspm-click="c304258.d308761"
+          //       data-aspm-desc="集群拓扑-图切换"
+          //       data-aspm-param={``}
+          //       data-aspm-expo
+          //       value="TOPO"
+          //     >
+          //       <ApartmentOutlined />
+          //     </Radio.Button>
+          //   </Radio.Group>
+          // }
+          // data-aspm-expo
+          // data-aspm-param={``}
         >
           {type === 'LIST' ? (
             <ZoneList ref={zoneListRef} serverList={serverList} clusterData={clusterData} />
           ) : (
-            <Topo clusterData={clusterData} />
+            <Topo clusterData={clusterData} serverList={serverList} />
           )}
         </MyCard>
       </div>

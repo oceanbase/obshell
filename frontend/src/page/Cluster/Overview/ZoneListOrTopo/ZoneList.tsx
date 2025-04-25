@@ -15,7 +15,6 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
 import React, { useState, useImperativeHandle } from 'react';
 import { Badge } from '@oceanbase/design';
 import { Table } from '@oceanbase/design';
@@ -75,15 +74,15 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(
         dataIndex: 'region_name',
       },
 
-      {
-        title: formatMessage({
-          id: 'ocp-express.Component.ZoneList.DataCenter',
-          defaultMessage: '所在机房',
-        }),
+      // {
+      //   title: formatMessage({
+      //     id: 'ocp-express.Component.ZoneList.DataCenter',
+      //     defaultMessage: '所在机房',
+      //   }),
 
-        dataIndex: 'idcName',
-        render: (text: string) => <span>{text || '-'}</span>,
-      },
+      //   dataIndex: 'idcName',
+      //   render: (text: string) => <span>{text || '-'}</span>,
+      // },
 
       {
         title: formatMessage({
@@ -260,10 +259,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(
           // filteredValue: statusList,
           // 这里不用设置 onFilter，dataSource 已经根据 statusList 做了筛选
           render: (text: API.ObServerStatus, record) => {
-            const value =
-              serverList?.find(item => item.ip?.split?.(':')[0] === record.ip)?.obState === 3
-                ? 'RUNNING'
-                : 'UNAVAILABLE';
+            const value = serverList?.find(item => item.ip?.split?.(':')[0] === record.ip)?.status;
 
             const statusItem = findByValue(OB_SERVER_STATUS_LIST, value);
             return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;

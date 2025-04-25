@@ -37,6 +37,17 @@ export async function dagHandler(
   });
 }
 
+/** get agent main dags get agent main dags GET /api/v1/task/dag/agent/main_dags */
+export async function getAgentMainDags(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO[] }>(
+    '/api/v1/task/dag/agent/main_dags',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}
+
 /** get agent unfinished dags get agent unfinished dags GET /api/v1/task/dag/agent/unfinish */
 export async function getAgentUnfinishDags(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -125,31 +136,17 @@ export async function getUnfinishedDags(
 }
 
 /** get all dags in the agent get all dags in the agent GET /api/v1/task/dags/agent */
-export async function getAllAgentDags(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getAllAgentDagsParams,
-  options?: { [key: string]: any }
-) {
+export async function getAllAgentDags(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.DagDetailDTO[] }>('/api/v1/task/dags/agent', {
     method: 'GET',
-    params: {
-      ...params,
-    },
     ...(options || {}),
   });
 }
 
 /** get all dags in cluster get all dags in cluster GET /api/v1/task/dags/ob */
-export async function getAllClusterDags(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getAllClusterDagsParams,
-  options?: { [key: string]: any }
-) {
+export async function getAllClusterDags(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.DagDetailDTO[] }>('/api/v1/task/dags/ob', {
     method: 'GET',
-    params: {
-      ...params,
-    },
     ...(options || {}),
   });
 }

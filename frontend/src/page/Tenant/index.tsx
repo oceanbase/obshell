@@ -62,7 +62,11 @@ const Tenant: React.FC<TenantProps> = ({
     loading: tenantListLoading,
     refresh: listTenantsRefresh,
   } = useRequest(getTenantOverView, {
-    defaultParams: [{}],
+    defaultParams: [
+      {
+        mode: 'MYSQL',
+      },
+    ],
   });
 
   const tenantList = tenantListData?.data?.contents || [];

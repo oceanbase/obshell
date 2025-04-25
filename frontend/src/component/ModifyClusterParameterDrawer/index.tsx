@@ -251,7 +251,11 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
   // 获取当前集群下的租户
   const { data, run: getTenantList } = useRequest(getTenantOverView, {
     manual: true,
-    defaultParams: [{}],
+    defaultParams: [
+      {
+        mode: 'MYSQL',
+      },
+    ],
   });
 
   const tenantList = data?.data?.contents || [];

@@ -181,6 +181,7 @@ declare namespace API {
 
   type ChangeUserPasswordParam = {
     new_password?: string;
+    root_password?: string;
   };
 
   type CharsetInfo = {
@@ -256,6 +257,7 @@ declare namespace API {
     collation?: string;
     db_name: string;
     read_only?: boolean;
+    root_password?: string;
   };
 
   type createDatabaseParams = {
@@ -461,14 +463,6 @@ declare namespace API {
     show_details?: boolean;
   };
 
-  type getAllAgentDagsParams = {
-    show_details?: boolean;
-  };
-
-  type getAllClusterDagsParams = {
-    show_details?: boolean;
-  };
-
   type GetClusterUnfinishDagsParams = {
     show_details?: boolean;
   };
@@ -614,6 +608,7 @@ declare namespace API {
   type ModifyDatabaseParam = {
     collation?: string;
     read_only?: boolean;
+    root_password?: string;
   };
 
   type modifyDbPrivilegeParams = {
@@ -657,11 +652,13 @@ declare namespace API {
   };
 
   type ModifyUserDbPrivilegeParam = {
-    db_privileges?: DbPrivilegeParam[];
+    db_privileges: DbPrivilegeParam[];
+    root_password?: string;
   };
 
   type ModifyUserGlobalPrivilegeParam = {
     global_privileges?: string[];
+    root_password?: string;
   };
 
   type NodeDetailDTO = {
@@ -749,6 +746,12 @@ declare namespace API {
     forcePassDag?: ForcePassDagParam;
     scope: Scope;
     terminate?: boolean;
+  };
+
+  type ObTenantPreCheckResult = {
+    is_connectable?: boolean;
+    is_empty_root_password?: boolean;
+    is_password_exists?: boolean;
   };
 
   type ObUnitConfig = {
@@ -1079,6 +1082,7 @@ declare namespace API {
     charset?: string;
     /** Only for ORACLE tenant */
     collation?: string;
+    connection_strings?: ObproxyAndConnectionString[];
     created_time?: string;
     in_recyclebin?: string;
     locality?: string;

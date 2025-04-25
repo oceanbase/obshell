@@ -1,7 +1,7 @@
 // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { uniqueId, find } from 'lodash';
 import React, { useState, useEffect } from 'react';
-import { Button, message, Drawer, Upload, Form, Table, Progress } from '@oceanbase/design';
+import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@oceanbase/design';
 import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
@@ -274,7 +274,19 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       maskClosable={false}
       okText={'上传'}
       onClose={() => {
-        onCancel();
+        if (fileList.some(item => item.status !== 'done')) {
+          Modal.confirm({
+            title: '当前文件上传中，是否确定退出？',
+            content: '退出后文件会在后台继续上传，但是无法查看进度',
+
+            okText: '退出',
+            onOk: () => {
+              onCancel();
+            },
+          });
+        } else {
+          onCancel();
+        }
       }}
       afterOpenChange={() => {
         setFileList([]);
@@ -369,7 +381,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 newPkgUpload({}, file, {
                   sha256sum: sha256,
                 }).then(res => {
-                  if (res.successful) {
+                  if (res?.successful) {
                     // timer 中有更新 percent 的逻辑，避免和 options.onSuccess 影响，加一个 delay 处理
                     clearInterval(timer);
                     setTimeout(() => {

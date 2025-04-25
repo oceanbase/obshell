@@ -91,6 +91,24 @@ const statusCodeMessage = {
     defaultMessage: '网关超时。',
   }),
 };
+const messageMap = {
+  'failed to start maintenance: cluster is under maintenance': '集群处于运维状态中',
+  'failed to start maintenance: agent is under maintaince': '当前节点处于运维状态中',
+};
+
+const getMsg = (errorMessage = '') => {
+  if (messageMap[errorMessage]) {
+    return messageMap[errorMessage];
+  }
+
+  if (errorMessage?.includes('observer process not exist')) {
+    return 'observer 进程不存在';
+  }
+
+  const reg = /failed to start maintenance: (.*?) is under maintenance/;
+  const [, name] = errorMessage?.match(reg) || [];
+  return name ? `${name} 处于运维状态中` : undefined;
+};
 
 /**
  * 异常处理程序
@@ -136,7 +154,8 @@ const errorHandler = ({ request, response, data }) => {
     const { code, message: errorMessage } = error;
     // 错误展示一定要在 throw err 之前执行，否则抛错之后就无法展示了
     // 优先展示后端返回的错误信息，如果没有，则根据 status 进行展示
-    const msg = errorMessage || statusCodeMessage[status];
+    const msg = errorMessage ? getMsg(errorMessage) || errorMessage : statusCodeMessage[status];
+
     // 是否隐藏错误信息
     const hideErrorMessage =
       HIDE_ERROR_MESSAGE ||

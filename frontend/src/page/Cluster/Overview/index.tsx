@@ -51,6 +51,9 @@ import { obclusterInfo } from '@/service/obshell/obcluster';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
 import { directTo } from '@oceanbase/util';
 import { getAllAgentsStatus, getStatus } from '@/service/obshell/v1';
+import moment from 'moment';
+import { getAgentMainDags } from '@/service/obshell/task';
+import { message } from 'antd';
 
 export interface DetailProps {
   match: {
@@ -138,12 +141,25 @@ const Detail: React.FC<DetailProps> = ({
   console.log(data, 'getAllAgentsStatus');
 
   // clusterData zones 中的 servers 不存在 status 属性，单独调个接口请求
-  const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
-    return {
-      ip,
-      ...value,
-      status: value.obState > 2 ? 'RUNNING' : 'UNAVAILABLE',
-    };
+  // const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
+  //   return {
+  //     ip,
+  //     ...value,
+  //     status: value.obState === 3 ? 'RUNNING' : 'UNAVAILABLE',
+  //   };
+  // });
+
+  const realServerList = flatten(clusterData.zones?.map(item => item.servers || [])).map(item => {
+    let status = 'OTHER';
+
+    if (item.inner_status === 'ACTIVE' && moment(item.start_time).valueOf() > moment(0).valueOf()) {
+      status = 'RUNNING';
+    }
+    if (item.inner_status === 'INACTIVE') {
+      status = 'UNAVAILABLE';
+    }
+
+    return { ...item, status };
   });
 
   console.log(realServerList, 'realServerList');
@@ -391,80 +407,76 @@ const Detail: React.FC<DetailProps> = ({
       setUpgradeVisible(true);
     } else if (key === 'upgradeAgent') {
       setUpgradeAgentVisible(true);
-    } else if (key === 'start') {
-      Modal.confirm({
-        title: `确定要启动 OB 集群 ${clusterData.cluster_name || ''} 吗？`,
+    } else if (key === 'start' || key === 'stop') {
+      getAgentMainDags().then(res => {
+        const dagList = res.data?.contents || [];
 
-        okText: '启动',
-        onOk: () => {
-          startFn({ scope: { type: 'GLOBAL' } });
-          // dispatch({
-          //   type: 'cluster/startCluster',
-          //   payload: {
-          //     id: clusterData.id,
-          //   },
-          // });
-        },
-      });
-    } else if (key === 'stop') {
-      let freezeServerValue = true;
-      Modal.confirm({
-        title: formatMessage(
-          {
-            id: 'ocp-v2.Cluster.Detail.AreYouSureYouWant.1',
-            defaultMessage: '确定要停止 OB 集群 {clusterDataName} 吗？',
-          },
+        if (dagList.some(item => item.state !== 'FAILED')) {
+          message.warning('当前有正在进行的集群启停任务，此时禁止继续启停');
+          return;
+        }
 
-          { clusterDataName: clusterData.cluster_name || '' }
-        ),
+        let content = '';
+        let forcePassDag = { id: [] };
+        const list = dagList.filter(item => item.state !== 'FAILED');
+        if (list.length > 0) {
+          content = `将会自动跳过任务 ${list
+            .map(item => {
+              return `[${item.name}:${item.id}]`;
+            })
+            .join('，')}`;
+          forcePassDag = { id: list.map(item => item.id) };
+        }
 
-        content: (
-          <>
-            <div>
-              {formatMessage({
-                id: 'ocp-v2.Cluster.Detail.StoppingTheClusterWillCause',
-                defaultMessage: '停止集群会导致集群中所有的服务被终止，请谨慎操作',
-              })}
-            </div>
-            {/* <ContentWithIcon
-              iconType="question"
-              content={formatMessage({
-                id: 'ocp-v2.Detail.Overview.PerformADumpOperationBeforeStoppingTheProcess',
-                defaultMessage: '停止进程前执行转储操作',
-              })}
-              tooltip={{
-                title: formatMessage({
-                  id: 'ocp-v2.Detail.Overview.PerformingThisActionWillProlongTheResponseTime',
-                  defaultMessage:
-                    '执行本动作会延长停止进程的响应时间，但可以显著缩短 OBServer 恢复时间。',
-                }),
-              }}
-            /> */}
-
-            {/* <Checkbox
-              style={{ marginLeft: '8px' }}
-              defaultChecked={freezeServerValue}
-              onChange={v => {
-                freezeServerValue = v.target.checked;
-              }}
-            /> */}
-          </>
-        ),
-
-        okText: formatMessage({ id: 'ocp-v2.Cluster.Detail.Stop', defaultMessage: '停止' }),
-        okButtonProps: {
-          danger: true,
-          ghost: true,
-        },
-
-        onOk: () => {
-          stopFn({
-            force: true,
-            scope: {
-              type: 'GLOBAL',
+        if (key === 'start') {
+          Modal.confirm({
+            title: `确定要启动 OB 集群 ${clusterData.cluster_name || ''} 吗？`,
+            content,
+            okText: '启动',
+            onOk: () => {
+              startFn({ scope: { type: 'GLOBAL' }, forcePassDag });
             },
           });
-        },
+        } else {
+          Modal.confirm({
+            title: formatMessage(
+              {
+                id: 'ocp-v2.Cluster.Detail.AreYouSureYouWant.1',
+                defaultMessage: '确定要停止 OB 集群 {clusterDataName} 吗？',
+              },
+
+              { clusterDataName: clusterData.cluster_name || '' }
+            ),
+
+            content: (
+              <>
+                <div>
+                  {formatMessage({
+                    id: 'ocp-v2.Cluster.Detail.StoppingTheClusterWillCause',
+                    defaultMessage: '停止集群会导致集群中所有的服务被终止，请谨慎操作',
+                  })}
+                </div>
+                <div>{content}</div>
+              </>
+            ),
+
+            okText: formatMessage({ id: 'ocp-v2.Cluster.Detail.Stop', defaultMessage: '停止' }),
+            okButtonProps: {
+              danger: true,
+              ghost: true,
+            },
+
+            onOk: () => {
+              stopFn({
+                force: true,
+                scope: {
+                  type: 'GLOBAL',
+                },
+                forcePassDag,
+              });
+            },
+          });
+        }
       });
     }
   }

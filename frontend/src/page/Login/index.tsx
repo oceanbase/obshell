@@ -106,7 +106,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       }
       title={
         <div>
-          Welcome to <div>OCP Express !</div>
+          Welcome to <div>OBShell !</div>
         </div>
       }
       description="Let's start a happy journey"
@@ -115,6 +115,15 @@ const LoginPage: React.FC<LoginPageProps> = ({
       loginProps={{
         loading: loading,
         onFinish: login,
+        initialValues: {
+          username: 'root',
+        },
+        passwordOptional: true,
+        componentProps: {
+          username: {
+            disabled: true,
+          },
+        },
       }}
     />
   );

@@ -233,7 +233,6 @@ const PackagePage: React.FC<PackageProps> = ({
           setVisible(false);
         }}
         onSuccess={() => {
-          setVisible(false);
           refresh();
         }}
       />

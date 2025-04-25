@@ -325,7 +325,7 @@ export async function tenantPreCheck(
   options?: { [key: string]: any }
 ) {
   const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.ObUserStats }>(
+  return request<API.OcsAgentResponse & { data?: API.ObTenantPreCheckResult }>(
     `/api/v1/tenant/${param0}/precheck`,
     {
       method: 'GET',

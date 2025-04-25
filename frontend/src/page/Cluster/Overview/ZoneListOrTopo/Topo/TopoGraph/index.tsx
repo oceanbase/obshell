@@ -351,6 +351,7 @@ G6.registerEdge(
 export interface TopoGraphProps {
   dispatch: any;
   clusterData: API.ClusterInfo;
+  serverList: any[];
 }
 
 class TopoGraph extends React.PureComponent<TopoGraphProps> {
@@ -407,7 +408,7 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
   };
 
   public handleMenuClick = ({ key }) => {
-    const { dispatch, clusterData } = this.props;
+    const { dispatch = () => {}, clusterData } = this.props;
     const { currentNode } = this.state;
     if (currentNode && currentNode.nodeType === 'cluster') {
       if (key === 'addTenant') {
@@ -449,12 +450,12 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
 
           okText: formatMessage({ id: 'ocp-express.Topo.TopoGraph.Start', defaultMessage: '启动' }),
           onOk: () => {
-            dispatch({
-              type: 'cluster/startCluster',
-              payload: {
-                id: currentNode?.obClusterId,
-              },
-            });
+            // dispatch({
+            //   type: 'cluster/startCluster',
+            //   payload: {
+            //     id: currentNode?.obClusterId,
+            //   },
+            // });
           },
         });
       } else if (key === 'restart') {
@@ -589,7 +590,7 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
   };
 
   public drawGraph() {
-    const { clusterData } = this.props;
+    const { clusterData, serverList } = this.props;
 
     // 主集群: 只有一个
     const primaryCluster = clusterData;
@@ -621,15 +622,21 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
               // OBServer 节点数 > 9 时，仅默认展开第一个 zone 节点
               // OBServer 节点数 <= 9 时，默认展开所有的 zone 节点
               collapsed: serverCount > 9 ? zoneIndex !== 0 : false,
-              children: (zone.servers || []).map(server => ({
-                ...server,
-                // G6 绘图要求: 节点 id 不能相同，为了避免与集群节点 id 重复，需要加上 server 前缀
-                id: `server_${server.id}`,
-                // 使用 serverId 作为实际的 id
-                serverId: server.id,
-                name: server.ip,
-                nodeType: 'server',
-              })),
+              children: (zone.servers || []).map(server => {
+                const status = serverList?.find(
+                  item => item.ip?.split?.(':')[0] === server.ip
+                )?.status;
+                return {
+                  ...server,
+                  status,
+                  // G6 绘图要求: 节点 id 不能相同，为了避免与集群节点 id 重复，需要加上 server 前缀
+                  id: `server_${server.id}`,
+                  // 使用 serverId 作为实际的 id
+                  serverId: server.id,
+                  name: server.ip,
+                  nodeType: 'server',
+                };
+              }),
             })),
           };
         }),
@@ -1152,7 +1159,7 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
         header={{
           title: (
             <Space size={16} className={styles.title}>
-              <span>{clusterData.clusterName}</span>
+              <span>{clusterData.cluster_name}</span>
               <Badge text={statusItem.label} status={statusItem.badgeStatus} />
             </Space>
           ),
@@ -1168,12 +1175,12 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
         }}
         graph={this.graph}
         onReload={() => {
-          dispatch({
-            type: 'cluster/getClusterData',
-            payload: {
-              // id: 2,
-            },
-          });
+          // dispatch({
+          //   type: 'cluster/getClusterData',
+          //   payload: {
+          //     // id: 2,
+          //   },
+          // });
         }}
       >
         {/* <Dropdown visible={true} overlay={menu} overlayClassName={styles.menu}>

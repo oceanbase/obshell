@@ -81,16 +81,32 @@ const Detail: React.FC<DetailProps> = ({
   const logRef = useRef<TaskGraphRef>(null);
   // const flowRef = useRef<TaskGraphRef>(null);
 
+  const [taskData, setTaskData] = useState({});
   // 获取任务详情
-  const { data, refreshAsync, loading } = useRequest(getDagDetail, {
-    defaultParams: [
-      {
-        id: taskId,
+  const { refreshAsync, loading } = useRequest(
+    () =>
+      getDagDetail(
+        {
+          id: taskId,
+        },
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      ),
+    {
+      onSuccess: res => {
+        if (res?.successful) {
+          setTaskData(res?.data || {});
+        } else {
+          // 错误之前的最后一次请求，不存在具体的 nodes，那么直接跳转到首页. 存在数据的情况下载此页面继续轮训
+          if (!taskData?.nodes?.length > 0) {
+            history.push('/overview');
+          }
+        }
       },
-    ],
-  });
+    }
+  );
 
-  const taskData = data?.data || {};
   const lockRefresh = useLockFn(refreshAsync);
 
   useDocumentTitle(taskData?.name);
@@ -246,7 +262,7 @@ const Detail: React.FC<DetailProps> = ({
 
         content: '这将取消整个任务',
 
-        okText: '取消',
+        okText: '确定',
         okButtonProps: {
           danger: true,
           ghost: true,

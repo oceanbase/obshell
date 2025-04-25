@@ -151,6 +151,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
             useType="UPGRADE_AGENT"
             labelInValue={true}
             style={{ width: '100%' }}
+            isHeterogeneousUpgrade={true}
             currentBuildVersionForUpgrade={agentData?.version}
             onSuccess={newPackageList => {
               setPackageList(newPackageList);
