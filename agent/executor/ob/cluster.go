@@ -108,6 +108,7 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 				Ip:   server.SvrIp,
 				Port: server.SvrPort,
 			}]; !ok {
+				zoneInfo.Servers = append(zoneInfo.Servers, observerBo)
 				continue
 			} else {
 				observerBo.Stats.BaseResourceStats = baseResourceStat.ToBO()
