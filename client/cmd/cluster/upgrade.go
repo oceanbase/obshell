@@ -207,7 +207,7 @@ func obUpgrade(params *param.ObUpgradeParam) (err error) {
 
 func uploadPkgsByNameInDir(params *param.ObUpgradeParam, pkgDir string, pkgs map[string]*rpm.Package) (err error) {
 	stdio.Verbose("Uploading OceanBase packages to the cluster")
-	myOBVersion, _ := binary.GetMyOBVersion()
+	myOBVersion, _, _ := binary.GetMyOBVersion()
 	return UploadPkgsByNameAndVersionInDir(pkgDir, pkgs, myOBVersion, params.Version, params.Release, false)
 }
 
@@ -266,7 +266,7 @@ func getTargetVersion(opts *clusterUpgradeFlags, pkgs map[string]*rpm.Package) (
 	}
 	stdio.Verbosef("The target version is %s", targetBuildVersion)
 
-	myOBVersion, err := binary.GetMyOBVersion()
+	myOBVersion, _, err := binary.GetMyOBVersion()
 	if err != nil {
 		return "", err
 	}

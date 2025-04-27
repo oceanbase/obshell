@@ -20,6 +20,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/executor/script"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -49,6 +50,11 @@ func CreateInitDag(param param.ObInitParam) (*task.DagDetailDTO, error) {
 	if param.ImportScript {
 		builder.AddNode(script.NewImportScriptForTenantNode(false))
 	}
+	obVersion, isCommunityEdition, _ := binary.GetMyOBVersion() // ignore the error
+	if obVersion > OB_VERSION_4_3_5_2 && isCommunityEdition {
+		builder.AddTask(newPostInitClusterTask(), false)
+	}
+
 	template := builder.AddTask(newAgentSyncTask(), true).Build()
 
 	ctx := task.NewTaskContext().
@@ -60,4 +66,29 @@ func CreateInitDag(param param.ObInitParam) (*task.DagDetailDTO, error) {
 		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
+}
+
+type PostInitClusterTask struct {
+	task.Task
+}
+
+func newPostInitClusterTask() *PostInitClusterTask {
+	newTask := &PostInitClusterTask{
+		Task: *task.NewSubTask(TASK_NAME_POST_INIT_CLUSTER),
+	}
+	newTask.SetCanCancel().SetCanContinue().SetCanRetry().SetCanRollback()
+	return newTask
+}
+
+func (t *PostInitClusterTask) Execute() error {
+	t.ExecuteLog("post init cluster")
+	// Set parameter 'global_index_auto_split_policy' to 'ALL'
+	// Ignore the error, because it won't affect the cluster initialization
+	obclusterService.SetParameter(
+		param.SetParameterParam{
+			Name:  "global_index_auto_split_policy",
+			Value: "ALL",
+		},
+	)
+	return nil
 }

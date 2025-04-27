@@ -75,7 +75,7 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 	}
 
 	// check ob version is consistent
-	if obVersion, err := binary.GetMyOBVersion(); err != nil {
+	if obVersion, _, err := binary.GetMyOBVersion(); err != nil {
 		return nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error())
 	} else if obVersion != agent.OBVersion {
 		return nil, errors.Occurf(errors.ErrBadRequest, "ob version is not consistent between %s(%s) and %s(%s)",

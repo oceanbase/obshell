@@ -78,7 +78,7 @@ func agentJoinHandler(c *gin.Context) {
 				param.AgentInfo.String(), agentStatus.Version, meta.OCS_AGENT.String(), constant.VERSION_RELEASE))
 			return
 		}
-		if obVersion, err := binary.GetMyOBVersion(); err != nil {
+		if obVersion, _, err := binary.GetMyOBVersion(); err != nil {
 			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error()))
 			return
 		} else if obVersion != agentStatus.OBVersion {

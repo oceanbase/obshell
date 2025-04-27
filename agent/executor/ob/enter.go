@@ -26,6 +26,8 @@ import (
 )
 
 const (
+	OB_VERSION_4_3_5_2 = "4.3.5.2"
+
 	SYS_STAT_MEMORY_SIZE_STAT_ID  = 140002
 	SYS_STAT_MEMORY_USAGE_STAT_ID = 140003
 	SYS_STAT_MAX_CPU_STAT_ID      = 140005
@@ -158,6 +160,7 @@ const (
 	TASK_NAME_MIGRATE_TABLE                      = "Migrate table"
 	TASK_NAME_MODIFY_PWD                         = "Modify password"
 	TASK_NAME_MIGRATE_DATA                       = "Migrate data"
+	TASK_NAME_POST_INIT_CLUSTER                  = "Post init cluster"
 	TASK_NAME_CREATE_USER                        = "Create user"
 	TASK_NAME_UPDATE_AGENT                       = "Update all agents"
 	TASK_NAME_INITIALIZE_DATA                    = "Initialize data"
@@ -384,6 +387,7 @@ func RegisterObInitTask() {
 	task.RegisterTaskType(ConvertFollowerToClusterAgentTask{})
 	task.RegisterTaskType(AgentSyncTask{})
 	task.RegisterTaskType(ConvertMasterToClusterAgentTask{})
+	task.RegisterTaskType(PostInitClusterTask{})
 }
 
 func RegisterObStartTask() {

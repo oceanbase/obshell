@@ -28,15 +28,15 @@ import (
 	"github.com/oceanbase/obshell/agent/global"
 )
 
-func GetMyOBVersion() (version string, err error) {
+func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	myOBPath := filepath.Join(global.HomePath, constant.DIR_BIN, constant.PROC_OBSERVER)
 	bash := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s -V", global.HomePath, myOBPath)
 	if os.Stat(myOBPath); err != nil {
-		return "", errors.Wrap(err, "get my ob version failed")
+		return "", false, errors.Wrap(err, "get my ob version failed")
 	}
 	out, err := exec.Command("/bin/bash", "-c", bash).CombinedOutput()
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	res := string(out)
 
@@ -44,15 +44,16 @@ func GetMyOBVersion() (version string, err error) {
 	regex := regexp.MustCompile(`REVISION:\s*(\d+)-([a-fA-F0-9]+)`)
 	match := regex.FindStringSubmatch(res)
 	if len(match) != 3 {
-		return "", errors.New("get my ob build number failed")
+		return "", false, errors.New("get my ob build number failed")
 	}
 	buildNumber := match[1]
 
 	// get version
-	regex = regexp.MustCompile(`observer\s*\(OceanBase(_CE)?\s*([\d.]+)\)`)
+	regex = regexp.MustCompile(`\(OceanBase(_CE)?\s*([\d.]+)\)`)
 	match = regex.FindStringSubmatch(res)
 	if match == nil {
-		return "", errors.New("get my ob version failed")
+		return "", false, errors.New("get my ob version failed")
 	}
-	return fmt.Sprintf("%s-%s", match[2], buildNumber), nil
+	fmt.Println("match:", match)
+	return fmt.Sprintf("%s-%s", match[2], buildNumber), match[1] != "", nil
 }
