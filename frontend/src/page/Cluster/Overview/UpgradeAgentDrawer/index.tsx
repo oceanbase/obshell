@@ -138,8 +138,8 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         <Form.Item label={'已安装版本'}>{agentData?.version}</Form.Item>
         <Form.Item label={'硬件架构'}>
           {uniq(
-            flatten(clusterData?.zones?.map(item => item.servers))?.map(
-              item => item.architecture
+            flatten(clusterData?.zones?.map(item => item.servers || [])).map(
+              item => item?.architecture
             ) || []
           ).join('、')}
         </Form.Item>

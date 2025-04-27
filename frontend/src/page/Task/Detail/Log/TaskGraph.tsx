@@ -17,14 +17,13 @@
 import { formatMessage } from '@/util/intl';
 import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
 import { Dropdown, Menu, Space, Tooltip, Typography, theme } from '@oceanbase/design';
-import { debounce, some } from 'lodash';
+import { debounce } from 'lodash';
 import Icon, { MoreOutlined } from '@oceanbase/icons';
 import { findByValue, isNullValue } from '@oceanbase/util';
 import { Canvas } from '@antv/g-svg';
-import { useRequest, useSize, useUpdateEffect } from 'ahooks';
+import { useSize, useUpdateEffect } from 'ahooks';
 import scrollIntoView from 'scroll-into-view';
 import useDeepCompareEffect from 'use-deep-compare-effect';
-import * as TaskController from '@/service/ocp-express/TaskController';
 import { TIME_FORMAT } from '@/constant/datetime';
 import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
@@ -32,7 +31,6 @@ import { downloadLog } from '@/util/log';
 import type { Node, SubtaskOperationKey } from '@/util/task';
 import { getNodes, getLatestNode, getTaskDuration, handleSubtaskOperate } from '@/util/task';
 import styles from './TaskGraph.less';
-import { dagHandler } from '@/service/obshell/task';
 
 const { Text } = Typography;
 
@@ -145,9 +143,6 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     console.log(nodes, subtask, 'nodes');
     const { token } = theme.useToken();
 
-    const { runAsync: dagHandlerFn } = useRequest(dagHandler, {
-      manual: true,
-    });
     // 定位到目标节点
     const setTargetSubtask = (targetSubtaskId?: number) => {
       onSubtaskChange(targetSubtaskId);
@@ -604,6 +599,9 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
               }
             });
         } else if (nextNode) {
+          console.log(item, nextNode, 'nextNode');
+          console.log(currentDomLeftPoint, nextDomLeftPoint, 'currentDomLeftPoint');
+
           // 未分叉: 绘制当前节点与下一节点之间的连线
           // 此时连线不会相互覆盖，因此顺序绘制即可，不需要处理覆盖的问题
           pathCanvas.addShape('path', {

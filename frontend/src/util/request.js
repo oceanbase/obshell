@@ -92,8 +92,10 @@ const statusCodeMessage = {
   }),
 };
 const messageMap = {
-  'failed to start maintenance: cluster is under maintenance': '集群处于运维状态中',
-  'failed to start maintenance: agent is under maintaince': '当前节点处于运维状态中',
+  'Unexpected error: failed to start maintenance: cluster is under maintenance':
+    '集群处于运维状态中',
+  'Unexpected error: failed to start maintenance: agent is under maintenance':
+    '当前节点处于运维状态中',
 };
 
 const getMsg = (errorMessage = '') => {

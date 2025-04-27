@@ -17,7 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import { Modal, message } from '@oceanbase/design';
-import { find, flatten, groupBy, isArray, uniq } from 'lodash';
+import { find, flatten, groupBy, isArray, uniq, uniqueId } from 'lodash';
 import moment from 'moment';
 import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
 import * as TaskController from '@/service/ocp-express/TaskController';
@@ -338,9 +338,10 @@ export function getNodes(taskData?: API.DagDetailDTO) {
   return nodes.map(item => {
     // 只有一个 subTasks 时，直接替换 Node 进行返回
     if (item.sub_tasks?.length === 1) {
+      item.sub_tasks[0].id = item.sub_tasks[0].id + uniqueId();
       return item.sub_tasks[0];
     }
-    item.children = item.sub_tasks;
+    item.children = item.sub_tasks.map(item => ({ ...item, id: item.id + uniqueId() }));
     return item;
   });
 }

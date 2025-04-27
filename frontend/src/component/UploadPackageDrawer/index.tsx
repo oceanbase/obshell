@@ -390,6 +390,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                       onSuccess();
                     }, 500);
                   } else {
+                    // 网络波动导致浏览器关闭请求，此处不会返回错误值
+                    if (!res) {
+                      message.error('网络异常，请稍后再试');
+                    }
                     clearInterval(timer);
                     setTimeout(() => {
                       setFileList(

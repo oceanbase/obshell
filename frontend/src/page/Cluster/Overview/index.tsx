@@ -152,7 +152,11 @@ const Detail: React.FC<DetailProps> = ({
   const realServerList = flatten(clusterData.zones?.map(item => item.servers || [])).map(item => {
     let status = 'OTHER';
 
-    if (item.inner_status === 'ACTIVE' && moment(item.start_time).valueOf() > moment(0).valueOf()) {
+    if (
+      item.inner_status === 'ACTIVE' &&
+      // 未开始时 start_time 的时间戳等于 0（1970年01月01日00时00分00），所以判断时间戳大于 0
+      moment(item.start_time).valueOf() > 0
+    ) {
       status = 'RUNNING';
     }
     if (item.inner_status === 'INACTIVE') {
