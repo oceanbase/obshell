@@ -18,6 +18,7 @@ package daemon
 
 import (
 	"os"
+	"strconv"
 	"time"
 
 	proc "github.com/shirou/gopsutil/v3/process"
@@ -64,14 +65,20 @@ func (s *Server) cleanup() {
 	}
 
 	if system.IsFileExist(path.ObshellPidPath()) {
-		obshellPid, err := process.GetObshellPid()
+		obshellPidStr, err := process.GetObshellPidStr()
 		if err != nil {
 			log.WithError(err).Error("failed to get obshell pid")
 			return
 		}
+		obshellPid, err := strconv.Atoi(obshellPidStr)
+		if err != nil {
+			log.Infof("unexpect obshell pid: %s, delete directly", obshellPidStr)
+			os.Remove(path.ObshellPidPath())
+		}
+
 		log.Info("the stopped obshell pid is ", obshellPid)
 
-		if _, err = proc.NewProcess(obshellPid); err != nil {
+		if _, err = proc.NewProcess(int32(obshellPid)); err != nil {
 			if system.IsFileExist(path.ObshellPidPath()) {
 				log.Infof("remove obshell pid file %s", path.ObshellPidPath())
 				os.Remove(path.ObshellPidPath())

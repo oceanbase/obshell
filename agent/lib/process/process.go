@@ -36,6 +36,20 @@ var (
 	obServerPidPath = filepath.Join(path.RunDir(), "observer.pid")
 )
 
+func getPidStr(pidPath string) (string, error) {
+	if _, err := os.Stat(pidPath); err != nil {
+		if os.IsNotExist(err) {
+			return "", nil
+		}
+		return "", err
+	}
+	content, err := os.ReadFile(pidPath)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(content)), nil
+}
+
 func getPid(pidPath string) (int32, error) {
 	if _, err := os.Stat(pidPath); err != nil {
 		if os.IsNotExist(err) {
@@ -206,6 +220,10 @@ func GetDaemonPid() (int32, error) {
 
 func GetObshellPid() (int32, error) {
 	return getPid(path.ObshellPidPath())
+}
+
+func GetObshellPidStr() (string, error) {
+	return getPidStr(path.ObshellPidPath())
 }
 
 func GetPid(path string) (int32, error) {
