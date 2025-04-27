@@ -24,14 +24,11 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oceanbase/obshell/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
-	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -254,28 +251,7 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return nil, errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please execute `init` first.")
 	}
-	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
-	agentsStatus := make(map[string]http.AgentStatus)
-	resErr := secure.SendGetRequest(agentInfo, "/api/v1/agents/status", nil, &agentsStatus)
-	if resErr != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "Failed to query all agents status")
-	}
-	unavailableAgents := make([]string, 0)
-	unavailableObservers := make([]string, 0)
-	for agent, agentStatus := range agentsStatus {
-		if agentStatus.State != 2 {
-			unavailableAgents = append(unavailableAgents, agent)
-		}
-		if agentStatus.OBState != 3 {
-			unavailableObservers = append(unavailableObservers, fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.SqlPort))
-		}
-	}
-	if len(unavailableAgents) > 0 {
-		return nil, errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found agent %s not running", strings.Join(unavailableAgents, ",")))
-	}
-	if len(unavailableObservers) > 0 {
-		return nil, errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found observer %s not running", strings.Join(unavailableObservers, ",")))
-	}
+
 	currentBuildVersion, e := obclusterService.GetObBuildVersion()
 	if e != nil {
 		return nil, errors.Occur(errors.ErrUnexpected, e)
