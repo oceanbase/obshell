@@ -705,9 +705,16 @@ export async function getTenantTopSlowSqlRank(
 }
 
 /** get tenant overview get tenant overview GET /api/v1/tenants/overview */
-export async function getTenantOverView(options?: { [key: string]: any }) {
+export async function getTenantOverView(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getTenantOverViewParams,
+  options?: { [key: string]: any }
+) {
   return request<API.OcsAgentResponse & { data?: API.DbaObTenant[] }>('/api/v1/tenants/overview', {
     method: 'GET',
+    params: {
+      ...params,
+    },
     ...(options || {}),
   });
 }

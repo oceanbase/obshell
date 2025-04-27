@@ -106,6 +106,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   });
   const { data } = useRequest(getAgentInfo);
   const agentData = data?.data || {};
+
   return (
     <MyDrawer
       width={620}
@@ -135,7 +136,13 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
     >
       <Form form={form} preserve={false} hideRequiredMark={true} className="form-with-small-margin">
         <Form.Item label={'已安装版本'}>{agentData?.version}</Form.Item>
-        <Form.Item label={'硬件架构'}>{agentData?.architecture}</Form.Item>
+        <Form.Item label={'硬件架构'}>
+          {uniq(
+            flatten(clusterData?.zones?.map(item => item.servers))?.map(
+              item => item.architecture
+            ) || []
+          ).join('、')}
+        </Form.Item>
         <Form.Item
           label={'OBShell Agent 版本'}
           name="fileName"

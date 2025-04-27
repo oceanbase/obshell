@@ -58,6 +58,7 @@ declare namespace API {
     pid?: number;
     /** Ports process occupied ports */
     port?: number;
+    sqlPort?: number;
     /** timestamp when service started */
     startAt?: number;
     /** service state */
@@ -514,6 +515,11 @@ declare namespace API {
     name: string;
   };
 
+  type getTenantOverViewParams = {
+    /** tenant compitable mode: MYSQL or ORACLE */
+    mode?: string;
+  };
+
   type getTenantParameterParams = {
     /** tenant name */
     name: string;
@@ -722,6 +728,7 @@ declare namespace API {
   };
 
   type Observer = {
+    architecture?: string;
     id?: number;
     inner_status?: string;
     ip?: string;
