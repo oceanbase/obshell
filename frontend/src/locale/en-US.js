@@ -969,7 +969,7 @@ export default {
   "ocp-express.src.model.database.UserCreated": "The user is created.",
   "ocp-express.Backup.Component.RestoreNow.TheRecoverableTimeOfBackuptenantlabel": "Available Recoverable Period of {backupTenantLabel} on {selectedRestoreDate}:",
   "ocp-express.Credential.Component.ExportModal.EncryptionAndDecryptionAreRequiredWhenImportingConnections": "To import a connection, you need to enter the encryption password for decryption.",
-  "ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient": "The time of the client and the server is synchronized. A time difference of {offsetSeconds} seconds exists. OceanBase Cloud Platform can be used as expected.",
+  "ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient": "The time of the client and the server is synchronized. A time difference of {offsetSeconds} seconds exists. OceanBase Shell can be used as expected.",
   "ocp-express.Layout.BasicLayout.GotIt": "OK",
   "ocp-express.Resource.Component.Block.Tenant": "Tenants",
   "ocp-express.src.constant.tenant.InsertPermissions": "INSERT Permissions",
@@ -6000,5 +6000,5 @@ export default {
   "ocp-express.Layout.BasicLayout.DarkThemText": "Dark Theme",
   "ocp-express.Layout.BasicLayout.Task": "Task",
   "ocp-express.Detail.Component.ModifyTenantPasswordModal.TheRootPasswordOfTheCurrentTenantIs": "The root password of the current tenant is empty. There are security risks. Please modify the root password.",
-  "ocp-express.Tenant.New.CommunityEditionOceanbaseDoesNotSupportOracleTenants": "Community Edition OceanBase does not support Oracle tenants."
-}
+  "ocp-express.Tenant.New.CommunityEditionOceanbaseDoesNotSupportOracleTenants": "Community Edition OceanBase does not support Oracle tenants.",
+};

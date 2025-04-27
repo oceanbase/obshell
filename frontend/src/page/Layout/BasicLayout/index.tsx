@@ -163,7 +163,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     : formatMessage(
         {
           id: 'ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient',
-          defaultMessage: '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OCP 可正常使用',
+          defaultMessage:
+            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OBShell 可正常使用',
         },
 
         { offsetSeconds }

@@ -27,7 +27,6 @@ import useDeepCompareEffect from 'use-deep-compare-effect';
 import { TIME_FORMAT } from '@/constant/datetime';
 import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
-import { downloadLog } from '@/util/log';
 import type { Node, SubtaskOperationKey } from '@/util/task';
 import { getNodes, getLatestNode, getTaskDuration, handleSubtaskOperate } from '@/util/task';
 import styles from './TaskGraph.less';
@@ -163,7 +162,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     // 定位到当前节点
     const setLatestSubtask = () => {
       const latestNode = getLatestNode(nodes);
-      setTargetSubtask(latestNode?.id);
+      setTargetSubtask(latestNode?.domId);
     };
 
     // 将 setLatestSubtask 函数挂载到 ref 上
@@ -175,11 +174,11 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
 
     useEffect(() => {
       // 如果当前没有选中子任务节点，则自动定位到当前节点
-      if (isNullValue(subtask?.id)) {
+      if (isNullValue(subtask?.domId)) {
         setLatestSubtask();
       } else {
         // 否则自动定位到已选中的子任务节点，目的是为了页面刷新时能够自动定位到之前选中的节点
-        setTargetSubtask(subtask?.id);
+        setTargetSubtask(subtask?.domId);
       }
       setTimeout(() => {
         // 绘制 path
@@ -350,8 +349,8 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
       // 子任务 ID 为空，表明是空节点，不进行绘制
       return isNullValue(node?.id) ? null : (
         <div
-          id={`ocp-subtask-node-${node?.id}`}
-          key={node?.id}
+          id={`ocp-subtask-node-${node?.domId}`}
+          key={node?.domId}
           onClick={() => {
             // 父节点不可点击，自动选择首个子节点
             onSubtaskChange(node?.children ? node.children[0]?.id : node?.id);
@@ -520,7 +519,9 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     // 采用传入的 canvas 对象进行绘制
     const renderPath = (pathCanvas: Canvas) => {
       nodes.forEach((item, index) => {
-        const currentDom = document.getElementById(`ocp-subtask-node-${item.id}`) as HTMLDivElement;
+        const currentDom = document.getElementById(
+          `ocp-subtask-node-${item.domId}`
+        ) as HTMLDivElement;
         const currentDomLeftPoint = {
           x: currentDom?.offsetLeft,
           y: currentDom?.offsetTop + 31,
@@ -529,7 +530,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         const children = item.children || [];
         // 下一个节点，可能为空
         const nextNode = nodes[index + 1] as Node;
-        const nextDom = document.getElementById(`ocp-subtask-node-${nextNode?.id}`) as
+        const nextDom = document.getElementById(`ocp-subtask-node-${nextNode?.domId}`) as
           | HTMLDivElement
           | undefined;
         const nextDomLeftPoint = {
@@ -547,7 +548,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
             .reverse()
             .forEach(child => {
               const childDom = document.getElementById(
-                `ocp-subtask-node-${child?.id}`
+                `ocp-subtask-node-${child?.domId}`
               ) as HTMLDivElement;
               const childDomLeftPoint = {
                 x: childDom?.offsetLeft,
@@ -645,7 +646,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         {/* 任务的节点图，使用 DOM 进行绘制，与路径图进行图层叠加，可模拟出整个任务流程图 */}
         <div id="ocp-subtask-node-container">
           {nodes.map((item, index) => (
-            <div key={item.id}>
+            <div key={item.domId}>
               {renderNode(item)}
               {item.children?.map(child => renderNode(child, true))}
               {/* 存在分支节点，且下一节点不为空，则留出 20px 高度的空间来绘制 path 路径 */}

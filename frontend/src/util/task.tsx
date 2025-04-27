@@ -336,12 +336,14 @@ export function getNodes(taskData?: API.DagDetailDTO) {
   const nodes = flatten(taskData?.nodes || []);
 
   return nodes.map(item => {
+    // task 和 subtask 的 id 可能重复，增加 domId 进行区分
+    item.domId = item.id;
     // 只有一个 subTasks 时，直接替换 Node 进行返回
     if (item.sub_tasks?.length === 1) {
-      item.sub_tasks[0].id = item.sub_tasks[0].id + uniqueId();
+      item.sub_tasks[0].domId = item.sub_tasks[0].id + '_child';
       return item.sub_tasks[0];
     }
-    item.children = item.sub_tasks.map(item => ({ ...item, id: item.id + uniqueId() }));
+    item.children = item.sub_tasks.map((item, index) => ({ ...item, domId: `${item.id}_child` }));
     return item;
   });
 }

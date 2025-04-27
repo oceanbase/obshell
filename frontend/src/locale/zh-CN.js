@@ -2119,7 +2119,7 @@ export default {
   "ocp-express.Auth.User.loginHistory.IpSource": "IP 来源",
   "ocp-express.Credential.Component.ImportModal.TheEncryptionPasswordSetWhenExportingTheConnection": "导出连接时设置的加密密码",
   "ocp-express.Tenant.New.TenantCreated": "租户新建成功",
-  "ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient": "客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OCP 可正常使用",
+  "ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient": "客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OB Shell 可正常使用",
   "ocp-performance-report.ReportTables.ParameterStatInfo.ServerParamInfoTable.HostIp": "主机 IP",
   "ocp-express.Layout.Header.ProfessionalDistributedRelationalDatabaseManagement": "专业的分布式关系型数据库管控平台",
   "ocp-express.Oracle.UserOrRoleDetail.UsernameRecordusername": "用户名：{recordUsername}",
