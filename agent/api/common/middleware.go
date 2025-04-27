@@ -307,8 +307,11 @@ func Recovery(c *gin.Context, err interface{}) {
 // This is particularly useful to handle cases where gin might set the Content-Type to "text/plain"
 // due to certain types of errors, such as JSON binding errors.
 func SetContentType(c *gin.Context) {
+	if !strings.HasPrefix(c.Request.RequestURI, constant.URI_API_V1) && !strings.HasPrefix(c.Request.RequestURI, constant.URI_RPC_V1) {
+		c.Next()
+		return
+	}
 	c.Writer.Header().Set("Content-Type", "application/json")
-
 	c.Next()
 }
 
