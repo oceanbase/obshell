@@ -222,7 +222,7 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
           ]}
         >
           <MySelect>
-            {REPLICA_TYPE_LIST.map(item => (
+            {REPLICA_TYPE_LIST?.map(item => (
               <Option key={item.value} value={item.value}>
                 {item.label}
               </Option>

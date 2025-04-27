@@ -784,11 +784,12 @@ export const REPLICA_TYPE_LIST = [
     }),
     shortLabel: 'F',
     value: 'FULL',
-    description: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.FullFeaturedCopyCurrentlyIt',
-      defaultMessage:
-        '全功能型副本：目前支持的普通副本，拥有事务日志、MemTable 和 SSTable 等全部完整的数据和功能。它可以随时快速切换为 Leader 以对外提供服务。',
-    }),
+    description: '全能型副本称为 Paxos 副本，对应副本可构成 Paxos 成员组，参与选举投票',
+    // description: formatMessage({
+    //   id: 'ocp-express.src.constant.oceanbase.FullFeaturedCopyCurrentlyIt',
+    //   defaultMessage:
+    //     '全功能型副本：目前支持的普通副本，拥有事务日志、MemTable 和 SSTable 等全部完整的数据和功能。它可以随时快速切换为 Leader 以对外提供服务。',
+    // }),
   },
 
   // {
@@ -804,20 +805,21 @@ export const REPLICA_TYPE_LIST = [
   //       '日志型副本：只包含日志的副本，没有 MemTable 和 SSTable。它参与日志投票并对外提供日志服务，可以参与其他副本的恢复，但自己不能变为主提供数据库服务。',
   //   }),
   // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.ReadOnlyCopy',
-  //     defaultMessage: '只读型副本',
-  //   }),
-  //   shortLabel: 'R',
-  //   value: 'READONLY',
-  //   description: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.ReadOnlyCopyContainsComplete',
-  //     defaultMessage:
-  //       '只读型副本：包含完整的日志、MemTable 和 SSTable 等。但是它的日志比较特殊，它不作为 Paxos 成员参与日志的投票，而是作为一个观察者实时追赶 Paxos 成员的日志，并在本地回放。这种副本可以在业务对读取数据的一致性要求不高的时候提供只读服务。因其不加入 Paxos 成员组，又不会造成投票成员增加导致事务提交延时的增加。',
-  //   }),
-  // },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.oceanbase.ReadOnlyCopy',
+      defaultMessage: '只读型副本',
+    }),
+    shortLabel: 'R',
+    value: 'READONLY',
+    description:
+      '对应 V4.x 版本，OceanBase 数据库从 V4.2.0 版本开始支持只读型副本。只读型副本为非 Paxos 副本，对应副本不可构成 Paxos 成员组，不参与选举投票。',
+    // description: formatMessage({
+    //   id: 'ocp-express.src.constant.oceanbase.ReadOnlyCopyContainsComplete',
+    //   defaultMessage:
+    //     '只读型副本：包含完整的日志、MemTable 和 SSTable 等。但是它的日志比较特殊，它不作为 Paxos 成员参与日志的投票，而是作为一个观察者实时追赶 Paxos 成员的日志，并在本地回放。这种副本可以在业务对读取数据的一致性要求不高的时候提供只读服务。因其不加入 Paxos 成员组，又不会造成投票成员增加导致事务提交延时的增加。',
+    // }),
+  },
 ];
 
 /** Unit 规格管理相关 */
