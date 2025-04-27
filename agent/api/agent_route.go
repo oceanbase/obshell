@@ -22,6 +22,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 )
 
@@ -200,4 +201,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	recyclebin.GET(constant.URI_TENANTS, recyclebinListTenantHandler)
 	recyclebin.DELETE(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinPurgeTenantHandler)
 	recyclebin.POST(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinFlashbackTenantHandler)
+	r.NoRoute(func(c *gin.Context) {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "404 not found"))
+		return
+	})
 }
