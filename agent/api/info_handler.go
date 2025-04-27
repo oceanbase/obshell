@@ -127,7 +127,7 @@ func StatusHandler(s *http.State) gin.HandlerFunc {
 // @Tags v1
 // @Accept application/json
 // @Produce application/json
-// @Success 200 object http.OcsAgentResponse{dat=map[string]http.AgentStatus}
+// @Success 200 object http.OcsAgentResponse{data=map[string]http.AgentStatus}
 // @Router /api/v1/agents/status [get]
 func GetAllAgentStatus(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
