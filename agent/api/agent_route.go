@@ -85,6 +85,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			// persist tenant root password
 			constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST,
 		),
+		common.SetContentType,
 	)
 
 	if isLocalRoute {
