@@ -63,12 +63,6 @@ make frontend-dep frontend-build pre-build build-release $flag
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
 cp -f bin/obshell $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
 
-cd frontend
-pnpm i
-pnpm build
-mkdir -p $RPM_BUILD_ROOT/%{_prefix}/oceanbase/frontend/dist
-cp -r ./dist/* $RPM_BUILD_ROOT/%{_prefix}/oceanbase/frontend/dist/
-
 %files
 %defattr(755,admin,admin)
 %{_prefix}/oceanbase/*
