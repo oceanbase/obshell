@@ -254,6 +254,10 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return nil, errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please execute `init` first.")
 	}
+	allAgents, agentErr := agentService.GetAllAgentsInfoFromOB()
+	if agentErr != nil {
+		return nil, errors.Occur(errors.ErrUnexpected, "Failed to query all agents from ob")
+	}
 	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
 	agentsStatus := make(map[string]http.AgentStatus)
 	resErr := secure.SendGetRequest(agentInfo, "/api/v1/agents/status", nil, &agentsStatus)
@@ -268,6 +272,11 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 		}
 		if agentStatus.OBState != 3 {
 			unavailableObservers = append(unavailableObservers, fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.SqlPort))
+		}
+	}
+	for _, agent := range allAgents {
+		if _, ok := agentsStatus[agent.String()]; !ok {
+			unavailableAgents = append(unavailableAgents, agent.String())
 		}
 	}
 	if len(unavailableAgents) > 0 {

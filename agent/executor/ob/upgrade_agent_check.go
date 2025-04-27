@@ -25,10 +25,13 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
@@ -57,6 +60,30 @@ func preCheckForAgentUpgrade(param param.UpgradeCheckParam) (agentErr *errors.Oc
 	log.Info("Starting obshell upgrade pre-check.")
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please confirm if the OBcluster has been initialized and is maintained by obshell.")
+	}
+	allAgents, err := agentService.GetAllAgentsInfoFromOB()
+	if err != nil {
+		return errors.Occur(errors.ErrUnexpected, "Failed to query all agents from ob")
+	}
+	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
+	agentsStatus := make(map[string]http.AgentStatus)
+	resErr := secure.SendGetRequest(agentInfo, "/api/v1/agents/status", nil, &agentsStatus)
+	if resErr != nil {
+		return errors.Occur(errors.ErrUnexpected, "Failed to query all agents status")
+	}
+	unavailableAgents := make([]string, 0)
+	for agent, agentStatus := range agentsStatus {
+		if agentStatus.State != 2 {
+			unavailableAgents = append(unavailableAgents, agent)
+		}
+	}
+	for _, agent := range allAgents {
+		if _, ok := agentsStatus[agent.String()]; !ok {
+			unavailableAgents = append(unavailableAgents, agent.String())
+		}
+	}
+	if len(unavailableAgents) > 0 {
+		return errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found agent %s not running", strings.Join(unavailableAgents, ",")))
 	}
 	if err := checkUpgradeDir(&param.UpgradeDir); err != nil {
 		return errors.Occur(errors.ErrIllegalArgument, err)
