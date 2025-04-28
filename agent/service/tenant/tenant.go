@@ -262,6 +262,19 @@ func (t *TenantService) LockTenant(name string) error {
 	return db.Exec(fmt.Sprintf(SQL_LOCK_TENANT, name)).Error
 }
 
+func (t *TenantService) IsTenantLocked(name string) (bool, error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = db.Table(DBA_OB_TENANTS).Where("TENANT_NAME = ? AND LOCKED = 'YES'", name).Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
 func (t *TenantService) UnlockTenant(name string) error {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

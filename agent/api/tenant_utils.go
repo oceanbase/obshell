@@ -91,6 +91,16 @@ func tenantHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
 			return
 		}
 
+		isLocked, err := tenantService.IsTenantLocked(tenantName)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' locked failed", tenantName))
+			return
+		}
+		if isLocked {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "Tenant has been locked."))
+			return
+		}
+
 		if tenantName == constant.TENANT_SYS {
 			f(c)
 			return
@@ -181,7 +191,6 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 	}
 	return executeAgent, err
 }
-
 
 func tenantCheckWithName(c *gin.Context) (string, error) {
 	name := c.Param(constant.URI_PARAM_NAME)
