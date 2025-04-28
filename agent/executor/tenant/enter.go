@@ -34,18 +34,6 @@ var (
 	clusterTaskService = taskservice.NewClusterTaskService()
 	unitService        unit.UnitService
 	agentService       agent.AgentService
-
-	// READONLY variables
-	CREATE_TENANT_STATEMENT_VARIABLES = []string{"lower_case_table_names"}
-	// Those variables could not set by sys tenant.
-	VARIAbLES_COLLATION_OR_CHARACTER = []string{
-		"collation_server",
-		"collation_database",
-		"collation_connection",
-		"character_set_server",
-		"character_set_database",
-		"character_set_connection",
-	}
 )
 
 const (
@@ -119,8 +107,6 @@ const (
 
 	VARIABLES_TEMPLATE  = "variables"
 	PARAMETERS_TEMPLATE = "parameters"
-
-	PARAMETER_EDIT_LEVEL_READONLY = "READONLY"
 )
 
 func checkTenantExist(name string) (*oceanbase.DbaObTenant, *errors.OcsAgentError) {

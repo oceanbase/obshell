@@ -86,7 +86,7 @@ func (t *PostInitClusterTask) Execute() error {
 	// Ignore the error, because it won't affect the cluster initialization
 	obclusterService.SetParameter(
 		param.SetParameterParam{
-			Name:  "global_index_auto_split_policy",
+			Name:  constant.PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY,
 			Value: "ALL",
 		},
 	)

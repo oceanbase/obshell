@@ -41,6 +41,13 @@ const (
 	CAP_TB = "TB"
 	CAP_PB = "PB"
 
+	KB = 1024
+	MB = KB * 1024
+	GB = MB * 1024
+	TB = GB * 1024
+	PB = TB * 1024
+	EB = PB * 1024
+
 	CAPACITY_PATTERN = `^([123456789]\d*)([KMGTP][B]?)$`
 )
 
@@ -70,15 +77,6 @@ func CapacityParser(capacity string) (int, bool) {
 }
 
 func FormatCapacity(bytes int64) string {
-	const (
-		KB = 1024
-		MB = KB * 1024
-		GB = MB * 1024
-		TB = GB * 1024
-		PB = TB * 1024
-		EB = PB * 1024
-	)
-
 	switch {
 	case bytes >= EB:
 		return fmt.Sprintf("%.2f EB", float64(bytes)/float64(EB))

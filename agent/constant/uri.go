@@ -111,6 +111,8 @@ const (
 	URI_STATS            = "/stats"
 	URI_PRECHECK         = "/precheck"
 
+	URI_UNIT_CONFIG_LIMIT = "/unit-config-limit"
+
 	URI_PARAM_NAME          = "name"
 	URI_PATH_PARAM_NAME     = "/:" + URI_PARAM_NAME
 	URI_PARAM_VAR           = "variable"

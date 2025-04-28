@@ -20,12 +20,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/parse"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
-	"github.com/oceanbase/obshell/agent/service/unit"
 	"github.com/oceanbase/obshell/param"
-)
-
-var (
-	unitService = unit.UnitService{}
 )
 
 func DropUnitConfig(name string) *errors.OcsAgentError {

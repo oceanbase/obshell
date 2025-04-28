@@ -182,23 +182,6 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 	return executeAgent, err
 }
 
-func checkClusterAgentWrapper(f func(*gin.Context)) func(*gin.Context) {
-	return func(c *gin.Context) {
-		err := checkClusterAgent()
-		if err != nil {
-			common.SendResponse(c, nil, err)
-			return
-		}
-		f(c)
-	}
-}
-
-func checkClusterAgent() error {
-	if !meta.OCS_AGENT.IsClusterAgent() {
-		return errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String())
-	}
-	return nil
-}
 
 func tenantCheckWithName(c *gin.Context) (string, error) {
 	name := c.Param(constant.URI_PARAM_NAME)

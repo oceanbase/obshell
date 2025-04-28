@@ -25,3 +25,8 @@ type CreateResourceUnitConfigParams struct {
 	MinIops     *int     `json:"min_iops"`                       // min iops, smaller than or equal to 'max_iops'
 	LogDiskSize *string  `json:"log_disk_size"`                  // log disk size, greater than or equal to '2G'
 }
+
+type ClusterUnitConfigLimit struct {
+	MinMemory float64 `json:"min_memory,omitempty"`
+	MinCpu    int     `json:"min_cpu,omitempty"`
+}

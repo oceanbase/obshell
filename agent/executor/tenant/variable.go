@@ -75,7 +75,7 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 
 	needConnectTenant := false
 	for k := range param.Variables {
-		if utils.ContainsString(VARIAbLES_COLLATION_OR_CHARACTER, k) {
+		if utils.ContainsString(constant.VARIAbLES_COLLATION_OR_CHARACTER, k) {
 			needConnectTenant = true
 			break
 		}

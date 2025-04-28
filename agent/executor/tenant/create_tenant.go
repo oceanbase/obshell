@@ -374,7 +374,7 @@ func buildCreateTenantDagTemplate(param *param.CreateTenantParam) (*task.Templat
 
 	// Delete the read-only variables
 	for k := range param.Variables {
-		if utils.ContainsString(CREATE_TENANT_STATEMENT_VARIABLES, k) {
+		if utils.ContainsString(constant.CREATE_TENANT_STATEMENT_VARIABLES, k) {
 			delete(param.Variables, k)
 		}
 	}
@@ -497,7 +497,7 @@ func buildCreateTenantSql(param *param.CreateTenantParam, poolList []string) (st
 
 	transferNumber(param.Variables)
 	for k, v := range param.Variables {
-		if utils.ContainsString(CREATE_TENANT_STATEMENT_VARIABLES, k) {
+		if utils.ContainsString(constant.CREATE_TENANT_STATEMENT_VARIABLES, k) {
 			if _, ok := v.(string); ok {
 				sql += ", " + k + "= `%s`"
 			} else {

@@ -700,6 +700,15 @@ func (*ObclusterService) GetAllUnhiddenParameters() ([]oceanbase.ObParameters, e
 	return unhiddenParams, err
 }
 
+func (obclusterService *ObclusterService) GetParameterByName(name string) (param *oceanbase.ObParameters, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME = ?", name).Scan(&param).Error
+	return
+}
+
 func (obclusterService *ObclusterService) SetParameter(parameter param.SetParameterParam) error {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {

@@ -720,3 +720,19 @@ func getObclusterCharsets(c *gin.Context) {
 	charsets, err := ob.GetObclusterCharsets()
 	common.SendResponse(c, charsets, err)
 }
+
+// @ID getUnitConfigLimit
+// @Summary get resource unit config limit
+// @Description get resource unit config limit
+// @Tags unit
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=param.ClusterUnitConfigLimit}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/unit-config-limit [get]
+func getUnitConfigLimitHandler(c *gin.Context) {
+	unit := ob.GetClusterUnitSpecLimit()
+	common.SendResponse(c, unit, nil)
+}
