@@ -17,6 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
 import { Col, Row, InputNumber } from '@oceanbase/design';
+import { byte2GB } from '@oceanbase/util';
 
 export interface unitSpec {
   cpuCore: number;
@@ -26,7 +27,7 @@ export interface unitSpec {
 export interface UnitSpecProps {
   unitSpecLimit?: any;
   idleUnitSpec?: any;
-  defaultUnitSpec?: API.UnitConfig;
+  defaultUnitSpec?: API.ObUnitConfig;
   onChange?: (value?: unitSpec) => void;
 }
 
@@ -37,7 +38,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
   onChange,
 }) => {
   const [cpuCoreValue, setCpuCoreValue] = useState(defaultUnitSpec?.max_cpu);
-  const [memorySizeValue, setMemorySizeValue] = useState(defaultUnitSpec?.memory_size);
+  const [memorySizeValue, setMemorySizeValue] = useState(byte2GB(defaultUnitSpec?.memory_size));
 
   const onValueChange = (cpuCore: number, memorySize: number) => {
     if (onChange) {
@@ -57,7 +58,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
   // 修改 unit 时，CUP可配置范围上限，当前 unit 已分配CUP + 剩余空闲CUP
   const currentMaxCpuCoreCount = idleCpuCore + defaultUnitSpec?.max_cpu;
   // 修改 unit 时，可配置范围上限，当前 unit 已分配内存 + 剩余空闲内存
-  const currentMaxMemorySize = idleMemoryInBytes + defaultUnitSpec?.memory_size;
+  const currentMaxMemorySize = idleMemoryInBytes + byte2GB(defaultUnitSpec?.memory_size);
 
   return (
     <Row
@@ -76,7 +77,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
             id: 'ocp-express.component.UnitSpec.Nuclear',
             defaultMessage: '核',
           })}
-          defaultValue={defaultUnitSpec?.maxCpuCoreCount}
+          defaultValue={defaultUnitSpec?.max_cpu}
           onChange={value => {
             setCpuCoreValue(value);
             onValueChange(value, memorySizeValue);
@@ -100,7 +101,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
           addonAfter="GB"
           min={memoryLowerLimit}
           max={currentMaxMemorySize}
-          defaultValue={defaultUnitSpec?.maxMemorySize}
+          defaultValue={byte2GB(defaultUnitSpec?.memory_size)}
           onChange={(value: number) => {
             setMemorySizeValue(value);
             onValueChange(cpuCoreValue, value);

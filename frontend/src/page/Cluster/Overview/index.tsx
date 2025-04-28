@@ -617,18 +617,19 @@ const Detail: React.FC<DetailProps> = ({
       }}
     >
       <Row gutter={[16, 16]}>
-        <Col span={12}>
+        <Col span={16}>
           <ClusterInfo clusterData={clusterData} />
         </Col>
         {overviewStatusType.map(item => {
           return (
-            <Col key={item.key} span={6}>
+            <Col key={item.key} span={4}>
               <MyCard
                 title={
                   <div style={{ backgroundImage: item.img }}>
                     <span>{item.title}</span>
                   </div>
                 }
+                style={{ height: '100%' }}
                 headStyle={{
                   marginBottom: 16,
                 }}
@@ -652,12 +653,12 @@ const Detail: React.FC<DetailProps> = ({
             </Col>
           );
         })}
-        <Col span={24}>
+        <Col span={12}>
           <CompactionTimeTop3 />
         </Col>
-        {/* <Col span={12}>
+        <Col span={12}>
           <SlowSQLTop3 />
-        </Col> */}
+        </Col>
         <Col span={24}>
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>

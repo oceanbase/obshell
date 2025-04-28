@@ -48,6 +48,17 @@ export async function unitConfigDrop(
   });
 }
 
+/** get resource unit config limit get resource unit config limit GET /api/v1/unit/config/limit */
+export async function getUnitConfigLimit(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ClusterUnitSpecLimit }>(
+    '/api/v1/unit/config/limit',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}
+
 /** get all resource unit configs get all resource unit configs in the cluster GET /api/v1/units/config */
 export async function unitConfigList(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.DbaObUnitConfig[] }>('/api/v1/units/config', {

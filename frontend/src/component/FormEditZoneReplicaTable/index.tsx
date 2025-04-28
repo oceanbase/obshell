@@ -33,7 +33,6 @@ export interface FormEditZoneReplicaTableProps<T> extends FormEditTableProps<T> 
   className?: string;
   value: T[];
   tenantData: API.TenantInfo;
-  zones: any[];
   unitSpecLimit?: any;
   saveLoading?: boolean;
   dispatch?: any;
@@ -55,7 +54,7 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
   };
 
   public render() {
-    const { saveLoading, zones, unitSpecLimit } = this.props;
+    const { saveLoading, clusterData, unitSpecLimit } = this.props;
 
     const columns = [
       {
@@ -111,10 +110,8 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
         width: '40%',
         editable: true,
         fieldComponent: (text, record) => {
-          const zoneData = findBy(zones || [], 'name', record.name);
+          const zoneData = findBy(clusterData?.zones || [], 'name', record.name);
 
-          console.log(zones, 'fieldComponent zones');
-          // TODO： 待后端添加字段进行修改
           let idleCpuCore, idleMemoryInBytes;
           if (zoneData?.servers?.length > 0 && zoneData?.servers[0]?.stats) {
             const { idleCpuCoreTotal, idleMemoryInBytesTotal } = getUnitSpecLimit(
@@ -125,11 +122,15 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
             idleMemoryInBytes = idleMemoryInBytesTotal;
           }
 
+          console.log(record?.resourcePool?.unitConfig, 'record?.resourcePool?.unitConfig');
+
           return (
             <UnitSpec
               unitSpecLimit={unitSpecLimit}
               idleUnitSpec={{ idleCpuCore, idleMemoryInBytes }}
-              defaultUnitSpec={record?.resourcePool?.unitConfig}
+              defaultUnitSpec={{
+                ...record?.resourcePool?.unitConfig,
+              }}
             />
           );
         },

@@ -128,19 +128,20 @@ const SlowSQLTop3: React.FC<SlowSQLTop3Props> = () => {
                     data-aspm-desc="租户 Slow 数 Top3-跳转 SlowSQL"
                     data-aspm-param={``}
                     data-aspm-expo
+                    // TODO: version1 先屏蔽 sql 跳转
                     onClick={() => {
-                      if (item.tenant_name) {
-                        history.push({
-                          pathname: '/diagnosis/sql',
-                          query: {
-                            tenant_id: item.tenant_id,
-                            tab: 'slowSql',
-                            startTime,
-                            endTime,
-                            rangeKey: NEAR_6_HOURS.name,
-                          },
-                        });
-                      }
+                      // if (item.tenant_name) {
+                      //   history.push({
+                      //     pathname: '/diagnosis/sql',
+                      //     query: {
+                      //       tenant_id: item.tenant_id,
+                      //       tab: 'slowSql',
+                      //       startTime,
+                      //       endTime,
+                      //       rangeKey: NEAR_6_HOURS.name,
+                      //     },
+                      //   });
+                      // }
                     }}
                     className={item.tenant_name ? 'ocp-link-hover' : ''}
                     style={{

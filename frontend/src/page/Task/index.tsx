@@ -60,7 +60,13 @@ const Task: React.FC<TaskProps> = ({
   const [status, setStatus] = useState(query.status || '');
   const [taskName, setTaskName] = useState(query.name);
 
-  const { data, loading, refresh } = useRequest(getAllClusterDags, {});
+  const { data, loading, refresh } = useRequest(
+    () =>
+      getAllClusterDags({
+        HIDE_ERROR_MESSAGE: true,
+      }),
+    {}
+  );
   const {
     data: agentDagsRes,
     loading: agentDagsLoading,

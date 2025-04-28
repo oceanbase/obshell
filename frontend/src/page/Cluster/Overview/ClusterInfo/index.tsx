@@ -41,7 +41,7 @@ import ObClusterDeployMode from '@/component/ObClusterDeployMode';
 import MyCard from '@/component/MyCard';
 import { OB_CLUSTER_STATUS_LIST } from '@/constant/oceanbase';
 import MouseTooltip from '@/component/MouseTooltip';
-import useStyles from './index.style';
+import styles from './index.less';
 
 const { Text } = Typography;
 
@@ -50,7 +50,6 @@ export interface DetailProps {
 }
 
 const Detail: React.FC<DetailProps> = ({ clusterData }) => {
-  const { styles } = useStyles();
   const { token } = theme.useToken();
 
   const statusItem = findByValue(OB_CLUSTER_STATUS_LIST, clusterData.status);
@@ -297,7 +296,8 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                 }
               >
                 <Liquid
-                  height={54}
+                  // 高度过小会导致图表异常刷新
+                  height={75}
                   layout="horizontal"
                   title={item.title}
                   shape="rect"

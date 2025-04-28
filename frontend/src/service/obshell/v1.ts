@@ -4,7 +4,7 @@ import request from '@/util/request';
 
 /** get all agent status get all agent status GET /api/v1/agents/status */
 export async function getAllAgentsStatus(options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse & { dat?: Record<string, any> }>('/api/v1/agents/status', {
+  return request<API.OcsAgentResponse & { data?: Record<string, any> }>('/api/v1/agents/status', {
     method: 'GET',
     ...(options || {}),
   });

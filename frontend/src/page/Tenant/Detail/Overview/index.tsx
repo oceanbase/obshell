@@ -38,10 +38,7 @@ import { uniqueId, find } from 'lodash';
 import { byte2GB, directTo, findByValue, jsonParse } from '@oceanbase/util';
 import moment from 'moment';
 import { PageContainer } from '@oceanbase/ui';
-import { EllipsisOutlined } from '@oceanbase/icons';
 import * as ObTenantController from '@/service/ocp-express/ObTenantController';
-import * as ObClusterController from '@/service/ocp-express/ObClusterController';
-import * as ObTenantCompactionController from '@/service/ocp-express/ObTenantCompactionController';
 import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
 import { TENANT_MODE_LIST } from '@/constant/tenant';
 import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
@@ -65,20 +62,19 @@ import DeleteReplicaModal from '../Component/DeleteReplicaModal';
 import ModifyPasswordModal from '../Component/ModifyPasswordModal';
 import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
 import ModifyPrimaryZoneDrawer from '../Component/ModifyPrimaryZoneDrawer';
-import ModifyTenantPasswordModal from '../Component/ModifyTenantPasswordModal';
+
 import OBProxyAndConnectionStringModal from '../Component/OBProxyAndConnectionStringModal';
 import {
   getTenantInfo,
   tenantModifyReplicas,
   getTenantCompaction,
   tenantMajorCompaction,
-  tenantPreCheck,
   tenantClearCompactionError,
   tenantLock,
   tenantUnlock,
 } from '@/service/obshell/tenant';
-import { getObInfo } from '@/service/obshell/ob';
-import { unitConfigCreate } from '@/service/obshell/unit';
+
+import { getUnitConfigLimit, unitConfigCreate } from '@/service/obshell/unit';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 const { Text } = Typography;
 
@@ -171,22 +167,13 @@ const Detail: React.FC<NewProps> = ({
   } || { tenant_name: tenantName };
 
   const zones = getZones(tenantData);
-  console.log(tenantData, 'tenantData');
 
   // 获取 unit 规格的限制规则
-  // const { data: clusterUnitSpecLimitData } = useRequest(
-  //   ObClusterController.getClusterUnitSpecLimit,
-  //   {
-  //     manual: false,
-  //     defaultParams: [{}],
-  //   }
-  // );
+  const { data: clusterUnitSpecLimitData } = useRequest(getUnitConfigLimit);
 
-  // const clusterUnitSpecLimit = clusterUnitSpecLimitData?.data || {};
-  // TODO: 后续修改
   const clusterUnitSpecLimit = {
-    cpuLowerLimit: 0,
-    memoryLowerLimit: 0,
+    cpuLowerLimit: clusterUnitSpecLimitData?.data?.min_cpu || 0,
+    memoryLowerLimit: clusterUnitSpecLimitData?.data?.min_memory || 0,
   };
 
   useEffect(() => {
@@ -725,6 +712,7 @@ const Detail: React.FC<NewProps> = ({
                   showDeletePopconfirm={false}
                   tenantData={tenantData}
                   zones={zones}
+                  clusterData={clusterData}
                   tenantName={tenantName}
                   rowSelection={rowSelection}
                   rowKey={record => record.name}

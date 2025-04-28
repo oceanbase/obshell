@@ -61,7 +61,7 @@ import SetParameterEditableProTable from '@/component/ParameterTemplate/SetParam
 import useStyles from './index.style';
 import { getObclusterCharsets, getObInfo } from '@/service/obshell/ob';
 import { tenantCreate } from '@/service/obshell/tenant';
-import { unitConfigCreate } from '@/service/obshell/unit';
+import { getUnitConfigLimit, unitConfigCreate } from '@/service/obshell/unit';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 
@@ -128,22 +128,12 @@ const New: React.FC<NewProps> = ({
   const clusterData = obclusterInfoRes?.data || {};
   const minServerCount = getMinServerCount(zones);
 
-  console.log(minServerCount, zones, 'minServerCount');
   // 获取 unit 规格的限制规则
-  // const { data: clusterUnitSpecLimitData } = useRequest(
-  //   ObClusterController.getClusterUnitSpecLimit,
-  //   {
-  //     manual: false,
-  //     defaultParams: [{}],
-  //   }
-  // );
+  const { data: clusterUnitSpecLimitData } = useRequest(getUnitConfigLimit);
 
-  // const clusterUnitSpecLimit = clusterUnitSpecLimitData?.data || {};
-
-  // TODO: 后续修改
   const clusterUnitSpecLimit = {
-    cpuLowerLimit: 0,
-    memoryLowerLimit: 0,
+    cpuLowerLimit: clusterUnitSpecLimitData?.data?.min_cpu || 0,
+    memoryLowerLimit: clusterUnitSpecLimitData?.data?.min_memory || 0,
   };
 
   const { data: charsetListData, runAsync: listCharsets } = useRequest(getObclusterCharsets, {

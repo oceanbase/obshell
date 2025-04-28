@@ -249,6 +249,11 @@ declare namespace API {
     zone: string;
   };
 
+  type ClusterUnitSpecLimit = {
+    min_cpu?: number;
+    min_memory?: number;
+  };
+
   type CollationInfo = {
     is_default?: boolean;
     name?: string;
