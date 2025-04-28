@@ -42,7 +42,18 @@ func mergeWhitelist(specific string) string {
 	if specific == "" {
 		return defaultWhitelist
 	}
-	return strings.Join([]string{specific, defaultWhitelist}, ",")
+	splits := strings.Split(specific, ",")
+	splits = append(splits, defaultWhitelist)
+	whitelistMap := make([]string, 0)
+	// 去重
+	unique := make(map[string]struct{})
+	for _, item := range splits {
+		if _, ok := unique[item]; !ok {
+			unique[item] = struct{}{}
+			whitelistMap = append(whitelistMap, item)
+		}
+	}
+	return strings.Join(whitelistMap, ",")
 }
 
 type ModifyTenantWhitelistTask struct {
