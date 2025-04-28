@@ -92,7 +92,8 @@ const Detail: React.FC<NewProps> = ({
   },
 }) => {
   const [form] = Form.useForm();
-  const { setFieldsValue, validateFields } = form;
+  const [form2] = Form.useForm();
+  const { setFieldsValue } = form;
 
   const [showAddReplicaModal, setShowAddReplicaModal] = useState(false);
   const [showDeleteReplicaModal, setShowDeleteReplicaModal] = useState(false);
@@ -628,12 +629,16 @@ const Detail: React.FC<NewProps> = ({
                 >
                   <Text
                     ellipsis={true}
-                    editable={{
-                      editing: false,
-                      onStart: () => {
-                        setEdiLockStatusModal(true);
-                      },
-                    }}
+                    editable={
+                      tenantData.tenant_name === 'sys'
+                        ? false
+                        : {
+                            editing: false,
+                            onStart: () => {
+                              setEdiLockStatusModal(true);
+                            },
+                          }
+                    }
                   >
                     {tenantData?.locked === 'YES'
                       ? formatMessage({
@@ -1060,7 +1065,7 @@ const Detail: React.FC<NewProps> = ({
         destroyOnClose={true}
         confirmLoading={lockTenantLOading || unlockTenantLOading}
         onOk={() => {
-          validateFields().then(values => {
+          form2.validateFields().then(values => {
             const { locked } = values;
             if (locked === 'YES') {
               lockTenant({
@@ -1077,7 +1082,7 @@ const Detail: React.FC<NewProps> = ({
           setEdiLockStatusModal(false);
         }}
       >
-        <Form form={form} layout="vertical" hideRequiredMark={true}>
+        <Form form={form2} layout="vertical" hideRequiredMark={true}>
           <Form.Item
             label={formatMessage({
               id: 'ocp-express.Detail.Overview.LockedState',
@@ -1113,7 +1118,7 @@ const Detail: React.FC<NewProps> = ({
         destroyOnClose={true}
         confirmLoading={modifyTenantDescriptionLoading}
         onOk={() => {
-          validateFields().then(values => {
+          form2.validateFields().then(values => {
             modifyTenantDescription(
               {
                 tenantName,
@@ -1127,7 +1132,7 @@ const Detail: React.FC<NewProps> = ({
           setEdiRemarksModal(false);
         }}
       >
-        <Form form={form} layout="vertical" hideRequiredMark={true}>
+        <Form form={form2} layout="vertical" hideRequiredMark={true}>
           <Form.Item
             label={formatMessage({
               id: 'ocp-express.Detail.Overview.Note',

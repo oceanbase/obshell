@@ -256,36 +256,37 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
               >
                 <EditContext.Consumer>
                   {(form: WrappedFormUtils) => (
-                    <Button
-                      type="link"
-                      loading={saveLoading}
-                      onClick={() => this.handleSave(form, record.key)}
+                    <Popconfirm
+                      title={'确定要修改吗？'}
+                      onConfirm={() => {
+                        setTimeout(() => {
+                          this.handleSave(form, record.key);
+                        }, 0);
+                      }}
                     >
-                      {formatMessage({
-                        id: 'ocp-express.component.FormEditTable.Determine',
-                        defaultMessage: '确定',
-                      })}
-                    </Button>
+                      <Button type="link" loading={saveLoading}>
+                        {formatMessage({
+                          id: 'ocp-express.component.FormEditTable.Determine',
+                          defaultMessage: '确定',
+                        })}
+                      </Button>
+                    </Popconfirm>
                   )}
                 </EditContext.Consumer>
-                <Popconfirm
-                  title={formatMessage({
-                    id: 'ocp-express.component.FormEditTable.AreYouSureToCancel',
-                    defaultMessage: '确定取消吗？',
-                  })}
-                  onConfirm={() => {
+
+                <Button
+                  type="link"
+                  onClick={() => {
                     setTimeout(() => {
                       this.handleCancel(record.key);
                     }, 0);
                   }}
                 >
-                  <Button type="link">
-                    {formatMessage({
-                      id: 'ocp-express.component.FormEditTable.Cancel',
-                      defaultMessage: '取消',
-                    })}
-                  </Button>
-                </Popconfirm>
+                  {formatMessage({
+                    id: 'ocp-express.component.FormEditTable.Cancel',
+                    defaultMessage: '取消',
+                  })}
+                </Button>
               </Space>
             ) : (
               <Space
