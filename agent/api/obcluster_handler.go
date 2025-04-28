@@ -724,7 +724,7 @@ func getObclusterCharsets(c *gin.Context) {
 // @ID getUnitConfigLimit
 // @Summary get resource unit config limit
 // @Description get resource unit config limit
-// @Tags unit
+// @Tags obcluster
 // @Accept application/json
 // @Produce application/json
 // @Success 200 object http.OcsAgentResponse{data=param.ClusterUnitConfigLimit}
