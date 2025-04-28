@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import { history, connect, useSelector } from 'umi';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Table,
   Col,
@@ -61,6 +61,12 @@ const Database: React.FC<DatabaseProps> = ({
   },
   tenantData,
 }) => {
+  useEffect(() => {
+    if (tenantData?.locked === 'YES' && tenantName) {
+      history.push(`/tenant/${tenantName}`);
+    }
+  }, [tenantName, tenantData?.locked]);
+
   const { precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);

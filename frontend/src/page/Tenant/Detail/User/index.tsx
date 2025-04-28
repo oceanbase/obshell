@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { useSelector } from 'umi';
-import React from 'react';
+import { useSelector, history } from 'umi';
+import React, { useEffect } from 'react';
 import MySQL from './MySQL';
 import Oracle from './Oracle';
 
@@ -38,6 +38,12 @@ const Index: React.FC<IndexProps> = ({
   location: { pathname },
 }) => {
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+
+  useEffect(() => {
+    if (tenantData?.locked === 'YES' && tenantName) {
+      history.push(`/tenant/${tenantName}`);
+    }
+  }, [tenantName, tenantData?.locked]);
 
   return (
     <>

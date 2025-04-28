@@ -189,8 +189,10 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
   };
 
   useEffect(() => {
-    handlePreCheck();
-  }, [tenantName, pathname]);
+    if (tenantData?.locked !== 'YES') {
+      handlePreCheck();
+    }
+  }, [tenantName, pathname, tenantData?.locked]);
 
   return (
     <BasicLayout
