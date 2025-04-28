@@ -8,6 +8,7 @@ import * as v1 from './v1';
 import * as ob from './ob';
 import * as backup from './backup';
 import * as obcluster from './obcluster';
+import * as unit from './unit';
 import * as obproxy from './obproxy';
 import * as package from './package';
 import * as recyclebin from './recyclebin';
@@ -15,7 +16,6 @@ import * as resourcePool from './resourcePool';
 import * as restore from './restore';
 import * as task from './task';
 import * as tenant from './tenant';
-import * as unit from './unit';
 export default {
   agent,
   upgrade,
@@ -23,6 +23,7 @@ export default {
   ob,
   backup,
   obcluster,
+  unit,
   obproxy,
   package,
   recyclebin,
@@ -30,5 +31,4 @@ export default {
   restore,
   task,
   tenant,
-  unit,
 };

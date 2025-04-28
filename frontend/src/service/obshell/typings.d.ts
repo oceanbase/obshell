@@ -249,7 +249,7 @@ declare namespace API {
     zone: string;
   };
 
-  type ClusterUnitSpecLimit = {
+  type ClusterUnitConfigLimit = {
     min_cpu?: number;
     min_memory?: number;
   };

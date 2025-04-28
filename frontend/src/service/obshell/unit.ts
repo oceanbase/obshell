@@ -2,6 +2,17 @@
 /* eslint-disable */
 import request from '@/util/request';
 
+/** get resource unit config limit get resource unit config limit GET /api/v1/obcluster/unit-config-limit */
+export async function getUnitConfigLimit(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ClusterUnitConfigLimit }>(
+    '/api/v1/obcluster/unit-config-limit',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}
+
 /** create resource unit config create resource unit config POST /api/v1/unit/config */
 export async function unitConfigCreate(
   body: API.CreateResourceUnitConfigParams,
@@ -46,17 +57,6 @@ export async function unitConfigDrop(
     params: { ...queryParams },
     ...(options || {}),
   });
-}
-
-/** get resource unit config limit get resource unit config limit GET /api/v1/unit/config/limit */
-export async function getUnitConfigLimit(options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse & { data?: API.ClusterUnitSpecLimit }>(
-    '/api/v1/unit/config/limit',
-    {
-      method: 'GET',
-      ...(options || {}),
-    }
-  );
 }
 
 /** get all resource unit configs get all resource unit configs in the cluster GET /api/v1/units/config */
