@@ -56,7 +56,6 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
 
   const minServerCount = getMinServerCount(clusterZones);
 
-  console.log(clusterZones, 'clusterZones');
   useEffect(() => {
     setUnitSpecs();
   }, [visible]);

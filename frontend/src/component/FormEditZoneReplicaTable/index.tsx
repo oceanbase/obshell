@@ -122,8 +122,6 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
             idleMemoryInBytes = idleMemoryInBytesTotal;
           }
 
-          console.log(record?.resourcePool?.unitConfig, 'record?.resourcePool?.unitConfig');
-
           return (
             <UnitSpec
               unitSpecLimit={unitSpecLimit}

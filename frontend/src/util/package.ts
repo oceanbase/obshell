@@ -26,7 +26,6 @@ export type Comparer =
 function versionCompareValue(version1?: string, version2?: string) {
   const v1 = version1?.split('.') || [];
   const v2 = version2?.split('.') || [];
-  console.log(v1, v2, 'versionCompareValue');
   for (let i = 0; i < v1.length || i < v2.length; ++i) {
     let x = 0;
     let y = 0;

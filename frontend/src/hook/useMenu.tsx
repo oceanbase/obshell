@@ -103,7 +103,10 @@ export const useBasicMenu = (): MenuItem[] => {
       children: [
         {
           link: `/package`,
-          title: '软件包管理',
+          title: formatMessage({
+            id: 'ocp-v2.src.hook.useMenu.SoftwarePackageManagement',
+            defaultMessage: '软件包管理',
+          }),
         },
         // {
         //   link: `/property`,

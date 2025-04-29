@@ -47,7 +47,10 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
       if (res.successful) {
         message.success(
           type === 'ADD'
-            ? '密码录入成功'
+            ? formatMessage({
+                id: 'ocp-v2.src.component.TenantAdminPasswordModal.PasswordEnteredSuccessfully',
+                defaultMessage: '密码录入成功',
+              })
             : formatMessage({
                 id: 'ocp-express.src.component.TenantAdminPasswordModal.PasswordModifiedSuccessfully',
                 defaultMessage: '密码修改成功',
@@ -101,6 +104,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           marginBottom: 24,
         }}
       />
+
       <Form
         form={form}
         layout="vertical"

@@ -236,7 +236,6 @@ export function getDetailComponentByParameterValue(
     };
   });
 
-  console.log(serverValues, tenantValues, zones, 'tenantValues');
   if (parameterType === 'TENANT') {
     const uniqTenantValues = uniq(
       tenantValues

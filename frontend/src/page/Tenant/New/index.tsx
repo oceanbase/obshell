@@ -241,7 +241,12 @@ const New: React.FC<NewProps> = ({
     manual: true,
     onSuccess: res => {
       if (res.successful) {
-        message.success('创建租户成功');
+        message.success(
+          formatMessage({
+            id: 'ocp-v2.Tenant.New.TenantCreationSucceeded',
+            defaultMessage: '创建租户成功',
+          })
+        );
         const taskId = res?.data?.id;
         history.push(`/tenant/result/${taskId}`);
       }
@@ -1127,7 +1132,10 @@ const New: React.FC<NewProps> = ({
                       rules={[
                         {
                           required: true,
-                          message: '请选择 Zone 优先级排序',
+                          message: formatMessage({
+                            id: 'ocp-v2.Tenant.New.PleaseSelectZonePrioritySort',
+                            defaultMessage: '请选择 Zone 优先级排序',
+                          }),
                         },
                       ]}
                     >

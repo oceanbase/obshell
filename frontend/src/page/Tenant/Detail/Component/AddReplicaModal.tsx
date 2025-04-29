@@ -193,7 +193,10 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
               }),
             },
           ]}
-          extra="每个 Zone 只能设置一个副本"
+          extra={formatMessage({
+            id: 'ocp-v2.Detail.Component.AddReplicaModal.OnlyOneReplicaCanBe',
+            defaultMessage: '每个 Zone 只能设置一个副本',
+          })}
         >
           <MySelect showSearch={true}>
             {unsetZones.map(item => (

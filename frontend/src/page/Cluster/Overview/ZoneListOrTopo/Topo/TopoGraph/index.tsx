@@ -700,7 +700,6 @@ class TopoGraph extends React.PureComponent<TopoGraphProps> {
                   defaultMessage: '连接数',
                 });
 
-                console.log(model, 'model');
                 const portInfo =
                   model.nodeType === 'server'
                     ? formatMessage(

@@ -69,7 +69,6 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     },
   });
 
-  console.log(location, 'location');
   useEffect(() => {
     if (location?.pathname === '/login') {
       refresh();

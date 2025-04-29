@@ -1,4 +1,4 @@
-// import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
+import { formatMessage } from '@/util/intl'; // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { uniqueId, find } from 'lodash';
 import React, { useState, useEffect } from 'react';
 import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@oceanbase/design';
@@ -46,7 +46,15 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   const beforeUpload = file => {
     const isFileExists = fileList.some(f => f.name === file.name);
     if (isFileExists) {
-      message.warning(`${file.name} 软件包已存在，请重新选择`);
+      message.warning(
+        formatMessage(
+          {
+            id: 'ocp-v2.component.UploadPackageDrawer.FilenamePackageAlreadyExistsPlease',
+            defaultMessage: '{fileName} 软件包已存在，请重新选择',
+          },
+          { fileName: file.name }
+        )
+      );
       return false;
     }
     return true;
@@ -111,7 +119,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 status: currentFile?.status,
                 id: existedFile.response?.data?.id,
                 md5: existedFile.response?.data?.md5,
-                checkResult: '失败',
+                checkResult: formatMessage({
+                  id: 'ocp-v2.component.UploadPackageDrawer.Failed',
+                  defaultMessage: '失败',
+                }),
                 description: currentFile?.response?.error?.message,
                 percent: 100,
               };
@@ -156,7 +167,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 
   const columns = [
     {
-      title: '软件包名称',
+      title: formatMessage({
+        id: 'ocp-v2.component.UploadPackageDrawer.PackageName',
+        defaultMessage: '软件包名称',
+      }),
       dataIndex: 'name',
       ellipsis: true,
       render: (text: string, record) => (
@@ -170,7 +184,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     },
 
     {
-      title: '上传进度',
+      title: formatMessage({
+        id: 'ocp-v2.component.UploadPackageDrawer.UploadProgress',
+        defaultMessage: '上传进度',
+      }),
       dataIndex: 'percent',
       width: 110,
       render: (text, record) => {
@@ -267,19 +284,34 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 
   return (
     <Drawer
-      title={'上传软件包'}
+      title={formatMessage({
+        id: 'ocp-v2.component.UploadPackageDrawer.UploadSoftwarePackage',
+        defaultMessage: '上传软件包',
+      })}
       open={open}
       width={800}
       destroyOnClose={true}
       maskClosable={false}
-      okText={'上传'}
+      okText={formatMessage({
+        id: 'ocp-v2.component.UploadPackageDrawer.Upload',
+        defaultMessage: '上传',
+      })}
       onClose={() => {
         if (fileList.some(item => item.status !== 'done')) {
           Modal.confirm({
-            title: '当前文件上传中，是否确定退出？',
-            content: '退出后文件会在后台继续上传，但是无法查看进度',
+            title: formatMessage({
+              id: 'ocp-v2.component.UploadPackageDrawer.TheCurrentFileIsBeing',
+              defaultMessage: '当前文件上传中，是否确定退出？',
+            }),
+            content: formatMessage({
+              id: 'ocp-v2.component.UploadPackageDrawer.AfterExitingTheFileWill',
+              defaultMessage: '退出后文件会在后台继续上传，但是无法查看进度',
+            }),
 
-            okText: '退出',
+            okText: formatMessage({
+              id: 'ocp-v2.component.UploadPackageDrawer.Exit',
+              defaultMessage: '退出',
+            }),
             onOk: () => {
               onCancel();
             },
@@ -331,17 +363,28 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           rules={[
             {
               required: true,
-              message: '请选择软件包',
+              message: formatMessage({
+                id: 'ocp-v2.component.UploadPackageDrawer.PleaseSelectASoftwarePackage',
+                defaultMessage: '请选择软件包',
+              }),
             },
           ]}
           extra={
             <div>
-              只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。
+              {formatMessage({
+                id: 'ocp-v2.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbase',
+                defaultMessage:
+                  '只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
+              })}
+
               <a
                 href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
                 target="_blank"
               >
-                RPM 包下载地址
+                {formatMessage({
+                  id: 'ocp-v2.component.UploadPackageDrawer.RpmPackageDownloadAddress',
+                  defaultMessage: 'RPM 包下载地址',
+                })}
               </a>
             </div>
           }
@@ -386,13 +429,26 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                     clearInterval(timer);
                     setTimeout(() => {
                       options.onSuccess(res.data);
-                      message.success(`${file.name} 上传成功`);
+                      message.success(
+                        formatMessage(
+                          {
+                            id: 'ocp-v2.component.UploadPackageDrawer.FilenameUploadedSuccessfully',
+                            defaultMessage: '{fileName} 上传成功',
+                          },
+                          { fileName: file.name }
+                        )
+                      );
                       onSuccess();
                     }, 500);
                   } else {
                     // 网络波动导致浏览器关闭请求，此处不会返回错误值
                     if (!res) {
-                      message.error('网络异常，请稍后再试');
+                      message.error(
+                        formatMessage({
+                          id: 'ocp-v2.component.UploadPackageDrawer.NetworkExceptionPleaseTryAgain',
+                          defaultMessage: '网络异常，请稍后再试',
+                        })
+                      );
                     }
                     clearInterval(timer);
                     setTimeout(() => {
@@ -406,7 +462,12 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 });
               } catch (error) {
                 console.error('file error: ', error);
-                message.warning('上传文件过大，请联系技术同学使用 SDK 上传');
+                message.warning(
+                  formatMessage({
+                    id: 'ocp-v2.component.UploadPackageDrawer.TheUploadedFileIsToo',
+                    defaultMessage: '上传文件过大，请联系技术同学使用 SDK 上传',
+                  })
+                );
               }
             }}
             withCredentials={true}
@@ -416,7 +477,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
           >
             <Button>
               <UploadOutlined />
-              {'选择软件包'}
+              {formatMessage({
+                id: 'ocp-v2.component.UploadPackageDrawer.SelectSoftwarePackage',
+                defaultMessage: '选择软件包',
+              })}
             </Button>
           </Upload>
         </Form.Item>
@@ -431,7 +495,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               color: '#132039',
             }}
           >
-            {'软件包'}
+            {formatMessage({
+              id: 'ocp-v2.component.UploadPackageDrawer.SoftwarePackage',
+              defaultMessage: '软件包',
+            })}
             {`（${fileList?.length}）`}
           </div>
           <Table dataSource={fileList} columns={columns} rowKey="key" pagination={false} />

@@ -65,7 +65,7 @@ export const OB_CLUSTER_STATUS_LIST: Global.StatusItem[] = [
   },
 
   {
-    label: '可用',
+    label: formatMessage({ id: 'ocp-v2.src.constant.oceanbase.Available', defaultMessage: '可用' }),
     value: 'AVAILABLE',
     badgeStatus: 'success',
   },
@@ -784,7 +784,10 @@ export const REPLICA_TYPE_LIST = [
     }),
     shortLabel: 'F',
     value: 'FULL',
-    description: '全能型副本称为 Paxos 副本，对应副本可构成 Paxos 成员组，参与选举投票',
+    description: formatMessage({
+      id: 'ocp-v2.src.constant.oceanbase.AUniversalCopyIsCalled',
+      defaultMessage: '全能型副本称为 Paxos 副本，对应副本可构成 Paxos 成员组，参与选举投票',
+    }),
     // description: formatMessage({
     //   id: 'ocp-express.src.constant.oceanbase.FullFeaturedCopyCurrentlyIt',
     //   defaultMessage:
@@ -812,8 +815,12 @@ export const REPLICA_TYPE_LIST = [
     }),
     shortLabel: 'R',
     value: 'READONLY',
-    description:
-      '对应 V4.x 版本，OceanBase 数据库从 V4.2.0 版本开始支持只读型副本。只读型副本为非 Paxos 副本，对应副本不可构成 Paxos 成员组，不参与选举投票。',
+    description: formatMessage({
+      id: 'ocp-v2.src.constant.oceanbase.ForVXVersionsOceanbase',
+      defaultMessage:
+        '对应 V4.x 版本，OceanBase 数据库从 V4.2.0 版本开始支持只读型副本。只读型副本为非 Paxos 副本，对应副本不可构成 Paxos 成员组，不参与选举投票。',
+    }),
+
     // description: formatMessage({
     //   id: 'ocp-express.src.constant.oceanbase.ReadOnlyCopyContainsComplete',
     //   defaultMessage:

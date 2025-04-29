@@ -15,6 +15,7 @@ unprocessed-code.ts.txt
 yarn.lock
 .node
 .ignore
+src/i18n
 dist
 unuseful-locale-key.txt
 docs.zip

@@ -164,7 +164,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         {
           id: 'ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient',
           defaultMessage:
-            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OBShell 可正常使用',
+            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OB-Dashboard 可正常使用',
         },
 
         { offsetSeconds }
@@ -425,7 +425,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         showLocale: true,
         locales: ['zh-CN', 'en-US'],
         appData: {
-          shortName: 'OBShell',
+          shortName: 'OB-Dashboard',
           version: appInfo.buildVersion,
           releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
         },

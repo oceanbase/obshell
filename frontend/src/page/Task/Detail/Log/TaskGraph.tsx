@@ -139,7 +139,6 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     // 对任务进行结构化处理，方便绘图
     const nodes = getNodes(taskData);
 
-    console.log(nodes, subtask, 'nodes');
     const { token } = theme.useToken();
 
     // 定位到目标节点
@@ -600,9 +599,6 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
               }
             });
         } else if (nextNode) {
-          console.log(item, nextNode, 'nextNode');
-          console.log(currentDomLeftPoint, nextDomLeftPoint, 'currentDomLeftPoint');
-
           // 未分叉: 绘制当前节点与下一节点之间的连线
           // 此时连线不会相互覆盖，因此顺序绘制即可，不需要处理覆盖的问题
           pathCanvas.addShape('path', {

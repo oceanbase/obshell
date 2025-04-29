@@ -138,8 +138,6 @@ const Detail: React.FC<DetailProps> = ({
 
   const { data } = useRequest(getAllAgentsStatus);
 
-  console.log(data, 'getAllAgentsStatus');
-
   // clusterData zones 中的 servers 不存在 status 属性，单独调个接口请求
   // const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
   //   return {
@@ -166,7 +164,6 @@ const Detail: React.FC<DetailProps> = ({
     return { ...item, status };
   });
 
-  console.log(realServerList, 'realServerList');
   const ResultStatusContent = ({ type }) => {
     const runningStatus = 'RUNNING';
     const normalStatus = 'NORMAL';
@@ -249,6 +246,7 @@ const Detail: React.FC<DetailProps> = ({
               color: token.colorTextTertiary,
             }}
           />
+
           <a
             onClick={() => {
               if (unavailableCount > 0) {
@@ -293,6 +291,7 @@ const Detail: React.FC<DetailProps> = ({
               color: token.colorTextTertiary,
             }}
           />
+
           <a
             onClick={() => {
               if (otherCount > 0) {
@@ -323,7 +322,6 @@ const Detail: React.FC<DetailProps> = ({
       </div>
     );
   };
-
   // 组装大盘类型数据
   const overviewStatusType = [
     {
@@ -347,6 +345,7 @@ const Detail: React.FC<DetailProps> = ({
       totalCount: (clusterData?.tenants || [])?.length,
     },
   ];
+
   const [upgradeVisible, setUpgradeVisible] = useState<boolean>(false);
   const [upgradeAgentVisible, setUpgradeAgentVisible] = useState<boolean>(false);
 
@@ -355,7 +354,10 @@ const Detail: React.FC<DetailProps> = ({
     onSuccess: res => {
       if (res.successful) {
         Modal.success({
-          title: '启动集群的任务提交成功',
+          title: formatMessage({
+            id: 'ocp-v2.Cluster.Overview.TheTaskToStartThe',
+            defaultMessage: '启动集群的任务提交成功',
+          }),
 
           content: (
             <>
@@ -383,7 +385,10 @@ const Detail: React.FC<DetailProps> = ({
     onSuccess: res => {
       if (res.successful) {
         Modal.success({
-          title: '停止集群的任务提交成功',
+          title: formatMessage({
+            id: 'ocp-v2.Cluster.Overview.TheTaskOfStoppingThe',
+            defaultMessage: '停止集群的任务提交成功',
+          }),
 
           content: (
             <>
@@ -416,27 +421,47 @@ const Detail: React.FC<DetailProps> = ({
         const dagList = res.data?.contents || [];
 
         if (dagList.some(item => item.state !== 'FAILED')) {
-          message.warning('当前有正在进行的集群启停任务，此时禁止继续启停');
+          message.warning(
+            formatMessage({
+              id: 'ocp-v2.Cluster.Overview.ThereIsAnOngoingCluster',
+              defaultMessage: '当前有正在进行的集群启停任务，此时禁止继续启停',
+            })
+          );
           return;
         }
 
         let content = '';
         let forcePassDag = { id: [] };
-        const list = dagList.filter(item => item.state !== 'FAILED');
+        const list = dagList.filter(item => item.state === 'FAILED');
         if (list.length > 0) {
-          content = `将会自动跳过任务 ${list
+          const listString = list
             .map(item => {
               return `[${item.name}:${item.id}]`;
             })
-            .join('，')}`;
+            .join('，');
+
+          content = formatMessage(
+            {
+              id: 'ocp-v2.Cluster.Overview.WillAutomaticallySkipTasksListstring',
+              defaultMessage: '将会自动跳过任务 {listString}',
+            },
+            { listString: listString }
+          );
           forcePassDag = { id: list.map(item => item.id) };
         }
 
         if (key === 'start') {
+          const realClusterName = clusterData.cluster_name || '';
           Modal.confirm({
-            title: `确定要启动 OB 集群 ${clusterData.cluster_name || ''} 吗？`,
+            title: formatMessage(
+              {
+                id: 'ocp-v2.Cluster.Overview.AreYouSureYouWant',
+                defaultMessage: '确定要启动 OB 集群 {realClusterName} 吗？',
+              },
+              { realClusterName: realClusterName }
+            ),
             content,
-            okText: '启动',
+            okText: formatMessage({ id: 'ocp-v2.Cluster.Overview.Start', defaultMessage: '启动' }),
             onOk: () => {
               startFn({ scope: { type: 'GLOBAL' }, forcePassDag });
             },
@@ -488,24 +513,30 @@ const Detail: React.FC<DetailProps> = ({
   const menu = (
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item key="upgrade">
-        <span>OB 升级</span>
+        <span>
+          {formatMessage({ id: 'ocp-v2.Cluster.Overview.ObUpgrade', defaultMessage: 'OB 升级' })}
+        </span>
       </Menu.Item>
       <Menu.Item key="upgradeAgent">
-        <span>OBShell 升级</span>
+        <span>
+          {formatMessage({
+            id: 'ocp-v2.Cluster.Overview.ObshellUpgrade',
+            defaultMessage: 'OBShell 升级',
+          })}
+        </span>
       </Menu.Item>
       {/*
       {(clusterData.status === 'RUNNING' ||
-        clusterData.status === 'UNAVAILABLE' ||
-        clusterData.syncStatus === 'DISABLED_WITH_READ_ONLY') && (
-        <Menu.Item key="restart">
-          <span>启动集群</span>
-        </Menu.Item>
+       clusterData.status === 'UNAVAILABLE' ||
+       clusterData.syncStatus === 'DISABLED_WITH_READ_ONLY') && (
+       <Menu.Item key="restart">
+         <span>启动集群</span>
+       </Menu.Item>
       )}
-
       {(clusterData.status === 'RUNNING' || clusterData.status === 'UNAVAILABLE') && (
-        <Menu.Item key="stop">
-          <span>停止集群</span>
-        </Menu.Item>
+       <Menu.Item key="stop">
+         <span>停止集群</span>
+       </Menu.Item>
       )} */}
     </Menu>
   );
@@ -541,7 +572,10 @@ const Detail: React.FC<DetailProps> = ({
                   }}
                 >
                   {isAbnormal
-                    ? '集群状态异常'
+                    ? formatMessage({
+                        id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
+                        defaultMessage: '集群状态异常',
+                      })
                     : formatMessage(
                         {
                           id: 'ocp-express.Cluster.Overview.Obversion',
@@ -564,18 +598,18 @@ const Detail: React.FC<DetailProps> = ({
           <Space>
             {/* TODO: version1 先屏蔽 */}
             {/* <Button
-              data-aspm-click="c304254.d308756"
-              data-aspm-desc="集群详情-Unit 分布跳转"
-              data-aspm-param={``}
-              data-aspm-expo
-              onClick={() => {
-                history.push('/overview/unit');
-              }}
+             data-aspm-click="c304254.d308756"
+             data-aspm-desc="集群详情-Unit 分布跳转"
+             data-aspm-param={``}
+             data-aspm-expo
+             onClick={() => {
+               history.push('/overview/unit');
+             }}
             >
-              {formatMessage({
-                id: 'ocp-express.Cluster.Overview.UnitDistribution',
-                defaultMessage: 'Unit 分布',
-              })}
+             {formatMessage({
+               id: 'ocp-express.Cluster.Overview.UnitDistribution',
+               defaultMessage: 'Unit 分布',
+             })}
             </Button> */}
             <Button
               data-aspm-click="c304254.d308757"
@@ -596,7 +630,12 @@ const Detail: React.FC<DetailProps> = ({
                 handleMenuClick('start');
               }}
             >
-              <span>启动集群</span>
+              <span>
+                {formatMessage({
+                  id: 'ocp-v2.Cluster.Overview.StartTheCluster',
+                  defaultMessage: '启动集群',
+                })}
+              </span>
             </Button>
 
             <Button
@@ -604,7 +643,12 @@ const Detail: React.FC<DetailProps> = ({
                 handleMenuClick('stop');
               }}
             >
-              <span>停止集群</span>
+              <span>
+                {formatMessage({
+                  id: 'ocp-v2.Cluster.Overview.StopTheCluster',
+                  defaultMessage: '停止集群',
+                })}
+              </span>
             </Button>
 
             <Dropdown overlay={menu} getPopupContainer={() => document.body}>
@@ -617,12 +661,12 @@ const Detail: React.FC<DetailProps> = ({
       }}
     >
       <Row gutter={[16, 16]}>
-        <Col span={16}>
+        <Col span={14}>
           <ClusterInfo clusterData={clusterData} />
         </Col>
         {overviewStatusType.map(item => {
           return (
-            <Col key={item.key} span={4}>
+            <Col key={item.key} span={5}>
               <MyCard
                 title={
                   <div style={{ backgroundImage: item.img }}>

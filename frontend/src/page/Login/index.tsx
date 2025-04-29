@@ -75,7 +75,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
   });
 
   const login = (values: Values) => {
-    const { username, password } = values;
+    const { username, password = '' } = values;
     // Save password to global state
     dispatch({
       type: 'profile/update',

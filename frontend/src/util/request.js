@@ -92,12 +92,24 @@ const statusCodeMessage = {
   }),
 };
 const messageMap = {
-  'Unexpected error: failed to start maintenance: cluster is under maintenance':
-    '集群处于运维状态中',
-  'Unexpected error: failed to start maintenance: agent is under maintenance':
-    '当前节点处于运维状态中',
-  'Known error: Tenant has been locked.':
-    '租户已被锁定',
+  'Unexpected error: failed to start maintenance: cluster is under maintenance': formatMessage({
+    id: 'ocp-v2.src.util.request.ClusterInOMState',
+    defaultMessage: '集群处于运维状态中',
+  }),
+
+  'Unexpected error: failed to start maintenance: agent is under maintenance': formatMessage({
+    id: 'ocp-v2.src.util.request.TheCurrentNodeIsIn',
+    defaultMessage: '当前节点处于运维状态中',
+  }),
+
+  'Known error: Tenant has been locked.': formatMessage({
+    id: 'ocp-v2.src.util.request.TenantIsLocked',
+    defaultMessage: '租户已被锁定',
+  }),
+  'Verification failed: access denied': formatMessage({
+    id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
+    defaultMessage: '验证失败：访问被拒绝',
+  }),
 };
 
 const getMsg = (errorMessage = '') => {
@@ -106,16 +118,26 @@ const getMsg = (errorMessage = '') => {
   }
 
   if (errorMessage?.includes('observer process not exist')) {
-    return 'observer 进程不存在';
+    return formatMessage({
+      id: 'ocp-v2.src.util.request.ObserverProcessDoesNotExist',
+      defaultMessage: 'observer 进程不存在',
+    });
   }
 
   const reg = /failed to start maintenance: (.*?) is under maintenance/;
   const [, name] = errorMessage?.match(reg) || [];
 
   if (name) {
-    return name ? `${name} 处于运维状态中` : undefined;
+    return name
+      ? formatMessage(
+          {
+            id: 'ocp-v2.src.util.request.NameIsInOperationAnd',
+            defaultMessage: '{name} 处于运维状态中',
+          },
+          { name: name }
+        )
+      : undefined;
   }
-
 };
 
 /**
@@ -209,11 +231,9 @@ const errorHandler = ({ request, response, data }) => {
       //   });
       // }
     }
-  }
-  // 一定要返回 data，否则就会在错误处理这一层断掉，后续无法获取响应的数据
+  } // 一定要返回 data，否则就会在错误处理这一层断掉，后续无法获取响应的数据
   return data;
 };
-
 /**
  * 配置request请求时的默认参数
  */
@@ -221,13 +241,11 @@ const request = extend({
   errorHandler, // 默认错误处理
   credentials: 'include', // 默认请求是否带上cookie
 });
-
-function base64Encode (key, iv) {
+function base64Encode(key, iv) {
   if (!key || !iv) return '';
   try {
     // 将 key 和 iv 合并，并转为 WordArray
     const combined = cloneDeep(key).concat(iv);
-
     // 将 WordArray 转为 Base64
     const base64String = CryptoJS.enc.Base64.stringify(combined);
 
@@ -270,36 +288,39 @@ request.interceptors.request.use((url, options) => {
 
   const ocsHeader = isTestEnv
     ? JSON.stringify({
-      // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-      Auth: password,
-      // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-      Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-      // 请求的 URI
-      Uri: `${url}${Object.keys(options.params).length > 0
-        ? `?${queryString.stringify(options.params, { sort: false })}`
-        : ''
+        // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
+        Auth: password,
+        // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
+        Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+        // 请求的 URI
+        Uri: `${url}${
+          Object.keys(options.params).length > 0
+            ? `?${queryString.stringify(options.params, { sort: false })}`
+            : ''
         }`,
-    })
+      })
     : Base64.decode(
-      Base64.encode(
-        encrypt(
-          JSON.stringify({
-            // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-            Auth: password,
-            // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-            Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-            // 请求的 URI
-            Uri: `${url}${Object.keys(options.params).length > 0
-              ? `?${queryString.stringify(options.params, { sort: false })}`
-              : ''
+        Base64.encode(
+          encrypt(
+            JSON.stringify({
+              // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
+              Auth: password,
+              // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
+              Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+              // 请求的 URI
+              Uri: `${url}${
+                Object.keys(options.params).length > 0
+                  ? `?${queryString.stringify(options.params, { sort: false })}`
+                  : ''
               }`,
-            // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
-            ...(options.data ? { Keys: keys } : {}),
-          }),
-          publicKey
+
+              // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
+              ...(options.data ? { Keys: keys } : {}),
+            }),
+            publicKey
+          )
         )
-      )
-    );
+      );
 
   // url list to skip auth validation
   const skipUrlList = ['/api/v1/secret'];
@@ -320,9 +341,9 @@ request.interceptors.request.use((url, options) => {
         ...(skipUrlList.includes(url)
           ? {}
           : {
-            'X-OCS-Header': ocsHeader,
-            ...(isTestEnv ? {} : isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
-          }),
+              'X-OCS-Header': ocsHeader,
+              ...(isTestEnv ? {} : isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
+            }),
       },
     },
   };

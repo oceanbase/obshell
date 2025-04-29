@@ -37,7 +37,8 @@ error = true -> 合并失败
  */
 export function getCompactionStatusV4(tenantCompactionsList: API.TenantCompaction[]) {
   // 合并出错
-  const compactionsError = tenantCompactionsList?.filter(item => item?.error || item?.is_error !== 'NO').length > 0;
+  const compactionsError =
+    tenantCompactionsList?.filter(item => item?.error || item?.is_error !== 'NO').length > 0;
   // 合并中
   const isCompactionsMerging =
     tenantCompactionsList.filter(
@@ -108,8 +109,8 @@ export function getCompactionResult(tenantCompaction?: API.TenantCompaction) {
     ? 'FAIL'
     : // 合并中
     tenantCompaction?.status === 'COMPACTING'
-      ? 'COMPACTING'
-      : // 合并成功
+    ? 'COMPACTING'
+    : // 合并成功
       'SUCCESS';
 }
 
@@ -156,7 +157,6 @@ export function getUnitSpecLimit(zoneStats: API.ServerResourceStats) {
     );
   }
 
-  console.log(idleCpuCoreTotal, idleMemoryInBytesTotal, 'idleCpuCoreTotal, idleMemoryInBytesTotal');
   return { idleCpuCoreTotal, idleMemoryInBytesTotal };
 }
 

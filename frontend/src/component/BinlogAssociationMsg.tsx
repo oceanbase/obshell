@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
 import { flatten } from 'lodash';
 import { Alert, Typography } from '@oceanbase/design';
@@ -36,12 +37,25 @@ const BinlogAssociationMsg: React.FC<BinlogAssociationMsgProps> = ({
           },
         }}
       >
-        当前 {clusterType} 与 Binlog 实例：
+        {formatMessage({
+          id: 'ocp-v2.src.component.BinlogAssociationMsg.Current',
+          defaultMessage: '当前',
+        })}
+
+        {clusterType}
+        {formatMessage({
+          id: 'ocp-v2.src.component.BinlogAssociationMsg.WithBinlogInstance',
+          defaultMessage: '与 Binlog 实例：',
+        })}
         {joinComponent(instanceNames, item => (
           <span style={{ marginBottom: 0 }}>{item}</span>
         ))}
       </Paragraph>
-      关联，本操作会造成 Binlog 服务与下游业务中断， 请谨慎评估业务影响后再进行操作。
+      {formatMessage({
+        id: 'ocp-v2.src.component.BinlogAssociationMsg.ThisOperationWillInterruptThe',
+        defaultMessage:
+          '关联，本操作会造成 Binlog 服务与下游业务中断， 请谨慎评估业务影响后再进行操作。',
+      })}
     </>
   );
 

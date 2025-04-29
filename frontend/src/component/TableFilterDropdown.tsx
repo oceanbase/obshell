@@ -56,7 +56,10 @@ const TableFilterDropdown: React.FC<TableFilterDropdownProps> = ({
       }}
     >
       <MyInput
-        spm="表格自定义搜索-搜索框"
+        spm={formatMessage({
+          id: 'ocp-v2.src.component.TableFilterDropdown.TableCustomSearchSearchBox',
+          defaultMessage: '表格自定义搜索-搜索框',
+        })}
         onChange={e => {
           setValue(e.target.value);
           setSelectedKeys(e.target.value ? [e.target.value] : []);
@@ -69,9 +72,13 @@ const TableFilterDropdown: React.FC<TableFilterDropdownProps> = ({
         data-aspm-expo
         data-aspm-param={``}
       />
+
       <Space>
         <Button
-          spm="表格自定义搜索-搜索"
+          spm={formatMessage({
+            id: 'ocp-v2.src.component.TableFilterDropdown.TableCustomSearchSearch',
+            defaultMessage: '表格自定义搜索-搜索',
+          })}
           type="primary"
           onClick={() => {
             confirmFilter();
@@ -84,7 +91,10 @@ const TableFilterDropdown: React.FC<TableFilterDropdownProps> = ({
           {formatMessage({ id: 'ocp-express.src.util.component.Search', defaultMessage: '搜索' })}
         </Button>
         <Button
-          spm="表格自定义搜索-重置"
+          spm={formatMessage({
+            id: 'ocp-v2.src.component.TableFilterDropdown.TableCustomSearchReset',
+            defaultMessage: '表格自定义搜索-重置',
+          })}
           onClick={() => {
             if (clearFilters) {
               clearFilters();

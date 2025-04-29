@@ -257,7 +257,10 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                 <EditContext.Consumer>
                   {(form: WrappedFormUtils) => (
                     <Popconfirm
-                      title={'确定要修改吗？'}
+                      title={formatMessage({
+                        id: 'ocp-v2.component.FormEditTable.AreYouSureYouWant',
+                        defaultMessage: '确定要修改吗？',
+                      })}
                       onConfirm={() => {
                         setTimeout(() => {
                           this.handleSave(form, record.key);

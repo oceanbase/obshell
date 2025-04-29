@@ -53,7 +53,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
     if (error) {
       return (
         <Empty
-          spm="错误处理"
+          spm={formatMessage({
+            id: 'ocp-v2.src.component.ErrorBoundary.ErrorHandling',
+            defaultMessage: '错误处理',
+          })}
           mode="page"
           image="/assets/common/crash.svg"
           title={formatMessage({
@@ -64,7 +67,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           data-aspm-param={``}
         >
           <Button
-            spm="错误处理-返回首页"
+            spm={formatMessage({
+              id: 'ocp-v2.src.component.ErrorBoundary.ErrorHandlingReturnToHome',
+              defaultMessage: '错误处理-返回首页',
+            })}
             type="primary"
             onClick={() => {
               history.push('/');
@@ -81,7 +87,10 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
           </Button>
           {/* 展示报错详情，方便定位问题原因 */}
           <Alert
-            spm="错误处理-错误详情"
+            spm={formatMessage({
+              id: 'ocp-v2.src.component.ErrorBoundary.ErrorHandlingErrorDetails',
+              defaultMessage: '错误处理-错误详情',
+            })}
             type="error"
             showIcon={true}
             message={errorMessage}

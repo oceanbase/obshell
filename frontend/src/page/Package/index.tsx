@@ -62,7 +62,6 @@ const PackagePage: React.FC<PackageProps> = ({
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
   const packageList = data?.data?.contents || [];
 
-  console.log(packageList, 'packageList');
   // architecture?: string;
   // chunkCount?: number;
   // distribution?: string;
@@ -188,7 +187,16 @@ const PackagePage: React.FC<PackageProps> = ({
     <PageContainer
       ghost={true}
       header={{
-        title: <ContentWithReload content={'软件包'} spin={loading} onClick={refresh} />,
+        title: (
+          <ContentWithReload
+            content={formatMessage({
+              id: 'ocp-v2.page.Package.SoftwarePackage',
+              defaultMessage: '软件包',
+            })}
+            spin={loading}
+            onClick={refresh}
+          />
+        ),
       }}
     >
       <Card
@@ -200,7 +208,10 @@ const PackagePage: React.FC<PackageProps> = ({
             onChange={e => {
               setKeyword(e.target.value);
             }}
-            placeholder={'搜索软件包名称'}
+            placeholder={formatMessage({
+              id: 'ocp-v2.page.Package.SearchPackageName',
+              defaultMessage: '搜索软件包名称',
+            })}
             className="search-input"
           />
         }
@@ -211,7 +222,10 @@ const PackagePage: React.FC<PackageProps> = ({
               setVisible(true);
             }}
           >
-            上传软件包
+            {formatMessage({
+              id: 'ocp-v2.page.Package.UploadSoftwarePackage',
+              defaultMessage: '上传软件包',
+            })}
           </Button>
         }
         className="card-without-padding"

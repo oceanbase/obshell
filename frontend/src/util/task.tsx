@@ -213,7 +213,10 @@ export function handleSubtaskOperate(
         defaultMessage: '确定要终止运行吗？',
       }),
 
-      content: '这将会终止整个任务',
+      content: formatMessage({
+        id: 'ocp-v2.src.util.task.ThisWillTerminateTheEntire',
+        defaultMessage: '这将会终止整个任务',
+      }),
 
       onOk: () => {
         return dagHandler(
@@ -225,7 +228,12 @@ export function handleSubtaskOperate(
           }
         ).then(res => {
           if (res.successful) {
-            message.success('任务终止成功');
+            message.success(
+              formatMessage({
+                id: 'ocp-v2.src.util.task.TaskTerminatedSuccessfully',
+                defaultMessage: '任务终止成功',
+              })
+            );
             onSuccess();
           }
         });
@@ -238,7 +246,10 @@ export function handleSubtaskOperate(
         defaultMessage: '确定要重新运行吗？',
       }),
 
-      content: '这将会重新执行整个任务',
+      content: formatMessage({
+        id: 'ocp-v2.src.util.task.ThisWillReRunThe',
+        defaultMessage: '这将会重新执行整个任务',
+      }),
 
       onOk: () => {
         return dagHandler(
@@ -250,7 +261,12 @@ export function handleSubtaskOperate(
           }
         ).then(res => {
           if (res.successful) {
-            message.success('任务重试成功');
+            message.success(
+              formatMessage({
+                id: 'ocp-v2.src.util.task.TaskRetrySucceeded',
+                defaultMessage: '任务重试成功',
+              })
+            );
             onSuccess();
           }
         });
@@ -387,7 +403,6 @@ export function getTaskLog(log: any[]) {
   const logList = reverseLog?.map(item => `${formatTime(item.create_time)}\n ${item.log_content}`);
   const formatter = getFormateForTimes(reverseLog?.map(item => item.create_time));
   const logGroupList = groupBy(reverseLog, item => formatTime(item.create_time, formatter));
-  console.log(logGroupList, 'logGroupList');
   const logNodeList = uniq(
     reverseLog?.map(item => `${moment(item.create_time).format(formatter)}`)
   );

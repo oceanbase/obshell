@@ -214,12 +214,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
         });
       }
 
-      console.log(
-        '%cfrontend/src/component/ModifyClusterParameterDrawer/index.tsx:196 otherParam',
-        'color: #007acc;',
-        otherParam
-      );
-
       updateClusterParameter({ params: otherParam });
     });
   };

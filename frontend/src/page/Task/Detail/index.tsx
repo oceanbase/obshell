@@ -164,9 +164,7 @@ const Detail: React.FC<DetailProps> = ({
       // });
     },
     logPolling ? 1000 : null
-  );
-
-  // 操作任务
+  ); // 操作任务
   const { runAsync: dagHandlerFn } = useRequest(dagHandler, {
     manual: true,
   });
@@ -212,7 +210,12 @@ const Detail: React.FC<DetailProps> = ({
             }
           ).then(res => {
             if (res.successful) {
-              message.success('任务重试成功');
+              message.success(
+                formatMessage({
+                  id: 'ocp-v2.Task.Detail.TaskRetrySucceeded',
+                  defaultMessage: '任务重试成功',
+                })
+              );
 
               delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
@@ -232,7 +235,7 @@ const Detail: React.FC<DetailProps> = ({
           defaultMessage: '这将从失败处开始回滚所有已执行过的任务',
         }),
 
-        okText: '回滚',
+        okText: formatMessage({ id: 'ocp-v2.Task.Detail.Rollback', defaultMessage: '回滚' }),
         okButtonProps: {
           danger: true,
           ghost: true,
@@ -248,7 +251,12 @@ const Detail: React.FC<DetailProps> = ({
             }
           ).then(res => {
             if (res.successful) {
-              message.success('任务回滚成功');
+              message.success(
+                formatMessage({
+                  id: 'ocp-v2.Task.Detail.TaskRollbackSuccessful',
+                  defaultMessage: '任务回滚成功',
+                })
+              );
 
               delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
@@ -258,11 +266,17 @@ const Detail: React.FC<DetailProps> = ({
     } else if (key === 'cancel') {
       // 放弃任务 = 回滚任务
       Modal.confirm({
-        title: '确定要取消当前任务吗？',
+        title: formatMessage({
+          id: 'ocp-v2.Task.Detail.AreYouSureYouWant',
+          defaultMessage: '确定要取消当前任务吗？',
+        }),
 
-        content: '这将取消整个任务',
+        content: formatMessage({
+          id: 'ocp-v2.Task.Detail.ThisWillCancelTheEntire',
+          defaultMessage: '这将取消整个任务',
+        }),
 
-        okText: '确定',
+        okText: formatMessage({ id: 'ocp-v2.Task.Detail.Determine', defaultMessage: '确定' }),
         okButtonProps: {
           danger: true,
           ghost: true,
@@ -278,7 +292,12 @@ const Detail: React.FC<DetailProps> = ({
             }
           ).then(res => {
             if (res.successful) {
-              message.success('任务取消成功');
+              message.success(
+                formatMessage({
+                  id: 'ocp-v2.Task.Detail.TaskCanceledSuccessfully',
+                  defaultMessage: '任务取消成功',
+                })
+              );
 
               delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
@@ -288,11 +307,17 @@ const Detail: React.FC<DetailProps> = ({
     } else if (key === 'pass') {
       // 放弃任务 = 回滚任务
       Modal.confirm({
-        title: '确定要跳过当前任务吗？',
+        title: formatMessage({
+          id: 'ocp-v2.Task.Detail.AreYouSureYouWant.1',
+          defaultMessage: '确定要跳过当前任务吗？',
+        }),
 
-        content: '这将跳过整个任务',
+        content: formatMessage({
+          id: 'ocp-v2.Task.Detail.ThisWillSkipTheEntire',
+          defaultMessage: '这将跳过整个任务',
+        }),
 
-        okText: '跳过',
+        okText: formatMessage({ id: 'ocp-v2.Task.Detail.Skip', defaultMessage: '跳过' }),
         okButtonProps: {
           danger: true,
           ghost: true,
@@ -308,7 +333,12 @@ const Detail: React.FC<DetailProps> = ({
             }
           ).then(res => {
             if (res.successful) {
-              message.success('任务跳过成功');
+              message.success(
+                formatMessage({
+                  id: 'ocp-v2.Task.Detail.TaskSkippedSuccessfully',
+                  defaultMessage: '任务跳过成功',
+                })
+              );
 
               delayInterfaceWithSentItTwice(refreshAsync, 800);
             }
@@ -359,48 +389,48 @@ const Detail: React.FC<DetailProps> = ({
         extra: (
           <span>
             {/* <Radio.Group
-              data-aspm-click="c304251.d308748"
-              data-aspm-desc="任务详情-切换视图"
-              data-aspm-param={``}
-              data-aspm-expo
-              value={mode}
-              onChange={e => {
-                setMode(e.target.value);
-                // 重置选中的 subtask
-                setSubtaskId(undefined);
-              }}
-            >
-              <Tooltip
-                title={formatMessage({
-                  id: 'ocp-express.Task.Detail.LogView',
-                  defaultMessage: '日志视图',
-                })}
-              >
-                <Radio.Button value="log" style={{ zIndex: 1 }}>
-                  <Icon
-                    component={LogSvg}
-                    style={mode === 'log' ? { color: token.colorInfo } : {}}
-                  />
-                </Radio.Button>
-              </Tooltip>
-              <Tooltip
-                title={formatMessage({
-                  id: 'ocp-express.Task.Detail.FlowView',
-                  defaultMessage: '流转视图',
-                })}
-              >
-                <Radio.Button value="flow">
-                  <Icon
-                    component={FlowSvg}
-                    style={mode === 'flow' ? { color: token.colorInfo } : {}}
-                  />
-                </Radio.Button>
-              </Tooltip>
-            </Radio.Group>
-            <Divider
-              type="vertical"
-              style={{ height: 32, margin: '0px 16px', display: 'inline-block' }}
-            /> */}
+           data-aspm-click="c304251.d308748"
+           data-aspm-desc="任务详情-切换视图"
+           data-aspm-param={``}
+           data-aspm-expo
+           value={mode}
+           onChange={e => {
+             setMode(e.target.value);
+             // 重置选中的 subtask
+             setSubtaskId(undefined);
+           }}
+          >
+           <Tooltip
+             title={formatMessage({
+               id: 'ocp-express.Task.Detail.LogView',
+               defaultMessage: '日志视图',
+             })}
+           >
+             <Radio.Button value="log" style={{ zIndex: 1 }}>
+               <Icon
+                 component={LogSvg}
+                 style={mode === 'log' ? { color: token.colorInfo } : {}}
+               />
+             </Radio.Button>
+           </Tooltip>
+           <Tooltip
+             title={formatMessage({
+               id: 'ocp-express.Task.Detail.FlowView',
+               defaultMessage: '流转视图',
+             })}
+           >
+             <Radio.Button value="flow">
+               <Icon
+                 component={FlowSvg}
+                 style={mode === 'flow' ? { color: token.colorInfo } : {}}
+               />
+             </Radio.Button>
+           </Tooltip>
+          </Radio.Group>
+          <Divider
+           type="vertical"
+           style={{ height: 32, margin: '0px 16px', display: 'inline-block' }}
+          /> */}
 
             <Space>
               <Button
@@ -569,21 +599,21 @@ const Detail: React.FC<DetailProps> = ({
             </Text>
           </Descriptions.Item>
           {/* <Descriptions.Item
-            label={formatMessage({
-              id: 'ocp-express.Task.Detail.TaskInitiator',
-              defaultMessage: '任务发起人',
-            })}
-            span={isEnglish() ? 6 : 3}
-            className="descriptions-item-with-ellipsis"
-          >
-            <Text
-              ellipsis={{
-                tooltip: true,
-              }}
+             label={formatMessage({
+               id: 'ocp-express.Task.Detail.TaskInitiator',
+               defaultMessage: '任务发起人',
+             })}
+             span={isEnglish() ? 6 : 3}
+             className="descriptions-item-with-ellipsis"
             >
-              {taskData.creator?.name}
-            </Text>
-          </Descriptions.Item> */}
+             <Text
+               ellipsis={{
+                 tooltip: true,
+               }}
+             >
+               {taskData.creator?.name}
+             </Text>
+            </Descriptions.Item> */}
         </Descriptions>
       </div>
 
@@ -599,33 +629,34 @@ const Detail: React.FC<DetailProps> = ({
           setSubtaskId(newSubtaskId);
         }}
       />
+
       {/* {mode === 'log' ? (
-        <Log
-          ref={logRef}
-          taskData={taskData}
-          onOperationSuccess={refresh}
-          subtask={subtask}
-          log={log}
-          logLoading={logLoading}
-          logPolling={logPolling}
-          onSubtaskChange={(newSubtaskId) => {
-            setSubtaskId(newSubtaskId);
-          }}
-        />
-      ) : (
-        <Flow
-          ref={flowRef}
-          taskData={taskData}
-          onOperationSuccess={refresh}
-          subtask={subtask}
-          log={log}
-          logLoading={logLoading}
-          logPolling={logPolling}
-          onSubtaskChange={(newSubtaskId) => {
-            setSubtaskId(newSubtaskId);
-          }}
-        />
-      )} */}
+         <Log
+           ref={logRef}
+           taskData={taskData}
+           onOperationSuccess={refresh}
+           subtask={subtask}
+           log={log}
+           logLoading={logLoading}
+           logPolling={logPolling}
+           onSubtaskChange={(newSubtaskId) => {
+             setSubtaskId(newSubtaskId);
+           }}
+         />
+        ) : (
+         <Flow
+           ref={flowRef}
+           taskData={taskData}
+           onOperationSuccess={refresh}
+           subtask={subtask}
+           log={log}
+           logLoading={logLoading}
+           logPolling={logPolling}
+           onSubtaskChange={(newSubtaskId) => {
+             setSubtaskId(newSubtaskId);
+           }}
+         />
+        )} */}
     </PageContainer>
   );
 };

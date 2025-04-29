@@ -143,7 +143,7 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
             <SelectDropdownRender
               menu={menu}
               text={formatMessage({
-                id: 'ocp-v2.src.component.PackageSelect.UploadASoftwarePackage',
+                id: 'ocp-v2.component.UploadPackageDrawer.UploadSoftwarePackage',
                 defaultMessage: '上传软件包',
               })}
               onClick={() => {

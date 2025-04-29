@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import { useDispatch, useSelector } from 'umi';
 import React, { useRef, useState, useEffect } from 'react';
 import { compact, filter, find, flatten, groupBy, includes, some, sum, uniq, uniqBy } from 'lodash';
@@ -89,7 +90,10 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         const taskId = res.data?.id;
         taskSuccess({
           taskId,
-          message: '版本升级的任务提交成功',
+          message: formatMessage({
+            id: 'ocp-v2.Overview.UpgradeAgentDrawer.VersionUpgradeTaskSubmittedSuccessfully',
+            defaultMessage: '版本升级的任务提交成功',
+          }),
         });
 
         if (onSuccess) {
@@ -110,14 +114,20 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   return (
     <MyDrawer
       width={620}
-      title={'Agent 升级版本'}
+      title={formatMessage({
+        id: 'ocp-v2.Overview.UpgradeAgentDrawer.AgentUpgradeVersion',
+        defaultMessage: 'Agent 升级版本',
+      })}
       visible={visible}
       destroyOnClose={true}
       onOk={() => {
         validateFields().then(({ fileName }) => {
           const pkg = packageList.find(item => item.pkg_id === fileName.value);
           Modal.confirm({
-            title: '确定要升级吗？',
+            title: formatMessage({
+              id: 'ocp-v2.Overview.UpgradeAgentDrawer.AreYouSureYouWant',
+              defaultMessage: '确定要升级吗？',
+            }),
             onOk: () => {
               if (pkg) {
                 runAsync({
@@ -130,13 +140,32 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         });
       }}
       onCancel={() => onCancel()}
-      okText={'升级'}
+      okText={formatMessage({
+        id: 'ocp-v2.Overview.UpgradeAgentDrawer.Upgrade',
+        defaultMessage: '升级',
+      })}
+      cancelText={formatMessage({
+        id: 'ocp-express.component.FormEditTable.Cancel',
+        defaultMessage: '取消',
+      })}
       confirmLoading={loading}
       {...restProps}
     >
       <Form form={form} preserve={false} hideRequiredMark={true} className="form-with-small-margin">
-        <Form.Item label={'已安装版本'}>{agentData?.version}</Form.Item>
-        <Form.Item label={'硬件架构'}>
+        <Form.Item
+          label={formatMessage({
+            id: 'ocp-v2.Overview.UpgradeAgentDrawer.InstalledVersion',
+            defaultMessage: '已安装版本',
+          })}
+        >
+          {agentData?.version}
+        </Form.Item>
+        <Form.Item
+          label={formatMessage({
+            id: 'ocp-v2.Overview.UpgradeAgentDrawer.HardwareArchitecture',
+            defaultMessage: '硬件架构',
+          })}
+        >
           {uniq(
             flatten(clusterData?.zones?.map(item => item.servers || [])).map(
               item => item?.architecture
@@ -144,12 +173,18 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
           ).join('、')}
         </Form.Item>
         <Form.Item
-          label={'OBShell Agent 版本'}
+          label={formatMessage({
+            id: 'ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion',
+            defaultMessage: 'OBShell Agent 版本',
+          })}
           name="fileName"
           rules={[
             {
               required: true,
-              message: '请选择 OBShell Agent 版本',
+              message: formatMessage({
+                id: 'ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent',
+                defaultMessage: '请选择 OBShell Agent 版本',
+              }),
             },
           ]}
           style={{ marginBottom: 0 }}

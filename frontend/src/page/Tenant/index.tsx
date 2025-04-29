@@ -76,7 +76,12 @@ const Tenant: React.FC<TenantProps> = ({
     onSuccess: res => {
       if (res.successful) {
         listTenantsRefresh();
-        message.success('租户锁定成功');
+        message.success(
+          formatMessage({
+            id: 'ocp-v2.page.Tenant.TenantLockSucceeded',
+            defaultMessage: '租户锁定成功',
+          })
+        );
       }
     },
   });
@@ -86,7 +91,12 @@ const Tenant: React.FC<TenantProps> = ({
     onSuccess: res => {
       if (res.successful) {
         listTenantsRefresh();
-        message.success('租户解锁成功');
+        message.success(
+          formatMessage({
+            id: 'ocp-v2.page.Tenant.TenantUnlockedSuccessfully',
+            defaultMessage: '租户解锁成功',
+          })
+        );
       }
     },
   });
@@ -392,18 +402,18 @@ const Tenant: React.FC<TenantProps> = ({
               )}
 
               {/* <a
-                data-aspm-click="c304184.d308813"
-                data-aspm-desc="租户列表-复制租户"
-                data-aspm-param={``}
-                data-aspm-expo
-                onClick={() => {
-                  directTo(`/tenant/new?tenantId=${record.obTenantId}`);
-                }}
+               data-aspm-click="c304184.d308813"
+               data-aspm-desc="租户列表-复制租户"
+               data-aspm-param={``}
+               data-aspm-expo
+               onClick={() => {
+                 directTo(`/tenant/new?tenantId=${record.obTenantId}`);
+               }}
               >
-                {formatMessage({
-                  id: 'ocp-express.component.TenantList.Copy',
-                  defaultMessage: '复制',
-                })}
+               {formatMessage({
+                 id: 'ocp-express.component.TenantList.Copy',
+                 defaultMessage: '复制',
+               })}
               </a> */}
             </Space>
           );
@@ -421,26 +431,26 @@ const Tenant: React.FC<TenantProps> = ({
       })}
     >
       {/* <Button
-        style={{ marginRight: 12 }}
-        onClick={() => {
-          history.push('/tenant/unitSpec');
-        }}
+       style={{ marginRight: 12 }}
+       onClick={() => {
+         history.push('/tenant/unitSpec');
+       }}
       >
-        {formatMessage({
-          id: 'ocp-express.page.Tenant.UnitSpecificationManagement',
-          defaultMessage: 'Unit 规格管理',
-        })}
+       {formatMessage({
+         id: 'ocp-express.page.Tenant.UnitSpecificationManagement',
+         defaultMessage: 'Unit 规格管理',
+       })}
       </Button> */}
       {/* <Button
-        style={{ marginRight: 12 }}
-        onClick={() => {
-          history.push('/tenant/parameterTemplate');
-        }}
+       style={{ marginRight: 12 }}
+       onClick={() => {
+         history.push('/tenant/parameterTemplate');
+       }}
       >
-        {formatMessage({
-          id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-          defaultMessage: '租户参数模板管理',
-        })}
+       {formatMessage({
+         id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
+         defaultMessage: '租户参数模板管理',
+       })}
       </Button> */}
       <Button
         data-aspm-click="c318544.d343271"
@@ -494,30 +504,30 @@ const Tenant: React.FC<TenantProps> = ({
             </Button>
             {/* 二期 */}
             {/* <Dropdown
-              overlay={
-                <Menu
-                  onClick={({ key }) => {
-                    handleMenuClick(key);
-                  }}
-                >
-                  <Menu.Item key="parameterTemplate">
-                    <a>
-                      {formatMessage({
-                        id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-                        defaultMessage: '租户参数模板管理',
-                      })}
-                    </a>
-                  </Menu.Item>
-                  <Menu.Item key="unitSpec">
-                    <a>Unit 规格管理</a>
-                  </Menu.Item>
-                </Menu>
-              }
-            >
-              <Button>
-                <EllipsisOutlined />
-              </Button>
-            </Dropdown> */}
+           overlay={
+             <Menu
+               onClick={({ key }) => {
+                 handleMenuClick(key);
+               }}
+             >
+               <Menu.Item key="parameterTemplate">
+                 <a>
+                   {formatMessage({
+                     id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
+                     defaultMessage: '租户参数模板管理',
+                   })}
+                 </a>
+               </Menu.Item>
+               <Menu.Item key="unitSpec">
+                 <a>Unit 规格管理</a>
+               </Menu.Item>
+             </Menu>
+           }
+          >
+           <Button>
+             <EllipsisOutlined />
+           </Button>
+          </Dropdown> */}
           </>
         ),
       }}

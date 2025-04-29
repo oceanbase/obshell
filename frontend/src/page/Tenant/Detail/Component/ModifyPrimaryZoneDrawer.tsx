@@ -45,7 +45,7 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
     manual: true,
     onSuccess: res => {
       if (res.successful) {
-        taskSuccess(res.data.id);
+        taskSuccess({ taskId: res.data.id });
         message.success(
           formatMessage({
             id: 'ocp-express.Detail.Component.ModifyPrimaryZoneDrawer.TheZonePriorityHasBeen',

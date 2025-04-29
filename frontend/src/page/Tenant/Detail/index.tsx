@@ -149,7 +149,13 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
             showTenantAdminPasswordModal: true,
             tenantAdminPasswordErrorData: {
               type: 'ADD',
-              errorMessage: `连接失败，${tenantName} 租户无法连接，请输入此租户管理员密码`,
+              errorMessage: formatMessage(
+                {
+                  id: 'ocp-v2.Tenant.Detail.ConnectionFailedTenantnameTheTenant',
+                  defaultMessage: '连接失败，{tenantName} 租户无法连接，请输入此租户管理员密码',
+                },
+                { tenantName: tenantName }
+              ),
               tenantName,
             },
           },
@@ -161,7 +167,13 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
             showTenantAdminPasswordModal: true,
             tenantAdminPasswordErrorData: {
               type: 'EDIT',
-              errorMessage: `连接失败，${tenantName} 租户密码错误，请输入此租户的正确密码`,
+              errorMessage: formatMessage(
+                {
+                  id: 'ocp-v2.Tenant.Detail.TheConnectionFailedBecauseThe',
+                  defaultMessage: '连接失败，{tenantName} 租户密码错误，请输入此租户的正确密码',
+                },
+                { tenantName: tenantName }
+              ),
               tenantName,
             },
           },

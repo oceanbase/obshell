@@ -44,7 +44,10 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
     operations: [
       {
         value: 'cancel',
-        label: '取消任务',
+        label: formatMessage({
+          id: 'ocp-v2.src.constant.task.CancelTask',
+          defaultMessage: '取消任务',
+        }),
       },
     ],
   },
@@ -63,11 +66,17 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
       },
       {
         value: 'pass',
-        label: '跳过任务',
+        label: formatMessage({
+          id: 'ocp-v2.src.constant.task.SkipTasks',
+          defaultMessage: '跳过任务',
+        }),
       },
       {
         value: 'giveup',
-        label: '回滚任务',
+        label: formatMessage({
+          id: 'ocp-v2.src.constant.task.RollbackTask',
+          defaultMessage: '回滚任务',
+        }),
       },
 
       // {
