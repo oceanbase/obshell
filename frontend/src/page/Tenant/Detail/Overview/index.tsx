@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
+import { history, useDispatch } from 'umi';
 import {
   Button,
   Col,
@@ -91,6 +91,8 @@ const Detail: React.FC<NewProps> = ({
     params: { tenantName },
   },
 }) => {
+  const dispatch = useDispatch();
+
   const [form] = Form.useForm();
   const [form2] = Form.useForm();
   const { setFieldsValue } = form;
@@ -221,6 +223,15 @@ const Detail: React.FC<NewProps> = ({
     },
   });
 
+  const updateTenant = () => {
+    dispatch({
+      type: 'tenant/getTenantData',
+      payload: {
+        name: tenantName,
+      },
+    });
+  };
+
   const { run: lockTenant, loading: lockTenantLOading } = useRequest(tenantLock, {
     manual: true,
     onSuccess: res => {
@@ -233,6 +244,7 @@ const Detail: React.FC<NewProps> = ({
         );
         setEdiLockStatusModal(false);
         refresh();
+        updateTenant();
       }
     },
   });
@@ -249,6 +261,7 @@ const Detail: React.FC<NewProps> = ({
         );
         setEdiLockStatusModal(false);
         refresh();
+        updateTenant();
       }
     },
   });
