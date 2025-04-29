@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os/exec"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -145,6 +146,11 @@ func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
 		return nil, err
 	}
 
+	// sort logPointSet by start scn
+	sort.Slice(logPointSet, func(i, j int) bool {
+		return logPointSet[i][0] < logPointSet[j][0]
+	})
+
 	var restoreWindows [][2]int64
 	for _, data := range dataSet {
 		if data.PlusArchivelog {
@@ -159,10 +165,16 @@ func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
 			continue
 		}
 
-		for _, logPoint := range logPointSet {
-			if logPoint[0] <= data.StartReplaySCN.Val && data.StartReplaySCN.Val <= logPoint[1] {
-				restoreWindows = append(restoreWindows, [2]int64{data.MinRestoreSCN.Val, logPoint[1]})
+		for i := 0; i < len(logPointSet); {
+			if !(logPointSet[i][0] <= data.StartReplaySCN.Val && data.StartReplaySCN.Val <= logPointSet[i][1]) {
+				i++
+				continue
 			}
+			for (i < len(logPointSet)-1) && (logPointSet[i+1][0] == logPointSet[i][1]) {
+				i++
+			}
+			restoreWindows = append(restoreWindows, [2]int64{data.MinRestoreSCN.Val, logPointSet[i][1]})
+			break
 		}
 	}
 
