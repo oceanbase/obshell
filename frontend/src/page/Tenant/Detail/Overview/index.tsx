@@ -33,7 +33,7 @@ import {
   Modal,
   message,
 } from '@oceanbase/design';
-import React, { useEffect, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { uniqueId, find } from 'lodash';
 import { byte2GB, directTo, findByValue, jsonParse } from '@oceanbase/util';
 import moment from 'moment';
@@ -133,7 +133,12 @@ const Detail: React.FC<NewProps> = ({
           name: zoneName,
           resourcePool: {
             ...resourcePool,
-            unitConfig: resourcePool?.unit_config,
+            unitConfig: {
+              ...resourcePool?.unit_config,
+              // 副本详情默认值
+              cpuCore: resourcePool?.unit_config?.max_cpu,
+              memorySize: byte2GB(resourcePool?.unit_config?.memory_size || 0),
+            },
           },
         };
       }) || []
@@ -410,9 +415,7 @@ const Detail: React.FC<NewProps> = ({
     const { name, replicaType, resourcePool } = value || {};
     const currentModifyTenantZone = find(zones, item => item.name === name);
 
-    const maxMemorySizeGB = byte2GB(
-      currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size / 8
-    );
+    const maxMemorySizeGB = byte2GB(currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size);
 
     if (
       !resourcePool ||
