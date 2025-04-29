@@ -50,10 +50,13 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'ocp-express.Component.TenantResourceTop3.PercentageOfCpuUsedToTenantCpu',
         defaultMessage: '已使用 CPU 占分配 CPU 的百分比',
       }),
-      chartData: tenantStats.map(item => ({
-        ...item,
-        percentValue: item.cpu_used_percent,
-      })),
+      chartData: tenantStats
+        .map(item => ({
+          ...item,
+          percentValue: item.cpu_used_percent,
+        }))
+        .sort((a, b) => b.percentValue - a.percentValue)
+        .slice(0, 3),
     },
 
     {
@@ -66,10 +69,13 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory',
         defaultMessage: '已使用内存占分配内存的百分比',
       }),
-      chartData: tenantStats.map(item => ({
-        ...item,
-        percentValue: item.memory_used_percent,
-      })),
+      chartData: tenantStats
+        .map(item => ({
+          ...item,
+          percentValue: item.memory_used_percent,
+        }))
+        .sort((a, b) => b.percentValue - a.percentValue)
+        .slice(0, 3),
     },
 
     {
@@ -82,11 +88,14 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'ocp-express.Component.TenantResourceTop3.TenantDataSizeAndPercentageOfClusterDisk',
         defaultMessage: '租户数据量大小，以及占集群磁盘容量的百分比',
       }),
-      chartData: tenantStats.map(item => ({
-        ...item,
-        usedValue: item.data_disk_usage,
-        percentValue: (item.data_disk_usage / clusterData?.stats?.disk_in_bytes_total) * 100,
-      })),
+      chartData: tenantStats
+        .map(item => ({
+          ...item,
+          usedValue: item.data_disk_usage,
+          percentValue: (item.data_disk_usage / clusterData?.stats?.disk_in_bytes_total) * 100,
+        }))
+        .sort((a, b) => b.percentValue - a.percentValue)
+        .slice(0, 3),
     },
   ];
 
