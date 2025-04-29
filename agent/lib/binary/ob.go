@@ -54,6 +54,5 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	if match == nil {
 		return "", false, errors.New("get my ob version failed")
 	}
-	fmt.Println("match:", match)
 	return fmt.Sprintf("%s-%s", match[2], buildNumber), match[1] != "", nil
 }

@@ -97,14 +97,9 @@ func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.
 }
 
 func newSetRootPwdNode(newPwd string) (*task.Node, error) {
-	agents, err := agentService.GetAllAgentsInfoFromOB()
-	if err != nil {
-		return nil, errors.Wrap(err, "create set root password task failed")
-	}
 	ctx := task.NewTaskContext().
-		SetParam(PARAM_TENANT_NEW_PASSWORD, newPwd).
-		SetParam(task.EXECUTE_AGENTS, agents)
-	return task.NewNodeWithContext(newSetRootPwdTask(), true, ctx), nil
+		SetParam(PARAM_TENANT_NEW_PASSWORD, newPwd)
+	return task.NewNodeWithContext(newSetRootPwdTask(), false, ctx), nil
 }
 
 func newSetRootPwdTask() *SetRootPwdTask {
@@ -134,11 +129,12 @@ func (t *SetRootPwdTask) Execute() error {
 		return errors.New("tenant is not active")
 	}
 
-	if meta.OCS_AGENT.Equal(executeAgent) {
-		if err := tenantService.ModifyTenantRootPassword(t.tenantName, "", t.newPassword); err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
-		}
+	if err := secure.SendPutRequest(executeAgent, constant.URI_API_V1+constant.URI_TENANT+"/"+t.tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{
+		NewPwd: &t.newPassword,
+	}, nil); err != nil {
+		return errors.Wrap(err, "set root password failed")
 	}
+
 	tenant.GetPasswordMap().Set(t.tenantName, t.newPassword)
 	return nil
 }
