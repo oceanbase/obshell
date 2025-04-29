@@ -144,10 +144,6 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         id: 'ocp-v2.Overview.UpgradeAgentDrawer.Upgrade',
         defaultMessage: '升级',
       })}
-      cancelText={formatMessage({
-        id: 'ocp-express.component.FormEditTable.Cancel',
-        defaultMessage: '取消',
-      })}
       confirmLoading={loading}
       {...restProps}
     >

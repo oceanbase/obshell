@@ -33,7 +33,7 @@ export default defineConfig({
   // 需要关闭 title 配置，避免与 useDocumentTitle 的逻辑冲突
   // 冲突的具体表现为: 切换路由时，父组件设置的文档标题会自动重置为配置的 title
   title: false,
-  favicon: '/assets/logo/ocp_express_favicon.svg',
+  favicon: '/assets/logo/ob_dashboard_favicon.svg',
   // 接口代理配置
   proxy: {
     '/api/v1': {

@@ -206,10 +206,10 @@ const Tenant: React.FC<TenantProps> = ({
       }),
 
       dataIndex: 'mode',
-      filters: TENANT_MODE_LIST.map(item => ({
-        text: item.label,
-        value: item.value,
-      })),
+      // filters: TENANT_MODE_LIST.map(item => ({
+      //   text: item.label,
+      //   value: item.value,
+      // })),
       // filteredValue: modeList,
       render: (text: API.TenantMode) => <span>{findByValue(TENANT_MODE_LIST, text).label}</span>,
     },

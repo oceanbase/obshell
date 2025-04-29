@@ -6111,4 +6111,6 @@ export default {
   "ocp-v2.src.util.task.TaskTerminatedSuccessfully": "Task terminated successfully",
   "ocp-v2.src.util.task.ThisWillReRunThe": "This will re-run the entire mission",
   "ocp-v2.src.util.task.TaskRetrySucceeded": "Task retry succeeded",
+  "ocp-v2.component.MyDrawer.Cancel": "Cancel",
+  "ocp-v2.component.MyDrawer.Determine": "Confirm",
 };

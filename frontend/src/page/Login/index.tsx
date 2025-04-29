@@ -88,13 +88,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     getObInfo();
   };
 
-  const logoUrl = isEnglish()
-    ? themeMode === 'dark'
-      ? '/assets/logo/ocp_express_logo_en_dark.svg'
-      : '/assets/logo/ocp_express_logo_en.svg'
-    : themeMode === 'dark'
-    ? '/assets/logo/ocp_express_logo_zh_dark.svg'
-    : '/assets/logo/ocp_express_logo_zh.svg';
+  const logoUrl = '/assets/logo/ob_dashboard_simple_logo_en.svg';
 
   return (
     <Login
@@ -106,7 +100,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       }
       title={
         <div>
-          Welcome to <div>OBShell !</div>
+          Welcome to <div>OB-Dashboard !</div>
         </div>
       }
       description="Let's start a happy journey"

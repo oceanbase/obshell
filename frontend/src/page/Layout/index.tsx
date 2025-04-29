@@ -28,6 +28,8 @@ import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
 import GlobalStyle from './GlobalStyle';
 import { setEncryptLocalStorage } from '@/util';
+import { getStatistics } from '@/service/obshell/ob';
+import { telemetryReport } from '@/service/custom';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,9 +48,15 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
 
   useEffect(() => {
     // 设置标签页的 title
-    document.title = formatMessage({
-      id: 'ocp-express.config.title',
-      defaultMessage: 'OceanBase 云平台',
+    document.title = 'OceanBase-Dashboard';
+    getStatistics().then(res => {
+      if (res.successful) {
+        // 遥测记录接口
+        telemetryReport({
+          content: res.data,
+          component: 'obshell',
+        });
+      }
     });
   }, []);
 

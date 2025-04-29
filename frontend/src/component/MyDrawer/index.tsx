@@ -35,7 +35,6 @@ const MyDrawer: React.FC<MyDrawerProps> = ({
   footer,
   ...restProps
 }) => {
-
   return (
     <Drawer
       destroyOnClose={true}

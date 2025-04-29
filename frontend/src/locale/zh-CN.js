@@ -7971,4 +7971,6 @@ export default {
   "ocp-v2.src.util.task.TaskTerminatedSuccessfully": "任务终止成功",
   "ocp-v2.src.util.task.ThisWillReRunThe": "这将会重新执行整个任务",
   "ocp-v2.src.util.task.TaskRetrySucceeded": "任务重试成功",
+  "ocp-v2.component.MyDrawer.Cancel": "取消",
+  "ocp-v2.component.MyDrawer.Determine": "确定",
 };

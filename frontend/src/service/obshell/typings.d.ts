@@ -249,14 +249,16 @@ declare namespace API {
     zone: string;
   };
 
-  type ClusterUnitConfigLimit = {
-    min_cpu?: number;
-    min_memory?: number;
-  };
-
   type CollationInfo = {
     is_default?: boolean;
     name?: string;
+  };
+
+  type CpuInfo = {
+    frequency?: string;
+    logicalCores?: number;
+    modelName?: string;
+    physicalCores?: number;
   };
 
   type CreateDatabaseParam = {
@@ -441,6 +443,13 @@ declare namespace API {
     zoneName: string;
   };
 
+  type DiskInfo = {
+    deviceName?: string;
+    mountHash?: string;
+    total?: string;
+    used?: string;
+  };
+
   type DropTenantParam = {
     /** Whether to recycle tenant(can be flashback). */
     need_recycle?: boolean;
@@ -593,6 +602,20 @@ declare namespace API {
     value?: string;
   };
 
+  type HostBasicInfo = {
+    hostHash?: string;
+    hostType?: string;
+  };
+
+  type HostInfo = {
+    basic?: HostBasicInfo;
+    cpuInfo?: CpuInfo;
+    disks?: DiskInfo[];
+    memoryInfo?: MemoryInfo;
+    os?: OSInfo;
+    ulimit?: UlimitInfo;
+  };
+
   type JoinApiParam = {
     agentInfo: AgentInfo;
     masterPassword?: string;
@@ -614,6 +637,12 @@ declare namespace API {
     name: string;
     /** user name */
     user: string;
+  };
+
+  type MemoryInfo = {
+    available?: string;
+    free?: string;
+    total?: string;
   };
 
   type ModifyDatabaseParam = {
@@ -691,6 +720,16 @@ declare namespace API {
     rsList?: string;
   };
 
+  type ObclusterStatisticInfo = {
+    clusterId?: string;
+    hosts?: HostInfo[];
+    instances?: ObserverInfo[];
+    obshellVersion?: string;
+    reportTime?: number;
+    reporter?: string;
+    telemetryVersion?: number;
+  };
+
   type ObInfoResp = {
     agent_info?: AgentInstance[];
     obcluster_info?: ClusterConfig;
@@ -751,6 +790,17 @@ declare namespace API {
     observerConfig: Record<string, any>;
     restart?: boolean;
     scope: Scope;
+  };
+
+  type ObserverInfo = {
+    cpuCount?: number;
+    dataFileSize?: string;
+    hostHash?: string;
+    logDiskSize?: string;
+    memoryLimit?: string;
+    revision?: string;
+    type?: string;
+    version?: string;
   };
 
   type ObStopParam = {
@@ -821,6 +871,11 @@ declare namespace API {
     timestamp?: string;
     /** Request trace ID, contained in server logs */
     traceId?: string;
+  };
+
+  type OSInfo = {
+    os?: string;
+    version?: string;
   };
 
   type patchTenantArchiveLogParams = {
@@ -1188,6 +1243,13 @@ declare namespace API {
   type tenantUnlockParams = {
     /** tenant name */
     name: string;
+  };
+
+  type UlimitInfo = {
+    maxUserProcessesHard?: string;
+    maxUserProcessesSoft?: string;
+    nofileHard?: string;
+    nofileSoft?: string;
   };
 
   type unitConfigDropParams = {

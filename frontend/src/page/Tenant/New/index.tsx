@@ -253,10 +253,6 @@ const New: React.FC<NewProps> = ({
     },
   });
 
-  const { runAsync: unitConfigCreateFn } = useRequest(unitConfigCreate, {
-    manual: true,
-  });
-
   const handleSubmit = () => {
     validateFields().then(values => {
       const {
@@ -298,7 +294,7 @@ const New: React.FC<NewProps> = ({
 
       Promise.all(
         Object.entries(zoneUnitMap).map(([key, item]) => {
-          return unitConfigCreateFn({
+          return unitConfigCreate({
             max_cpu: item.cpuCore,
             memory_size: item.memorySize,
             name: item.name,

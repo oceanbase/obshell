@@ -95,6 +95,17 @@ export async function obclusterConfig(
   });
 }
 
+/** get statistics data get statistics data GET /api/v1/obcluster/statistics */
+export async function getStatistics(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ObclusterStatisticInfo }>(
+    '/api/v1/obcluster/statistics',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}
+
 /** cluster scale-in cluster scale-in DELETE /api/v1/observer */
 export async function deleteObserver(
   body: API.ClusterScaleInParam,

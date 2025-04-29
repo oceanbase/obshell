@@ -68,20 +68,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   // 是否展示修改密码的弹窗
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const logoUrl = isEnglish()
-    ? themeMode === 'dark'
-      ? '/assets/logo/ocp_express_logo_en_dark.svg'
-      : '/assets/logo/ocp_express_logo_en.svg'
-    : themeMode === 'dark'
-    ? '/assets/logo/ocp_express_logo_zh_dark.svg'
-    : '/assets/logo/ocp_express_logo_zh.svg';
-  const simpleLogoUrl = isEnglish()
-    ? themeMode === 'dark'
-      ? '/assets/logo/ocp_express_simple_logo_en_dark.svg'
-      : '/assets/logo/ocp_express_simple_logo_en.svg'
-    : themeMode === 'dark'
-    ? '/assets/logo/ocp_express_simple_logo_zh_dark.svg'
-    : '/assets/logo/ocp_express_simple_logo_zh.svg';
+  const simpleLogoUrl = '/assets/logo/ob_dashboard_simple_logo_en.svg';
 
   useEffect(() => {
     // 获取当前登录用户数据
@@ -293,7 +280,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
           />
         )
       }
-      logoUrl={logoUrl}
+      logoUrl={simpleLogoUrl}
       simpleLogoUrl={simpleLogoUrl}
       menus={menus}
       defaultOpenKeys={defaultOpenKey ? [defaultOpenKey] : []}
@@ -426,8 +413,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         locales: ['zh-CN', 'en-US'],
         appData: {
           shortName: 'OB-Dashboard',
-          version: appInfo.buildVersion,
-          releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
+          // version: appInfo.buildVersion,
+          // releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
         },
       }}
       {...restProps}
