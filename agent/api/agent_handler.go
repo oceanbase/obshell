@@ -24,6 +24,7 @@ import (
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/agent"
+	"github.com/oceanbase/obshell/agent/executor/host"
 	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -193,4 +194,18 @@ func agentSetPasswordHandler(c *gin.Context) {
 	}
 
 	common.SendResponse(c, nil, agentService.SetAgentPassword(param.Password))
+}
+
+// GitHostInfo returns the host info
+//
+// @ID GetHostInfo
+// @Summary get host info
+// @Description get host info
+// @Tags agent
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=bo.HostInfo}
+// @Router /api/v1/agent/host-info [GET]
+func GetHostInfo(c *gin.Context) {
+	common.SendResponse(c, host.GetInfo(), nil)
 }

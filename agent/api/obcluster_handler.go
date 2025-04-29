@@ -48,6 +48,24 @@ func parseRootPwd(pwd string, isForward bool) (string, error) {
 	return pwd, nil
 }
 
+// StatisticsHandler returns the statistics data
+//
+// @ID GetStatistics
+// @Summary get statistics data
+// @Description get statistics data
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=bo.ObclusterStatisticInfo}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/statistics [GET]
+func GetStatistics(c *gin.Context) {
+	statisticsData := ob.GetStatisticsInfo()
+	common.SendResponse(c, statisticsData, nil)
+}
+
 // @ID obclusterConfig
 // @Summary put ob cluster configs
 // @Description put ob cluster configs

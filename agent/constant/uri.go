@@ -36,11 +36,12 @@ const (
 	URI_RECYCLEBIN_GROUP = "/recyclebin"
 	URI_OBPROXY_GROUP    = "/obproxy"
 
-	URI_INFO     = "/info"
-	URI_TIME     = "/time"
-	URI_GIT_INFO = "/git-info"
-	URI_STATUS   = "/status"
-	URI_SECRET   = "secret"
+	URI_INFO      = "/info"
+	URI_TIME      = "/time"
+	URI_GIT_INFO  = "/git-info"
+	URI_HOST_INFO = "/host-info"
+	URI_STATUS    = "/status"
+	URI_SECRET    = "secret"
 
 	URI_JOIN     = "/join"
 	URI_REMOVE   = "/remove"
@@ -73,6 +74,7 @@ const (
 	URI_SCALE_IN    = "/scale_in"
 	URI_AGENTS      = "/agents"
 	URI_CHARSETS    = "/charsets"
+	URI_STATISTICS  = "/statistics"
 
 	// Used for upgrade
 	URI_UPGRADE = "/upgrade"

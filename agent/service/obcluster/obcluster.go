@@ -889,7 +889,7 @@ func (obclusterService *ObclusterService) IsCommunityEdition() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return count > 1, nil
+	return count > 0, nil
 }
 
 func (*ObclusterService) GetAllZoneRootServers() (rootServersMap map[string]oceanbase.RootServer, err error) {
