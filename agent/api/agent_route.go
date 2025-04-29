@@ -53,6 +53,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			// upload obproxy package
 			constant.URI_OBPROXY_API_PREFIX+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_PACKAGE,
+
+			constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK,
 		),
 		common.SetContentType,
 	)

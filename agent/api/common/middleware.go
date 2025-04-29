@@ -176,9 +176,13 @@ func readRequestBodyMaskPassword(c *gin.Context) string {
 
 	masked := false
 	for _, key := range []string{
+		"context",
+		"data_base_uri",
+		"backup_base_uri",
+		"archive_base_uri",
 		"data_backup_uri",
 		"archive_log_uri",
-		"backup_base_uri",
+		"decryption",
 		"encryption",
 		"root_password",
 		"password",
@@ -187,7 +191,10 @@ func readRequestBodyMaskPassword(c *gin.Context) string {
 		"tenant_password",
 		"token",
 		"proxy_password",
-		"obproxy_sys_password"} {
+		"rootPwd",
+		"obproxy_sys_password",
+		"masterPassword",
+		"targetAgentPassword"} {
 		if _, ok := bodyInterface[key]; ok {
 			bodyInterface[key] = "******"
 			masked = true
