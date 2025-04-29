@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"io"
 	"net"
 	"net/http"
@@ -165,6 +166,43 @@ func compareRequestUri(c *gin.Context, maskUri string) bool {
 	return true
 }
 
+func readRequestBodyMaskPassword(c *gin.Context) string {
+	bodyBytes, _ := io.ReadAll(c.Request.Body)
+	bodyInterface := make(map[string]interface{})
+
+	if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
+		return ""
+	}
+
+	masked := false
+	for _, key := range []string{
+		"data_backup_uri",
+		"archive_log_uri",
+		"backup_base_uri",
+		"encryption",
+		"root_password",
+		"password",
+		"new_password",
+		"old_password",
+		"tenant_password",
+		"token",
+		"proxy_password",
+		"obproxy_sys_password"} {
+		if _, ok := bodyInterface[key]; ok {
+			bodyInterface[key] = "******"
+			masked = true
+		}
+	}
+
+	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	if masked {
+		// marshal the modified body back to JSON
+		bodyBytes, _ = json.Marshal(bodyInterface)
+	}
+	return emptyRe.ReplaceAllString(string(bodyBytes), "")
+}
+
 // PreHandlers returns a Gin middleware function to extract and log
 // trace IDs from incoming HTTP requests, and to log request details.
 func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
@@ -189,7 +227,7 @@ func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
 			log.WithContext(ctx).Infof("API request: [%v %v, client=%v, traceId=%v]",
 				c.Request.Method, c.Request.URL, c.ClientIP(), traceId)
 		} else {
-			body := readRequestBody(c)
+			body := readRequestBodyMaskPassword(c)
 			log.WithContext(ctx).Infof("API request: [%v %v, client=%v, traceId=%v, body=%v]",
 				c.Request.Method, c.Request.URL, c.ClientIP(), traceId, body)
 		}

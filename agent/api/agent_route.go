@@ -50,40 +50,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 		common.PaddingBody(), // if the response body is empty, the response body is padded with "{}"
 		common.PreHandlers(
 			constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_PACKAGE,
-			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_CONFIG,
-			constant.URI_API_V1+constant.URI_OBCLUSTER_GROUP+constant.URI_BACKUP+constant.URI_CONFIG,
-			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG,
-			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_RESTORE,
-			constant.URI_API_V1+constant.URI_RESTORE+constant.URI_WINDOWS,
-			// init cluster
-			constant.URI_OB_API_PREFIX+constant.URI_INIT,
-			constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK,
-			// create tenant
-			constant.URI_API_V1+constant.URI_TENANT_GROUP,
-			// set tenant password
-			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD,
-			// create user
-			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_USER,
-			// delete user
-			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER,
-			// add obproxy
-			constant.URI_OBPROXY_API_PREFIX,
-			// set tenant variable
-			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES,
-			// set agent password
-			constant.URI_AGENT_API_PREFIX+constant.URI_PASSWORD,
-			// join master
-			constant.URI_AGENT_API_PREFIX+constant.URI_JOIN,
-			constant.URI_AGENT_API_PREFIX,
-			// scale out
-			constant.URI_API_V1+constant.URI_OB_GROUP+constant.URI_SCALE_OUT,
-			// send token
-			constant.URI_AGENT_RPC_PREFIX+constant.URI_TOKEN,
 			// upload obproxy package
 			constant.URI_OBPROXY_API_PREFIX+constant.URI_PACKAGE,
 			constant.URI_API_V1+constant.URI_PACKAGE,
-			// persist tenant root password
-			constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST,
 		),
 		common.SetContentType,
 	)
