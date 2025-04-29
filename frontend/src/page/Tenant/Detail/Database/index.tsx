@@ -64,6 +64,7 @@ const Database: React.FC<DatabaseProps> = ({
   useEffect(() => {
     if (tenantData?.locked === 'YES' && tenantName) {
       history.push(`/tenant/${tenantName}`);
+      message.error('租户已被锁定', 3);
     }
   }, [tenantName, tenantData?.locked]);
 

@@ -53,7 +53,21 @@ const OCPPassword: React.FC<PasswordProps> = props => {
     },
   ];
 
-  return <Password rules={hasRule ? ocpPasswordRules : undefined} {...props} />;
+  return (
+    <Password
+      rules={
+        hasRule
+          ? ocpPasswordRules
+          : [
+              {
+                validate: (val?: string) => val?.length >= 1,
+                message: '请输入密码',
+              },
+            ]
+      }
+      {...props}
+    />
+  );
 };
 
 export default OCPPassword;

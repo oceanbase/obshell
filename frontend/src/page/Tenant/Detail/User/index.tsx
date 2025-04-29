@@ -18,6 +18,7 @@ import { useSelector, history } from 'umi';
 import React, { useEffect } from 'react';
 import MySQL from './MySQL';
 import Oracle from './Oracle';
+import { message } from '@oceanbase/design';
 
 export interface IndexProps {
   match: {
@@ -42,6 +43,7 @@ const Index: React.FC<IndexProps> = ({
   useEffect(() => {
     if (tenantData?.locked === 'YES' && tenantName) {
       history.push(`/tenant/${tenantName}`);
+      message.error('租户已被锁定', 3);
     }
   }, [tenantName, tenantData?.locked]);
 
