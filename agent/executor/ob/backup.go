@@ -23,7 +23,6 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/lib/system"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
@@ -140,7 +139,7 @@ func newStartBackupCtx(p *param.BackupParam) (*task.TaskContext, error) {
 
 type CheckDestTask struct {
 	task.Task
-	tenants []oceanbase.DbaObTenant
+	// tenants []oceanbase.DbaObTenant
 }
 
 func newCheckDestTask() *CheckDestTask {
@@ -152,82 +151,82 @@ func newCheckDestTask() *CheckDestTask {
 }
 
 func (t *CheckDestTask) Execute() error {
-	if err := t.getParams(); err != nil {
-		return errors.Wrap(err, "get params")
-	}
+	// if err := t.getParams(); err != nil {
+	// 	return errors.Wrap(err, "get params")
+	// }
 
-	for _, tenant := range t.tenants {
-		archiveLogClosed, err := tenantService.IsArchiveLogClosed(tenant.TenantName)
-		if err != nil {
-			return errors.Wrap(err, "check archive log closed")
-		}
-		if archiveLogClosed {
-			if err = t.checkArchiveDest(&tenant); err != nil {
-				return errors.Wrap(err, "check archive dest")
-			}
-		}
+	// for _, tenant := range t.tenants {
+	// 	archiveLogClosed, err := tenantService.IsArchiveLogClosed(tenant.TenantName)
+	// 	if err != nil {
+	// 		return errors.Wrap(err, "check archive log closed")
+	// 	}
+	// 	if archiveLogClosed {
+	// 		if err = t.checkArchiveDest(&tenant); err != nil {
+	// 			return errors.Wrap(err, "check archive dest")
+	// 		}
+	// 	}
 
-		if err = t.checkDataBackupDest(&tenant); err != nil {
-			return errors.Wrap(err, "check data backup dest")
-		}
+	// 	if err = t.checkDataBackupDest(&tenant); err != nil {
+	// 		return errors.Wrap(err, "check data backup dest")
+	// 	}
 
-	}
+	// }
 	return nil
 }
 
-func (t *CheckDestTask) getParams() (err error) {
-	t.tenants, err = getTenantFromCtx(t.GetContext())
-	if err != nil {
-		return errors.Wrap(err, "get tenant from context")
-	}
-	return nil
-}
+// func (t *CheckDestTask) getParams() (err error) {
+// 	t.tenants, err = getTenantFromCtx(t.GetContext())
+// 	if err != nil {
+// 		return errors.Wrap(err, "get tenant from context")
+// 	}
+// 	return nil
+// }
 
-func (t *CheckDestTask) checkArchiveDest(tenant *oceanbase.DbaObTenant) (err error) {
-	t.ExecuteLogf("Check archive log dest of %s(%d)", tenant.TenantName, tenant.TenantID)
-	dest, err := tenantService.GetArchiveDestByID(tenant.TenantID)
-	if err != nil {
-		return errors.Wrap(err, "get archive dest")
-	}
+// func (t *CheckDestTask) checkArchiveDest(tenant *oceanbase.DbaObTenant) (err error) {
+// 	t.ExecuteLogf("Check archive log dest of %s(%d)", tenant.TenantName, tenant.TenantID)
+// 	dest, err := tenantService.GetArchiveDestByID(tenant.TenantID)
+// 	if err != nil {
+// 		return errors.Wrap(err, "get archive dest")
+// 	}
 
-	if dest == "" {
-		return errors.New("archive dest is empty")
-	}
+// 	if dest == "" {
+// 		return errors.New("archive dest is empty")
+// 	}
 
-	storage, err := system.GetStorageInterfaceByURI(dest)
-	if err != nil {
-		return errors.Wrap(err, "get storage interface")
-	}
-	t.ExecuteLogf("Archive dest is %s", storage.GenerateURIWithoutSecret())
+// 	storage, err := system.GetStorageInterfaceByURI(dest)
+// 	if err != nil {
+// 		return errors.Wrap(err, "get storage interface")
+// 	}
+// 	t.ExecuteLogf("Archive dest is %s", storage.GenerateURIWithoutSecret())
 
-	if err = storage.CheckWritePermission(); err != nil {
-		return errors.Wrap(err, "check storage")
-	}
-	return nil
-}
+// 	if err = storage.CheckWritePermission(); err != nil {
+// 		return errors.Wrap(err, "check storage")
+// 	}
+// 	return nil
+// }
 
-func (t *CheckDestTask) checkDataBackupDest(tenant *oceanbase.DbaObTenant) (err error) {
-	t.ExecuteLogf("Check data backup dest of %s(%d)", tenant.TenantName, tenant.TenantID)
-	dest, err := tenantService.GetDataBackupDestByID(tenant.TenantID)
-	if err != nil {
-		return errors.Wrap(err, "get data dest")
-	}
+// func (t *CheckDestTask) checkDataBackupDest(tenant *oceanbase.DbaObTenant) (err error) {
+// 	t.ExecuteLogf("Check data backup dest of %s(%d)", tenant.TenantName, tenant.TenantID)
+// 	dest, err := tenantService.GetDataBackupDestByID(tenant.TenantID)
+// 	if err != nil {
+// 		return errors.Wrap(err, "get data dest")
+// 	}
 
-	if dest == "" {
-		return errors.New("data dest is empty")
-	}
+// 	if dest == "" {
+// 		return errors.New("data dest is empty")
+// 	}
 
-	storage, err := system.GetStorageInterfaceByURI(dest)
-	if err != nil {
-		return errors.Wrap(err, "get storage interface")
-	}
+// 	storage, err := system.GetStorageInterfaceByURI(dest)
+// 	if err != nil {
+// 		return errors.Wrap(err, "get storage interface")
+// 	}
 
-	if err = storage.CheckWritePermission(); err != nil {
-		return errors.Wrap(err, "check storage")
-	}
-	t.ExecuteLogf("Data backup dest of %s(%d) is '%s'", tenant.TenantName, tenant.TenantID, storage.GenerateURIWithoutSecret())
-	return nil
-}
+// 	if err = storage.CheckWritePermission(); err != nil {
+// 		return errors.Wrap(err, "check storage")
+// 	}
+// 	t.ExecuteLogf("Data backup dest of %s(%d) is '%s'", tenant.TenantName, tenant.TenantID, storage.GenerateURIWithoutSecret())
+// 	return nil
+// }
 
 type OpenArchiveLogTask struct {
 	task.Task
