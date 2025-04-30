@@ -49,11 +49,9 @@ const Index: React.FC<IndexProps> = ({
 
   return (
     <>
-      {tenantData?.mode === 'MYSQL' ? (
-        <MySQL tenantName={tenantName} />
-      ) : (
-        <Oracle pathname={pathname} tenantName={tenantName} />
-      )}
+      {tenantData?.mode === 'MYSQL' && <MySQL tenantName={tenantName} />}
+
+      {tenantData?.mode === 'ORACLE' && <Oracle pathname={pathname} tenantName={tenantName} />}
     </>
   );
 };
