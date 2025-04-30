@@ -27,9 +27,10 @@ import * as v1Service from '@/service/obshell/v1';
 import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
 import GlobalStyle from './GlobalStyle';
-import { setEncryptLocalStorage } from '@/util';
-import { getStatistics } from '@/service/obshell/ob';
+import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
+import { getObInfo, getStatistics } from '@/service/obshell/ob';
 import { telemetryReport } from '@/service/custom';
+import moment from 'moment';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,16 +49,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
 
   useEffect(() => {
     // 设置标签页的 title
-    document.title = 'OceanBase-Dashboard';
-    getStatistics().then(res => {
-      if (res.successful) {
-        // 遥测记录接口
-        telemetryReport({
-          content: res.data,
-          component: 'obshell',
-        });
-      }
-    });
+    document.title = 'OB-Dashboard';
   }, []);
 
   // request and save publicKey to global state
@@ -77,9 +69,52 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     },
   });
 
+  // 依赖 model 中的 password来判断
+  const { password } = useSelector((state: DefaultRootState) => state.profile);
+  const telemetryTime = getEncryptLocalStorage('telemetryTime');
+  const isTelemetryOutdated = !telemetryTime || moment().diff(moment(telemetryTime), 'hours') >= 1;
+
+  useRequest(getStatistics, {
+    // 登录状态下一小时请求一次
+    ready: !!password && isTelemetryOutdated,
+    // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
+    pollingInterval: 1000 * 60 * 60 + 5000,
+    onSuccess: res => {
+      if (res.successful) {
+        telemetryReport({
+          content: res.data,
+          component: 'obshell',
+        }).then(res => {
+          if (res?.code === 200) {
+            setEncryptLocalStorage('telemetryTime', moment().format());
+          }
+        });
+      }
+    },
+  });
+
   useEffect(() => {
     if (location?.pathname === '/login') {
       refresh();
+    } else {
+      // model 中不存在 password，可能是刷新了浏览器
+      // 此时请求 obInfo 接口查看是否能过鉴权，通过表明 storage 的密码是正确的，进行更新 model
+      if (!password) {
+        getObInfo().then(res => {
+          if (res.successful) {
+            const password = getEncryptLocalStorage('password');
+
+            if (password) {
+              dispatch({
+                type: 'profile/update',
+                payload: {
+                  password,
+                },
+              });
+            }
+          }
+        });
+      }
     }
   }, [location?.pathname]);
 

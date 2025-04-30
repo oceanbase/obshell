@@ -31,7 +31,7 @@ import { formatTime } from '@/util/datetime';
 import tracert from '@/util/tracert';
 import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
 import useStyles from './index.style';
-import { getTime } from '@/service/obshell/v1';
+import { getAgentInfo, getTime } from '@/service/obshell/v1';
 import { getUnfinishedDags } from '@/service/obshell/task';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
@@ -219,6 +219,9 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     id: 'ocp-express.Layout.BasicLayout.DarkThemText',
     defaultMessage: '暗黑主题',
   });
+
+  const { data } = useRequest(getAgentInfo);
+  const version = data?.data?.version;
   return (
     <OBUIBasicLayout
       className={styles.container}
@@ -413,7 +416,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         locales: ['zh-CN', 'en-US'],
         appData: {
           shortName: 'OB-Dashboard',
-          // version: appInfo.buildVersion,
+          version: version,
           // releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
         },
       }}

@@ -43,7 +43,6 @@ const LoginPage: React.FC<LoginPageProps> = ({
   },
 }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
-  const { publicKey } = useSelector((state: DefaultRootState) => state.profile);
 
   const dispatch = useDispatch();
 
@@ -69,7 +68,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
           history.push('/overview');
         }
       } else {
-        message.error(res.error?.message);
+        message.error(
+          formatMessage({
+            id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
+            defaultMessage: '密码错误',
+          })
+        );
       }
     },
   });

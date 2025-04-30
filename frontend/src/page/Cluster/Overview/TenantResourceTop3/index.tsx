@@ -166,11 +166,11 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                               ellipsis={{
                                 tooltip: true,
                               }}
+                              // TODO: 不存在监控, 先禁止跳转
                               onClick={() => {
-                                // TODO: 不存在监控, 先禁止跳转
                                 // history.push(`/tenant/${dataItem.tenant_name}/monitor`);
                               }}
-                              className="ocp-link-hover"
+                              // className="ocp-link-hover"
                               style={{ width: 70, color: token.colorTextTertiary }}
                             >
                               {dataItem.tenant_name}
