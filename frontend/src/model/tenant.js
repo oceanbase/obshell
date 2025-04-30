@@ -57,7 +57,10 @@ const model = {
         yield put({
           type: 'update',
           payload: {
-            precheckResult: res.data || {},
+            precheckResult: {
+              ...(res.data || {}),
+              tenantName: payload?.name
+            },
           },
         });
       }

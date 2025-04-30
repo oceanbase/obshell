@@ -125,7 +125,8 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
       tenantName !== 'sys' &&
       Object.keys(precheckResult)?.length > 0 &&
       precheckResult?.is_empty_root_password &&
-      isCheckEmptyPasswordRootPath
+      isCheckEmptyPasswordRootPath &&
+      precheckResult?.tenantName === tenantName
     ) {
       setShowTenantPasswordModal(true);
     } else {
@@ -133,14 +134,20 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
         `__OCP_EXPRESS_TENANT__${tenantName}_EMPTY_SUPER_USER_PASSWORD_TIME__`
       );
     }
-  }, [precheckResult?.is_empty_root_password, isCheckEmptyPasswordRootPath, pathname]);
+  }, [
+    precheckResult?.tenantName,
+    precheckResult?.is_empty_root_password,
+    isCheckEmptyPasswordRootPath,
+    pathname,
+  ]);
 
   useEffect(() => {
     if (
       tenantName !== 'sys' &&
       Object.keys(precheckResult)?.length > 0 &&
       isCheckEmptyPasswordPath &&
-      !precheckResult?.is_connectable
+      !precheckResult?.is_connectable &&
+      precheckResult?.tenantName === tenantName
     ) {
       if (!precheckResult?.is_password_exists) {
         dispatch({
@@ -183,6 +190,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
   }, [
     precheckResult?.is_password_exists,
     precheckResult?.is_connectable,
+    precheckResult?.tenantName,
     isCheckEmptyPasswordPath,
     pathname,
   ]);
