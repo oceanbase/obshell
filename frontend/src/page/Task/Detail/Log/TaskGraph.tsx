@@ -37,7 +37,7 @@ export interface TaskGraphProps {
   taskData?: API.DagDetailDTO;
   onOperationSuccess: () => void;
   subtask?: API.SubtaskInstance;
-  onSubtaskChange: (subtaskId: number | undefined) => void;
+  onSubtaskChange: (domId: string | undefined) => void;
 }
 
 export interface TaskGraphRef {
@@ -137,12 +137,12 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     const hasBranch = false;
 
     // 对任务进行结构化处理，方便绘图
-    const nodes = getNodes(taskData);
+    const nodes = taskData?.nodes || [];
 
     const { token } = theme.useToken();
 
     // 定位到目标节点
-    const setTargetSubtask = (targetSubtaskId?: number) => {
+    const setTargetSubtask = (targetSubtaskId?: string) => {
       onSubtaskChange(targetSubtaskId);
       const targetElement = document.getElementById(`ocp-subtask-node-${targetSubtaskId}`);
       if (targetElement) {
@@ -172,13 +172,6 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
     }));
 
     useEffect(() => {
-      // 如果当前没有选中子任务节点，则自动定位到当前节点
-      if (isNullValue(subtask?.domId)) {
-        setLatestSubtask();
-      } else {
-        // 否则自动定位到已选中的子任务节点，目的是为了页面刷新时能够自动定位到之前选中的节点
-        setTargetSubtask(subtask?.domId);
-      }
       setTimeout(() => {
         // 绘制 path
         const graphWidth = graphRef.current?.scrollWidth || 0;
@@ -193,6 +186,16 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         renderPath(pathCanvas);
       }, 0);
     }, []);
+
+    useEffect(() => {
+      // 如果当前没有选中子任务节点，则自动定位到当前节点
+      if (isNullValue(subtask?.domId)) {
+        setLatestSubtask();
+      } else {
+        // 否则自动定位到已选中的子任务节点，目的是为了页面刷新时能够自动定位到之前选中的节点
+        setTargetSubtask(subtask?.domId);
+      }
+    }, [nodes.length]);
 
     // 这里采用深对比，只要 taskData 发生变化，就重新绘制任务的路径图
     // 这是因为任务的节点图也是这样的绘制频率，为了路径和节点的绘制结果是对齐的，两者的绘制频率也需要对齐
@@ -352,7 +355,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
           key={node?.domId}
           onClick={() => {
             // 父节点不可点击，自动选择首个子节点
-            onSubtaskChange(node?.children ? node.children[0]?.id : node?.id);
+            onSubtaskChange(node?.children?.length > 0 ? node.children[0]?.domId : node?.domId);
           }}
           // 设置选中节点的样式
           className={`${isSubNode ? styles.subNode : styles.node}`}
@@ -423,93 +426,94 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
               </Text>
             </Space>
             {/* 存在子节点的不展示操作 */}
-            {!node?.children && (
-              <Dropdown
-                overlay={
-                  <Menu
-                    style={{ marginBottom: 0, color: 'rgba(0, 0, 0, 0.45)' }}
-                    onClick={({ key, domEvent }) => {
-                      // 点击菜单时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
-                      if (domEvent) {
-                        domEvent.stopPropagation();
-                      }
-                      // 下载日志
-                      if (key === 'downloadLog') {
-                        // const promise = TaskController.getSubtaskLog({
-                        //   taskInstanceId: taskData?.id,
-                        //   subtaskInstanceId: node?.id,
-                        // });
-                        // promise.then(res => {
-                        //   if (res.successful) {
-                        //     const log = res.data?.log;
-                        //     downloadLog(log, `subtask_${node?.id}.log`);
-                        //   }
-                        // });
-                      } else {
-                        // 其他操作
-                        handleSubtaskOperate(
-                          key as SubtaskOperationKey,
-                          taskData,
-                          node,
-                          onOperationSuccess
-                        );
-                      }
-                    }}
-                  >
-                    <div
-                      className={styles.taskIdWrapper}
-                      style={
-                        statusItem.operations?.length > 0
-                          ? { borderBottom: '1px solid #e8e8e8' }
-                          : {}
-                      }
+            {!node?.children ||
+              (node?.children?.length !== 0 && (
+                <Dropdown
+                  overlay={
+                    <Menu
+                      style={{ marginBottom: 0, color: 'rgba(0, 0, 0, 0.45)' }}
+                      onClick={({ key, domEvent }) => {
+                        // 点击菜单时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
+                        if (domEvent) {
+                          domEvent.stopPropagation();
+                        }
+                        // 下载日志
+                        if (key === 'downloadLog') {
+                          // const promise = TaskController.getSubtaskLog({
+                          //   taskInstanceId: taskData?.id,
+                          //   subtaskInstanceId: node?.id,
+                          // });
+                          // promise.then(res => {
+                          //   if (res.successful) {
+                          //     const log = res.data?.log;
+                          //     downloadLog(log, `subtask_${node?.id}.log`);
+                          //   }
+                          // });
+                        } else {
+                          // 其他操作
+                          handleSubtaskOperate(
+                            key as SubtaskOperationKey,
+                            taskData,
+                            node,
+                            onOperationSuccess
+                          );
+                        }
+                      }}
                     >
-                      <Text
-                        copyable={{
-                          text: `${node?.id}`,
-                        }}
-                        onClick={e => {
-                          // 点击 ID 或者复制 icon 时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
-                          e?.stopPropagation();
-                        }}
+                      <div
+                        className={styles.taskIdWrapper}
+                        style={
+                          statusItem.operations?.length > 0
+                            ? { borderBottom: '1px solid #e8e8e8' }
+                            : {}
+                        }
                       >
-                        {`ID: ${node?.id}`}
-                      </Text>
-                    </div>
-                    {statusItem.operations?.map(item => {
-                      // 如果属于远程 OCP 发起任务下的子任务，则禁止重试
-                      const disabled = taskData?.isRemote && ['retry'].includes(item.value);
-                      return (
-                        <Menu.Item key={item.value} disabled={disabled}>
-                          <Tooltip
-                            placement="right"
-                            title={
-                              disabled &&
-                              formatMessage({
-                                id: 'ocp-express.Detail.Log.TaskGraph.TheCurrentTaskIsInitiated',
-                                defaultMessage:
-                                  '当前任务为远程 OCP 发起，请到发起端的 OCP 进行操作',
-                              })
-                            }
-                          >
-                            <span>{item.label}</span>
-                          </Tooltip>
-                        </Menu.Item>
-                      );
-                    })}
-                  </Menu>
-                }
-              >
-                <MoreOutlined
-                  style={{
-                    fontSize: 18,
-                    cursor: 'pointer',
-                    // 保证图标垂直对齐
-                    marginTop: 4,
-                  }}
-                />
-              </Dropdown>
-            )}
+                        <Text
+                          copyable={{
+                            text: `${node?.id}`,
+                          }}
+                          onClick={e => {
+                            // 点击 ID 或者复制 icon 时阻止事件冒泡，避免触发整个节点的 click 事件导致被选中
+                            e?.stopPropagation();
+                          }}
+                        >
+                          {`ID: ${node?.id}`}
+                        </Text>
+                      </div>
+                      {statusItem.operations?.map(item => {
+                        // 如果属于远程 OCP 发起任务下的子任务，则禁止重试
+                        const disabled = taskData?.isRemote && ['retry'].includes(item.value);
+                        return (
+                          <Menu.Item key={item.value} disabled={disabled}>
+                            <Tooltip
+                              placement="right"
+                              title={
+                                disabled &&
+                                formatMessage({
+                                  id: 'ocp-express.Detail.Log.TaskGraph.TheCurrentTaskIsInitiated',
+                                  defaultMessage:
+                                    '当前任务为远程 OCP 发起，请到发起端的 OCP 进行操作',
+                                })
+                              }
+                            >
+                              <span>{item.label}</span>
+                            </Tooltip>
+                          </Menu.Item>
+                        );
+                      })}
+                    </Menu>
+                  }
+                >
+                  <MoreOutlined
+                    style={{
+                      fontSize: 18,
+                      cursor: 'pointer',
+                      // 保证图标垂直对齐
+                      marginTop: 4,
+                    }}
+                  />
+                </Dropdown>
+              ))}
           </Space>
         </div>
       );

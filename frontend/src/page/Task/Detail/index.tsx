@@ -30,7 +30,7 @@ import { TASK_STATUS_LIST } from '@/constant/task';
 import { delayInterfaceWithSentItTwice, isEnglish } from '@/util';
 import { download } from '@/util/export';
 import { formatTime } from '@/util/datetime';
-import { getTaskDuration, getTaskProgress } from '@/util/task';
+import { getNodes, getTaskDuration, getTaskProgress } from '@/util/task';
 import ContentWithReload from '@/component/ContentWithReload';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import Log from './Log';
@@ -77,7 +77,7 @@ const Detail: React.FC<DetailProps> = ({
     query: { backUrl },
   },
 }) => {
-  const [subtaskId, setSubtaskId] = useState<number | string | undefined>(undefined);
+  const [domId, setDomId] = useState<number | string | undefined>(undefined);
   const logRef = useRef<TaskGraphRef>(null);
   // const flowRef = useRef<TaskGraphRef>(null);
 
@@ -96,7 +96,12 @@ const Detail: React.FC<DetailProps> = ({
     {
       onSuccess: res => {
         if (res?.successful) {
-          setTaskData(res?.data || {});
+          const realTaskData = res?.data || { nodes: [] };
+          console.log(realTaskData, 'realTaskData');
+          // 设置 nodes，增加 domId 进行判断
+          realTaskData.nodes = getNodes(realTaskData);
+
+          setTaskData(realTaskData);
         } else {
           // 错误之前的最后一次请求，不存在具体的 nodes，那么直接跳转到首页. 存在数据的情况下载此页面继续轮训
           if (!taskData?.nodes?.length > 0) {
@@ -114,10 +119,13 @@ const Detail: React.FC<DetailProps> = ({
   const stateItem = findByValue(TASK_STATUS_LIST, taskData.state);
   // 任务是否处于轮询状态
   const polling = taskData?.state === 'RUNNING';
-  const subtasks = flatten(taskData?.nodes?.map(item => item.sub_tasks || []) || []);
+  // children 上增加了 domId， 后端的 parentId 和 childId 存在重复，画图时异常
+  const subtasks = flatten(
+    taskData?.nodes?.map(item => (item.children?.length > 0 ? item.children : [item])) || []
+  );
 
   // 当前选中的子任务
-  const subtask = find(subtasks || [], item => !isNullValue(subtaskId) && item.id === subtaskId);
+  const subtask = find(subtasks || [], item => !isNullValue(domId) && item.domId === domId);
 
   // 子任务处在运行中的状态才发起日志轮询，待执行的任务不需要发起轮询，因为待执行的任务无法查看日志
   const logPolling = subtask?.state === 'RUNNING';
@@ -397,7 +405,7 @@ const Detail: React.FC<DetailProps> = ({
            onChange={e => {
              setMode(e.target.value);
              // 重置选中的 subtask
-             setSubtaskId(undefined);
+             setDomId(undefined);
            }}
           >
            <Tooltip
@@ -626,7 +634,7 @@ const Detail: React.FC<DetailProps> = ({
         logLoading={logLoading}
         logPolling={logPolling}
         onSubtaskChange={newSubtaskId => {
-          setSubtaskId(newSubtaskId);
+          setDomId(newSubtaskId);
         }}
       />
 
@@ -640,7 +648,7 @@ const Detail: React.FC<DetailProps> = ({
            logLoading={logLoading}
            logPolling={logPolling}
            onSubtaskChange={(newSubtaskId) => {
-             setSubtaskId(newSubtaskId);
+             setDomId(newSubtaskId);
            }}
          />
         ) : (
@@ -653,7 +661,7 @@ const Detail: React.FC<DetailProps> = ({
            logLoading={logLoading}
            logPolling={logPolling}
            onSubtaskChange={(newSubtaskId) => {
-             setSubtaskId(newSubtaskId);
+             setDomId(newSubtaskId);
            }}
          />
         )} */}

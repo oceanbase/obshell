@@ -208,7 +208,7 @@ const LogCard: React.FC<LogCardProps> = ({
                 }}
                 className={styles.subtaskId}
               >
-                {`ID: ${subtask?.id}`}
+                {`ID: ${subtask?.id || '-'}`}
               </Text>
             </Space>
             {/* <div className={styles.logNodeWrapper}>

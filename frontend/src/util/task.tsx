@@ -18,6 +18,7 @@ import { formatMessage } from '@/util/intl';
 import React from 'react';
 import { Modal, message } from '@oceanbase/design';
 import { find, flatten, groupBy, isArray, uniq, uniqueId } from 'lodash';
+import { history } from 'umi';
 import moment from 'moment';
 import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
 import * as TaskController from '@/service/ocp-express/TaskController';
@@ -77,9 +78,11 @@ export function taskSuccess({
     id: 'ocp-express.src.util.task.TaskSubmittedSuccessfully',
     defaultMessage: '任务提交成功',
   }),
+  newTab = false,
 }: {
   taskId: number | undefined | (number | undefined)[];
   message?: string;
+  newTab?: boolean;
 }) {
   const taskIdList = isArray(taskId) ? taskId : [taskId];
   // 是否为多个任务
@@ -99,7 +102,12 @@ export function taskSuccess({
               <a
                 key={item}
                 onClick={() => {
-                  directTo(`/task/${item}?backUrl=/task`);
+                  if (newTab) {
+                    directTo(`/task/${item}?backUrl=/task`);
+                  } else {
+                    history.push(`/task/${item}`);
+                    Modal.destroyAll();
+                  }
                 }}
               >
                 {item}
@@ -131,11 +139,15 @@ export function taskSuccess({
 
     onOk: () => {
       if (!isMultipleTask) {
-        directTo(`/task/${taskId}?backUrl=/task`);
-        // 通过模拟 promsie reject 实现击查看任务后，不关闭弹窗
-        return new Promise((resolve, reject) => {
-          reject();
-        });
+        if (newTab) {
+          directTo(`/task/${taskId}?backUrl=/task`);
+          // 通过模拟 promsie reject 实现击查看任务后，不关闭弹窗
+          return new Promise((resolve, reject) => {
+            reject();
+          });
+        } else {
+          history.push(`/task/${taskId}`);
+        }
       }
       return null;
     },
@@ -355,11 +367,13 @@ export function getNodes(taskData?: API.DagDetailDTO) {
     // task 和 subtask 的 id 可能重复，增加 domId 进行区分
     item.domId = item.id;
     // 只有一个 subTasks 时，直接替换 Node 进行返回
-    if (item.sub_tasks?.length === 1) {
+    if (item?.sub_tasks?.length === 1) {
       item.sub_tasks[0].domId = item.sub_tasks[0].id + '_child';
       return item.sub_tasks[0];
     }
-    item.children = item.sub_tasks.map((item, index) => ({ ...item, domId: `${item.id}_child` }));
+    item.children =
+      item?.sub_tasks?.map((item, index) => ({ ...item, domId: `${item.id}_child` })) || [];
+
     return item;
   });
 }

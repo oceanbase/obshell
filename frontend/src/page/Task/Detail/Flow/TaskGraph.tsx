@@ -23,7 +23,7 @@ import type { Graph } from '@antv/g6';
 import G6 from '@antv/g6';
 import { SUBTASK_STATUS_LIST } from '@/constant/task';
 import type { SubtaskOperationKey } from '@/util/task';
-import { getNodes, getLatestNode, handleSubtaskOperate } from '@/util/task';
+import { getLatestNode, handleSubtaskOperate } from '@/util/task';
 import { fittingString } from '@/util/graph';
 import GraphToolbar from '@/component/GraphToolbar';
 import styles from './TaskGraph.less';
@@ -186,8 +186,9 @@ G6.registerEdge(
         path,
         // 自定义结束箭头，箭头的边长为 10，夹角为 60 度
         endArrow: {
-          path: `M${10 * Math.cos(Math.PI / 6)},${10 * Math.sin(Math.PI / 6)} L0,0 L${10 * Math.cos(Math.PI / 6)
-            },-${10 * Math.sin(Math.PI / 6)}`,
+          path: `M${10 * Math.cos(Math.PI / 6)},${10 * Math.sin(Math.PI / 6)} L0,0 L${
+            10 * Math.cos(Math.PI / 6)
+          },-${10 * Math.sin(Math.PI / 6)}`,
           fill: statusItem.color,
         },
 
@@ -267,7 +268,7 @@ class TaskGraph extends React.PureComponent<TaskGraphProps, TaskGraphState> {
   // 定位到当前节点
   public setLatestSubtask = () => {
     const { taskData } = this.props;
-    const nodes = getNodes(taskData);
+    const nodes = taskData.nodes || [];
     const latestNode = getLatestNode(nodes);
     this.setTargetSubtask(
       latestNode?.id,

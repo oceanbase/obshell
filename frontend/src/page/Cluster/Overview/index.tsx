@@ -42,7 +42,6 @@ import SlowSQLTop3 from './SlowSQLTop3';
 import TenantResourceTop3 from './TenantResourceTop3';
 import type { ZoneListOrTopoRef } from './ZoneListOrTopo';
 import ZoneListOrTopo from './ZoneListOrTopo';
-import { OB_SERVER_STATUS_LIST } from '@/constant/oceanbase';
 import { EllipsisOutlined } from '@oceanbase/icons';
 import UpgradeDrawer from './UpgradeDrawer';
 import { useRafInterval, useRequest } from 'ahooks';
@@ -368,7 +367,9 @@ const Detail: React.FC<DetailProps> = ({
 
               <a
                 onClick={() => {
-                  directTo(`/task/${res?.data?.id}?backUrl=/task`);
+                  history.push(`/task/${res?.data?.id}`);
+                  Modal.destroyAll();
+                  // directTo(`/task/${res?.data?.id}?backUrl=/task`);
                 }}
               >
                 {res?.data?.id}
@@ -399,7 +400,9 @@ const Detail: React.FC<DetailProps> = ({
 
               <a
                 onClick={() => {
-                  directTo(`/task/${res?.data?.id}?backUrl=/task`);
+                  history.push(`/task/${res?.data?.id}`);
+                  Modal.destroyAll();
+                  // directTo(`/task/${res?.data?.id}?backUrl=/task`);
                 }}
               >
                 {res?.data?.id}
