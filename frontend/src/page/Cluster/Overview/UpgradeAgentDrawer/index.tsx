@@ -38,12 +38,10 @@ import MyDrawer from '@/component/MyDrawer';
 import MySelect from '@/component/MySelect';
 // import type { PackageSelectRef } from '@/component/PackageSelect';
 import PackageSelect from '@/component/PackageSelect';
-import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 // import DraggableTable from '../DraggableTable';
 import styles from './index.less';
 import { agentUpgrade } from '@/service/obshell/upgrade';
-import { getObInfo } from '@/service/obshell/ob';
-import { getAgentInfo, getStatus } from '@/service/obshell/v1';
+import { getAgentInfo } from '@/service/obshell/v1';
 
 const { Step } = Steps;
 const { TabPane } = Tabs;

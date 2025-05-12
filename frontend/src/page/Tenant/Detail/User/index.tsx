@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 /*
  * Copyright (c) 2024 OceanBase.
  *
@@ -43,7 +44,10 @@ const Index: React.FC<IndexProps> = ({
   useEffect(() => {
     if (tenantData?.locked === 'YES' && tenantName) {
       history.push(`/tenant/${tenantName}`);
-      message.error('租户已被锁定', 3);
+      message.error(
+        formatMessage({ id: 'ocp-v2.Detail.User.TenantIsLocked', defaultMessage: '租户已被锁定' }),
+        3
+      );
     }
   }, [tenantName, tenantData?.locked]);
 

@@ -6113,4 +6113,15 @@ export default {
   "ocp-v2.src.util.task.TaskRetrySucceeded": "Task retry succeeded",
   "ocp-v2.component.MyDrawer.Cancel": "Cancel",
   "ocp-v2.component.MyDrawer.Determine": "Confirm",
+  "ocp-v2.src.component.Password.PleaseEnterThePassword": "Please enter the password",
+  "ocp-v2.src.hook.useMenu.ClusterManagement": "Cluster Management",
+  "ocp-v2.Cluster.Host.ClusterManagement": "Cluster Management",
+  "ocp-v2.Cluster.Overview.ClusterManagement": "Cluster Management",
+  "ocp-v2.Cluster.Overview.UpgradeVersion": "Upgrade Version",
+  "ocp-v2.Cluster.Overview.UpgradeObshell": "Upgrade obshell",
+  "ocp-v2.Cluster.Parameter.ClusterManagement": "Cluster Management",
+  "ocp-v2.Cluster.Unit.ClusterManagement": "Cluster Management",
+  "ocp-v2.Detail.Database.TenantIsLocked": "Tenant is locked",
+  "ocp-v2.Detail.User.TenantIsLocked": "Tenant is locked",
+  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "Full-functional and read-only replicas are currently supported"
 };

@@ -77,10 +77,7 @@ const Detail: React.FC<DetailProps> = ({
 
   const dispatch = useDispatch();
   useDocumentTitle(
-    formatMessage({
-      id: 'ocp-express.Cluster.Unit.ClusterOverview',
-      defaultMessage: '集群总览',
-    })
+    formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
   );
 
   const { data: obclusterInfoRes, refresh } = useRequest(
@@ -101,6 +98,15 @@ const Detail: React.FC<DetailProps> = ({
       },
     }
   );
+
+  useRequest(getStatus, {
+    manual: false,
+    onSuccess: res => {
+      console.log('res', res);
+      if (res.successful) {
+      }
+    },
+  });
 
   useRafInterval(
     () => {
@@ -320,8 +326,7 @@ const Detail: React.FC<DetailProps> = ({
         </div>
       </div>
     );
-  };
-  // 组装大盘类型数据
+  }; // 组装大盘类型数据
   const overviewStatusType = [
     {
       key: 'observer',
@@ -517,29 +522,32 @@ const Detail: React.FC<DetailProps> = ({
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       <Menu.Item key="upgrade">
         <span>
-          {formatMessage({ id: 'ocp-v2.Cluster.Overview.ObUpgrade', defaultMessage: 'OB 升级' })}
+          {formatMessage({
+            id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
+            defaultMessage: '升级版本',
+          })}
         </span>
       </Menu.Item>
       <Menu.Item key="upgradeAgent">
         <span>
           {formatMessage({
-            id: 'ocp-v2.Cluster.Overview.ObshellUpgrade',
-            defaultMessage: 'OBShell 升级',
+            id: 'ocp-v2.Cluster.Overview.UpgradeObshell',
+            defaultMessage: '升级 obshell',
           })}
         </span>
       </Menu.Item>
       {/*
       {(clusterData.status === 'RUNNING' ||
-       clusterData.status === 'UNAVAILABLE' ||
-       clusterData.syncStatus === 'DISABLED_WITH_READ_ONLY') && (
-       <Menu.Item key="restart">
-         <span>启动集群</span>
-       </Menu.Item>
+      clusterData.status === 'UNAVAILABLE' ||
+      clusterData.syncStatus === 'DISABLED_WITH_READ_ONLY') && (
+      <Menu.Item key="restart">
+        <span>启动集群</span>
+      </Menu.Item>
       )}
       {(clusterData.status === 'RUNNING' || clusterData.status === 'UNAVAILABLE') && (
-       <Menu.Item key="stop">
-         <span>停止集群</span>
-       </Menu.Item>
+      <Menu.Item key="stop">
+        <span>停止集群</span>
+      </Menu.Item>
       )} */}
     </Menu>
   );
@@ -559,8 +567,8 @@ const Detail: React.FC<DetailProps> = ({
               }}
             >
               {formatMessage({
-                id: 'ocp-express.Cluster.Overview.ClusterOverview',
-                defaultMessage: '集群总览',
+                id: 'ocp-v2.Cluster.Overview.ClusterManagement',
+                defaultMessage: '集群管理',
               })}
             </span>
             <ContentWithReload
@@ -601,18 +609,18 @@ const Detail: React.FC<DetailProps> = ({
           <Space>
             {/* TODO: version1 先屏蔽 */}
             {/* <Button
-             data-aspm-click="c304254.d308756"
-             data-aspm-desc="集群详情-Unit 分布跳转"
-             data-aspm-param={``}
-             data-aspm-expo
-             onClick={() => {
-               history.push('/overview/unit');
-             }}
+            data-aspm-click="c304254.d308756"
+            data-aspm-desc="集群详情-Unit 分布跳转"
+            data-aspm-param={``}
+            data-aspm-expo
+            onClick={() => {
+              history.push('/overview/unit');
+            }}
             >
-             {formatMessage({
-               id: 'ocp-express.Cluster.Overview.UnitDistribution',
-               defaultMessage: 'Unit 分布',
-             })}
+            {formatMessage({
+              id: 'ocp-express.Cluster.Overview.UnitDistribution',
+              defaultMessage: 'Unit 分布',
+            })}
             </Button> */}
             <Button
               data-aspm-click="c304254.d308757"
@@ -628,31 +636,36 @@ const Detail: React.FC<DetailProps> = ({
                 defaultMessage: '参数管理',
               })}
             </Button>
-            <Button
-              onClick={() => {
-                handleMenuClick('start');
-              }}
-            >
-              <span>
-                {formatMessage({
-                  id: 'ocp-v2.Cluster.Overview.StartTheCluster',
-                  defaultMessage: '启动集群',
-                })}
-              </span>
-            </Button>
 
-            <Button
-              onClick={() => {
-                handleMenuClick('stop');
-              }}
-            >
-              <span>
-                {formatMessage({
-                  id: 'ocp-v2.Cluster.Overview.StopTheCluster',
-                  defaultMessage: '停止集群',
-                })}
-              </span>
-            </Button>
+            {clusterData.status !== 'AVAILABLE' && (
+              <Button
+                onClick={() => {
+                  handleMenuClick('start');
+                }}
+              >
+                <span>
+                  {formatMessage({
+                    id: 'ocp-v2.Cluster.Overview.StartTheCluster',
+                    defaultMessage: '启动集群',
+                  })}
+                </span>
+              </Button>
+            )}
+
+            {clusterData.status === 'AVAILABLE' && (
+              <Button
+                onClick={() => {
+                  handleMenuClick('stop');
+                }}
+              >
+                <span>
+                  {formatMessage({
+                    id: 'ocp-v2.Cluster.Overview.StopTheCluster',
+                    defaultMessage: '停止集群',
+                  })}
+                </span>
+              </Button>
+            )}
 
             <Dropdown overlay={menu} getPopupContainer={() => document.body}>
               <Button>
@@ -700,12 +713,12 @@ const Detail: React.FC<DetailProps> = ({
             </Col>
           );
         })}
-        <Col span={12}>
+        <Col span={24}>
           <CompactionTimeTop3 />
         </Col>
-        <Col span={12}>
-          <SlowSQLTop3 />
-        </Col>
+        {/* <Col span={12}>
+           <SlowSQLTop3 />
+          </Col> */}
         <Col span={24}>
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>

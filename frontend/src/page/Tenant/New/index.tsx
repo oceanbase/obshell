@@ -349,8 +349,8 @@ const New: React.FC<NewProps> = ({
       maxWidth: 400,
     },
     title: formatMessage({
-      id: 'ocp-express.Tenant.New.CurrentlyOnlyFullFunctionReplicasAreSupported',
-      defaultMessage: '当前仅支持全功能型副本',
+      id: 'ocp-v2.Tenant.New.FullFunctionalAndReadOnly',
+      defaultMessage: '当前支持全功能型副本和只读型副本',
     }),
   };
 

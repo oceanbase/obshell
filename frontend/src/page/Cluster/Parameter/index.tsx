@@ -273,8 +273,8 @@ const List: React.FC<ListProps> = ({}) => {
     {
       path: '/overview',
       breadcrumbName: formatMessage({
-        id: 'ocp-express.Cluster.Parameter.ClusterOverview',
-        defaultMessage: '集群总览',
+        id: 'ocp-v2.Cluster.Parameter.ClusterManagement',
+        defaultMessage: '集群管理',
       }),
     },
 

@@ -18,10 +18,9 @@ import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
 import React from 'react';
 import { Empty, Col, Row, theme as designTheme } from '@oceanbase/design';
-import { TinyArea, useTheme } from '@oceanbase/charts';
-import { orderBy, maxBy } from 'lodash';
+import { useTheme } from '@oceanbase/charts';
+import { orderBy } from 'lodash';
 import { useRequest } from 'ahooks';
-import { formatTime } from '@/util/datetime';
 import MyCard from '@/component/MyCard';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import useStyles from './index.style';
@@ -106,18 +105,6 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
                   {formatMessage({
                     id: 'ocp-express.Component.CompactionTimeTop3.SortByLastMergeTime',
                     defaultMessage: '按最近 1 次合并时间排序',
-                  })}
-                </div>
-                <div>
-                  {formatMessage({
-                    id: 'ocp-express.Component.CompactionTimeTop3.GreenTheLastTwoMergingTimesHaveDecreased',
-                    defaultMessage: '绿色：最近 2 次合并时间下降',
-                  })}
-                </div>
-                <div>
-                  {formatMessage({
-                    id: 'ocp-express.Component.CompactionTimeTop3.RedTheLastTwoMergingTimesHaveIncreased',
-                    defaultMessage: '红色：最近 2 次合并时间上升',
                   })}
                 </div>
               </div>

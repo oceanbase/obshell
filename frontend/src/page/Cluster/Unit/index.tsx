@@ -210,8 +210,8 @@ const Unit: React.FC<UnitProps> = ({ clusterId }) => {
     {
       path: '/overview',
       breadcrumbName: formatMessage({
-        id: 'ocp-express.Cluster.Unit.ClusterOverview',
-        defaultMessage: '集群总览',
+        id: 'ocp-v2.Cluster.Unit.ClusterManagement',
+        defaultMessage: '集群管理',
       }),
     },
 
@@ -251,8 +251,8 @@ const Unit: React.FC<UnitProps> = ({ clusterId }) => {
           onBack: fullscreen
             ? undefined
             : () => {
-              history.push('/overview');
-            },
+                history.push('/overview');
+              },
           extra: (
             <div
               style={{
@@ -435,13 +435,13 @@ const Unit: React.FC<UnitProps> = ({ clusterId }) => {
                   title={
                     fullscreen
                       ? formatMessage({
-                        id: 'ocp-express.Detail.Resource.Unit.ExitFullScreen',
-                        defaultMessage: '退出全屏',
-                      })
+                          id: 'ocp-express.Detail.Resource.Unit.ExitFullScreen',
+                          defaultMessage: '退出全屏',
+                        })
                       : formatMessage({
-                        id: 'ocp-express.Detail.Resource.Unit.FullScreen',
-                        defaultMessage: '全屏',
-                      })
+                          id: 'ocp-express.Detail.Resource.Unit.FullScreen',
+                          defaultMessage: '全屏',
+                        })
                   }
                 >
                   <FullscreenOutlined
@@ -459,65 +459,65 @@ const Unit: React.FC<UnitProps> = ({ clusterId }) => {
         <Card bordered={false}>
           <Spin spinning={isPolling ? false : loading}>
             {/* <div
-               style={{
-                 display: 'flex',
-                 justifyContent: 'space-between',
-                 alignItems: 'center',
-                 padding: '16px 0px 0px 24px',
-                 minHeight: 41,
-                 boxSizing: 'border-box',
-               }}
-              >
-              Unit 视图展示，在内部判断是为了保留 Space 适应 'space-between' 的布局
-              <Space size={16}>
-               <>
-                 <Space>
-                   <div
-                     className={styles.tag}
-                     style={{ backgroundColor: 'rgba(255,192,105,0.65)' }}
-                   />
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '16px 0px 0px 24px',
+                  minHeight: 41,
+                  boxSizing: 'border-box',
+                }}
+               >
+               Unit 视图展示，在内部判断是为了保留 Space 适应 'space-between' 的布局
+               <Space size={16}>
+                <>
+                  <Space>
+                    <div
+                      className={styles.tag}
+                      style={{ backgroundColor: 'rgba(255,192,105,0.65)' }}
+                    />
+                     <span>
+                      {formatMessage({
+                        id: 'ocp-express.Detail.Resource.Unit.MoveOut',
+                        defaultMessage: '迁出',
+                      })}
+                    </span>
+                  </Space>
+                  <Space>
+                    <div
+                      className={styles.tag}
+                      style={{ backgroundColor: 'rgba(89,126,247,0.65)' }}
+                    />
+                     <span>
+                      {formatMessage({
+                        id: 'ocp-express.Detail.Resource.Unit.Move',
+                        defaultMessage: '迁入',
+                      })}
+                    </span>
+                  </Space>
+                  <Space>
+                    <div className={styles.tag} style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
                     <span>
-                     {formatMessage({
-                       id: 'ocp-express.Detail.Resource.Unit.MoveOut',
-                       defaultMessage: '迁出',
-                     })}
-                   </span>
-                 </Space>
-                 <Space>
-                   <div
-                     className={styles.tag}
-                     style={{ backgroundColor: 'rgba(89,126,247,0.65)' }}
-                   />
-                    <span>
-                     {formatMessage({
-                       id: 'ocp-express.Detail.Resource.Unit.Move',
-                       defaultMessage: '迁入',
-                     })}
-                   </span>
-                 </Space>
-                 <Space>
-                   <div className={styles.tag} style={{ backgroundColor: 'rgba(0,0,0,0.15)' }} />
-                   <span>
-                     {formatMessage({
-                       id: 'ocp-express.Detail.Resource.Unit.RollingBack',
-                       defaultMessage: '回滚中',
-                     })}
-                   </span>
-                 </Space>
-               </>
-              </Space> */}
+                      {formatMessage({
+                        id: 'ocp-express.Detail.Resource.Unit.RollingBack',
+                        defaultMessage: '回滚中',
+                      })}
+                    </span>
+                  </Space>
+                </>
+               </Space> */}
 
             {/* 存在集群操作权限时，才显示对应的提示 */}
             {/* <ContentWithInfo
-                 content={
-                   <span style={{ fontSize: 14 }}>
-                     {formatMessage({
-                       id: 'ocp-express.Detail.Resource.ClickTheUnitCardTo',
-                       defaultMessage: '鼠标点击 Unit 卡片发起主动迁移',
-                     })}
-                   </span>
-                 }
-               /> */}
+                  content={
+                    <span style={{ fontSize: 14 }}>
+                      {formatMessage({
+                        id: 'ocp-express.Detail.Resource.ClickTheUnitCardTo',
+                        defaultMessage: '鼠标点击 Unit 卡片发起主动迁移',
+                      })}
+                    </span>
+                  }
+                /> */}
             {/* </div> */}
             <div
               ref={unitRef}
@@ -697,20 +697,20 @@ const Unit: React.FC<UnitProps> = ({ clusterId }) => {
           </Spin>
         </Card>
         {/* <UnitMigrateModal
-           clusterId={clusterId}
-           unitInfo={currentUnitInfo}
-           serverInfos={allServerInfos}
-           visible={visible}
-           onCancel={() => {
-             setVisible(false);
-             setCurrentUnitInfo(undefined);
-           }}
-           onSuccess={() => {
-             setVisible(false);
-             setCurrentUnitInfo(undefined);
-             refreshUnitView();
-           }}
-          /> */}
+            clusterId={clusterId}
+            unitInfo={currentUnitInfo}
+            serverInfos={allServerInfos}
+            visible={visible}
+            onCancel={() => {
+              setVisible(false);
+              setCurrentUnitInfo(undefined);
+            }}
+            onSuccess={() => {
+              setVisible(false);
+              setCurrentUnitInfo(undefined);
+              refreshUnitView();
+            }}
+           /> */}
       </PageContainer>
     </FullscreenBox>
   );

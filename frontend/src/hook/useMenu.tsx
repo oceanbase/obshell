@@ -28,8 +28,8 @@ export const useBasicMenu = (): MenuItem[] => {
     {
       link: '/overview',
       title: formatMessage({
-        id: 'ocp-express.src.hook.useMenu.ClusterOverview',
-        defaultMessage: '集群总览',
+        id: 'ocp-v2.src.hook.useMenu.ClusterManagement',
+        defaultMessage: '集群管理',
       }),
       icon: <IconFont type="overview" />,
       selectedIcon: <Lottie path="/lottie/overview.json" mode="icon" speed={3} loop={false} />,

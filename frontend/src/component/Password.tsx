@@ -61,7 +61,10 @@ const OCPPassword: React.FC<PasswordProps> = props => {
           : [
               {
                 validate: (val?: string) => val?.length >= 1,
-                message: '请输入密码',
+                message: formatMessage({
+                  id: 'ocp-v2.src.component.Password.PleaseEnterThePassword',
+                  defaultMessage: '请输入密码',
+                }),
               },
             ]
       }

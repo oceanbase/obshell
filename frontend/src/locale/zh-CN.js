@@ -7972,4 +7972,15 @@ export default {
   "ocp-v2.src.util.task.TaskRetrySucceeded": "任务重试成功",
   "ocp-v2.component.MyDrawer.Cancel": "取消",
   "ocp-v2.component.MyDrawer.Determine": "确定",
+  "ocp-v2.src.component.Password.PleaseEnterThePassword": "请输入密码",
+  "ocp-v2.src.hook.useMenu.ClusterManagement": "集群管理",
+  "ocp-v2.Cluster.Host.ClusterManagement": "集群管理",
+  "ocp-v2.Cluster.Overview.ClusterManagement": "集群管理",
+  "ocp-v2.Cluster.Overview.UpgradeVersion": "升级版本",
+  "ocp-v2.Cluster.Overview.UpgradeObshell": "升级 obshell",
+  "ocp-v2.Cluster.Parameter.ClusterManagement": "集群管理",
+  "ocp-v2.Cluster.Unit.ClusterManagement": "集群管理",
+  "ocp-v2.Detail.Database.TenantIsLocked": "租户已被锁定",
+  "ocp-v2.Detail.User.TenantIsLocked": "租户已被锁定",
+  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "当前支持全功能型副本和只读型副本"
 };

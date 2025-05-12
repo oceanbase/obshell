@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Form, Alert, Modal, message } from '@oceanbase/design';
+import { Form, Alert, Modal, message, Input } from '@oceanbase/design';
 import { ExclamationCircleFilled } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
@@ -128,8 +128,17 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
             defaultMessage: '密码',
           })}
           name="newPassword"
+          rules={[
+            {
+              required: true,
+              message: formatMessage({
+                id: 'ocp-v2.src.component.Password.PleaseEnterThePassword',
+                defaultMessage: '请输入密码',
+              }),
+            },
+          ]}
         >
-          <Password hasRule={false} />
+          <Input.Password />
         </Form.Item>
       </Form>
     </Modal>

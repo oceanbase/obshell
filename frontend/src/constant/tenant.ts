@@ -422,10 +422,11 @@ export const TENANT_MODE_LIST = [
     value: 'MYSQL',
     label: 'MySQL',
   },
-  {
-    value: 'ORACLE',
-    label: 'Oracle',
-  },
+  // 暂不支持
+  // {
+  //   value: 'ORACLE',
+  //   label: 'Oracle',
+  // },
 ];
 
 export const TENANT_STATUS_LIST = [

@@ -28,12 +28,9 @@ import {
   theme,
 } from '@oceanbase/design';
 import { EllipsisOutlined } from '@oceanbase/icons';
-import { byte2GB, findByValue, isNullValue } from '@oceanbase/util';
+import { findByValue, isNullValue } from '@oceanbase/util';
 import { Liquid } from '@oceanbase/charts';
 import { toPercent } from '@oceanbase/charts/es/util/number';
-import { useRequest } from 'ahooks';
-import * as MonitorController from '@/service/ocp-express/MonitorController';
-import { RFC3339_DATE_TIME_FORMAT } from '@/constant/datetime';
 import { formatSize, isEnglish } from '@/util';
 import tracert from '@/util/tracert';
 import { getObServerCountByObCluster, getIdcCountByObCluster } from '@/util/oceanbase';
@@ -306,7 +303,6 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                   // 最多保留 1 位有效小数
                   decimal={1}
                   warningPercent={0.7}
-                  dangerPercent={0.8}
                 />
               </Col>
             ))}
