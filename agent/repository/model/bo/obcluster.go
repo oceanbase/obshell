@@ -128,11 +128,13 @@ type ClusterBasicInfo struct {
 }
 
 type TenantResourceStat struct {
-	TenantId          int     `json:"tenant_id"`
-	TenantName        string  `json:"tenant_name"`
-	CpuUsedPercent    float64 `json:"cpu_used_percent"`
-	MemoryUsedPercent float64 `json:"memory_used_percent"`
-	DataDiskUsage     int64   `json:"data_disk_usage"`
+	TenantId           int     `json:"tenant_id"`
+	TenantName         string  `json:"tenant_name"`
+	CpuUsedPercent     float64 `json:"cpu_used_percent"`
+	MemoryUsedPercent  float64 `json:"memory_used_percent"`
+	DataDiskUsage      int64   `json:"data_disk_usage"`
+	CpuCoreTotal       float64 `json:"cpu_core_total"`
+	MemoryInBytesTotal int64   `json:"memory_in_bytes_total"`
 }
 
 type ClusterParameter struct {

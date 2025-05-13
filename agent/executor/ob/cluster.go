@@ -145,12 +145,14 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 		}
 		if sysStat, ok := tenantSysStatsMap[SYS_STAT_MAX_CPU_STAT_ID]; ok {
 			maxCpu = float64(sysStat.Value)
+			tenantResourceStat.CpuCoreTotal = maxCpu
 		}
 		if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_USAGE_STAT_ID]; ok {
 			memoryUsage = float64(sysStat.Value)
 		}
 		if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_SIZE_STAT_ID]; ok {
 			memorySize = float64(sysStat.Value)
+			tenantResourceStat.MemoryInBytesTotal = sysStat.Value
 		}
 		tenantResourceStat.CpuUsedPercent = cpuUsage / maxCpu * 100
 		tenantResourceStat.MemoryUsedPercent = memoryUsage / memorySize * 100
