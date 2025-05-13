@@ -520,30 +520,6 @@ func obUpgradeCheckHandler(c *gin.Context) {
 	common.SendResponse(c, task, err)
 }
 
-// @ID UpgradePkgRoute
-// @Summary get upgrade route of target ob package
-// @Description get upgrade route of target ob package
-// @Tags upgrade
-// @Accept application/json
-// @Produce application/json
-// @Param X-OCS-Header header string true "Authorization"
-// @Param version query	string true "version"
-// @Param release query	string true "release"
-// @Success 200	object []ob.RouteNode
-// @Failure 401	object http.OcsAgentResponse
-// @Failure 500	object http.OcsAgentResponse
-// @Router /api/v1/ob/upgrade/route [get]
-func obPkgUpgradeRouteHandler(c *gin.Context) {
-	version := c.Query("version")
-	release := c.Query("release")
-	if version == "" || release == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "version or release is empty"))
-		return
-	}
-	routes, err := ob.GetObPackageUpgradeDepYaml(version, release)
-	common.SendResponse(c, routes, err)
-}
-
 // @ID UpgradePkgUpload
 // @Summary upload upgrade package
 // @Description upload upgrade package

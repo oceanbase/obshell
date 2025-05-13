@@ -43,14 +43,3 @@ func GetAllUpgradePkgInfos() ([]bo.UpgradePkgInfo, *errors.OcsAgentError) {
 
 	return infos, nil
 }
-
-func GetObPackageUpgradeDepYaml(version string, release string) ([]RouteNode, *errors.OcsAgentError) {
-	upgradeRoute, err := getTargetObUpgradeDepYaml(version, release)
-	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
-	}
-	if upgradeRoute == nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "No upgrade route found")
-	}
-	return upgradeRoute[1:], nil
-}

@@ -119,7 +119,6 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	ob.POST(constant.URI_SCALE_OUT, obClusterScaleOutHandler)
 	ob.POST(constant.URI_SCALE_IN, obClusterScaleInHandler)
 	ob.POST(constant.URI_UPGRADE, obUpgradeHandler)
-	ob.GET(constant.URI_UPGRADE+constant.URI_ROUTE, obPkgUpgradeRouteHandler)
 	ob.POST(constant.URI_UPGRADE+constant.URI_CHECK, obUpgradeCheckHandler)
 	ob.GET(constant.URI_AGENTS, obAgentsHandler)
 
