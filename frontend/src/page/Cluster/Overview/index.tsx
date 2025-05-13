@@ -54,6 +54,24 @@ import moment from 'moment';
 import { getAgentMainDags } from '@/service/obshell/task';
 import { message } from 'antd';
 
+export const getServerStatus = (server: API.Observer) => {
+  let status = 'OTHER';
+  if (!server) return status;
+
+  if (
+    server.inner_status === 'ACTIVE' &&
+    // 未开始时 start_time 的时间戳等于 0（1970年01月01日00时00分00），所以判断时间戳大于 0
+    moment(server.start_time).valueOf() > 0
+  ) {
+    status = 'RUNNING';
+  }
+  if (server.inner_status === 'INACTIVE') {
+    status = 'UNAVAILABLE';
+  }
+
+  return status;
+};
+
 export interface DetailProps {
   match: {
     params: {
@@ -75,7 +93,6 @@ const Detail: React.FC<DetailProps> = ({
 
   const isAbnormal = clusterStatus === 'abnormal';
 
-  const dispatch = useDispatch();
   useDocumentTitle(
     formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
   );
@@ -153,18 +170,7 @@ const Detail: React.FC<DetailProps> = ({
   // });
 
   const realServerList = flatten(clusterData.zones?.map(item => item.servers || [])).map(item => {
-    let status = 'OTHER';
-
-    if (
-      item.inner_status === 'ACTIVE' &&
-      // 未开始时 start_time 的时间戳等于 0（1970年01月01日00时00分00），所以判断时间戳大于 0
-      moment(item.start_time).valueOf() > 0
-    ) {
-      status = 'RUNNING';
-    }
-    if (item.inner_status === 'INACTIVE') {
-      status = 'UNAVAILABLE';
-    }
+    const status = getServerStatus(item);
 
     return { ...item, status };
   });

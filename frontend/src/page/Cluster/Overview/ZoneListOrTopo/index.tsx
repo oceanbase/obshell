@@ -99,7 +99,7 @@ const ZoneListOrTopo = React.forwardRef<ZoneListOrTopoRef, ZoneListOrTopoProps>(
           // data-aspm-param={``}
         >
           {type === 'LIST' ? (
-            <ZoneList ref={zoneListRef} serverList={serverList} clusterData={clusterData} />
+            <ZoneList ref={zoneListRef} clusterData={clusterData} />
           ) : (
             <Topo clusterData={clusterData} serverList={serverList} />
           )}
