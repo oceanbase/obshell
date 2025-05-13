@@ -617,6 +617,7 @@ func (s *taskService) updateDagOperator(tx *gorm.DB, dag *task.Dag, operator int
 		data["is_finished"] = false
 	case task.PASS:
 		data["state"] = task.SUCCEED
+		data["start_time"] = dag.GetStartTime()
 		data["end_time"] = dag.GetEndTime()
 		data["is_finished"] = true
 	}
