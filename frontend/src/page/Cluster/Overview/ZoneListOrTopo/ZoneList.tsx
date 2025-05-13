@@ -259,7 +259,9 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(
           // filteredValue: statusList,
           // 这里不用设置 onFilter，dataSource 已经根据 statusList 做了筛选
           render: (text: API.ObServerStatus, record) => {
-            const value = serverList?.find(item => item.ip?.split?.(':')[0] === record.ip)?.status;
+            const value = serverList?.find(
+              item => item.ip?.split?.(':')[0] === record.ip && item.sql_port === record.sql_port
+            )?.status;
 
             const statusItem = findByValue(OB_SERVER_STATUS_LIST, value);
             return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
