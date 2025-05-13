@@ -7839,7 +7839,7 @@ export default {
   "ocp-express.src.util.Seconds": "秒",
   "ocp-express.src.util.tenant.OnlyUnitSpecificationsWithAMemoryOfNo": "仅可选择内存不小于 {memoryLowerLimit}G 的 Unit 规格",
   "ocp-express.src.util.tenant.OnlyUnitSpecificationsWithCpuNoLessThan": "仅可选择 CPU 不小于 {cpuLowerLimit}C 的 Unit 规格",
-  "ocp-express.Component.ClusterInfo.ClusterClustername": "集群 {clusterName}",
+  "ocp-express.Component.ClusterInfo.ClusterClustername": "集群 {clusterName} 已分配资源",
   "ocp-express.Cluster.Overview.Obversion": "{obVersion} 版本",
   "ocp-express.Detail.Component.BatchModifyUnitModal.TheMaximumNumberOfCurrentKesheIsMinservercount": "当前可设最大个数为 {minServerCount} (Zone 中最少 OBServer 数决定 Unit 可设最大个数)",
   "ocp-express.Detail.Overview.ModifyTheLockedStateOfTenantTenantdataname": "修改租户 {tenantDataName} 锁定状态",

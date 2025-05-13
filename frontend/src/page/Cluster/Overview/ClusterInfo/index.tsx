@@ -144,7 +144,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
               {formatMessage(
                 {
                   id: 'ocp-express.Component.ClusterInfo.ClusterClustername',
-                  defaultMessage: '集群 {clusterName}',
+                  defaultMessage: '集群 {clusterName} 已分配资源',
                 },
                 { clusterName: clusterName }
               )}

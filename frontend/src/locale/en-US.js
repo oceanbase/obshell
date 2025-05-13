@@ -2872,7 +2872,7 @@ export default {
   "ocp-express.Settings.Credential.Cluster.SharedWithinTheSameOcpOnly": "Shared within the same OCP only",
   "ocp-express.SQLDiagnosis.attributes.sqlTrendsAttributes.RpcCount": "RPCs",
   "ocp-express.Alarm.Channel.New.MessageContent": "Message Content",
-  "ocp-express.Component.ClusterInfo.ClusterClustername": "Cluster: {clusterName}",
+  "ocp-express.Component.ClusterInfo.ClusterClustername": "Cluster: {clusterName} Allocated resources",
   "ocp-express.Alarm.Event.ObCluster": "ObCluster",
   "ocp-express.SQLDiagnosis.attributes.slowSqlAttributes.PlanGenerationTime": "Plan Generation Time",
   "ocp-express.Cluster.Component.WaterLevel.ReadOnlyCluster": "(Read-Only Cluster)",
