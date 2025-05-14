@@ -26,10 +26,7 @@ import { getFormateForTimes, secondToTime } from '@/util';
 import { dagHandler } from '@/service/obshell/task';
 
 export function getTaskProgress(task: API.DagDetailDTO) {
-  const subtasks = flatten(task?.nodes?.map(item => item.sub_tasks || []) || []);
-  const total = subtasks.length;
-  const finishedCount = subtasks.filter(item => item && item.state === 'SUCCEED').length;
-  return `${finishedCount}/${total}`;
+  return `${task?.stage || 0}/${task?.max_stage}`;
 }
 
 export function getTaskPercent(task: API.DagDetailDTO, withUnit = true) {
