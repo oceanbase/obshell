@@ -7711,7 +7711,7 @@ export default {
   "ocp-express.Component.TenantResourceTop3.CpuUsage": "CPU 消耗比",
   "ocp-express.Component.TenantResourceTop3.PercentageOfCpuUsedToTenantCpu": "已使用 CPU 占分配 CPU 的百分比",
   "ocp-express.Component.TenantResourceTop3.MemoryUsage": "内存消耗比",
-  "ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory": "已使用内存占分配内存的百分比",
+  "ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory": "分配内存总量，以及已使用内存占分配内存的百分比",
   "ocp-express.Component.TenantResourceTop3.DataVolume": "数据量",
   "ocp-express.Component.TenantResourceTop3.TenantDataSizeAndPercentageOfClusterDisk": "租户数据量大小，以及占集群磁盘容量的百分比",
   "ocp-express.Component.TenantResourceTop3.TenantResourceUsageTop": "租户资源使用 Top3",
@@ -7982,5 +7982,7 @@ export default {
   "ocp-v2.Cluster.Unit.ClusterManagement": "集群管理",
   "ocp-v2.Detail.Database.TenantIsLocked": "租户已被锁定",
   "ocp-v2.Detail.User.TenantIsLocked": "租户已被锁定",
-  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "当前支持全功能型副本和只读型副本"
+  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "当前支持全功能型副本和只读型副本",
+  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "总: {labelResult}"
+
 };

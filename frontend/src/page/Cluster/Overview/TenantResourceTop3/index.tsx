@@ -28,7 +28,7 @@ import MyCard from '@/component/MyCard';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import { RFC3339_DATE_TIME_FORMAT } from '@/constant/datetime';
 import { formatSize } from '@/util';
-import { isNullValue } from '@oceanbase/util';
+import { isNullValue, formatNumber, byte2GB, byte2MB } from '@oceanbase/util';
 
 export interface TenantResourceTop3Props {
   clusterData: API.ClusterInfo;
@@ -67,7 +67,7 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
       }),
       description: formatMessage({
         id: 'ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory',
-        defaultMessage: '已使用内存占分配内存的百分比',
+        defaultMessage: '分配内存总量，以及已使用内存占分配内存的百分比',
       }),
       chartData: tenantStats
         .map(item => ({
@@ -169,8 +169,7 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                               // TODO: 不存在监控, 先禁止跳转
                               onClick={() => {
                                 // history.push(`/tenant/${dataItem.tenant_name}/monitor`);
-                              }}
-                              // className="ocp-link-hover"
+                              }} // className="ocp-link-hover"
                               style={{ width: 70, color: token.colorTextTertiary }}
                             >
                               {dataItem.tenant_name}
@@ -187,14 +186,39 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                                   : toPercent(dataItem.percentValue / 100, 1)
                               }%`;
                             }
-                            return `${toPercent(dataItem.percentValue / 100, 1)}%`;
+
+                            const memory = dataItem?.memory_in_bytes_total || 0;
+                            let label1 = '';
+                            if (item?.key === 'ob_memory_percent') {
+                              if (byte2MB(memory) >= 1024) {
+                                label1 = `${formatNumber(byte2GB(memory),2)} GB`;
+                              } else {
+                                label1 = `${formatNumber(byte2MB(memory))} MB`;
+                              }
+                            }
+
+                            const label2 =
+                              item?.key === 'ob_cpu_percent' ? `${dataItem?.cpu_core_total}C` : '';
+
+                            const labelResult = `${label1}${label2} | ${toPercent(
+                              dataItem.percentValue / 100,
+                              1
+                            )}%`;
+
+                            return formatMessage(
+                              {
+                                id: 'ocp-v2.Overview.TenantResourceTop3.TotalLabelresult',
+                                defaultMessage: '总: {labelResult}',
+                              },
+                              { labelResult: labelResult }
+                            );
                           }}
                           percentStyle={{
-                            width: item.key === 'ob_tenant_disk_usage' ? 120 : 60,
+                            width: item.key === 'ob_memory_percent' ? 140 : 120,
                           }}
                           warningPercent={0.7}
                           dangerPercent={0.8}
-                          maxColumnWidth={8}
+                          maxColumnWidth={10}
                         />
                       </Col>
                     ))}

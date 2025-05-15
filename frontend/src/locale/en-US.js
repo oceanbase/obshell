@@ -993,7 +993,7 @@ export default {
   "ocp-express.src.constant.obproxy.Microseconds": "Microseconds",
   "ocp-express.Component.ZoneList.AddOBServerDrawer.SelectIp": "The IP address is required.",
   "ocp-express.SQLDiagnosis.Component.SQLLimit.CurrentlyNoKeywordCanBe": "No keywords are available for setting.",
-  "ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory": "Percentage of used memory to assigned memory",
+  "ocp-express.Component.TenantResourceTop3.UsedMemoryAsAPercentageOfTenantMemory": "The total amount of allocated memory and the percentage of used memory to allocated memory",
   "ocp-express.Detail.Parameter.List.PleaseEnter": "Enter a value",
   "ocp-express.Detail.Session.List.Actions": "Actions",
   "ocp-express.src.component.AddUnitSpecModal.SpecificationName": "Specification Name",
@@ -6123,5 +6123,6 @@ export default {
   "ocp-v2.Cluster.Unit.ClusterManagement": "Cluster Management",
   "ocp-v2.Detail.Database.TenantIsLocked": "Tenant is locked",
   "ocp-v2.Detail.User.TenantIsLocked": "Tenant is locked",
-  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "Full-functional and read-only replicas are currently supported"
+  "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "Full-functional and read-only replicas are currently supported",
+  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "Total: {labelResult}"
 };
