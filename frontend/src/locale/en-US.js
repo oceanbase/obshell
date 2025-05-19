@@ -6106,6 +6106,7 @@ export default {
   "ocp-v2.src.util.request.TenantIsLocked": "Tenant is locked",
   "ocp-v2.src.util.request.AuthenticationFailedAccessDenied": "Authentication failed",
   "ocp-v2.src.util.request.ObserverProcessDoesNotExist": "observer process does not exist",
+  "ocp-v2.src.util.request.OceanbaseDbIsNil": "failed to establish cluster connection",
   "ocp-v2.src.util.request.NameIsInOperationAnd": "{name}is in operation and maintenance state",
   "ocp-v2.src.util.task.ThisWillTerminateTheEntire": "This will terminate the entire mission",
   "ocp-v2.src.util.task.TaskTerminatedSuccessfully": "Task terminated successfully",

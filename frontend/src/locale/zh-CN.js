@@ -7965,6 +7965,7 @@ export default {
   "ocp-v2.src.util.request.TenantIsLocked": "租户已被锁定",
   "ocp-v2.src.util.request.AuthenticationFailedAccessDenied": "密码错误",
   "ocp-v2.src.util.request.ObserverProcessDoesNotExist": "observer 进程不存在",
+  "ocp-v2.src.util.request.OceanbaseDbisNil": "未获得集群连接",
   "ocp-v2.src.util.request.NameIsInOperationAnd": "{name} 处于运维状态中",
   "ocp-v2.src.util.task.ThisWillTerminateTheEntire": "这将会终止整个任务",
   "ocp-v2.src.util.task.TaskTerminatedSuccessfully": "任务终止成功",

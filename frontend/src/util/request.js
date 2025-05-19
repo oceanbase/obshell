@@ -124,6 +124,13 @@ const getMsg = (errorMessage = '') => {
     });
   }
 
+  if (errorMessage?.includes('oceanbase db is nil')) {
+    return formatMessage({
+      id: 'ocp-v2.src.util.request.OceanbaseDbIsNil',
+      defaultMessage: '未获得集群连接',
+    });
+  }
+
   const reg = /failed to start maintenance: (.*?) is under maintenance/;
   const [, name] = errorMessage?.match(reg) || [];
 
