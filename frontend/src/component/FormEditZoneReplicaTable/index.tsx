@@ -74,7 +74,7 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
 
         dataIndex: 'replicaType',
         width: '20%',
-        editable: false,
+        editable: true,
         fieldProps: () => ({
           rules: [
             {
@@ -165,95 +165,6 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
           );
         },
       },
-
-      // {
-      //   title: (
-      //     <ContentWithQuestion
-      //       content={formatMessage({
-      //         id: 'ocp-express.component.FormEditZoneReplicaTable.UnitSpecification',
-      //         defaultMessage: 'Unit 规格',
-      //       })}
-      //       tooltip={{
-      //         title: unitSpecLimitRule && getUnitSpecLimitText(unitSpecLimitRule),
-      //       }}
-      //     />
-      //   ),
-
-      //   dataIndex: 'resourcePool.unitSpecName',
-      //   width: '25%',
-      //   editable: true,
-      //   fieldComponent: () => (
-      //     <UnitSpecSelect
-      //       allowClear={true}
-      //       obVersion={tenantData?.obVersion}
-      //       placeholder={
-      //         <Tooltip
-      //           placement="topLeft"
-      //           title={formatMessage({
-      //             id: 'ocp-express.component.FormEditZoneReplicaTable.EmptyIndicatesThatTheUnit',
-      //             defaultMessage: '为空表示不修改 Unit 规格',
-      //           })}
-      //         >
-      //           <span>
-      //             {formatMessage({
-      //               id: 'ocp-express.component.FormEditZoneReplicaTable.EmptyIndicatesThatTheUnit',
-      //               defaultMessage: '为空表示不修改 Unit 规格',
-      //             })}
-      //           </span>
-      //         </Tooltip>
-      //       }
-      //     />
-      //   ),
-      //   fieldProps: (text, record) => ({
-      //     rules: [
-      //       {
-      //         validator: (rule, value = text, callback) => {
-      //           if (value) {
-      //             return validatorUnitResource(
-      //               rule,
-      //               record.resourcePool.unitConfig,
-      //               callback,
-      //               findBy(tenantData.zones || [], 'name', record.name)
-      //             );
-      //           } else {
-      //             return callback();
-      //           }
-      //         },
-      //       },
-      //     ],
-      //   }),
-
-      //   render: (text: string, record: API.TenantZone) => {
-      //     const { unitConfig } = (record.resourcePool as API.ResourcePool) || {};
-      //     const { maxCpuCoreCount, maxMemorySize: maxMemorySizeGB } =
-      //       (unitConfig as API.UnitConfig) || {};
-
-      //     return (
-      //       <ul>
-      //         <li>
-      //           {formatMessage(
-      //             {
-      //               id: 'ocp-express.component.FormEditZoneReplicaTable.CpuCoreMincpucorecountMaxcpucorecount',
-      //               defaultMessage: 'CPU（核）： {maxCpuCoreCount}',
-      //             },
-
-      //             { maxCpuCoreCount }
-      //           )}
-      //         </li>
-      //         <li>
-      //           {formatMessage(
-      //             {
-      //               id: 'ocp-express.component.FormEditZoneReplicaTable.MemoryGbMinmemorysizegbMaxmemorysizegb',
-      //               defaultMessage: '内存（GB）：{maxMemorySizeGB}',
-      //             },
-
-      //             { maxMemorySizeGB }
-      //           )}
-      //         </li>
-      //       </ul>
-      //     );
-      //   },
-      // },
 
       {
         title: formatMessage({

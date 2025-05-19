@@ -411,18 +411,28 @@ const Detail: React.FC<NewProps> = ({
     manual: true,
   });
 
-  const handleModifyReplica = (value: API.TenantZone, onSuccess: () => void) => {
+  const handleModifyReplica = async (value: API.TenantZone, onSuccess: () => void) => {
     const { name, replicaType, resourcePool } = value || {};
     const currentModifyTenantZone = find(zones, item => item.name === name);
 
     const maxMemorySizeGB = byte2GB(currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size);
 
-    if (
-      !resourcePool ||
-      (resourcePool.unitConfig?.cpuCore ===
-        currentModifyTenantZone?.resourcePool?.unitConfig?.max_cpu &&
-        resourcePool.unitConfig?.memorySize === maxMemorySizeGB)
+    let unitName: string = currentModifyTenantZone?.resourcePool?.unitConfig?.name;
+    if (resourcePool &&
+      (resourcePool.unitConfig?.cpuCore !==
+        currentModifyTenantZone?.resourcePool?.unitConfig?.max_cpu ||
+        resourcePool.unitConfig?.memorySize !== maxMemorySizeGB)
     ) {
+        unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
+        const res = await unitConfigCreateFn({
+          name: unitName,
+          max_cpu: Number(resourcePool.unitConfig?.cpuCore),
+          memory_size: `${resourcePool.unitConfig?.memorySize}GB`,
+        });
+        if (!res.successful) {
+          return
+        }
+    } else if (replicaType === currentModifyTenantZone?.replicaType) {
       return message.info(
         formatMessage({
           id: 'ocp-express.Detail.Overview.ZoneInformationHasNotChanged',
@@ -430,38 +440,27 @@ const Detail: React.FC<NewProps> = ({
         })
       );
     }
-
-    const unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
-
-    unitConfigCreateFn({
-      name: unitName,
-      max_cpu: Number(resourcePool.unitConfig?.cpuCore),
-      memory_size: resourcePool.unitConfig?.memorySize + 'GB',
-    }).then(res => {
-      if (res.successful) {
-        modifyReplica(
+    modifyReplica(
+      {
+        name: tenantData.tenant_name,
+      },
+      {
+        zone_list: [
           {
-            name: tenantData.tenant_name,
+            zone_name: name,
+            replica_type: replicaType,
+            unit_num:
+              resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
+            unit_config_name: unitName,
           },
-          {
-            zone_list: [
-              {
-                zone_name: name,
-                replica_type: replicaType,
-                unit_num:
-                  resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
-                unit_config_name: unitName,
-              },
-            ],
-          }
-        ).then(res => {
-          if (res.successful) {
-            if (onSuccess) {
-              refresh();
-              onSuccess();
-            }
-          }
-        });
+        ],
+      }
+    ).then(res => {
+      if (res.successful) {
+        if (onSuccess) {
+          refresh();
+          onSuccess();
+        }
       }
     });
   };
