@@ -26,6 +26,14 @@ export async function deleteAgent(body: API.AgentInfo, options?: { [key: string]
   });
 }
 
+/** get host info get host info GET /api/v1/agent/host-info */
+export async function getHostInfo(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.HostInfo }>('/api/v1/agent/host-info', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 /** join the specified agent join the specified agent POST /api/v1/agent/join */
 export async function postAgentJoin(body: API.JoinApiParam, options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>('/api/v1/agent/join', {

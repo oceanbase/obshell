@@ -35,3 +35,14 @@ export async function obclusterSetParameters(
     ...(options || {}),
   });
 }
+
+/** get resource unit config limit get resource unit config limit GET /api/v1/obcluster/unit-config-limit */
+export async function getUnitConfigLimit(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ClusterUnitConfigLimit }>(
+    '/api/v1/obcluster/unit-config-limit',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}

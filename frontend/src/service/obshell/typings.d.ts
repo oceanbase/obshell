@@ -249,6 +249,11 @@ declare namespace API {
     zone: string;
   };
 
+  type ClusterUnitConfigLimit = {
+    min_cpu?: number;
+    min_memory?: number;
+  };
+
   type CollationInfo = {
     is_default?: boolean;
     name?: string;
@@ -724,6 +729,7 @@ declare namespace API {
     clusterId?: string;
     hosts?: HostInfo[];
     instances?: ObserverInfo[];
+    obshellRevision?: string;
     obshellVersion?: string;
     reportTime?: number;
     reporter?: string;
@@ -987,14 +993,6 @@ declare namespace API {
     role?: string;
     svr_port?: number;
     zone?: string;
-  };
-
-  type RouteNode = {
-    build_version?: string;
-    deprecated_info?: string[];
-    release?: string;
-    require_from_binary?: boolean;
-    version?: string;
   };
 
   type ScaleInTenantReplicasParam = {
@@ -1333,13 +1331,6 @@ declare namespace API {
     releaseDistribution?: string;
     size?: number;
     version?: string;
-  };
-
-  type UpgradePkgRouteParams = {
-    /** version */
-    version: string;
-    /** release */
-    release: string;
   };
 
   type Zone = {

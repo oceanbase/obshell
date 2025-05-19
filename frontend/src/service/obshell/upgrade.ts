@@ -59,21 +59,6 @@ export async function obUpgradeCheck(
   });
 }
 
-/** get upgrade route of target ob package get upgrade route of target ob package GET /api/v1/ob/upgrade/route */
-export async function upgradePkgRoute(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.UpgradePkgRouteParams,
-  options?: { [key: string]: any }
-) {
-  return request<API.RouteNode[]>('/api/v1/ob/upgrade/route', {
-    method: 'GET',
-    params: {
-      ...params,
-    },
-    ...(options || {}),
-  });
-}
-
 /** upload upgrade package upload upgrade package POST /api/v1/upgrade/package */
 export async function upgradePkgUpload(body: {}, file?: File, options?: { [key: string]: any }) {
   const formData = new FormData();

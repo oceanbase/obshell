@@ -28,7 +28,7 @@ import MyInput from '@/component/MyInput';
 import ContentWithReload from '@/component/ContentWithReload';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import { useRequest } from 'ahooks';
-import { upgradePkgInfo, upgradePkgRoute } from '@/service/obshell/upgrade';
+import { upgradePkgInfo } from '@/service/obshell/upgrade';
 import { Button } from 'antd';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import { uniq } from 'lodash';

@@ -74,8 +74,8 @@ import {
   tenantUnlock,
 } from '@/service/obshell/tenant';
 
-import { getUnitConfigLimit, unitConfigCreate } from '@/service/obshell/unit';
-import { obclusterInfo } from '@/service/obshell/obcluster';
+import { unitConfigCreate } from '@/service/obshell/unit';
+import { obclusterInfo, getUnitConfigLimit} from '@/service/obshell/obcluster';
 const { Text } = Typography;
 
 interface NewProps {
