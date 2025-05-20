@@ -32,7 +32,7 @@ import tracert from '@/util/tracert';
 import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
 import useStyles from './index.style';
 import { getAgentInfo, getTime } from '@/service/obshell/v1';
-import { getUnfinishedDags } from '@/service/obshell/task';
+import { getClusterUnfinishDags, getAgentUnfinishDags} from '@/service/obshell/task';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
   children: React.ReactNode;
@@ -113,9 +113,9 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     },
   });
 
-  const { data: taskListData } = useRequest(
+  const { data: clusterTaskListData } = useRequest(
     () => {
-      return getUnfinishedDags(
+      return getClusterUnfinishDags(
         {},
         {
           HIDE_ERROR_MESSAGE: true,
@@ -127,12 +127,30 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     }
   );
 
-  const failedTaskList = (taskListData?.data?.contents || []).filter(
-    item => item.state === 'FAILED'
+  const { data: agentTaskListData } = useRequest(
+    () => {
+      return getAgentUnfinishDags(
+        {},
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      );
+    },
+    {
+      pollingInterval: 30000,
+    }
   );
 
-  const runningTaskList = (taskListData?.data?.contents || []).filter(
+  const failedTaskList = (clusterTaskListData?.data?.contents || []).filter(
+    item => item.state === 'FAILED'
+  ).concat(
+    (agentTaskListData?.data?.contents || []).filter(item => item.state === 'FAILED')
+  );
+
+  const runningTaskList = (clusterTaskListData?.data?.contents || []).filter(
     item => item.state === 'RUNNING'
+  ).concat(
+    (agentTaskListData?.data?.contents || []).filter(item => item.state === 'RUNNING')
   );
 
   // 时间差是否超出最大限制 60 秒
@@ -334,7 +352,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
                   ? formatMessage(
                       {
                         id: 'ocp-express.Layout.BasicLayout.FailedTaskCount',
-                        defaultMessage: '有 {failedTaskCount} 条失败任务',
+                        defaultMessage: '有 {failedTaskCount} 条失败的运维任务',
                       },
 
                       { failedTaskCount: failedTaskList.length }

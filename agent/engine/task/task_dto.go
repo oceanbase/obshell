@@ -75,10 +75,12 @@ type DagDetailDTO struct {
 }
 
 type DagDetail struct {
-	DagID    int64  `json:"dag_id" uri:"dag_id"`
-	Name     string `json:"name"`
-	Stage    int    `json:"stage"`
-	MaxStage int    `json:"max_stage"`
+	DagID           int64  `json:"dag_id" uri:"dag_id"`
+	Name            string `json:"name"`
+	Stage           int    `json:"stage"`
+	MaxStage        int    `json:"max_stage"`
+	MaintenanceType int    `json:"maintenance_type"`
+	MaintenanceKey  string `json:"maintenance_key"`
 	TaskStatusDTO
 	AdditionalDataDTO
 	Nodes []*NodeDetailDTO `json:"nodes"`
@@ -236,11 +238,13 @@ func newGenericDTO(instance TaskInfoInterface, dagType string) *GenericDTO {
 
 func NewDagDetail(dag *Dag) *DagDetail {
 	return &DagDetail{
-		DagID:         dag.GetID(),
-		Name:          dag.GetName(),
-		Stage:         dag.GetStage(),
-		MaxStage:      dag.GetMaxStage(),
-		TaskStatusDTO: *NewTaskStatusDTO(&dag.TaskInfo),
+		DagID:           dag.GetID(),
+		Name:            dag.GetName(),
+		Stage:           dag.GetStage(),
+		MaxStage:        dag.GetMaxStage(),
+		MaintenanceType: dag.GetMaintenanceType(),
+		MaintenanceKey:  dag.GetMaintenanceKey(),
+		TaskStatusDTO:   *NewTaskStatusDTO(&dag.TaskInfo),
 	}
 }
 

@@ -90,6 +90,76 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
   },
 ];
 
+
+export const TASK_MAINTENANCE_LIST: Global.StatusItem[] = [
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.maintenance.NotMaintenance',
+      defaultMessage: '非运维',
+    }),
+    value: '1',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.maintenance.GlobalMaintenance',
+      defaultMessage: '全局运维',
+    }),
+    value: '2',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.maintenance.TenantMaintenance',
+      defaultMessage: '租户运维',
+    }),
+    value: '3',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.maintenance.OBProxyMaintenance',
+      defaultMessage: 'OBProxy 运维',
+    }),
+    value: '4',
+  }
+]
+
+export const TASK_TYPE_LIST: Global.StatusItem[] = [
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.obcluster',
+      defaultMessage: '集群任务',
+    }),
+    value: '1',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.local.agent',
+      defaultMessage: '本地任务',
+    }),
+    value: '2',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.local.agent',
+      defaultMessage: '本地任务',
+    }),
+    value: '3',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.local.obproxy',
+      defaultMessage: 'obproxy 任务',
+    }),
+    value: '4',
+  },
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.task.local.obproxy',
+      defaultMessage: 'obproxy 任务',
+    }),
+    value: '5',
+  },
+];
+
 // 子任务状态列表
 export const SUBTASK_STATUS_LIST: Global.StatusItem[] = [
   {

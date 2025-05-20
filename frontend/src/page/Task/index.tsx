@@ -23,13 +23,14 @@ import moment from 'moment';
 import { PageContainer } from '@oceanbase/ui';
 import { directTo, findByValue, sortByMoment } from '@oceanbase/util';
 import { useUpdateEffect, useInterval, useRequest } from 'ahooks';
-import { TASK_STATUS_LIST } from '@/constant/task';
+import { TASK_STATUS_LIST, TASK_TYPE_LIST, TASK_MAINTENANCE_LIST } from '@/constant/task';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import { formatTime } from '@/util/datetime';
 import { getTaskProgress } from '@/util/task';
 import MyInput from '@/component/MyInput';
 import ContentWithReload from '@/component/ContentWithReload';
 import { getAllAgentDags, getAllClusterDags } from '@/service/obshell/task';
+import { title } from 'process';
 
 export interface TaskProps {
   location?: {
@@ -151,9 +152,30 @@ const Task: React.FC<TaskProps> = ({
     {
       title: formatMessage({ id: 'ocp-express.page.Task.State', defaultMessage: '状态' }),
       dataIndex: 'state',
-      render: (text: API.State) => {
+      render: (text: string) => {
         const statusItem = findByValue(TASK_STATUS_LIST, text);
         return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
+      },
+    },
+
+    {
+      title: formatMessage({  id: 'ocp-express.page.Task.Type', defaultMessage: '类型' }),
+      dataIndex: 'id',
+      render: (text: string, record: API.DagDetailDTO) => {
+        const statusItem = findByValue(TASK_TYPE_LIST, text[0]);
+        return <span>{statusItem.label}</span>;
+      },
+    },
+
+    {
+      title: formatMessage({
+        id: 'ocp-express.page.Task.Maintenance',
+        defaultMessage: '运维类型',
+      }),
+      dataIndex: 'maintenance_type',
+      render: (text: number) => {
+        const statusItem = findByValue(TASK_MAINTENANCE_LIST, String(text));
+        return <span>{statusItem.label}</span>;
       },
     },
 
@@ -164,7 +186,7 @@ const Task: React.FC<TaskProps> = ({
       }),
 
       dataIndex: 'nodes',
-      render: (text, record: API.DagDetailDTO) => <span>{getTaskProgress(record)}</span>,
+      render: (_: any, record: API.DagDetailDTO) => <span>{getTaskProgress(record)}</span>,
     },
 
     {
