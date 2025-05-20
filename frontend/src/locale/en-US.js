@@ -2225,7 +2225,7 @@ export default {
   "ocp-express.src.constant.sqlDiagnosis.DiagnosticResults": "Diagnostic Results",
   "ocp-express.Backup.Component.RestoreTenantCard.SetTheZonePriority": "Specify the zone priority",
   "ocp-express.src.component-legacy.MySearch.TimeCannotBeEmpty": "The time range is required.",
-  "ocp-express.Task.Detail.TaskGraph.ThisSkipsTheCurrentTask": "This operation will skip the current task and set the status of the task node to successful.",
+  "ocp-express.Task.Detail.TaskGraph.ThisSkipsTheCurrentTask": "This operation will skip the current task and set the status of the task node to successful and go on.",
   "ocp-express.MultiCluster.RegisterOcp.Password": "Password",
   "ocp-express.src.model.alarm.DeleteSuccessfully": "Deleted.",
   "ocp-express.Detail.TakeOver.AreYouSureToTake": "Are you sure that you want to take over {dataSourceLength} OBProxies?",

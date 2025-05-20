@@ -23,7 +23,7 @@ import type { Graph } from '@antv/g6';
 import G6 from '@antv/g6';
 import { SUBTASK_STATUS_LIST } from '@/constant/task';
 import type { SubtaskOperationKey } from '@/util/task';
-import { getLatestNode, handleSubtaskOperate } from '@/util/task';
+import { getLatestNode, handleDagOperate } from '@/util/task';
 import { fittingString } from '@/util/graph';
 import GraphToolbar from '@/component/GraphToolbar';
 import styles from './TaskGraph.less';
@@ -435,11 +435,10 @@ class TaskGraph extends React.PureComponent<TaskGraphProps, TaskGraphState> {
 
   public handleMenuClick = (key: 'viewLog' | SubtaskOperationKey) => {
     const { taskData, onSuccess } = this.props;
-    const { currentSubtask } = this.state;
     if (key === 'viewLog') {
       this.viewLog();
     } else {
-      handleSubtaskOperate(key, taskData, currentSubtask, () => {
+      handleDagOperate(key, taskData, () => {
         this.setState({
           currentSubtask: undefined,
         });

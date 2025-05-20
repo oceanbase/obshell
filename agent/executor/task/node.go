@@ -17,6 +17,8 @@
 package task
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/oceanbase/obshell/agent/api/common"
@@ -128,4 +130,84 @@ func getNodeDetail(service taskservice.TaskServiceInterface, node *task.Node, da
 		nodeDetailDTO.SubTasks = append(nodeDetailDTO.SubTasks, taskDetailDTO)
 	}
 	return
+}
+
+// node handler
+//
+// @ID nodeHandler
+// @Summary operate node
+// @Description operate node
+// @Tags task
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param id path string true "node id"
+// @Param body body task.NodeOperator true "node operator, supported values is (pass) only"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 404 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/task/node/{id} [post]
+func NodeHandler(c *gin.Context) {
+	var nodeDTOParam task.NodeDetailDTO
+	var service taskservice.TaskServiceInterface
+	var nodeOperator task.DagOperator
+
+	if err := c.BindUri(&nodeDTOParam); err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+
+	nodeID, agent, err := task.ConvertGenericID(nodeDTOParam.GenericID)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+
+	if err := c.BindJSON(&nodeOperator); err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		return
+	}
+	if strings.ToUpper(nodeOperator.Operator) != task.PASS_STR {
+		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "invalid operator: %s", nodeOperator.Operator))
+		return
+	}
+
+	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(nodeDTOParam.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
+		if meta.OCS_AGENT.IsFollowerAgent() {
+			// forward request to master
+			master := agentService.GetMasterAgentInfo()
+			if master == nil {
+				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				return
+			}
+			common.ForwardRequest(c, master, nil)
+		} else {
+			common.ForwardRequest(c, agent, nil)
+		}
+		return
+	}
+
+	if agent == nil {
+		service = clusterTaskService
+	} else {
+		service = localTaskService
+	}
+
+	node, err := service.GetNodeByNodeId(nodeID)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		return
+	}
+
+	dag, err := service.GetDagInstance(int64(node.GetDagId()))
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		return
+	}
+
+	common.SendResponse(c, nil, service.PassNode(node, dag))
 }

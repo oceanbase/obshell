@@ -79,6 +79,8 @@ type DagServiceInterface interface {
 
 	PassDag(*task.Dag) error
 
+	PassNode(*task.Node, *task.Dag) error
+
 	SetDagRollback(*task.Dag) error
 
 	SetDagRetryAndReady(*task.Dag) error

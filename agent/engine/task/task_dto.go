@@ -91,6 +91,11 @@ type TaskExecuteLogDTO struct {
 	IsSync       bool   `json:"is_sync"`
 }
 
+type NodeOperator struct {
+	NodeDetailDTO
+	Operator string `json:"operator" binding:"required"`
+}
+
 type DagOperator struct {
 	DagDetailDTO
 	Operator string `json:"operator" binding:"required"`

@@ -41,7 +41,7 @@ import {
 import { useKeyPress } from 'ahooks';
 import { isEnglish } from '@/util';
 import { downloadLog } from '@/util/log';
-import { getTaskLog, handleSubtaskOperate, splitTaskLog } from '@/util/task';
+import { getTaskLog, handleNodeOperate } from '@/util/task';
 import HighlightWithLineNumbers from '@/component/HighlightWithLineNumbers';
 import styles from './LogCard.less';
 
@@ -298,10 +298,10 @@ const LogCard: React.FC<LogCardProps> = ({
                 </span>
               </Space>
             </span>
-            {subtask?.status === 'RUNNING' && (
+            {/* {subtask?.status === 'RUNNING' && (
               <span
                 onClick={() => {
-                  handleSubtaskOperate('stop', taskData, subtask, onOperationSuccess);
+                  handleNodeOperate('stop', subtask, onOperationSuccess);
                 }}
                 className="pointable"
               >
@@ -315,9 +315,9 @@ const LogCard: React.FC<LogCardProps> = ({
                   </span>
                 </Space>
               </span>
-            )}
+            )} */}
 
-            {subtask?.status === 'FAILED' && (
+            {/* {subtask?.state === 'FAILED' && (
               <>
                 <Tooltip
                   placement="topRight"
@@ -330,26 +330,11 @@ const LogCard: React.FC<LogCardProps> = ({
                     })
                   }
                 >
-                  <span
-                    onClick={() => {
-                      handleSubtaskOperate('retry', taskData, subtask, onOperationSuccess);
-                    }}
-                    className={`pointable ${taskData?.isRemote ? 'disabled' : ''}`}
-                  >
-                    <Space size={4}>
-                      <ReloadOutlined />
-                      <span>
-                        {formatMessage({
-                          id: 'ocp-express.Detail.Log.LogCard.ReRun',
-                          defaultMessage: '重新运行',
-                        })}
-                      </span>
-                    </Space>
-                  </span>
+
                 </Tooltip>
                 <span
                   onClick={() => {
-                    handleSubtaskOperate('skip', taskData, subtask, onOperationSuccess);
+                    handleNodeOperate('skip', subtask, onOperationSuccess);
                   }}
                   className="pointable"
                 >
@@ -364,7 +349,7 @@ const LogCard: React.FC<LogCardProps> = ({
                   </Space>
                 </span>
               </>
-            )}
+            )} */}
           </Space>
         }
       >

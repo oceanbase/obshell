@@ -34,6 +34,7 @@ func InitTaskRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	group.GET(constant.URI_NODE+"/:id", task.GetNodeDetail)
 	group.GET(constant.URI_DAG+"/:id", task.GetDagDetail)
 	group.POST(constant.URI_DAG+"/:id", task.DagHandler)
+	group.POST(constant.URI_NODE+"/:id", task.NodeHandler)
 	group.GET(constant.URI_DAGS+constant.URI_OB_GROUP, task.GetAllClusterDags)
 	group.GET(constant.URI_DAGS+constant.URI_AGENT_GROUP, task.GetAllAgentDags)
 	group.GET(constant.URI_SUB_TASK+"/:id"+constant.URI_LOGS, task.GetFullSubTaskLogs)

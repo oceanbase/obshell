@@ -120,9 +120,7 @@ const Detail: React.FC<DetailProps> = ({
   // 任务是否处于轮询状态
   const polling = taskData?.state === 'RUNNING';
   // children 上增加了 domId， 后端的 parentId 和 childId 存在重复，画图时异常
-  const subtasks = flatten(
-    taskData?.nodes?.map(item => (item.children?.length > 0 ? item.children : [item])) || []
-  );
+  const subtasks = flatten(taskData?.nodes?.map(item => item.children || []) || []);
 
   // 当前选中的子任务
   const subtask = find(subtasks || [], item => !isNullValue(domId) && item.domId === domId);

@@ -17,9 +17,9 @@
 package task
 
 import (
-	"errors"
 	"fmt"
 
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -113,6 +113,58 @@ func (s *taskService) GetNodes(dag *task.Dag) ([]*task.Node, error) {
 		}
 	}
 	return nodes, nil
+}
+
+func (s *taskService) PassNode(node *task.Node, dag *task.Dag) error {
+	if !dag.IsFail() {
+		return errors.New("failed to pass node: associated dag is not failed")
+	}
+	if !node.IsFail() {
+		return errors.New("failed to pass node: node is not failed")
+	}
+
+	if _, err := s.GetSubTasks(node); err != nil {
+		return err
+	}
+	if !node.CanPass() {
+		return fmt.Errorf("failed to pass node: %s can not pass", node.GetName())
+	}
+
+	db, err := s.getDbInstance()
+	if err != nil {
+		return err
+	}
+
+	return db.Transaction(func(tx *gorm.DB) error {
+		if dag.IsMaintenance() && node.GetContext().GetParam(task.FAILURE_EXIT_MAINTENANCE) != nil {
+			if err := s.StartMaintenance(tx, dag); err != nil {
+				return err
+			}
+			if err := s.UpdateMaintenanceTask(tx, dag); err != nil {
+				return err
+			}
+		}
+
+		node.SetEndTime(s.getCurrentTime(tx))
+		if err := s.updateNodeOperator(tx, node, task.PASS); err != nil {
+			return errors.Wrap(err, "failed to pass node")
+		}
+
+		subTaskInstanceBO := &bo.SubTaskInstance{
+			State:    task.SUCCEED,
+			EndTime:  node.GetEndTime(),
+			Operator: task.PASS,
+		}
+		subTaskInstance := s.convertSubTaskInstanceBOToDO(subTaskInstanceBO)
+		if err := tx.Model(subTaskInstance).Where("node_id=? and state!=?", node.GetID(), task.SUCCEED).Updates(subTaskInstance).Error; err != nil {
+			return err
+		}
+
+		if err := s.updateDagOperator(tx, dag, task.RUN); err != nil {
+			return errors.Wrap(err, "failed to rerun dag when pass node")
+		}
+		return nil
+	})
 }
 
 func (s *taskService) GetNodeByNodeId(nodeID int64) (*task.Node, error) {

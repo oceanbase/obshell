@@ -718,6 +718,23 @@ declare namespace API {
     sub_tasks?: TaskDetailDTO[];
   };
 
+  type nodeHandlerParams = {
+    /** node id */
+    id: string;
+  };
+
+  type NodeOperator = {
+    additional_data?: Record<string, any>;
+    end_time?: string;
+    id: string;
+    name?: string;
+    node_id?: number;
+    operator: string;
+    start_time?: string;
+    state?: string;
+    sub_tasks?: TaskDetailDTO[];
+  };
+
   type ObClusterConfigParams = {
     clusterId?: number;
     clusterName?: string;

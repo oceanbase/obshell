@@ -23,7 +23,7 @@ import moment from 'moment';
 import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
 import * as TaskController from '@/service/ocp-express/TaskController';
 import { getFormateForTimes, secondToTime } from '@/util';
-import { dagHandler } from '@/service/obshell/task';
+import { dagHandler, nodeHandler } from '@/service/obshell/task';
 
 export function getTaskProgress(task: API.DagDetailDTO) {
   return `${task?.stage || 0}/${task?.max_stage}`;
@@ -208,80 +208,12 @@ export function taskSuccessOfInspection({
 
 export type SubtaskOperationKey = 'stop' | 'retry' | 'skip';
 
-/* 处理子任务的操作: 终止运行、重新运行、设置为成功 (跳过) */
-export function handleSubtaskOperate(
+export function handleNodeOperate(
   key: SubtaskOperationKey,
-  taskData?: API.TaskInstance,
-  subtask?: API.SubtaskInstance,
+  node?: API.NodeDetailDTO,
   onSuccess?: () => void
 ) {
-  if (key === 'stop') {
-    Modal.confirm({
-      title: formatMessage({
-        id: 'ocp-express.Task.Detail.TaskGraph.AreYouSureYouWant',
-        defaultMessage: '确定要终止运行吗？',
-      }),
-
-      content: formatMessage({
-        id: 'ocp-v2.src.util.task.ThisWillTerminateTheEntire',
-        defaultMessage: '这将会终止整个任务',
-      }),
-
-      onOk: () => {
-        return dagHandler(
-          {
-            id: taskData?.id,
-          },
-          {
-            operator: 'CANCEL',
-          }
-        ).then(res => {
-          if (res.successful) {
-            message.success(
-              formatMessage({
-                id: 'ocp-v2.src.util.task.TaskTerminatedSuccessfully',
-                defaultMessage: '任务终止成功',
-              })
-            );
-            onSuccess();
-          }
-        });
-      },
-    });
-  } else if (key === 'retry') {
-    Modal.confirm({
-      title: formatMessage({
-        id: 'ocp-express.Task.Detail.TaskGraph.AreYouSureYouWant.1',
-        defaultMessage: '确定要重新运行吗？',
-      }),
-
-      content: formatMessage({
-        id: 'ocp-v2.src.util.task.ThisWillReRunThe',
-        defaultMessage: '这将会重新执行整个任务',
-      }),
-
-      onOk: () => {
-        return dagHandler(
-          {
-            id: taskData?.id,
-          },
-          {
-            operator: 'RETRY',
-          }
-        ).then(res => {
-          if (res.successful) {
-            message.success(
-              formatMessage({
-                id: 'ocp-v2.src.util.task.TaskRetrySucceeded',
-                defaultMessage: '任务重试成功',
-              })
-            );
-            onSuccess();
-          }
-        });
-      },
-    });
-  } else if (key === 'skip') {
+  if (key === 'skip') {
     Modal.confirm({
       title: formatMessage({
         id: 'ocp-express.Task.Detail.TaskGraph.AreYouSureTheSettings',
@@ -290,16 +222,18 @@ export function handleSubtaskOperate(
 
       content: formatMessage({
         id: 'ocp-express.Task.Detail.TaskGraph.ThisSkipsTheCurrentTask',
-        defaultMessage: '这将会跳过当前任务，并把任务节点的状态设为成功',
+        defaultMessage: '这将会跳过当前任务，并把失败节点的状态设为成功后继续向后执行',
       }),
 
       onOk: () => {
-        const promise = TaskController.skipSubtask({
-          taskInstanceId: taskData?.id,
-          subtaskInstanceId: subtask?.id,
-        });
-
-        promise.then(res => {
+        return nodeHandler(
+          {
+            id: node?.id,
+          },
+          {
+            operator: 'PASS',
+          }
+        ).then(res => {
           if (res.successful) {
             message.success(
               formatMessage({
@@ -312,7 +246,6 @@ export function handleSubtaskOperate(
             }
           }
         });
-        return promise;
       },
     });
   }
@@ -363,11 +296,6 @@ export function getNodes(taskData?: API.DagDetailDTO) {
   return nodes.map(item => {
     // task 和 subtask 的 id 可能重复，增加 domId 进行区分
     item.domId = item.id;
-    // 只有一个 subTasks 时，直接替换 Node 进行返回
-    if (item?.sub_tasks?.length === 1) {
-      item.sub_tasks[0].domId = item.sub_tasks[0].id + '_child';
-      return item.sub_tasks[0];
-    }
     item.children =
       item?.sub_tasks?.map((item, index) => ({ ...item, domId: `${item.id}_child` })) || [];
 

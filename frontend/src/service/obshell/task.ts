@@ -170,6 +170,25 @@ export async function getNodeDetail(
   );
 }
 
+/** operate node operate node POST /api/v1/task/node/${param0} */
+export async function nodeHandler(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.nodeHandlerParams,
+  body: API.NodeOperator,
+  options?: { [key: string]: any }
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/task/node/${param0}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: { ...queryParams },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** get sub_task detail by sub_task_id get sub_task detail by sub_task_id GET /api/v1/task/sub_task/${param0} */
 export async function getSubTaskDetail(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

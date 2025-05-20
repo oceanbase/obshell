@@ -157,7 +157,7 @@ export default {
   "ocp-express.SQLDiagnosis.Digest.PercentageOfResponseTime": "响应时间占比（%）",
   "ocp-express.src.constant.alarm.Restricted": "已限制",
   "ocp-express.Detail.Resource.Trend.CpuAllocationRate": "CPU 分配率",
-  "ocp-express.Task.Detail.TaskGraph.ThisSkipsTheCurrentTask": "这将会跳过当前任务，并把任务节点的状态设为成功",
+  "ocp-express.Task.Detail.TaskGraph.ThisSkipsTheCurrentTask": "这将会跳过当前任务，并把失败节点的状态设为成功后继续向后执行",
   "ocp-express.src.constant.backup.Starting": "启动中",
   "ocp-express.Report.Inspection.ReportContent.ClusterName": "集群名",
   "ocp-express.Report.Component.GenerateReportModal.YouCanSelectOnlyThe": "只支持选择近 30 天的时间",
