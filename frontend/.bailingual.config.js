@@ -1,4 +1,3 @@
-/** @type {import('@alipay/bailingual-cli').BailingualConfig} */
 module.exports = {
   extract: {
     name: 'ocp-v2',
