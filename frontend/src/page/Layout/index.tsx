@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import { getLocale, history, useSelector, useDispatch } from 'umi';
+import { getLocale, history, useSelector, useDispatch, setLocale } from 'umi';
 import React, { useEffect } from 'react';
-import { ConfigProvider, theme } from '@oceanbase/design';
+import { ConfigProvider, Spin, theme } from '@oceanbase/design';
 import { ChartProvider } from '@oceanbase/charts';
 import en_US from '@oceanbase/ui/es/locale/en-US';
 import zh_CN from '@oceanbase/ui/es/locale/zh-CN';
@@ -28,7 +27,7 @@ import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
 import GlobalStyle from './GlobalStyle';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
-import { getObInfo, getStatistics } from '@/service/obshell/ob';
+import { getStatistics } from '@/service/obshell/ob';
 import { telemetryReport } from '@/service/custom';
 import moment from 'moment';
 
@@ -53,7 +52,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   }, []);
 
   // request and save publicKey to global state
-  const { refresh } = useRequest(v1Service.getSecret, {
+  const { refresh, loading } = useRequest(v1Service.getSecret, {
     defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
@@ -69,54 +68,62 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     },
   });
 
-  // 依赖 model 中的 password来判断
-  const { password } = useSelector((state: DefaultRootState) => state.profile);
   const telemetryTime = getEncryptLocalStorage('telemetryTime');
   const isTelemetryOutdated = !telemetryTime || moment().diff(moment(telemetryTime), 'hours') >= 1;
 
-  useRequest(getStatistics, {
-    // 登录状态下一小时请求一次
-    ready: !!password && isTelemetryOutdated,
-    // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
-    pollingInterval: 1000 * 60 * 60 + 5000,
-    onSuccess: res => {
-      if (res.successful) {
-        telemetryReport({
-          content: res.data,
-          component: 'obshell',
-        }).then(res => {
-          if (res?.code === 200) {
-            setEncryptLocalStorage('telemetryTime', moment().format());
-          }
-        });
-      }
-    },
-  });
+  useRequest(
+    () =>
+      getStatistics({
+        HIDE_ERROR_MESSAGE: true,
+      }),
+    {
+      ready: isTelemetryOutdated && !loading,
+      // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
+      pollingInterval: 1000 * 60 * 60 + 5000,
+      onSuccess: res => {
+        if (res.successful) {
+          telemetryReport({
+            content: res.data,
+            component: 'obshell',
+          }).then(res => {
+            if (res?.code === 200) {
+              setEncryptLocalStorage('telemetryTime', moment().format());
+            }
+          });
+        }
+      },
+    }
+  );
 
   useEffect(() => {
     if (location?.pathname === '/login') {
       refresh();
-    } else {
-      // model 中不存在 password，可能是刷新了浏览器
-      // 此时请求 obInfo 接口查看是否能过鉴权，通过表明 storage 的密码是正确的，进行更新 model
-      if (!password) {
-        getObInfo().then(res => {
-          if (res.successful) {
-            const password = getEncryptLocalStorage('password');
-
-            if (password) {
-              dispatch({
-                type: 'profile/update',
-                payload: {
-                  password,
-                },
-              });
-            }
-          }
-        });
-      }
     }
   }, [location?.pathname]);
+
+  useEffect(() => {
+    // Example: 发送消息到子应用，要注意子应用是否加载完成
+    // const iframe = document.getElementById('child-iframe');
+    // iframe.contentWindow.postMessage(
+    //   { locale: 'en-US'},
+    //   '*' // 子应用的源（origin）
+    // );
+
+    // 子应用作为 iframe 嵌入其他应用，通过 message 需要获取 locale 进行同步切换语言
+    document.addEventListener('message', event => {
+      if (event.data && event.data.locale) {
+        setLocale(event.data.locale, true);
+
+        event?.source?.postMessage({ changedLocale: true }, event.origin);
+      }
+    });
+  }, []);
+
+  // 登录页不需要 publicKey loading
+  if (loading && location?.pathname !== '/login') {
+    // publicKey 获取之后再加载内容，空密码场景下只需要 publicKey 即可登录，不需要获取密码
+    return <Spin style={{ marginTop: '20vh' }}></Spin>;
+  }
 
   return (
     <ConfigProvider

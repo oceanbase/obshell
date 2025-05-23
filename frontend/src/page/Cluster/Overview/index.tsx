@@ -484,7 +484,7 @@ const Detail: React.FC<DetailProps> = ({
           Modal.confirm({
             title: formatMessage(
               {
-                id: 'ocp-v2.Cluster.Detail.AreYouSureYouWant.1',
+                id: 'ocp-express.Cluster.Detail.AreYouSureYouWant.1',
                 defaultMessage: '确定要停止 OB 集群 {clusterDataName} 吗？',
               },
 
@@ -495,7 +495,7 @@ const Detail: React.FC<DetailProps> = ({
               <>
                 <div>
                   {formatMessage({
-                    id: 'ocp-v2.Cluster.Detail.StoppingTheClusterWillCause',
+                    id: 'ocp-express.Cluster.Detail.StoppingTheClusterWillCause',
                     defaultMessage: '停止集群会导致集群中所有的服务被终止，请谨慎操作',
                   })}
                 </div>
@@ -503,7 +503,10 @@ const Detail: React.FC<DetailProps> = ({
               </>
             ),
 
-            okText: formatMessage({ id: 'ocp-v2.Cluster.Detail.Stop', defaultMessage: '停止' }),
+            okText: formatMessage({
+              id: 'ocp-express.Cluster.Detail.Stop',
+              defaultMessage: '停止',
+            }),
             okButtonProps: {
               danger: true,
               ghost: true,
