@@ -581,6 +581,8 @@ func (obclusterService *ObclusterService) GetUpgradePkgChunkByPkgIdAndChunkId(pk
 	if err != nil {
 		return chunk, err
 	}
+	oceanbaseDb.Exec("SET SESSION ob_query_timeout=1000000000") // Ignore the error because it is not non-essential.
+	oceanbaseDb.Exec("SET SESSION ob_trx_timeout=1000000000")
 	err = oceanbaseDb.Model(&oceanbase.UpgradePkgChunk{}).Where("pkg_id = ? and chunk_id = ?", pkgId, chunkId).First(&chunk).Error
 	return
 }
@@ -619,6 +621,8 @@ func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *r
 		return nil, err
 	}
 	err = oceanbaseDb.Transaction(func(tx *gorm.DB) error {
+		tx.Exec("SET SESSION ob_query_timeout=1000000000") // Ignore the error because it is not non-essential.
+		tx.Exec("SET SESSION ob_trx_timeout=1000000000")
 		if err := tx.Model(&oceanbase.UpgradePkgInfo{}).Create(&pkgInfo).Error; err != nil {
 			return err
 		}
