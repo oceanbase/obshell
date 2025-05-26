@@ -82,6 +82,7 @@ const model = {
       });
 
       setEncryptLocalStorage('password', '');
+      setEncryptLocalStorage('login', 'false');
       history.push('/login');
     },
   },

@@ -30,7 +30,7 @@ import encrypt from '@/util/encrypt';
 import { aesEncrypt } from '@/util/aes';
 import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
-import { getEncryptLocalStorage } from '@/util';
+import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -172,6 +172,8 @@ const errorHandler = ({ request, response, data }) => {
   const { status } = response || {};
   // 401 状态为未登录情况，不展示接口错误信息，直接跳转登录页，因此需要单独处理
   if (status === 401) {
+    setEncryptLocalStorage('login', 'false');
+
     // 未登录状态，清空 tracert 的用户标识
     // tracert.set({
     //   roleId: null,

@@ -29,6 +29,7 @@ import GlobalStyle from './GlobalStyle';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { getStatistics } from '@/service/obshell/ob';
 import { telemetryReport } from '@/service/custom';
+import * as obService from '@/service/obshell/ob';
 import moment from 'moment';
 
 interface LayoutProps {
@@ -71,8 +72,14 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     },
   });
 
+  // 用来触发非免密场景下空密码 401 跳到登录页
+  useRequest(obService.getObInfo, {
+    ready: !isPasswordFreeLogin,
+  });
+
   const telemetryTime = getEncryptLocalStorage('telemetryTime');
   const isTelemetryOutdated = !telemetryTime || moment().diff(moment(telemetryTime), 'hours') >= 1;
+  const isLogin = getEncryptLocalStorage('login') === 'true';
 
   useRequest(
     () =>
@@ -83,7 +90,9 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       ready:
         isTelemetryOutdated &&
         // 如果是免密登录场景，获取到 secret 后在进行 statistics 请求，避免 401 错误
-        (isPasswordFreeLogin ? !loading : true),
+        (isPasswordFreeLogin ? !loading : isLogin),
+      // 登录状态变化后，重新发起请求，避免首次失败后不再发起请求
+      refreshDeps: [isLogin],
       // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
       pollingInterval: 1000 * 60 * 60 + 5000,
       onSuccess: res => {
