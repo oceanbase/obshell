@@ -37,6 +37,9 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
+  const { query } = location;
+  const { mode } = query || {};
+  const isPasswordFreeLogin = mode === 'passwordFreeLogin';
 
   const locale = getLocale();
   const localeMap = {
@@ -77,7 +80,10 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
         HIDE_ERROR_MESSAGE: true,
       }),
     {
-      ready: isTelemetryOutdated && !loading,
+      ready:
+        isTelemetryOutdated &&
+        // 如果是免密登录场景，获取到 secret 后在进行 statistics 请求，避免 401 错误
+        (isPasswordFreeLogin ? !loading : true),
       // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
       pollingInterval: 1000 * 60 * 60 + 5000,
       onSuccess: res => {
@@ -120,8 +126,8 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   }, []);
 
   // 登录页不需要 publicKey loading
-  if (loading && location?.pathname !== '/login') {
-    // publicKey 获取之后再加载内容，空密码场景下只需要 publicKey 即可登录，不需要获取密码
+  if (isPasswordFreeLogin && loading && location?.pathname !== '/login') {
+    // publicKey 获取之后再加载内容，空密码场景下只需要 publicKey 即可登录（实现免密登录），无须获取密码
     return <Spin style={{ marginTop: '20vh' }}></Spin>;
   }
 
