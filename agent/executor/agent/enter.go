@@ -33,6 +33,7 @@ var (
 const (
 	// task param
 	PARAM_MASTER_AGENT           = "masterAgent"
+	PARAM_MASTER_AGENT_PASSWORD  = "masterAgentPassword"
 	PARAM_ZONE                   = "zone"
 	PARAM_AGENT                  = "agent"
 	PARAM_TAKE_OVER_MASTER_AGENT = "takeOverMasterAgent"

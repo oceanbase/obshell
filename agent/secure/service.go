@@ -74,6 +74,22 @@ func updateOBConifg(key string, value interface{}) (err error) {
 	return updateOBConifgInTransaction(db, key, value)
 }
 
+func updateObproxyConfig(key string, value interface{}) (err error) {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return
+	}
+	data := map[string]interface{}{
+		"name":  key,
+		"value": value,
+	}
+	err = db.Model(obConfigModel).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "name"}},
+		DoUpdates: clause.AssignmentColumns([]string{"value"}),
+	}).Create(data).Error
+	return
+}
+
 func updateOBConifgInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
 	data := map[string]interface{}{
 		"name":  key,

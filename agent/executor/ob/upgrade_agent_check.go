@@ -71,7 +71,7 @@ func preCheckForAgentUpgrade(param param.UpgradeCheckParam) (agentErr *errors.Oc
 }
 
 func checkTargetVersionSupport(version, release string) error {
-	buildNumber, _, err := splitRelease(release)
+	buildNumber, _, err := pkg.SplitRelease(release)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func findTargetPkg(version, release string) error {
 		return err
 	}
 	var errs []error
-	buildNumber, distribution, _ := splitRelease(release)
+	buildNumber, distribution, _ := pkg.SplitRelease(release)
 	for _, arch := range archList {
 		_, err := obclusterService.GetUpgradePkgInfoByVersionAndRelease(constant.PKG_OBSHELL, version, buildNumber, distribution, arch)
 		if err != nil {
@@ -106,7 +106,7 @@ func findTargetPkg(version, release string) error {
 
 func buildAgentUpgradeCheckTaskContext(param param.UpgradeCheckParam, agents []meta.AgentInfo) *task.TaskContext {
 	ctx := task.NewTaskContext()
-	buildNumber, distribution, _ := splitRelease(param.Release)
+	buildNumber, distribution, _ := pkg.SplitRelease(param.Release)
 	taskTime := strconv.Itoa(int(time.Now().UnixMilli()))
 	ctx.SetParam(PARAM_ALL_AGENTS, agents).
 		SetParam(task.EXECUTE_AGENTS, agents).

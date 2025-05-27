@@ -125,10 +125,10 @@ func (obclusterService *ObclusterService) MinorFreeze(servers []oceanbase.OBServ
 	}
 	var targetCmd []string
 	for _, server := range servers {
-		targetCmd = append(targetCmd, fmt.Sprintf("'%s:%d'", server.SvrIp, server.SvrPort))
+		targetCmd = append(targetCmd, meta.NewAgentInfo(server.SvrIp, server.SvrPort).String())
 	}
-	serverList := strings.Join(targetCmd, ",")
-	sql := fmt.Sprintf("alter system minor freeze server = (%[1]s);", serverList)
+	serverList := strings.Join(targetCmd, "','")
+	sql := fmt.Sprintf("alter system minor freeze server = ('%[1]s');", serverList)
 
 	return db.Exec(sql).Error
 }
@@ -234,21 +234,21 @@ func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndRelease(n
 	return
 }
 
-func (obclusterService *ObclusterService) AddServer(ip, port, zoneName string) (err error) {
+func (obclusterService *ObclusterService) AddServer(svrInfo meta.ObserverSvrInfo, zoneName string) (err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return err
 	}
-	alterSql := fmt.Sprintf("ALTER SYSTEM ADD SERVER '%s:%s' ZONE '%s'", ip, port, zoneName)
+	alterSql := fmt.Sprintf("ALTER SYSTEM ADD SERVER '%s' ZONE '%s'", svrInfo.String(), zoneName)
 	return db.Exec(alterSql).Error
 }
 
-func (obclusterService *ObclusterService) DeleteServerInZone(ip, port, zoneName string) (err error) {
+func (obclusterService *ObclusterService) DeleteServerInZone(svrInfo meta.ObserverSvrInfo, zoneName string) (err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return err
 	}
-	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s:%s' ZONE '%s'", ip, port, zoneName)
+	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s' ZONE '%s'", svrInfo.String(), zoneName)
 	return db.Exec(alterSql).Error
 }
 
@@ -257,7 +257,7 @@ func (obclusterService *ObclusterService) DeleteServer(svrInfo meta.ObserverSvrI
 	if err != nil {
 		return err
 	}
-	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s:%d'", svrInfo.GetIp(), svrInfo.GetPort())
+	alterSql := fmt.Sprintf("ALTER SYSTEM DELETE SERVER '%s'", svrInfo.String())
 	return db.Exec(alterSql).Error
 }
 
@@ -266,30 +266,30 @@ func (ObclusterService *ObclusterService) CancelDeleteServer(svrInfo meta.Observ
 	if err != nil {
 		return err
 	}
-	alterSql := fmt.Sprintf("ALTER SYSTEM CANCEL DELETE SERVER '%s:%d'", svrInfo.GetIp(), svrInfo.GetPort())
+	alterSql := fmt.Sprintf("ALTER SYSTEM CANCEL DELETE SERVER '%s'", svrInfo.String())
 	return db.Exec(alterSql).Error
 }
 
-func (obclusterService *ObclusterService) IsServerExist(ip string, port string) (bool, error) {
+func (obclusterService *ObclusterService) IsServerExist(svrInfo meta.ObserverSvrInfo) (bool, error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return false, err
 	}
 	var count int
-	err = db.Raw("select count(*) from oceanbase.dba_ob_servers where svr_ip = ? and svr_port = ?", ip, port).First(&count).Error
+	err = db.Raw("select count(*) from oceanbase.dba_ob_servers where svr_ip = ? and svr_port = ?", svrInfo.GetIp(), svrInfo.GetPort()).First(&count).Error
 	if err != nil {
 		return false, err
 	}
 	return count > 0, nil
 }
 
-func (obclusterService *ObclusterService) IsServerExistWithZone(ip string, port string, zone string) (bool, error) {
+func (obclusterService *ObclusterService) IsServerExistWithZone(svrInfo meta.ObserverSvrInfo, zone string) (bool, error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return false, err
 	}
 	var count int64
-	err = db.Table(DBA_OB_SERVERS).Where("svr_ip = ? and svr_port = ? and zone = ?", ip, port, zone).Count(&count).Error
+	err = db.Table(DBA_OB_SERVERS).Where("svr_ip = ? and svr_port = ? and zone = ?", svrInfo.GetIp(), svrInfo.GetPort(), zone).Count(&count).Error
 	if err != nil {
 		return false, err
 	}
@@ -643,7 +643,7 @@ func (obclusterService *ObclusterService) RestoreParamsForUpgrade(params []ocean
 				}
 				sql = fmt.Sprintf("ALTER SYSTEM SET %s = '%s' TENANT = %s", param.Name, param.Value, tenantName)
 			case "CLUSTER":
-				sql = fmt.Sprintf("ALTER SYSTEM SET %s = '%s' SERVER = '%s:%d'", param.Name, param.Value, param.SvrIp, param.SvrPort)
+				sql = fmt.Sprintf("ALTER SYSTEM SET %s = '%s' SERVER = '%s'", param.Name, param.Value, meta.NewAgentInfo(param.SvrIp, param.SvrPort).String())
 			default:
 				return errors.New("unknown scope")
 			}
@@ -737,7 +737,7 @@ func (ObclusterService *ObclusterService) IsLsMultiPaxosAlive(lsId int, tenantId
 
 // GetLogInfosInServer returns the log stat in target server
 // only contains tenant_id and ls_id.
-func (ObclusterService *ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logStats []oceanbase.ObLogStat, err error) {
+func (*ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logStats []oceanbase.ObLogStat, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -746,7 +746,7 @@ func (ObclusterService *ObclusterService) GetLogInfosInServer(svrInfo meta.Obser
 	return
 }
 
-func (ObclusterService *ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
+func (*ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return false, err
@@ -754,4 +754,35 @@ func (ObclusterService *ObclusterService) HasUnitInZone(zone string) (exist bool
 	var count int64
 	err = oceanbaseDb.Table(DBA_OB_UNITS).Where("ZONE = ?", zone).Count(&count).Error
 	return count > 0, err
+}
+
+func (obclusterService *ObclusterService) CreateProxyroUser(password string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+
+	sqlText := fmt.Sprintf("CREATE USER IF NOT EXISTS `%s`@`%s`", constant.SYS_USER_PROXYRO, "%")
+	if password != "" {
+		sqlText += fmt.Sprintf(" IDENTIFIED BY '%s'", strings.ReplaceAll(password, "'", "'\"'\"'"))
+	}
+	if err = oceanbaseDb.Exec(sqlText).Error; err != nil {
+		return err
+	}
+	if err := oceanbaseDb.Exec(fmt.Sprintf("GRANT SELECT ON oceanbase.* TO %s", constant.SYS_USER_PROXYRO)).Error; err != nil {
+		return err
+	}
+	return nil
+}
+
+func (obclusterService *ObclusterService) GetRsListStr() (rsListStr string, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return "", err
+	}
+	err = oceanbaseDb.Table(GV_OB_PARAMETERS).
+		Select("VALUE").
+		Where("NAME = ?", "rootservice_list").
+		Scan(&rsListStr).Error
+	return
 }

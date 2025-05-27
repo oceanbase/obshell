@@ -77,7 +77,7 @@ func CreateRemoveFollowerAgentDag(agent meta.AgentInfo, fromAPI bool) (*task.Dag
 	// Follower agent send rpc to master agent to remove itself or master agent receive api to remove follower agent.
 	// Then, master agent create a task to remove follower agent.
 	// Master will clear observer and zone config if there is no other follower agent in the zone.
-	name := fmt.Sprintf("Remove follower agent %s:%d", agent.Ip, agent.Port)
+	name := fmt.Sprintf("Remove follower agent %s", agent.String())
 	builder := task.NewTemplateBuilder(name)
 	if fromAPI {
 		builder.AddNode(newAgentRemoveFollowerRPCNode([]meta.AgentInfo{agent}))
@@ -118,13 +118,13 @@ func (t *RemoveFollowerAgentTask) Execute() (err error) {
 		return errors.Wrap(err, "get param failed")
 	}
 
-	t.ExecuteLogf("finding agent %s:%d info", agent.Ip, agent.Port)
+	t.ExecuteLogf("finding agent %s info", agent.String())
 	agentInstance, err := GetFollowerAgent(&agent)
 	if err != nil {
 		return errors.Wrap(err, "get follower agent failed")
 	}
 	if agentInstance == nil {
-		t.ExecuteLogf("agent %s:%d is not exists", agent.Ip, agent.Port)
+		t.ExecuteLogf("agent %s is not exists", agent.String())
 		return nil
 	}
 
@@ -145,11 +145,11 @@ func (t *RemoveFollowerAgentTask) Execute() (err error) {
 		}
 	}
 
-	t.ExecuteLogf("deleting agent %s:%d", agent.Ip, agent.Port)
+	t.ExecuteLogf("deleting agent %s", agent.String())
 	if err = agentService.DeleteAgent(&agent); err != nil {
 		return errors.Wrap(err, "delete agent failed")
 	}
-	t.ExecuteLogf("remove follower agent %s:%d success", agent.Ip, agent.Port)
+	t.ExecuteLogf("remove follower agent %s success", agent.String())
 	return nil
 }
 
@@ -185,7 +185,7 @@ func GetFollowerAgent(agent meta.AgentInfoInterface) (agentInstance *meta.AgentI
 	if err != nil {
 		err = errors.Wrap(err, "get agent instance failed")
 	} else if agentInstance != nil && !agentInstance.IsFollowerAgent() {
-		err = errors.Errorf("agent %s:%d is not follower", agent.GetIp(), agent.GetPort())
+		err = errors.Errorf("agent %s is not follower", agent.String())
 	}
 	return
 }

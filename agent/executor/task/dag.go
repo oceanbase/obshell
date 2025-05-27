@@ -67,6 +67,9 @@ func GetDagDetail(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(dagDTOParam.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
@@ -113,6 +116,10 @@ func GetDagDetail(c *gin.Context) {
 		return
 	}
 
+	if task.ConvertToGenericID(dag, dag.GetDagType()) != dagDTOParam.GenericID {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "dag id not match"))
+		return
+	}
 	dagDetailDTO, err = convertDagDetailDTO(dag, *param.ShowDetails)
 	common.SendResponse(c, dagDetailDTO, err)
 }
@@ -167,7 +174,7 @@ func convertDagDetailDTO(dag *task.Dag, fillDeatil bool) (dagDetailDTO *task.Dag
 				return
 			}
 
-			nodeDetailDTO, err = getNodeDetail(service, nodes[i])
+			nodeDetailDTO, err = getNodeDetail(service, nodes[i], dag.GetDagType())
 			if err != nil {
 				return
 			}
@@ -215,6 +222,9 @@ func DagHandler(c *gin.Context) {
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
+		if task.IsObproxyTask(dagOperator.GenericID) {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
@@ -238,6 +248,11 @@ func DagHandler(c *gin.Context) {
 	dag, err := service.GetDagInstance(dagID)
 	if err != nil {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		return
+	}
+
+	if task.ConvertToGenericID(dag, dag.GetDagType()) != dagOperator.GenericID {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "dag id not match"))
 		return
 	}
 

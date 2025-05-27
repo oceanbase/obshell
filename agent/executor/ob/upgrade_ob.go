@@ -26,6 +26,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
@@ -74,7 +75,7 @@ func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, *errors.
 
 func buildCheckAndUpgradeObTaskContext(p *obUpgradeParams) *task.TaskContext {
 	ctx := task.NewTaskContext()
-	buildNumber, distribution, _ := splitRelease(p.RequestParam.Release)
+	buildNumber, distribution, _ := pkg.SplitRelease(p.RequestParam.Release)
 	taskTime := strconv.Itoa(int(time.Now().UnixMilli()))
 	ctx.SetParam(PARAM_ALL_AGENTS, p.agents).
 		SetParam(PARAM_UPGRADE_DIR, p.RequestParam.UpgradeDir).

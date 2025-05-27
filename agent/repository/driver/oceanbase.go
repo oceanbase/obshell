@@ -33,6 +33,14 @@ func Open(dsn string) gorm.Dialector {
 	}
 }
 
+func OpenObproxy(dsn string) gorm.Dialector {
+	mysqlDialector := mysql.Open(dsn).(*mysql.Dialector)
+	mysqlDialector.Config.SkipInitializeWithVersion = true
+	return Dialector{
+		Dialector: *mysqlDialector,
+	}
+}
+
 func (dialector Dialector) Migrator(db *gorm.DB) gorm.Migrator {
 	mysqlMigrator := mysql.Migrator{
 		Migrator: migrator.Migrator{

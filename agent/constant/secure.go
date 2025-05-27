@@ -20,6 +20,7 @@ import "time"
 
 const (
 	OCS_HEADER                    = "X-OCS-Header"
+	OCS_AGENT_HEADER              = "X-OCS-Agent-Header"
 	REQUEST_RECEIVED_TIME         = "request_received_time"
 	RESPONSE_PWD_KEY              = "password"
 	AGENT_PRIVATE_KEY             = "private_key"

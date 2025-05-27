@@ -116,7 +116,7 @@ func clusterStop(flags *ClusterStopFlags) (err error) {
 	}
 
 	if flags.server == "" && flags.zone == "" && !flags.global {
-		flags.server = fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.Agent.GetPort())
+		flags.server = agentStatus.Agent.String()
 	}
 
 	if err = CheckAllAgentMaintenance(); err != nil {
@@ -169,11 +169,9 @@ func callEmerTypeApi(uri string, param interface{}) (err error) {
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		sig := <-sigChan
-		stdio.StopLoading()
 		stdio.Printf("\nReceived signal: %v", sig)
 		stdio.Info("try to cancel the task, please wait...")
 		if err := dagHandler.CancelDag(); err != nil {
-			stdio.StopLoading()
 			stdio.Warnf("Failed to cancel the task: %s", err.Error())
 			os.Exit(1)
 		}

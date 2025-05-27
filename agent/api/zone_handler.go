@@ -25,20 +25,20 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-//	@ID				DeleteZone
+// @ID				DeleteZone
 //
-// @Summary		delete zone
-// @Description	delete zone
-// @Tags			ob
-// @Accept			application/json
-// @Produce		application/json
-// @Param			X-OCS-Header	header	string	true	"Authorization"
-// @Param			zoneName		path	string	true	"zone name"
-// @Success		200			object	http.OcsAgentResponse{data=task.DagDetailDTO}
-// @Success		204				object	http.OcsAgentResponse
-// @Failure		401				object	http.OcsAgentResponse
-// @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/zone/{zoneName} [delete]
+//	@Summary		delete zone
+//	@Description	delete zone
+//	@Tags			ob
+//	@Accept			application/json
+//	@Produce		application/json
+//	@Param			X-OCS-Header	header	string	true	"Authorization"
+//	@Param			zoneName		path	string	true	"zone name"
+//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+//	@Success		204				object	http.OcsAgentResponse
+//	@Failure		401				object	http.OcsAgentResponse
+//	@Failure		500				object	http.OcsAgentResponse
+//	@Router			/api/v1/zone/{zoneName} [delete]
 func zoneDeleteHandler(c *gin.Context) {
 	zoneName := c.Param(constant.URI_PARAM_NAME)
 	if zoneName == "" {

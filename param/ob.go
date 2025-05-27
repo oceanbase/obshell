@@ -53,6 +53,7 @@ type ScaleOutParam struct {
 
 type ClusterScaleOutParam struct {
 	ScaleOutParam
+	TargetAgentPassword string `json:"targetAgentPassword"`
 }
 
 type LocalScaleOutParam struct {
@@ -74,7 +75,9 @@ type ClusterScaleInParam struct {
 }
 
 type ObInitParam struct {
-	ImportScript bool `json:"import_script"`
+	ImportScript      bool   `json:"import_script"`
+	CreateProxyroUser bool   `json:"create_proxyro_user"`
+	ProxyroPassword   string `json:"proxyro_password"`
 }
 
 type ObStopParam struct {

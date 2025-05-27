@@ -233,7 +233,7 @@ func sendUpdateTaskRpc(remoteTaskId int64, task task.ExecutableTask) error {
 	if coordinator.OCS_COORDINATOR.IsFaulty() {
 		return errors.New("faulty does not have maintainer")
 	}
-	log.Infof("send update task rpc to %s:%d, remote task id %d", coordinator.OCS_COORDINATOR.Maintainer.GetIp(), coordinator.OCS_COORDINATOR.Maintainer.GetPort(), remoteTaskId)
+	log.Infof("send update task rpc to %s, remote task id %d", coordinator.OCS_COORDINATOR.Maintainer.String(), remoteTaskId)
 	remoteTask := createRemoteTask(remoteTaskId, task)
 	maintainerAgent := coordinator.OCS_COORDINATOR.Maintainer
 	return secure.SendPatchRequest(maintainerAgent, constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK, remoteTask, nil)

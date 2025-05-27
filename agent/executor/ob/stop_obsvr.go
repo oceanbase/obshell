@@ -19,8 +19,6 @@ package ob
 import (
 	"fmt"
 	"os/exec"
-	"strconv"
-	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -251,15 +249,13 @@ func GenerateTargetAgentList(scope param.Scope) ([]meta.AgentInfo, error) {
 		}
 	case SCOPE_SERVER:
 		for _, server := range scope.Target {
-			var info meta.AgentInfo
-			info.Ip = server[0:strings.LastIndex(server, ":")]
-			info.Port, err = strconv.Atoi(server[strings.LastIndex(server, ":")+1:])
+			info, err := meta.ConvertAddressToAgentInfo(server)
 			if err != nil {
 				log.WithError(err).Errorf("parse server '%s' failed", server)
 				return nil, err
 			}
 
-			targetAgents = append(targetAgents, info)
+			targetAgents = append(targetAgents, *info)
 		}
 	}
 	return targetAgents, nil

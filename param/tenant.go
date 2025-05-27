@@ -27,7 +27,7 @@ type CreateTenantParam struct {
 	Collation    string                 `json:"collation"`
 	ReadOnly     bool                   `json:"read_only"`     // Default to false.
 	Comment      string                 `json:"comment"`       // Messages.
-	Variables    map[string]interface{} `json:"variables"`     // Teantn global variables.
+	Variables    map[string]interface{} `json:"variables"`     // Tenant global variables.
 	Parameters   map[string]interface{} `json:"parameters"`    // Tenant parameters.
 	Scenario     string                 `json:"scenario"`      // Tenant scenario.
 	ImportScript bool                   `json:"import_script"` // whether to import script.
@@ -92,7 +92,8 @@ type SetTenantParametersParam struct {
 }
 
 type SetTenantVariablesParam struct {
-	Variables map[string]interface{} `json:"variables" binding:"required"`
+	Variables      map[string]interface{} `json:"variables" binding:"required"`
+	TenantPassword string                 `json:"tenant_password"`
 }
 
 // Task Param
@@ -101,4 +102,22 @@ type CreateResourcePoolTaskParam struct {
 	ZoneName       string // a resource pool is bound to a zone.
 	UnitConfigName string
 	UnitNum        int
+}
+
+type CreateUserParam struct {
+	UserName         string             `json:"user_name" binding:"required"`
+	Password         string             `json:"password" binding:"required"`
+	RootPassword     string             `json:"root_password"`
+	GlobalPrivileges []string           `json:"global_privileges"`
+	DbPrivileges     []DbPrivilegeParam `json:"db_privileges"`
+	HostName         string             `json:"host_name"`
+}
+
+type DbPrivilegeParam struct {
+	DbName     string   `json:"db_name" binding:"required"`
+	Privileges []string `json:"privileges" binding:"required"`
+}
+
+type DropUserParam struct {
+	RootPassword string `json:"root_password"`
 }

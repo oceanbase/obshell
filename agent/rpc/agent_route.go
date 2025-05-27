@@ -36,6 +36,7 @@ func InitOcsAgentRpcRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	agent := v1.Group(constant.URI_AGENT_GROUP)
 	agent.POST("", agentJoinHandler)
+	agent.POST(constant.URI_TOKEN, agentAddTokenHandler)
 	agent.DELETE("", agentRemoveHandler)
 	agent.POST(constant.URI_UPDATE, agentUpdateHandler)
 	agent.POST(constant.URI_SYNC_BIN, takeOverAgentUpdateBinaryHandler)

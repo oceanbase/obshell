@@ -18,6 +18,7 @@ package binary
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
@@ -30,9 +31,12 @@ import (
 func GetMyOBVersion() (version string, err error) {
 	myOBPath := filepath.Join(global.HomePath, constant.DIR_BIN, constant.PROC_OBSERVER)
 	bash := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s -V", global.HomePath, myOBPath)
+	if os.Stat(myOBPath); err != nil {
+		return "", errors.Wrap(err, "get my ob version failed")
+	}
 	out, err := exec.Command("/bin/bash", "-c", bash).CombinedOutput()
 	if err != nil {
-		return "", errors.Wrap(err, "exec get my ob version failed")
+		return "", err
 	}
 	res := string(out)
 

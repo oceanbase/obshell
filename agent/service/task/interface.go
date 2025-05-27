@@ -102,6 +102,8 @@ type SubTaskServiceInterface interface {
 
 	GetLocalTaskInstanceByRemoteTaskId(int64) (*sqlite.SubtaskInstance, error)
 
+	GetDagBySubTaskId(taskId int64) (*task.Dag, error)
+
 	GetSubTasks(*task.Node) ([]task.ExecutableTask, error)
 
 	GetSubTaskByTaskID(int64) (task.ExecutableTask, error)

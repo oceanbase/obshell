@@ -144,7 +144,7 @@ func (r *upgradeRpmPkgInfo) fileCheck() (err error) {
 
 func (r *upgradeRpmPkgInfo) checkVersion() (err error) {
 	log.Info("version is ", r.version)
-	r.release, r.distribution, err = splitRelease(r.rpmPkg.Release())
+	r.release, r.distribution, err = pkg.SplitRelease(r.rpmPkg.Release())
 	if err != nil {
 		return
 	}
@@ -198,19 +198,9 @@ func (r *upgradeRpmPkgInfo) findAllExpectedFiles(expected []string) (err error) 
 	return nil
 }
 
-func checkCompressAndFormat(pkg *rpm.Package) error {
-	if pkg.PayloadCompression() != "xz" {
-		return fmt.Errorf("unsupported compression '%s', the supported compression is 'xz'", pkg.PayloadCompression())
-	}
-	if pkg.PayloadFormat() != "cpio" {
-		return fmt.Errorf("unsupported payload format '%s', the supported payload format is 'cpio'", pkg.PayloadFormat())
-	}
-	return nil
-}
-
 func (r *upgradeRpmPkgInfo) GetUpgradeDepYml() (err error) {
 	log.Info("start to get upgrade dep yml")
-	if err = checkCompressAndFormat(r.rpmPkg); err != nil {
+	if err = pkg.CheckCompressAndFormat(r.rpmPkg); err != nil {
 		return
 	}
 	xzReader, err := xz.NewReader(r.rpmFile)

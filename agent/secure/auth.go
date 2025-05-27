@@ -18,46 +18,71 @@ package secure
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/config"
+
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
 
-type AgentAuth struct {
-	Password string
-	Ts       int64
+type RouteType int
+type VerifyType int
+
+const (
+	ROUTE_OCEANBASE RouteType = iota
+	ROUTE_OBPROXY
+	ROUTE_TASK
+
+	OCEANBASE_PASSWORD VerifyType = iota
+	AGENT_PASSWORD
+)
+
+func VerifyTimeStamp(ts string, curTs int64) error {
+	tsInt, err := strconv.ParseInt(ts, 10, 64)
+	if err != nil {
+		log.WithError(err).Errorf("parse ts failed, ts:%v", ts)
+		return err
+	}
+	if curTs > int64(tsInt) {
+		log.Warnf("auth expired at: %v, current: %v", ts, curTs)
+		return errors.New("auth expired")
+	}
+	return nil
 }
 
-func VerifyAuth(pwd string, ts string, curTs int64) error {
+func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error {
 	if pwd != "" {
-		tsInt, err := strconv.ParseInt(ts, 10, 64)
-		if err != nil {
-			log.WithError(err).Errorf("parse ts failed, ts:%v", ts)
+		if err := VerifyTimeStamp(ts, curTs); err != nil {
 			return err
-		}
-		if curTs > int64(tsInt) {
-			log.Warnf("auth expired at: %v, current: %v", ts, curTs)
-			return errors.New("auth expired")
 		}
 	}
 
-	if pwd != meta.OCEANBASE_PWD {
-		if oceanbase.HasOceanbaseInstance() {
-			if err := VerifyOceanbasePassword(pwd); err != nil {
-				return err
-			}
-			if err := dumpPassword(); err != nil {
-				log.WithError(err).Error("dump password failed")
-				return err
-			}
-		} else {
-			return errors.New("access denied")
+	if verifyType == AGENT_PASSWORD {
+		if pwd != meta.AGENT_PWD.GetPassword() {
+			log.Infof("agent password is incorrect, pwd:%v, agentPwd:%v", pwd, meta.AGENT_PWD.GetPassword())
+			return fmt.Errorf("access denied: %s", "agent password is incorrect")
 		}
+	} else if verifyType == OCEANBASE_PASSWORD {
+		if pwd != meta.OCEANBASE_PWD {
+			if oceanbase.HasOceanbaseInstance() {
+				if err := VerifyOceanbasePassword(pwd); err != nil {
+					return err
+				}
+				if err := dumpPassword(); err != nil {
+					log.WithError(err).Error("dump password failed")
+					return err
+				}
+			} else {
+				return fmt.Errorf("access denied: %s", "oceanbase password is incorrect")
+			}
+		}
+	} else {
+		return errors.New("unknown password type")
 	}
 	return nil
 }

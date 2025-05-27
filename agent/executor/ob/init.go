@@ -36,8 +36,15 @@ func CreateInitDag(param param.ObInitParam) (*task.DagDetailDTO, error) {
 		AddTask(newStartObServerTask(), true).
 		AddTask(newClusterBoostrapTask(), false).
 		AddTask(newMigrateTableTask(), false).
-		AddTask(newModifyPwdTask(), false).
-		AddTask(newMigrateDataTask(), false).
+		AddTask(newModifyPwdTask(), false)
+	if param.CreateProxyroUser {
+		createUserNode, err := newCreateDefaultUserNode(param.ProxyroPassword)
+		if err != nil {
+			return nil, err
+		}
+		builder.AddNode(createUserNode)
+	}
+	builder.AddTask(newMigrateDataTask(), false).
 		AddTemplate(newConvertClusterTemplate())
 	if param.ImportScript {
 		builder.AddNode(script.NewImportScriptForTenantNode(false))

@@ -34,7 +34,7 @@ const (
 	FLAG_NEW_NAME_SH = "n"
 	FLAG_NEW_NAME    = "new_name"
 
-	// obshell recyclebin tenatn show
+	// obshell recyclebin tenant show
 	CMD_SHOW = "show"
 )
 

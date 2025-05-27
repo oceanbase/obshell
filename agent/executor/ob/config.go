@@ -19,7 +19,6 @@ package ob
 import (
 	"fmt"
 	"path/filepath"
-	"regexp"
 	"strconv"
 	"strings"
 
@@ -135,26 +134,13 @@ func (t *UpdateOBServerConfigTask) updateZoneConfig() error {
 func (t *UpdateOBServerConfigTask) updateServerConfig() error {
 	agents := make([]meta.AgentInfoInterface, 0)
 	for _, server := range t.config.Scope.Target {
-		agent := ConvertAgentInfo(server)
-		if agent == nil {
-			return fmt.Errorf("invalid server: %s", server)
+		agent, err := meta.ConvertAddressToAgentInfo(server)
+		if err != nil {
+			return err
 		}
 		agents = append(agents, agent)
 	}
 	return observerService.UpdateServerConfig(t.config.ObServerConfig, agents, t.deleteAll)
-}
-
-func ConvertAgentInfo(str string) meta.AgentInfoInterface {
-	re := regexp.MustCompile(`(\[?[^\[\]:]+\]?):(\d+)`)
-	matches := re.FindAllStringSubmatch(str, -1)
-	if len(matches) != 1 || len(matches[0]) != 3 {
-		return nil
-	}
-	port, err := strconv.Atoi(matches[0][2])
-	if err != nil {
-		return nil
-	}
-	return meta.NewAgentInfo(matches[0][1], port)
 }
 
 func newUpdateOBClusterConfigTask() *UpdateOBClusterConfigTask {
@@ -269,6 +255,7 @@ func (t *IntegrateObConfigTask) getAgents() error {
 		agent := *meta.NewAgentInfo(agentDO.Ip, agentDO.Port)
 		t.agents[agent] = agentDO
 	}
+	t.ExecuteInfoLogf("agents: %v", t.agents)
 	return nil
 }
 
@@ -362,10 +349,31 @@ func (t *IntegrateObConfigTask) hasRSList() error {
 	rsServers := strings.Split(val.Value, ";")
 	t.ExecuteLogf("check rsList config: %s", rsServers)
 	for _, rsServer := range rsServers {
-		info := strings.Split(rsServer, ":")
+		if rsServer == "" {
+			return fmt.Errorf("invalid rsList config: %s", val.Value)
+		}
+
+		var info []string
+		if rsServer[0] == '[' {
+			t.ExecuteLogf("rsServer: %s is IPv6 address", rsServer)
+			// It means the rsServer is IPv6 address.
+			info = strings.Split(rsServer, "]")
+			if len(info) != 2 {
+				return fmt.Errorf("invalid rsList config: %s", rsServer)
+			}
+
+			ip := info[0][1:len(info[0])]
+			info = strings.Split(info[1], ":")
+			info[0] = ip
+		} else {
+			t.ExecuteLogf("rsServer: %s is IPv4 address", rsServer)
+			// It means the rsServer is IPv4 address.
+			info = strings.Split(rsServer, ":")
+		}
 		if len(info) != 3 {
 			return fmt.Errorf("invalid rsList config: %s", rsServer)
 		}
+
 		rpcPort, err := strconv.Atoi(info[1])
 		if err != nil {
 			return fmt.Errorf("invalid rsList config: %s", rsServer)
@@ -419,7 +427,7 @@ func (t *IntegrateObConfigTask) setUNRootServer() error {
 }
 
 func (t *IntegrateObConfigTask) getObserverConfig(agent meta.AgentInfo) (map[string]string, error) {
-	agentStr := fmt.Sprintf("%s:%d", agent.Ip, agent.Port)
+	agentStr := agent.String()
 	t.ExecuteLogf("Integrating %s agent config", agentStr)
 
 	t.ExecuteLogf("get %s agent config", agentStr)

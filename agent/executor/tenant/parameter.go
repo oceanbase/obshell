@@ -75,6 +75,12 @@ type SetTenantParamterTask struct {
 	tenantId   int
 }
 
+func newSetTenantParameterNode(parameters map[string]interface{}) *task.Node {
+	subtask := newSetTenantParameterTask()
+	ctx := task.NewTaskContext().SetParam(PARAM_TENANT_PARAMETER, parameters)
+	return task.NewNodeWithContext(subtask, false, ctx)
+}
+
 func newSetTenantParameterTask() *SetTenantParamterTask {
 	newTask := &SetTenantParamterTask{
 		Task: *task.NewSubTask(TASK_NAME_SET_TENANT_PARAMETER),

@@ -146,7 +146,7 @@ func NewClient() *resty.Client {
 func sendHttpRequest(agentInfo meta.AgentInfoInterface, uri string, method string, param, ret interface{}, headers map[string]string) (agentResponse ocsAgentResponse, err error) {
 	var agentResp OcsAgentResponse
 	var response *resty.Response
-	targetUrl := fmt.Sprintf("%s://%s:%d%s", global.Protocol, agentInfo.GetIp(), agentInfo.GetPort(), uri)
+	targetUrl := fmt.Sprintf("%s://%s%s", global.Protocol, agentInfo.String(), uri)
 	request := NewClient().R()
 	if ret != nil {
 		request.SetResult(&agentResp)

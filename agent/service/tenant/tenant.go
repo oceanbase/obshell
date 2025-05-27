@@ -313,6 +313,29 @@ func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd strin
 	return nil
 }
 
+func (t *TenantService) SetTenantVariablesWithTenant(tenantName, password string, variables map[string]interface{}) error {
+	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, password)
+	if err != nil {
+		return errors.Occur(errors.ErrUnexpected, err.Error())
+	}
+	defer func() {
+		db, _ := tempDb.DB()
+		if db != nil {
+			db.Close()
+		}
+	}()
+	variablesSql := ""
+	for k, v := range variables {
+		if val, ok := v.(string); ok {
+			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= `%v`", val)
+		} else {
+			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= %v", v)
+		}
+	}
+	sqlText := fmt.Sprintf("SET %s", variablesSql[1:])
+	return tempDb.Exec(sqlText).Error
+}
+
 func (t *TenantService) AlterTenantPrimaryZone(tenantName string, primaryZone string) error {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

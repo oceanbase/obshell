@@ -49,7 +49,7 @@ func (t *UpdateAllAgentsTask) Execute() error {
 	}
 
 	for _, agent := range agents {
-		t.ExecuteLogf("convert agent %s:%d to cluster agent", agent.GetIp(), agent.GetPort())
+		t.ExecuteLogf("convert agent %s to cluster agent", agent.String())
 		if err := agentService.ConvertToClusterAgent(&agent); err != nil {
 			return err
 		}

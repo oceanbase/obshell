@@ -63,7 +63,7 @@ func TimeHandler(c *gin.Context) {
 func InfoHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		obVersion, err := binary.GetMyOBVersion()
-		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion)
+		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion, meta.AGENT_PWD.Inited())
 		common.SendResponse(c, agentStatus, err)
 	}
 }

@@ -21,13 +21,27 @@ import (
 	"strings"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/meta"
 )
 
 func NewObDataSourceConfig() *ObDataSourceConfig {
 	return &ObDataSourceConfig{
 		username:        constant.DB_USERNAME,
-		ip:              constant.LOCAL_IP,
+		ip:              meta.OCS_AGENT.GetLocalIp(),
 		dBName:          constant.DB_OCS,
+		charset:         constant.DB_DEFAULT_CHARSET,
+		parseTime:       true,
+		location:        constant.DB_DEFAULT_LOCATION,
+		maxIdleConns:    constant.DB_DEFAULT_MAX_IDLE_CONNS,
+		maxOpenConns:    constant.DB_DEFAULT_MAX_OPEN_CONNS,
+		connMaxLifetime: constant.DB_DEFAULT_CONN_MAX_LIFETIME,
+	}
+}
+
+func NewObproxyDataSourceConfig() *ObDataSourceConfig {
+	return &ObDataSourceConfig{
+		username:        constant.DB_PROXYSYS_USERNAME,
+		ip:              constant.LOCAL_IP,
 		charset:         constant.DB_DEFAULT_CHARSET,
 		parseTime:       true,
 		location:        constant.DB_DEFAULT_LOCATION,
@@ -182,7 +196,7 @@ func (config *ObDataSourceConfig) GetSkipPwdCheck() bool {
 }
 
 func (config *ObDataSourceConfig) GetDSN() string {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/", config.username, config.password, config.ip, config.port)
+	dsn := fmt.Sprintf("%s:%s@tcp(%s)/", config.username, config.password, meta.NewAgentInfo(config.ip, config.port).String())
 	if config.dBName != "" {
 		dsn += config.dBName
 	}

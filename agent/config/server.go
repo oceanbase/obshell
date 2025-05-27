@@ -16,6 +16,12 @@
 
 package config
 
+import (
+	"errors"
+	"fmt"
+	"net"
+)
+
 type AgentMode = string
 
 const (
@@ -29,4 +35,30 @@ type ServerConfig struct {
 	Address     string
 	RunDir      string
 	UpgradeMode bool
+}
+
+func NewServerConfig(ip string, port int, runDir string, UpgradeMode bool) (*ServerConfig, error) {
+	address, err := generateAddress(ip, port)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ServerConfig{
+		Ip:          ip,
+		Port:        port,
+		Address:     address,
+		RunDir:      runDir,
+		UpgradeMode: UpgradeMode,
+	}, nil
+}
+
+func generateAddress(ip string, port int) (string, error) {
+	ipParsed := net.ParseIP(ip)
+	if ipParsed == nil {
+		return "", errors.New("invalid ip")
+	}
+	if ipParsed.To4() != nil {
+		return fmt.Sprint("0.0.0.0:", port), nil
+	}
+	return fmt.Sprint("[::]:", port), nil
 }

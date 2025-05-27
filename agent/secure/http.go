@@ -144,3 +144,12 @@ func BuildBody(agentInfo meta.AgentInfoInterface, param interface{}) (encryptedB
 func BuildHeaderForForward(agentInfo meta.AgentInfoInterface, uri string, keys ...[]byte) map[string]string {
 	return BuildHeader(agentInfo, uri, true, keys...)
 }
+
+func SendRequestWithPassword(agentInfo meta.AgentInfoInterface, uri string, method string, agentPassword string, param interface{}, ret interface{}) error {
+	encryptedBody, Key, Iv, err := BuildBody(agentInfo, param)
+	if err != nil {
+		return errors.Wrap(err, "build body failed")
+	}
+	header := BuildAgentHeader(agentInfo, agentPassword, uri, false, Key, Iv)
+	return http.SendRequestAndBuildReturn(agentInfo, uri, method, encryptedBody, ret, header)
+}

@@ -121,7 +121,7 @@ func clusterStart(flags *ClusterStartFlags) (err error) {
 	}
 
 	if flags.server == "" && flags.zone == "" && !flags.global {
-		flags.server = fmt.Sprintf("%s:%d", agentStatus.Agent.GetIp(), agentStatus.Agent.GetPort())
+		flags.server = agentStatus.Agent.String()
 	}
 
 	stdio.Verbosef("current my agent is %s", agentStatus.Agent.GetIdentity())

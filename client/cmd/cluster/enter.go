@@ -53,15 +53,17 @@ const (
 	// CMD_INIT represents the "init" command used to initialize the cluster.
 	CMD_INIT = "init"
 	// Flags for the "init" command.
-	FLAG_PASSWORD        = "rootpassword"
-	FLAG_PASSWORD_ALIAS  = "rp"
-	FLAG_CLUSTER_NAME    = "cluster_name"
-	FLAG_CLUSTER_NAME_SH = "n"
-	FLAG_CLUSTER_ID      = "cluster_id"
-	FLAG_CLUSTER_ID_SH   = "i"
-	FLAG_RS_LIST         = "rs_list"
-	FLAG_RS_LIST_ALIAS   = "rs"
-	FLAG_IMPORT_SCRIPT   = "import_script"
+	FLAG_PASSWORD            = "rootpassword"
+	FLAG_PASSWORD_ALIAS      = "rp"
+	FLAG_CLUSTER_NAME        = "cluster_name"
+	FLAG_CLUSTER_NAME_SH     = "n"
+	FLAG_CLUSTER_ID          = "cluster_id"
+	FLAG_CLUSTER_ID_SH       = "i"
+	FLAG_RS_LIST             = "rs_list"
+	FLAG_RS_LIST_ALIAS       = "rs"
+	FLAG_IMPORT_SCRIPT       = "import_script"
+	FLAG_CREATE_PROXYRO_USER = "create_proxyro_user"
+	FLAG_PROXYRO_PASSWORD    = "proxyro_password"
 
 	// CMD_START represents the "start" command used to start observers.
 	CMD_START = "start"

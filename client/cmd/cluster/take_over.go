@@ -24,10 +24,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oceanbase/obshell/client/global"
-	"github.com/oceanbase/obshell/client/lib/http"
-	"github.com/oceanbase/obshell/client/lib/stdio"
-	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/agent/cmd/admin"
 	"github.com/oceanbase/obshell/agent/cmd/daemon"
 	"github.com/oceanbase/obshell/agent/constant"
@@ -36,6 +32,10 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/client/global"
+	"github.com/oceanbase/obshell/client/lib/http"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
 )
 
 func handleIfInTakeoverProcess() error {
@@ -98,38 +98,34 @@ func getServersForEmecStart(flags *ClusterStartFlags) (servers []string, err err
 }
 
 // getServersByInputAndConf takes a ClusterStartFlags structure and a list of server addresses paired with their RPC ports,
-func getServersByInputAndConf(flags *ClusterStartFlags, serversWithRpcPort [][2]string) (servers []string, err error) {
+func getServersByInputAndConf(flags *ClusterStartFlags, serversWithRpcPort []meta.AgentInfoInterface) (servers []string, err error) {
 	if getScopeType(&flags.scopeFlags) == ob.SCOPE_GLOBAL {
 		for _, server := range serversWithRpcPort {
-			servers = append(servers, server[0])
+			servers = append(servers, server.GetIp())
 		}
 		return
 	}
 
 	// If Server scope is specified, perform detailed validation.
-	var items []string
 	inputServers := strings.Split(strings.TrimSpace(flags.server), ",")
 	for _, inputServer := range inputServers {
-		items = strings.Split(inputServer, ":")
-		if len(items) != 2 {
-			return nil, errors.Errorf("invalid server format: %s", inputServer)
-		}
-		if items[1] != fmt.Sprint(constant.DEFAULT_AGENT_PORT) {
-			return nil, errors.Errorf("unsupported port: %s in emergency case", items[1])
+		inputServerInfo, err := meta.ConvertAddressToAgentInfo(inputServer)
+		if err != nil {
+			return nil, errors.Errorf("invalid server '%s'", inputServerInfo)
 		}
 
 		// Check if the server with the default port is present in the configuration.
 		var found bool
 		for _, server := range serversWithRpcPort {
-			if server[0] == items[0] {
+			if server.GetIp() == inputServerInfo.GetIp() {
 				found = true
 				break
 			}
 		}
 		if !found {
-			return nil, errors.Errorf("server %s is not in the ob conf", items[0])
+			return nil, errors.Errorf("server %s is not in the ob conf", inputServerInfo.GetIp())
 		}
-		servers = append(servers, items[0])
+		servers = append(servers, inputServerInfo.GetIp())
 	}
 	log.Info("servers to start ", servers)
 	return
@@ -226,7 +222,8 @@ func sshStartRemoteAgentForTakeOver(server string, agentPort int, sshFlags SSHFl
 	}
 	defer SSHClient.Close()
 
-	cmd := fmt.Sprintf(`export OB_ROOT_PASSWORD='%s';%s cluster start -s '%s:%d'`, os.Getenv(constant.OB_ROOT_PASSWORD), path.ObshellBinPath(), server, agentPort)
+	agentInfo := meta.NewAgentInfo(server, agentPort)
+	cmd := fmt.Sprintf(`export OB_ROOT_PASSWORD='%s';%s cluster start -s '%s'`, os.Getenv(constant.OB_ROOT_PASSWORD), path.ObshellBinPath(), agentInfo.String())
 	if msg, err := SSHClient.Exec(cmd); err != nil {
 		errCh <- errors.Wrapf(err, "failed to start remote agent on %s, error msg: %s", server, string(msg))
 		return

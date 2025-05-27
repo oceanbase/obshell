@@ -31,17 +31,18 @@ import (
 )
 
 var (
-	HomePath     string
-	Uid          uint32
-	Gid          uint32
-	Pid          = os.Getpid()
-	StartAt      = time.Now().UnixNano()
-	Protocol     = "http"
-	CaCertPool   *x509.CertPool
-	SkipVerify   bool
-	EnableHTTPS  bool
-	Architecture string
-	Os           string
+	HomePath        string
+	Uid             uint32
+	Gid             uint32
+	Pid             = os.Getpid()
+	StartAt         = time.Now().UnixNano()
+	Protocol        = "http"
+	CaCertPool      *x509.CertPool
+	SkipVerify      bool
+	EnableHTTPS     bool
+	Architecture    string
+	Os              string
+	ObproxyHomePath string
 )
 
 var (

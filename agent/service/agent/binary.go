@@ -85,6 +85,9 @@ func (s *AgentService) UpgradeBinary() error {
 		if err := tx.Exec("SET SESSION ob_query_timeout=1000000000").Error; err != nil {
 			return err
 		}
+		if err := tx.Exec("SET SESSION ob_trx_timeout=1000000000").Error; err != nil {
+			return err
+		}
 
 		info := &oceanbase.AgentBinaryInfo{
 			Version:      constant.VERSION,

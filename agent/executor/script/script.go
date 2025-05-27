@@ -174,7 +174,7 @@ func (t *ImportScriptForTenantTask) importByPython(module, scriptPath, sqlfile s
 	}
 
 	t.ExecuteLogf("Use python to import %s.", module)
-	str := fmt.Sprintf("%s -h%s -P%d -t%s -f%s", scriptPath, constant.LOCAL_IP, meta.MYSQL_PORT, t.tenantName, sqlfile)
+	str := fmt.Sprintf("%s -h%s -P%d -t%s -f%s", scriptPath, meta.OCS_AGENT.GetLocalIp(), meta.MYSQL_PORT, t.tenantName, sqlfile)
 	if meta.GetOceanbasePwd() != "" {
 		pwd := strings.ReplaceAll(meta.GetOceanbasePwd(), "'", "'\"'\"'")
 		str = fmt.Sprintf("%s -p'%s'", str, pwd)

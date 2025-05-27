@@ -20,13 +20,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oceanbase/obshell/agent/lib/json"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/crypto"
+	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -46,12 +45,27 @@ type HttpHeader struct {
 	ForwardAgent meta.AgentInfo
 }
 
+func BuildAgentHeader(agentInfo meta.AgentInfoInterface, password string, uri string, isForword bool, keys ...[]byte) map[string]string {
+	auth := buildHeader(agentInfo, password, uri, isForword, keys...)
+	header := map[string]string{
+		constant.OCS_AGENT_HEADER: auth,
+	}
+	return header
+}
+
 func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, keys ...[]byte) map[string]string {
-	headers := make(map[string]string)
+	auth := buildHeader(agentInfo, meta.OCEANBASE_PWD, uri, isForword, keys...)
+	header := map[string]string{
+		constant.OCS_HEADER: auth,
+	}
+	return header
+}
+
+func buildHeader(agentInfo meta.AgentInfoInterface, password string, uri string, isForword bool, keys ...[]byte) string {
 	pk := GetAgentPublicKey(agentInfo)
 	if pk == "" {
-		log.Warnf("no key for agent '%s:%d'", agentInfo.GetIp(), agentInfo.GetPort())
-		return nil
+		log.Warnf("no key for agent '%s'", agentInfo.String())
+		return ""
 	}
 
 	var token string
@@ -68,7 +82,7 @@ func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, 
 		aesKeys = append(keys[0], keys[1]...)
 	}
 	header := HttpHeader{
-		Auth:  meta.OCEANBASE_PWD,
+		Auth:  password,
 		Ts:    fmt.Sprintf("%d", time.Now().Add(getAuthExpiredDuration()).Unix()),
 		Token: token,
 		Uri:   uri,
@@ -83,15 +97,14 @@ func BuildHeader(agentInfo meta.AgentInfoInterface, uri string, isForword bool, 
 	mAuth, err := json.Marshal(header)
 	if err != nil {
 		log.WithError(err).Error("json marshal failed")
-		return nil
+		return ""
 	}
 	auth, err := crypto.RSAEncrypt(mAuth, pk)
 	if err != nil {
 		log.WithError(err).Error("rsa encrypt failed")
-		return nil
+		return ""
 	}
-	headers[constant.OCS_HEADER] = auth
-	return headers
+	return auth
 }
 
 func DecryptHeader(ciphertext string) (HttpHeader, error) {

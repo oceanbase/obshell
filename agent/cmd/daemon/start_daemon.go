@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"net"
 	"os"
-	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -123,22 +122,7 @@ func (d *Daemon) startSocket(socketListener *net.UnixListener) {
 func (d *Daemon) writePid() (err error) {
 	pid := os.Getpid()
 	log.Info("obshell daemon pid is ", pid)
-	return writePid(path.DaemonPidPath(), pid)
-}
-
-// writePid writes the pid to the specified path atomically.
-// If the file already exists, an error is returned.
-func writePid(path string, pid int) (err error) {
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC|syscall.O_CLOEXEC, 0644)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	_, err = fmt.Fprint(f, pid)
-	if err != nil {
-		return err
-	}
-	return nil
+	return process.WritePid(path.DaemonPidPath(), pid)
 }
 
 func (d *Daemon) isForUpgrade() bool {

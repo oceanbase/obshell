@@ -104,6 +104,6 @@ func (synchronizer *taskLogSynchronizer) syncTaskLog(taskLog *sqlite.SubTaskLog)
 
 func postTaskLogToRemote(taskLog task.TaskExecuteLogDTO) error {
 	maintainerAgent := coordinator.OCS_COORDINATOR.Maintainer
-	log.Infof("send task log to %s:%d", maintainerAgent.GetIp(), maintainerAgent.GetPort())
+	log.Infof("send task log to %s", maintainerAgent.String())
 	return secure.SendPostRequest(maintainerAgent, constant.URI_TASK_RPC_PREFIX+constant.URI_LOG, taskLog, nil)
 }

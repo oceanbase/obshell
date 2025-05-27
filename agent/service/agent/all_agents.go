@@ -215,6 +215,25 @@ func (s *AgentService) addAgentToken(tx *gorm.DB, agentInfo meta.AgentInfoInterf
 	}).Create(&ocsToken).Error
 }
 
+func (s *AgentService) AddSingleToken(agentInfo meta.AgentInfoInterface, token string) error {
+	if token == "" {
+		return nil
+	}
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	ocsToken := sqlite.OcsToken{
+		Ip:    agentInfo.GetIp(),
+		Port:  agentInfo.GetPort(),
+		Token: token,
+	}
+	return db.Model(&sqlite.OcsToken{}).Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "ip"}, {Name: "port"}},
+		DoUpdates: clause.AssignmentColumns([]string{"token"}),
+	}).Create(&ocsToken).Error
+}
+
 func (s *AgentService) addAgent(db *gorm.DB, agentInstance meta.Agent, homePath string, os string, arch string, publicKey string) error {
 	agent := &sqlite.AllAgent{
 		Ip:           agentInstance.GetIp(),
@@ -228,20 +247,6 @@ func (s *AgentService) addAgent(db *gorm.DB, agentInstance meta.Agent, homePath 
 		PublicKey:    publicKey,
 	}
 	return db.Create(agent).Error
-}
-
-func (s *AgentService) UpdateAgent(agentInstance meta.Agent, homePath string, os string, arch string, publicKey string, token string) error {
-	db, err := sqlitedb.GetSqliteInstance()
-	if err != nil {
-		return err
-	}
-	return db.Transaction(func(tx *gorm.DB) error {
-		err = s.addAgentToken(tx, agentInstance, token)
-		if err == nil {
-			err = s.updateAgent(tx, agentInstance, homePath, os, arch, publicKey)
-		}
-		return err
-	})
 }
 
 func (s *AgentService) UpdateAgentOBPort(agent meta.AgentInfoInterface, mysqlPort, rpcPort int) error {
@@ -394,7 +399,7 @@ func (s *AgentService) CheckCanBeTakeOverMaster() (bool, error) {
 	}
 
 	if !self_exist {
-		return false, fmt.Errorf("%s:%d not in cluster", meta.OCS_AGENT.GetIp(), meta.RPC_PORT)
+		return false, fmt.Errorf("%s not in cluster", meta.NewAgentInfo(meta.OCS_AGENT.GetIp(), meta.RPC_PORT).String())
 	}
 
 	return other_exist, nil

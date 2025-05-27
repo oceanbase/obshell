@@ -225,7 +225,7 @@ func (c *Coordinator) buildMaintainerByPolling() error {
 		}
 
 		if err := c.getMaintainerbyRpc(&agent); err != nil {
-			log.WithError(err).Warnf("get maintainer from '%s:%d' failed", agent.GetIp(), agent.GetPort())
+			log.WithError(err).Warnf("get maintainer from '%s' failed", agent.String())
 			continue
 		}
 		return nil
@@ -235,7 +235,7 @@ func (c *Coordinator) buildMaintainerByPolling() error {
 
 func (c *Coordinator) getMaintainerbyRpc(agentInfo meta.AgentInfoInterface) error {
 	now := time.Now()
-	log.Infof("try get maintainer rpc request from '%s:%d' to '%s:%d' ", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), agentInfo.GetIp(), agentInfo.GetPort())
+	log.Infof("try get maintainer rpc request from '%s' to '%s' ", meta.OCS_AGENT.String(), agentInfo.String())
 	maintainer := Maintainer{}
 	if err := secure.SendGetRequest(agentInfo, constant.URI_RPC_V1+constant.URI_MAINTAINER, nil, &maintainer); err != nil {
 		return err

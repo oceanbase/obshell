@@ -62,6 +62,7 @@ const (
 	PARAM_EXPECT_MAIN_NEXT_STAGE = "expectedMainNextStage"
 	PARAM_URI                    = "uri"
 	PARAM_HEALTH_CHECK           = "healthCheck"
+	PARAM_PROXYRO_PASSWORD       = "proxyroPassword"
 	// scale out
 	PARAM_EXPECT_DEPLOY_NEXT_STAGE   = "expectedDeployNextStage"
 	PARAM_EXPECT_START_NEXT_STAGE    = "expectedStartNextStage"
@@ -102,6 +103,7 @@ const (
 	PARAM_TENANT_NAME = "tenantName"
 
 	PARAM_TARGET_AGENT_BUILD_VERSION = "targetAgentBuildVersion"
+	PARAM_TARGET_AGENT_PASSWORD      = "targetAgentPassword"
 
 	// for backup
 	PARAM_NEED_BACKUP_TENANT  = "needBackupTenants"
@@ -124,6 +126,9 @@ const (
 	PARAM_HA_HIGH_THREAD_SCORE = "haHighThreadScore"
 	PARAM_RESTORE_SCN          = "restoreScn"
 	PARAM_NEED_DELETE_RP       = "needDeleteRp"
+
+	PARAM_USER_NAME     = "userName"
+	PARAM_USER_PASSWORD = "userPassword"
 
 	DATA_ALL_AGENT_DAG_MAP = "allAgentDagMap"
 	DATA_SKIP_START_TASK   = "skipStartTask"
@@ -155,6 +160,7 @@ const (
 	TASK_NAME_MIGRATE_TABLE                      = "Migrate table"
 	TASK_NAME_MODIFY_PWD                         = "Modify password"
 	TASK_NAME_MIGRATE_DATA                       = "Migrate data"
+	TASK_NAME_CREATE_USER                        = "Create user"
 	TASK_NAME_UPDATE_AGENT                       = "Update all agents"
 	TASK_NAME_INITIALIZE_DATA                    = "Initialize data"
 	TASK_NAME_AGENT_SYNC                         = "Synchronize agent from cluster"
@@ -375,6 +381,7 @@ func RegisterObInitTask() {
 	task.RegisterTaskType(ClusterBoostrapTask{})
 	task.RegisterTaskType(MigrateTableTask{})
 	task.RegisterTaskType(ModifyPwdTask{})
+	task.RegisterTaskType(CreateDefaultUserTask{})
 	task.RegisterTaskType(MigrateDataTask{})
 	task.RegisterTaskType(ConvertFollowerToClusterAgentTask{})
 	task.RegisterTaskType(AgentSyncTask{})

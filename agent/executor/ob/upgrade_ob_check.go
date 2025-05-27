@@ -68,7 +68,7 @@ func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.
 
 func buildObUpgradeCheckTaskContext(param param.UpgradeCheckParam, upgradeRoute []RouteNode, agents []meta.AgentInfo) *task.TaskContext {
 	ctx := task.NewTaskContext()
-	buildNumer, distribution, _ := splitRelease(param.Release)
+	buildNumer, distribution, _ := pkg.SplitRelease(param.Release)
 	taskTime := strconv.Itoa(int(time.Now().UnixMilli()))
 	ctx.SetParam(task.EXECUTE_AGENTS, agents).
 		SetParam(PARAM_ALL_AGENTS, agents).
@@ -133,19 +133,9 @@ func preCheckForObUpgradeCheck(param param.UpgradeCheckParam) (upgradeRoute []Ro
 	return upgradeRoute, nil
 }
 
-func splitRelease(release string) (buildNumber, distribution string, err error) {
-	releaseSplit := strings.Split(release, ".")
-	if len(releaseSplit) < 2 {
-		return "", "", fmt.Errorf("release format %s is illegal", release)
-	}
-	buildNumber = releaseSplit[0]
-	distribution = releaseSplit[len(releaseSplit)-1]
-	return
-}
-
 func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, error) {
 	// Param 'targetRelease' is like '***.**.el7'.
-	targetBuildNumber, targetDistribution, err := splitRelease(targetRelease)
+	targetBuildNumber, targetDistribution, err := pkg.SplitRelease(targetRelease)
 	if err != nil {
 		return nil, err
 	}

@@ -28,18 +28,23 @@ const (
 	DB_OCEANBASE = "oceanbase"
 	DB_OCS       = "ocs"
 
+	DEFAULT_HOST = "%"
+
+	SYS_USER_PROXYRO = "proxyro"
+
 	CONFIG_RPC_PORT   = "rpc_port"
 	CONFIG_MYSQL_PORT = "mysql_port"
 
 	DEFAULT_MYSQL_PORT = 2881
 	DEFAULT_RPC_PORT   = 2882
 
-	CONFIG_HOME_PATH = "homePath"
-	CONFIG_ROOT_PWD  = "rootPwd"
-	CONFIG_DATA_DIR  = "data_dir"
-	CONFIG_REDO_DIR  = "redo_dir"
-	CONFIG_CLOG_DIR  = "clog_dir"
-	CONFIG_SLOG_DIR  = "slog_dir"
+	CONFIG_HOME_PATH      = "homePath"
+	CONFIG_ROOT_PWD       = "rootPwd"
+	CONFIG_AGENT_PASSWORD = "agentRootPwd"
+	CONFIG_DATA_DIR       = "data_dir"
+	CONFIG_REDO_DIR       = "redo_dir"
+	CONFIG_CLOG_DIR       = "clog_dir"
+	CONFIG_SLOG_DIR       = "slog_dir"
 
 	CONFIG_LOCAL_IP  = "local_ip"
 	CONFIG_DEV_NAME  = "devname"

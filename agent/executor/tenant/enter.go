@@ -34,14 +34,24 @@ var (
 	clusterTaskService = taskservice.NewClusterTaskService()
 	unitService        unit.UnitService
 	agentService       agent.AgentService
+
+	// READONLY variables
+	CREATE_TENANT_STATEMENT_VARIABLES = []string{"lower_case_table_names"}
+	// Those variables could not set by sys tenant.
+	VARIAbLES_COLLATION_OR_CHARACTER = []string{
+		"collation_server",
+		"collation_database",
+		"collation_connection",
+		"character_set_server",
+		"character_set_database",
+		"character_set_connection",
+	}
 )
 
 const (
 	// task param name
 	PARAM_CREATE_TENANT                = "createTenant"
-	PARAM_OPTIMIZE_TENANT              = "optimizeTenant"
-	PARAM_CREATE_TENANT_VARIABLES      = "createTenantVariables"
-	PARAM_CREATE_TENANT_PARAMETERS     = "createTenantParameters"
+	PARAM_TENANT_VARIABLES             = "tenantVariables"
 	PARAM_TENANT_NAME                  = "tenantName"
 	PARAM_TENANT_TIME_ZONE             = "timeZone"
 	PARAM_TENANT_ID                    = "tenantId"
@@ -74,6 +84,7 @@ const (
 	TASK_NAME_MODIFY_PRIMARY_ZONE             = "Modify tenant primary zone"
 	TASK_NAME_SET_ROOT_PWD                    = "Set root password"
 	TASK_NAME_SET_TENANT_PARAM                = "Set tenant parameters"
+	TASK_NAME_SET_TENANT_VARIABLE             = "Set tenant variables"
 	TASK_NAME_DROP_RESOURCE_POOL              = "Drop resource pools"
 	TASK_NAME_SET_TENANT_PARAMETER            = "Set tenant parameter"
 	TASK_NAME_DROP_TENANT                     = "Drop tenant"
@@ -136,7 +147,7 @@ func RegisterTenantTask() {
 	task.RegisterTaskType(SetRootPwdTask{})
 	task.RegisterTaskType(SetTenantTimeZoneTask{})
 	task.RegisterTaskType(SetTenantParamterTask{})
-	task.RegisterTaskType(OptimizeTenantTask{})
+	task.RegisterTaskType(SetTenantVariableTask{})
 	task.RegisterTaskType(DropTenantTask{})
 	task.RegisterTaskType(RecycleTenantTask{})
 	task.RegisterTaskType(BatchCreateResourcePoolTask{})

@@ -28,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
+	"github.com/oceanbase/obshell/agent/secure"
 )
 
 var (
@@ -75,7 +76,47 @@ func (s *AgentService) InitAgent() error {
 		}
 	default:
 	}
+
+	if err := s.initObproxy(); err != nil {
+		return err
+	}
+
 	meta.OCS_AGENT = ocsAgent
+	return nil
+}
+
+// initObproxy will initialize obproxy info of the agent.
+func (s *AgentService) initObproxy() (err error) {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return
+	}
+
+	if err = db.Model(&sqlite.ObproxyInfo{}).
+		Select("value").
+		Where("name = ?", constant.OBPROXY_INFO_HOME_PATH).
+		Scan(&meta.OBPROXY_HOME_PATH).Error; err != nil {
+		return
+	}
+
+	if err = db.Model(&sqlite.ObproxyInfo{}).
+		Select("value").
+		Where("name = ?", constant.OBPROXY_INFO_SQL_PORT).
+		Scan(&meta.OBPROXY_SQL_PORT).Error; err != nil {
+		return
+	}
+
+	encryptedSysPwd := ""
+	if err = db.Model(&sqlite.ObproxyInfo{}).
+		Select("value").
+		Where("name = ?", constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD).
+		Scan(&encryptedSysPwd).Error; err != nil {
+		return err
+	}
+	if meta.OBPROXY_SYS_PWD, err = secure.Decrypt(encryptedSysPwd); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -106,11 +147,17 @@ func (agentService *AgentService) InitializeAgentStatus() (err error) {
 	}
 	if err = db.Create(&sqlite.OcsInfo{Name: constant.OCS_INFO_STATUS, Value: strconv.Itoa(task.NOT_UNDER_MAINTENANCE)}).Error; err != nil {
 		sqliteErr, ok := err.(sqlite3.Error)
-		if ok && sqliteErr.Code == sqlite3.ErrConstraint {
-			return nil
+		if !ok || sqliteErr.Code != sqlite3.ErrConstraint {
+			return
 		}
 	}
-	return
+	if err = db.Create(&sqlite.ObproxyInfo{Name: constant.OCS_INFO_STATUS, Value: strconv.Itoa(task.NOT_UNDER_MAINTENANCE)}).Error; err != nil {
+		sqliteErr, ok := err.(sqlite3.Error)
+		if !ok || sqliteErr.Code != sqlite3.ErrConstraint {
+			return
+		}
+	}
+	return nil
 }
 
 func (s *AgentService) getAgentInfo() (agentInfo meta.AgentInstance, err error) {

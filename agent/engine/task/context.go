@@ -58,7 +58,7 @@ func (ctx *TaskContext) GetData(key string) interface{} {
 }
 
 func (ctx *TaskContext) GetAgentData(agent meta.AgentInfoInterface, key string) interface{} {
-	return ctx.GetAgentDataByAgentKey(fmt.Sprintf("%s:%d", agent.GetIp(), agent.GetPort()), key)
+	return ctx.GetAgentDataByAgentKey(agent.String(), key)
 }
 
 func (ctx *TaskContext) GetAgentDataByAgentKey(agentKey string, key string) interface{} {

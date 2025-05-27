@@ -43,6 +43,15 @@ func (s *ObserverService) GetObConfigByName(name string) (config sqlite.ObConfig
 	return
 }
 
+func (s *ObserverService) GetObConfigValueByName(name string, val interface{}) (err error) {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return
+	}
+	err = db.Model(&sqlite.ObConfig{}).Select("value").Where("name = ?", name).Scan(val).Error
+	return
+}
+
 func (s *ObserverService) GetOBParatemerByName(name string, value interface{}) (err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {

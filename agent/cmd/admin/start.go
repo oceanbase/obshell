@@ -130,8 +130,12 @@ func isDaemonRunning() (pid int32, res bool) {
 	if err != nil {
 		return 0, false
 	}
-	if _, err = proc.NewProcess(pid); err != nil {
+	if pidInfo, err := proc.NewProcess(pid); err != nil {
 		return pid, false
+	} else {
+		if name, err := pidInfo.Name(); err == nil && name != constant.PROC_OBSHELL {
+			return pid, false
+		}
 	}
 	return pid, true
 }

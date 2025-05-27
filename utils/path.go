@@ -18,6 +18,7 @@ package utils
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -66,4 +67,38 @@ func CheckPathExistAndValid(path string) error {
 		return errors.Wrapf(err, "path %s not exist", path)
 	}
 	return CheckPathValid(path)
+}
+
+// CheckDirExists checks if the provided filesystem path exists and is a dir.
+// It returns an error if the path does not exist or if the path is not a dir.
+func CheckDirExists(dir string) error {
+	fileInfo, err := os.Stat(dir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return err
+		}
+		return errors.Wrapf(err, "failed to stat path %s", dir)
+	}
+
+	if !fileInfo.IsDir() {
+		return errors.Errorf("path '%s' is not a directory", dir)
+	}
+	return nil
+}
+
+func CheckDirEmpty(path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return errors.Wrapf(err, "failed to open directory %s", path)
+	}
+	defer dir.Close()
+
+	_, err = dir.Readdir(1)
+	if err == io.EOF {
+		return nil // Directory is empty
+	}
+	if err != nil {
+		return errors.Wrapf(err, "failed to read directory %s", path)
+	}
+	return errors.Errorf("directory '%s' is not empty", path)
 }

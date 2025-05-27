@@ -33,6 +33,7 @@ type Node struct {
 	nodeType   string
 	upStream   *Node
 	downStream *Node
+	dagId      int
 	TaskInfo
 	ctx *TaskContext
 }
@@ -43,6 +44,10 @@ func (node *Node) GetTaskType() reflect.Type {
 
 func (node *Node) GetNodeType() string {
 	return node.nodeType
+}
+
+func (node *Node) GetDagId() int {
+	return node.dagId
 }
 
 func (node *Node) GetSubTasks() []ExecutableTask {
@@ -166,12 +171,13 @@ func NewNodeWithContext(task ExecutableTask, paralle bool, ctx *TaskContext) *No
 	return node
 }
 
-func NewNodeWithId(id int64, name string, nodeType string, state int, operator int, structName string, ctx *TaskContext, isLocalTask bool, startTime time.Time, endTime time.Time) *Node {
+func NewNodeWithId(id int64, name string, dagId int, nodeType string, state int, operator int, structName string, ctx *TaskContext, isLocalTask bool, startTime time.Time, endTime time.Time) *Node {
 	node := &Node{
 		taskType: TASK_TYPE[structName],
 		subtasks: make([]ExecutableTask, 0),
 		nodeType: nodeType,
 		ctx:      ctx,
+		dagId:    dagId,
 		TaskInfo: TaskInfo{
 			id:          id,
 			name:        name,

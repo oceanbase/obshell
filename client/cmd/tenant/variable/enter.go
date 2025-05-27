@@ -42,6 +42,8 @@ const (
 
 	// obshell tenant variable set
 	CMD_SET = "set"
+
+	FLAG_TENANT_PASSWORD = "tenant_password"
 )
 
 func NewVariableCmd() *cobra.Command {
@@ -112,6 +114,7 @@ func showVariable(cmd *cobra.Command, tenant string, variable string) error {
 
 func newSetCmd() *cobra.Command {
 	var verbose bool
+	var tenantPassword string
 	setCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SET,
 		Short: "Set speciaic variables.",
@@ -130,7 +133,7 @@ func newSetCmd() *cobra.Command {
 			cmd.SilenceUsage = true
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := setVariable(cmd, args[0], args[1]); err != nil {
+			if err := setVariable(cmd, args[0], args[1], tenantPassword); err != nil {
 				stdio.LoadFailedWithoutMsg()
 				stdio.Error(err.Error())
 				return err
@@ -141,17 +144,19 @@ func newSetCmd() *cobra.Command {
 	})
 	setCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <name=value>"}
 	setCmd.VarsPs(&verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
+	setCmd.VarsPs(&tenantPassword, []string{FLAG_TENANT_PASSWORD}, "", "Tenant password", false)
 	return setCmd.Command
 }
 
-func setVariable(cmd *cobra.Command, tenant string, str string) error {
+func setVariable(cmd *cobra.Command, tenant string, str string, tenantPassword string) error {
 	variables, err := parameter.BuildVariableOrParameterMap(str)
 	if err != nil {
 		cmd.SilenceUsage = false
 		return err
 	}
 	params := param.SetTenantVariablesParam{
-		Variables: variables,
+		Variables:      variables,
+		TenantPassword: tenantPassword,
 	}
 	stdio.StartLoading("set tenant variables")
 	if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenant+constant.URI_VARIABLES, params, nil); err != nil {

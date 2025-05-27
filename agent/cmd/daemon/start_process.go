@@ -120,7 +120,7 @@ func (s *Server) startServerProc() (err error) {
 }
 
 func (s *Server) writePid() error {
-	return writePid(path.ObshellPidPath(), s.GetPid())
+	return process.WritePid(path.ObshellPidPath(), s.GetPid())
 }
 
 func (s *Server) handleProcExited(procState process.ProcState, count *int) (err error) {

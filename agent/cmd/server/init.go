@@ -18,7 +18,7 @@ package server
 
 import (
 	"fmt"
-	"os"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -31,6 +31,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/agent"
 	"github.com/oceanbase/obshell/agent/executor/ob"
+	"github.com/oceanbase/obshell/agent/executor/obproxy"
 	"github.com/oceanbase/obshell/agent/executor/pool"
 	"github.com/oceanbase/obshell/agent/executor/recyclebin"
 	"github.com/oceanbase/obshell/agent/executor/script"
@@ -98,14 +99,12 @@ func (a *Agent) initSqlite() (err error) {
 // initServerForUpgrade will only start the unix socket service  When upgrading.
 func (a *Agent) initServerForUpgrade() error {
 	log.Info("init local server [upgrade mode]")
-	serverConfig := config.ServerConfig{
-		Ip:          "0.0.0.0",
-		Port:        meta.OCS_AGENT.GetPort(),
-		Address:     fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
-		RunDir:      path.RunDir(),
-		UpgradeMode: true,
+	serverConfig, err := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), true)
+	if err != nil {
+		return err
 	}
-	a.server = web.NewServerOnlyLocal(config.DebugMode, serverConfig)
+
+	a.server = web.NewServerOnlyLocal(config.DebugMode, *serverConfig)
 	socketListener, err := a.server.NewUnixListener()
 	if err != nil {
 		return err
@@ -227,14 +226,9 @@ func (a *Agent) checkAgentInfo() {
 // initServer will only initialize the Server and will not start the service.
 func (a *Agent) initServer() {
 	log.Info("init server")
-	serverConfig := config.ServerConfig{
-		Ip:      "0.0.0.0",
-		Port:    meta.OCS_AGENT.GetPort(),
-		Address: fmt.Sprintf("0.0.0.0:%d", meta.OCS_AGENT.GetPort()),
-		RunDir:  path.RunDir(),
-	}
+	serverConfig, _ := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), false)
 	log.Infof("server config is %v", serverConfig)
-	a.server = web.NewServer(config.DebugMode, serverConfig)
+	a.server = web.NewServer(config.DebugMode, *serverConfig)
 	a.startChan = make(chan bool, 1)
 }
 
@@ -253,6 +247,7 @@ func (a *Agent) initTask() {
 	recyclebin.RegisterRecyclebinTask()
 	task.RegisterTaskType(script.ImportScriptForTenantTask{})
 	pool.RegisterPoolTask()
+	obproxy.RegisterTaskType()
 }
 
 // Check if the ob config file exists.
@@ -267,12 +262,16 @@ func (a *Agent) isUpgradeMode() bool {
 	if a.OldServerPid != 0 {
 		// If the old agent is running in the same directory as the new agent,
 		// it is considered an upgrade.
-		cwdDir, err := os.Readlink(fmt.Sprintf("/proc/%d/cwd", a.OldServerPid))
+		cwdDir, err := filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/cwd", a.OldServerPid))
+		if err != nil {
+			return false
+		}
+		curDir, err := filepath.EvalSymlinks(global.HomePath)
 		if err != nil {
 			return false
 		}
 		log.Infof("the cwd of %d is %s", a.OldServerPid, cwdDir)
-		if global.HomePath == cwdDir {
+		if curDir == cwdDir {
 			log.Info("The obshell is in upgrade mode.")
 			a.upgradeMode = true
 			// Unset root password env to avoid cover sqlite when upgrade (agent restart)

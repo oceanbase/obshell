@@ -52,9 +52,14 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG,
 			constant.URI_API_V1+constant.URI_TENANT_GROUP+constant.URI_RESTORE,
 			constant.URI_API_V1+constant.URI_RESTORE+constant.URI_WINDOWS,
+			constant.URI_API_V1+constant.URI_INIT,
 			constant.URI_TASK_RPC_PREFIX+constant.URI_SUB_TASK,
 			constant.URI_API_V1+constant.URI_TENANT_GROUP,
 			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD,
+			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_USER,
+			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME,
+			constant.URI_OBPROXY_API_PREFIX,
+			constant.URI_TENANT_API_PREFIX+constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES,
 		),
 		common.SetContentType,
 	)
@@ -107,6 +112,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	InitTenantRoutes(v1, isLocalRoute)
 	InitBackupRoutes(v1, isLocalRoute)
 	InitRestoreRoutes(v1, isLocalRoute)
+	InitObproxyRoutes(v1, isLocalRoute)
 
 	// ob routes
 	ob.POST(constant.URI_INIT, obInitHandler)
@@ -126,6 +132,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	agent.POST(constant.URI_REMOVE, agentRemoveHandler)
 	agent.POST(constant.URI_UPGRADE, agentUpgradeHandler)
 	agent.POST(constant.URI_UPGRADE+constant.URI_CHECK, agentUpgradeCheckHandler)
+	agent.POST(constant.URI_PASSWORD, agentSetPasswordHandler)
 
 	// agents routes
 	agents.GET(constant.URI_STATUS, GetAllAgentStatus(s))

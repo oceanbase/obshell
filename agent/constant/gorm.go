@@ -18,9 +18,11 @@ package constant
 
 const (
 	// source config default value
-	DB_USERNAME         = "root"
-	LOCAL_IP            = "127.0.0.1"
-	DB_DEFAILT_TIMEOUT  = 10
+	DB_USERNAME          = "root"
+	DB_PROXYSYS_USERNAME = "root@proxysys"
+	LOCAL_IP             = "127.0.0.1"
+	LOCAL_IP_V6          = "::1"
+
 	DB_DEFAULT_CHARSET  = "utf8mb4"
 	DB_DEFAULT_LOCATION = "Local"
 

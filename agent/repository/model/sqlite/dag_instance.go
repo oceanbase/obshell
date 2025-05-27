@@ -19,6 +19,7 @@ package sqlite
 import (
 	"time"
 
+	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -42,9 +43,9 @@ type DagInstance struct {
 }
 
 func (d *DagInstance) ToBO() *bo.DagInstance {
-	MaintenanceType := 0
+	MaintenanceType := task.NOT_UNDER_MAINTENANCE
 	if d.IsMaintenance {
-		MaintenanceType = 2
+		MaintenanceType = task.GLOBAL_MAINTENANCE
 	}
 	return &bo.DagInstance{
 		Id:                d.Id,

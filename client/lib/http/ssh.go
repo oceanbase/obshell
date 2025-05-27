@@ -17,16 +17,17 @@
 package http
 
 import (
-	"fmt"
 	"io"
 	"os"
 	osuser "os/user"
 	"path/filepath"
 	"strconv"
 
-	"github.com/oceanbase/obshell/utils"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/ssh"
+
+	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/utils"
 )
 
 const DEFALUT_SSH_PORT = 22
@@ -218,5 +219,7 @@ func newClient(config *SSHClient, auth ...ssh.AuthMethod) (*ssh.Client, error) {
 		Auth:            auth,
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	return ssh.Dial("tcp", fmt.Sprintf("%s:%d", config.Host, config.Port), conf)
+
+	server := meta.NewAgentInfo(config.Host, config.Port)
+	return ssh.Dial("tcp", server.String(), conf)
 }

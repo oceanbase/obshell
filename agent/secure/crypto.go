@@ -88,19 +88,19 @@ func GetAgentPublicKey(agent meta.AgentInfoInterface) string {
 	pk, err := getPublicKeyByAgentInfo(agent)
 	if err != nil {
 		// Need to query sqlite instead.
-		log.WithError(err).Errorf("query oceanbase '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+		log.WithError(err).Errorf("query oceanbase '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 	}
 	if pk != "" {
 		err = updateAgentPublicKey(agent, pk)
 		if err != nil {
-			log.WithError(err).Errorf("update sqlite '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+			log.WithError(err).Errorf("update sqlite '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 		}
 		// Although backup failed, the key should be returned.
 		return pk
 	}
 	pk, err = getPublicKeyByAgentInfo(agent)
 	if err != nil {
-		log.WithError(err).Errorf("query sqlite '%s' for '%s:%d' failed", constant.TABLE_ALL_AGENT, agent.GetIp(), agent.GetPort())
+		log.WithError(err).Errorf("query sqlite '%s' for '%s' failed", constant.TABLE_ALL_AGENT, agent.String())
 	}
 	if pk != "" {
 		return pk
@@ -113,12 +113,12 @@ func GetAgentPublicKey(agent meta.AgentInfoInterface) string {
 	return ""
 }
 
-// LoadPassword will load password from environment variable or sqlite.
-func LoadPassword(password *string) error {
+// LoadOceanbasePassword will load password from environment variable or sqlite.
+func LoadOceanbasePassword(password *string) error {
 	if password == nil {
 		rootPwd, isSet := syscall.Getenv(constant.OB_ROOT_PASSWORD)
 		if !isSet {
-			return CheckPasswordInSqlite()
+			return CheckObPasswordInSqlite()
 		}
 		log.Info("get password from environment variable")
 		password = &rootPwd
@@ -129,11 +129,33 @@ func LoadPassword(password *string) error {
 	// clear root password, avoid to cover sqlite when agent restart
 	syscall.Unsetenv(constant.OB_ROOT_PASSWORD)
 	meta.SetOceanbasePwd(*password)
-	go dumpTempPassword(*password)
+	go dumpTempObPassword(*password)
 	return nil
 }
 
-func dumpTempPassword(pwd string) {
+func LoadAgentPassword() error {
+	var pwd string
+	err := getOCSInfo(constant.CONFIG_AGENT_PASSWORD, &pwd)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			log.Info("no password in sqlite")
+			return nil
+		}
+		return err
+	}
+	// Decrypt password
+	if pwd != "" {
+		pwd, err = Crypter.Decrypt(pwd)
+		if err != nil {
+			return err
+		}
+	}
+	meta.AGENT_PWD.SetPassword(pwd)
+	return nil
+
+}
+
+func dumpTempObPassword(pwd string) {
 	log.Info("current password is temporary, will dump it into sqlite")
 	for meta.OCEANBASE_PWD == pwd {
 		if oceanbase.HasOceanbaseInstance() {
@@ -148,9 +170,9 @@ func dumpTempPassword(pwd string) {
 	}
 }
 
-// CheckPasswordInSqlite will try connecting ob using password stored in sqlite.
-func CheckPasswordInSqlite() error {
-	log.Info("retore password from sqlite")
+// CheckObPasswordInSqlite will try connecting ob using password stored in sqlite.
+func CheckObPasswordInSqlite() error {
+	log.Info("retore password of root@sys from sqlite")
 	password, err := getCipherPassword()
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -184,6 +206,19 @@ func dumpPassword() error {
 		passwrod = cipherPassword
 	}
 	return updateOBConifg(constant.CONFIG_ROOT_PWD, passwrod)
+}
+
+func dumpObproxyPassword() error {
+	passwrod := meta.OBPROXY_SYS_PWD
+	if meta.OBPROXY_SYS_PWD != "" {
+		cipherPassword, err := Crypter.Encrypt(meta.OBPROXY_SYS_PWD)
+		if err != nil {
+			log.WithError(err).Error("encrypt password failed")
+			return err
+		}
+		passwrod = cipherPassword
+	}
+	return updateObproxyConfig(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, passwrod)
 }
 
 func EncryptPwdInObConfigs(configs []sqlite.ObConfig) (err error) {
