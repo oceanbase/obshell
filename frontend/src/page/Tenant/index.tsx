@@ -459,7 +459,7 @@ const Tenant: React.FC<TenantProps> = ({
         data-aspm-expo
         type="primary"
         onClick={() => {
-          history.push('/tenant/new');
+          history.push('/tenantCreate/new');
         }}
       >
         {formatMessage({ id: 'ocp-express.page.Tenant.NewTenant', defaultMessage: '新建租户' })}
@@ -494,7 +494,7 @@ const Tenant: React.FC<TenantProps> = ({
               data-aspm-expo
               type="primary"
               onClick={() => {
-                history.push('/tenant/new');
+                history.push('/tenantCreate/new');
               }}
             >
               {formatMessage({

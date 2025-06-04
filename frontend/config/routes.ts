@@ -34,7 +34,8 @@ export default [
         spmb: 'b55555',
       },
       {
-        path: 'tenant/new',
+        // 避免与租户详情冲突
+        path: 'tenantCreate/new',
         component: 'Tenant/New',
         name: '新建租户',
         spmb: 'b55554',
