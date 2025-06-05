@@ -23,7 +23,7 @@ import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
-import { tenantModifyPassword,persistTenantRootPassword } from '@/service/obshell/tenant';
+import { tenantModifyPassword, persistTenantRootPassword } from '@/service/obshell/tenant';
 
 export interface TenantAdminPasswordModalProps {
   onSuccess: () => void;
@@ -69,9 +69,12 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     },
   });
 
-  const { run: createOrReplacePassword, loading:persistTenantRootPasswordLoading } = useRequest(persistTenantRootPassword, {
-    manual: true,
-  });
+  const { run: createOrReplacePassword, loading: persistTenantRootPasswordLoading } = useRequest(
+    persistTenantRootPassword,
+    {
+      manual: true,
+    }
+  );
 
   const handleSubmit = () => {
     validateFields().then(values => {
@@ -87,12 +90,14 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
         }
       );
 
-      createOrReplacePassword({
-        name: tenantData?.tenantName,
-
-      },{
-        password: newPassword,
-      });
+      createOrReplacePassword(
+        {
+          name: tenantData?.tenantName,
+        },
+        {
+          password: newPassword,
+        }
+      );
     });
   };
 
@@ -127,16 +132,18 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
         preserve={false}
         {...MODAL_FORM_ITEM_LAYOUT}
       >
-        <Form.Item
-          label={formatMessage({
-            id: 'ocp-express.src.component.TenantAdminPasswordModal.Tenant',
-            defaultMessage: '租户',
-          })}
-          name="tenantName"
-          initialValue={tenantData?.tenantName}
-        >
-          <MyInput disabled={true} />
-        </Form.Item>
+        {tenantData?.tenantName && (
+          <Form.Item
+            label={formatMessage({
+              id: 'ocp-express.src.component.TenantAdminPasswordModal.Tenant',
+              defaultMessage: '租户',
+            })}
+            name="tenantName"
+            initialValue={tenantData?.tenantName}
+          >
+            <MyInput disabled={true} />
+          </Form.Item>
+        )}
         <Form.Item
           label={formatMessage({
             id: 'ocp-express.src.component.TenantAdminPasswordModal.Password',
