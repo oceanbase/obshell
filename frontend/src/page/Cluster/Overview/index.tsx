@@ -118,11 +118,6 @@ const Detail: React.FC<DetailProps> = ({
 
   useRequest(getStatus, {
     manual: false,
-    onSuccess: res => {
-      console.log('res', res);
-      if (res.successful) {
-      }
-    },
   });
 
   useRafInterval(
