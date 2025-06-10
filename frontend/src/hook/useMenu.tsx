@@ -108,10 +108,13 @@ export const useBasicMenu = (): MenuItem[] => {
             defaultMessage: '软件包管理',
           }),
         },
-        // {
-        //   link: `/property`,
-        //   title: '系统参数',
-        // },
+        {
+          link: `/task`,
+          title: formatMessage({
+            id: 'ocp-v2.src.hook.useMenu.MissionCenter',
+            defaultMessage: '任务中心',
+          }),
+        },
       ],
     },
   ];

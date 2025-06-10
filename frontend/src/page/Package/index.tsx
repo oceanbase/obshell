@@ -84,7 +84,7 @@ const PackagePage: React.FC<PackageProps> = ({
   const columns = [
     {
       title: formatMessage({
-        id: 'ocp-v2.page.Package.PackageName',
+        id: 'ocp-express.page.Package.PackageName',
         defaultMessage: '软件包名',
       }),
       dataIndex: 'name',
@@ -95,7 +95,7 @@ const PackagePage: React.FC<PackageProps> = ({
 
     // {
     //   title: formatMessage({
-    //     id: "ocp-v2.page.Package.Type",
+    //     id: "ocp-express.page.Package.Type",
     //     defaultMessage: "类型",
     //   }),
     //   dataIndex: "type",
@@ -109,7 +109,7 @@ const PackagePage: React.FC<PackageProps> = ({
 
     {
       title: formatMessage({
-        id: 'ocp-v2.page.Package.Version',
+        id: 'ocp-express.page.Package.Version',
         defaultMessage: '版本',
       }),
       dataIndex: 'version',
@@ -126,7 +126,7 @@ const PackagePage: React.FC<PackageProps> = ({
 
     // {
     //   title: formatMessage({
-    //     id: "ocp-v2.page.Package.System",
+    //     id: "ocp-express.page.Package.System",
     //     defaultMessage: "系统",
     //   }),
     //   dataIndex: "operatingSystem",
@@ -138,7 +138,7 @@ const PackagePage: React.FC<PackageProps> = ({
 
     {
       title: formatMessage({
-        id: 'ocp-v2.page.Package.HardwareArchitecture',
+        id: 'ocp-express.page.Package.HardwareArchitecture',
         defaultMessage: '硬件架构',
       }),
 
@@ -151,10 +151,7 @@ const PackagePage: React.FC<PackageProps> = ({
     },
 
     {
-      title: formatMessage({
-        id: 'ocp-v2.page.Package.SizeMb',
-        defaultMessage: '大小（MB）',
-      }),
+      title: formatMessage({ id: 'ocp-v2.page.Package.SizeMb', defaultMessage: '大小（MB）' }),
       dataIndex: 'payload_size',
       // 后端返回的是 bit
       render: (text: number) => <span>{byte2MB(text)}</span>,
@@ -172,10 +169,7 @@ const PackagePage: React.FC<PackageProps> = ({
     },
 
     {
-      title: formatMessage({
-        id: 'ocp-v2.page.Package.UploadTime',
-        defaultMessage: '上传时间',
-      }),
+      title: formatMessage({ id: 'ocp-v2.page.Package.UploadTime', defaultMessage: '上传时间' }),
       dataIndex: 'gmt_modify',
       width: 250,
       sorter: (a, b) => sortByMoment(a, b, 'gmt_modify'),
@@ -190,7 +184,7 @@ const PackagePage: React.FC<PackageProps> = ({
         title: (
           <ContentWithReload
             content={formatMessage({
-              id: 'ocp-v2.page.Package.SoftwarePackage',
+              id: 'ocp-express.page.Package.SoftwarePackage',
               defaultMessage: '软件包',
             })}
             spin={loading}

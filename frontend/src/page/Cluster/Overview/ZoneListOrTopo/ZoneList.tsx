@@ -132,7 +132,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
     const { servers } = record;
     const expandColumns = [
       {
-        title: 'OBServer IP',
+        title: 'IP',
         dataIndex: 'ip',
         render: (text: string, expandedRecord: API.Server) => {
           return text;

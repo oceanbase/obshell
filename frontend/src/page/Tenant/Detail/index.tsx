@@ -245,13 +245,11 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
                     {tenantData?.tenant_name}
                   </div>
                   <div>
-                    {formatMessage(
-                      {
-                        id: 'ocp-express.Tenant.Detail.tenantNametenantName',
-                        defaultMessage: '租户 ID：{tenantId}',
-                      },
-                      { tenantId: tenantData?.tenant_id }
-                    )}
+                    {formatMessage({
+                      id: 'ocp-v2.Tenant.Detail.TenantId',
+                      defaultMessage: '租户 ID：',
+                    })}
+                    {tenantData?.tenant_id}
                   </div>
                 </>
               }

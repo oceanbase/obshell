@@ -169,7 +169,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
         <Form.Item
           label={formatMessage({
             id: 'ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion',
-            defaultMessage: 'OBShell Agent 版本',
+            defaultMessage: 'obshell Agent 版本',
           })}
           name="fileName"
           rules={[
@@ -177,7 +177,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
               required: true,
               message: formatMessage({
                 id: 'ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent',
-                defaultMessage: '请选择 OBShell Agent 版本',
+                defaultMessage: '请选择 obshell Agent 版本',
               }),
             },
           ]}

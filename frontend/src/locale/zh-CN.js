@@ -7910,8 +7910,8 @@ export default {
   "ocp-v2.Overview.UpgradeAgentDrawer.Upgrade": "升级",
   "ocp-v2.Overview.UpgradeAgentDrawer.InstalledVersion": "已安装版本",
   "ocp-v2.Overview.UpgradeAgentDrawer.HardwareArchitecture": "硬件架构",
-  "ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion": "OBShell Agent 版本",
-  "ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent": "请选择 OBShell Agent 版本",
+  "ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion": "obshell Agent 版本",
+  "ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent": "请选择 obshell Agent 版本",
   "ocp-v2.Overview.UpgradeDrawer.VersionUpgradeTaskSubmittedSuccessfully": "版本升级的任务提交成功",
   "ocp-v2.Overview.UpgradeDrawer.UpgradeVersion": "升级版本",
   "ocp-v2.Overview.UpgradeDrawer.AreYouSureYouWant": "确定要升级吗？",
@@ -7993,6 +7993,9 @@ export default {
   "ocp-v2.Detail.Database.TenantIsLocked": "租户已被锁定",
   "ocp-v2.Detail.User.TenantIsLocked": "租户已被锁定",
   "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "当前支持全功能型副本和只读型副本",
-  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "总: {labelResult}"
-
+  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "总: {labelResult}",
+  "ocp-v2.src.hook.useMenu.MissionCenter": "任务中心",
+  "ocp-v2.page.Package.SizeMb": "大小（MB）",
+  "ocp-v2.page.Package.UploadTime": "上传时间",
+  "ocp-v2.Tenant.Detail.TenantId": "租户 ID：",
 };

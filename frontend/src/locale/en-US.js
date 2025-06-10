@@ -6051,8 +6051,8 @@ export default {
   "ocp-v2.Overview.UpgradeAgentDrawer.Upgrade": "Upgrade",
   "ocp-v2.Overview.UpgradeAgentDrawer.InstalledVersion": "Installed version",
   "ocp-v2.Overview.UpgradeAgentDrawer.HardwareArchitecture": "Hardware Architecture",
-  "ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion": "OBShell Agent Version",
-  "ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent": "Please select the OBShell Agent version",
+  "ocp-v2.Overview.UpgradeAgentDrawer.ObshellAgentVersion": "obshell Agent Version",
+  "ocp-v2.Overview.UpgradeAgentDrawer.PleaseSelectTheObshellAgent": "Please select the obshell Agent version",
   "ocp-v2.Overview.UpgradeDrawer.VersionUpgradeTaskSubmittedSuccessfully": "Version upgrade task submitted successfully",
   "ocp-v2.Overview.UpgradeDrawer.UpgradeVersion": "Upgrade Version",
   "ocp-v2.Overview.UpgradeDrawer.AreYouSureYouWant": "Are you sure you want to upgrade?",
@@ -6134,5 +6134,9 @@ export default {
   "ocp-v2.Detail.Database.TenantIsLocked": "Tenant is locked",
   "ocp-v2.Detail.User.TenantIsLocked": "Tenant is locked",
   "ocp-v2.Tenant.New.FullFunctionalAndReadOnly": "Full-functional and read-only replicas are currently supported",
-  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "Total: {labelResult}"
+  "ocp-v2.Overview.TenantResourceTop3.TotalLabelresult": "Total: {labelResult}",
+  "ocp-v2.src.hook.useMenu.MissionCenter": "Mission Center",
+  "ocp-v2.page.Package.SizeMb": "Size (MB)",
+  "ocp-v2.page.Package.UploadTime": "Upload time",
+  "ocp-v2.Tenant.Detail.TenantId": "Tenant ID:",
 };
