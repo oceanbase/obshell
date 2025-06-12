@@ -31,6 +31,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/pool"
 	"github.com/oceanbase/obshell/agent/executor/script"
 	"github.com/oceanbase/obshell/agent/executor/zone"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/meta"
 	tenantservice "github.com/oceanbase/obshell/agent/service/tenant"
@@ -173,6 +174,13 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 			return errors.New("Incorrect argument type to variable 'time_zone'")
 		}
 		delete(param.Variables, constant.VARIABLE_TIME_ZONE)
+	}
+
+	obVersion, isCommunityEdition, _ := binary.GetMyOBVersion() // ignore the error
+	if obVersion > constant.OB_VERSION_4_3_5_2 && isCommunityEdition {
+		if _, ok := param.Parameters[constant.PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY]; !ok {
+			param.Parameters[constant.PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY] = "ALL"
+		}
 	}
 
 	zone.RenderZoneParams(param.ZoneList)

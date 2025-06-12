@@ -115,6 +115,8 @@ const (
 
 	// env
 	OB_ROOT_PASSWORD = "OB_ROOT_PASSWORD"
+
+	OB_VERSION_4_3_5_2 = "4.3.5.2"
 )
 
 const (

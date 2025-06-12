@@ -26,8 +26,6 @@ import (
 )
 
 const (
-	OB_VERSION_4_3_5_2 = "4.3.5.2"
-
 	SYS_STAT_MEMORY_SIZE_STAT_ID  = 140002
 	SYS_STAT_MEMORY_USAGE_STAT_ID = 140003
 	SYS_STAT_MAX_CPU_STAT_ID      = 140005
@@ -387,7 +385,6 @@ func RegisterObInitTask() {
 	task.RegisterTaskType(ConvertFollowerToClusterAgentTask{})
 	task.RegisterTaskType(AgentSyncTask{})
 	task.RegisterTaskType(ConvertMasterToClusterAgentTask{})
-	task.RegisterTaskType(PostInitClusterTask{})
 }
 
 func RegisterObStartTask() {
