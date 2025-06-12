@@ -26,8 +26,8 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/driver"
+	"github.com/oceanbase/obshell/agent/repository/logger"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -45,7 +45,7 @@ func LoadObproxyInstance() (db *gorm.DB, err error) {
 	dsConfig := config.NewObproxyDataSourceConfig().SetPort(meta.OBPROXY_SQL_PORT).SetPassword(meta.OBPROXY_SYS_PWD)
 
 	gormConfig := gorm.Config{
-		Logger: logger.Default.LogMode(dsConfig.GetLoggerLevel()),
+		Logger: logger.OBDefault.LogMode(dsConfig.GetLoggerLevel()),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		}}
@@ -74,7 +74,7 @@ func LoadObproxyInstanceForHealthCheck(dsConfig *config.ObDataSourceConfig) (err
 
 func LoadTempObproxyInstance(dsConfig *config.ObDataSourceConfig) (db *gorm.DB, err error) {
 	gormConfig := gorm.Config{
-		Logger: logger.Default.LogMode(dsConfig.GetLoggerLevel()),
+		Logger: logger.OBDefault.LogMode(dsConfig.GetLoggerLevel()),
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		}}
