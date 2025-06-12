@@ -30,7 +30,6 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
-	"github.com/oceanbase/obshell/agent/lib/system"
 )
 
 func (d *Daemon) ListenSignal() {
@@ -79,15 +78,24 @@ func (d *Daemon) cleanup() {
 			os.Remove(sockPath)
 		}
 	}
+	if !IsDaemonRunning() {
+		os.Remove(path.DaemonPidPath())
+	}
+}
 
-	if system.IsFileExist(path.DaemonPidPath()) {
-		daemonPid, err := process.GetDaemonPid()
-		if err != nil {
-			return
-		}
-		if _, err = proc.NewProcess(daemonPid); err != nil {
-			log.Infof("remove pid file %s", path.DaemonPidPath())
-			os.Remove(path.DaemonPidPath())
+func IsDaemonRunning() bool {
+	pid, err := process.GetDaemonPid()
+	if err != nil {
+		// If an error occurs, it can be assumed that the daemon process no longer exists or,
+		// even if it does, it is not under the control of the current user.
+		return false
+	}
+	if pidInfo, err := proc.NewProcess(pid); err != nil {
+		return false
+	} else {
+		if name, err := pidInfo.Name(); err == nil && name != constant.PROC_OBSHELL {
+			return false
 		}
 	}
+	return true
 }

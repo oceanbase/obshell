@@ -20,7 +20,6 @@ import (
 	"os"
 	"time"
 
-	proc "github.com/shirou/gopsutil/v3/process"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
@@ -60,7 +59,7 @@ func (a *Admin) StartDaemon() (err error) {
 	ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 	global.InitGlobalVariable()
 
-	if _, isRunning := isDaemonRunning(); isRunning {
+	if daemon.IsDaemonRunning() {
 		log.Info("daemon process is running")
 		return nil
 	}
@@ -123,21 +122,6 @@ func (a *Admin) getDaemonArgs() []string {
 		return args
 	}
 	return append(args, a.flags.GetArgs()...)
-}
-
-func isDaemonRunning() (pid int32, res bool) {
-	pid, err := process.GetDaemonPid()
-	if err != nil {
-		return 0, false
-	}
-	if pidInfo, err := proc.NewProcess(pid); err != nil {
-		return pid, false
-	} else {
-		if name, err := pidInfo.Name(); err == nil && name != constant.PROC_OBSHELL {
-			return pid, false
-		}
-	}
-	return pid, true
 }
 
 func (a *Admin) isDaemonReady() (res bool, err error) {
