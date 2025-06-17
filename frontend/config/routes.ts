@@ -182,7 +182,7 @@ export default [
           {
             path: 'property',
             component: 'Property',
-            name: '系统配置',
+            name: '系统管理',
             spmb: 'b55558',
           },
           {

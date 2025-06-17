@@ -247,7 +247,7 @@ export const DATABASE_GLOBAL_PRIVILEGE_LIST = [
     value: 'SUPER',
     label: formatMessage({
       id: 'ocp-express.src.constant.tenant.SetGlobalPermissionToModify',
-      defaultMessage: 'SET GLOBAL 修改全局系统配置的权限',
+      defaultMessage: 'SET GLOBAL 修改全局系统管理的权限',
     }),
   },
 

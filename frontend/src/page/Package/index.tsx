@@ -54,8 +54,8 @@ const PackagePage: React.FC<PackageProps> = ({
 }) => {
   useDocumentTitle(
     formatMessage({
-      id: 'ocp-express.page.Package.SystemParameters',
-      defaultMessage: '系统配置',
+      id: 'ocp-express.src.util.menu.SystemManagement',
+      defaultMessage: '系统管理',
     })
   );
 

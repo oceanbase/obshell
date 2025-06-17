@@ -2859,7 +2859,7 @@ export default {
   "ocp-express.src.constant.backup.Editing": "Modify",
   "ocp-express.Detail.Component.ModifyDbUserPassword.DbuserusernamePasswordChanged": "The password for {dbUserUsername} is modified.",
   "ocp-express.Alarm.Channel.New.ViewSample": "View a sample.",
-  "ocp-express.src.util.menu.SystemParameters": "Property",
+  "ocp-express.src.util.menu.SystemParameters": "System management",
   "ocp-express.component.common.ServerSelect.All": "All",
   "ocp-express.Detail.SQLDiagnosis.ModifyClusterParameters": "Change Cluster Parameters",
   "ocp-express.Backup.Component.BackupNowDrawer.SelectADataBackupMethod": "Select a data backup method",
@@ -6139,4 +6139,5 @@ export default {
   "ocp-v2.page.Package.SizeMb": "Size (MB)",
   "ocp-v2.page.Package.UploadTime": "Upload time",
   "ocp-v2.Tenant.Detail.TenantId": "Tenant ID:",
+  "ocp-express.src.util.menu.SystemManagement": "System management",
 };

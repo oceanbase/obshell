@@ -95,8 +95,8 @@ export const useBasicMenu = (): MenuItem[] => {
     {
       link: '/system',
       title: formatMessage({
-        id: 'ocp-express.src.util.menu.SystemParameters',
-        defaultMessage: '系统配置',
+        id: 'ocp-express.src.util.menu.SystemManagement',
+        defaultMessage: '系统管理',
       }),
       icon: <IconFont type="property" />,
       selectedIcon: <Lottie path="/lottie/property.json" mode="icon" speed={3} loop={false} />,

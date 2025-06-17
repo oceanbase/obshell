@@ -52,7 +52,7 @@ const PropertyPage: React.FC<PropertyProps> = ({
   submitLoading,
 }) => {
   useDocumentTitle(
-    formatMessage({ id: 'ocp-express.page.Property.SystemParameters', defaultMessage: '系统配置' })
+    formatMessage({ id: 'ocp-express.src.util.menu.SystemManagement', defaultMessage: '系统管理' })
   );
 
   // 更新 Property 要求具有 PROPERTY:*:UPDATE 的权限，而不仅仅是单个 Property 的更新权限
@@ -195,13 +195,13 @@ const PropertyPage: React.FC<PropertyProps> = ({
                 title={
                   record.needRestart
                     ? formatMessage({
-                      id: 'ocp-express.page.Property.RestartRequiredToTakeEffect',
-                      defaultMessage: '需要重启生效',
-                    })
+                        id: 'ocp-express.page.Property.RestartRequiredToTakeEffect',
+                        defaultMessage: '需要重启生效',
+                      })
                     : formatMessage({
-                      id: 'ocp-express.page.Property.EffectiveWithinMinutes',
-                      defaultMessage: '3分钟内生效',
-                    })
+                        id: 'ocp-express.page.Property.EffectiveWithinMinutes',
+                        defaultMessage: '3分钟内生效',
+                      })
                 }
               >
                 <Tag
@@ -214,9 +214,9 @@ const PropertyPage: React.FC<PropertyProps> = ({
                     right: 32,
                     ...(isEnglish()
                       ? {
-                        whiteSpace: 'break-spaces',
-                        wordBreak: 'break-all',
-                      }
+                          whiteSpace: 'break-spaces',
+                          wordBreak: 'break-all',
+                        }
                       : {}),
                   }}
                 >
@@ -298,7 +298,7 @@ const PropertyPage: React.FC<PropertyProps> = ({
           <ContentWithReload
             content={formatMessage({
               id: 'ocp-express.page.Property.SystemParameters',
-              defaultMessage: '系统配置',
+              defaultMessage: '系统管理',
             })}
             spin={loading}
             onClick={getPropertyList}
@@ -378,10 +378,10 @@ const PropertyPage: React.FC<PropertyProps> = ({
             rules={
               currentRecord?.key === 'ocp.site.url'
                 ? [
-                  {
-                    validator: validateOcpSiteUrl,
-                  },
-                ]
+                    {
+                      validator: validateOcpSiteUrl,
+                    },
+                  ]
                 : []
             }
           >
