@@ -52,7 +52,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     }
   };
 
-  const { run: changeDbUserPassword, loading } = useRequest(tenantModifyPassword, {
+  const { runAsync: tenantModifyPasswordFn } = useRequest(tenantModifyPassword, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -69,7 +69,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     },
   });
 
-  const { run: createOrReplacePassword, loading: persistTenantRootPasswordLoading } = useRequest(
+  const { run: createOrReplacePassword, loading } = useRequest(
     persistTenantRootPassword,
     {
       manual: true,
@@ -79,7 +79,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
-      changeDbUserPassword(
+      tenantModifyPasswordFn(
         {
           name: tenantData?.tenantName,
           // username: tenantData?.mode === 'ORACLE' ? 'SYS' : 'root',
@@ -88,16 +88,18 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           old_password: '',
           new_password: newPassword,
         }
-      );
-
-      createOrReplacePassword(
-        {
-          name: tenantData?.tenantName,
-        },
-        {
-          password: newPassword,
+      ).then(res => {
+        if (res.successful) {
+          createOrReplacePassword(
+            {
+              name: tenantData?.tenantName,
+            },
+            {
+              password: newPassword,
+            }
+          );
         }
-      );
+      });
     });
   };
 

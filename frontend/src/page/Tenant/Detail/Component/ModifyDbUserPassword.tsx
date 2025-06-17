@@ -22,7 +22,7 @@ import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
 import { useRequest } from 'ahooks';
-import { changePassword } from '@/service/obshell/tenant';
+import { changePassword, persistTenantRootPassword } from '@/service/obshell/tenant';
 import useStyles from './ModifyPasswordModal.style';
 
 export interface ModifyDbUserPasswordProps {
@@ -58,7 +58,7 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
     }
   };
 
-  const { run: handleChangePassword, loading } = useRequest(changePassword, {
+  const { runAsync: handleChangePassword, loading } = useRequest(changePassword, {
     manual: true,
     onSuccess: res => {
       if (res?.successful) {
@@ -80,6 +80,13 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
     },
   });
 
+  const { run: createOrReplacePassword} = useRequest(
+    persistTenantRootPassword,
+    {
+      manual: true,
+    }
+  );
+
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
@@ -91,7 +98,18 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
         {
           new_password: newPassword,
         }
-      );
+      ).then(res => {
+        if (res.successful && dbUser.username === 'root') {
+          createOrReplacePassword(
+            {
+              name: tenantData?.tenant_name,
+            },
+            {
+              password: newPassword,
+            }
+          );
+        }
+      });
     });
   };
 
