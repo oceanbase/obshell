@@ -182,7 +182,7 @@ func CheckAndStartOBServer() error {
 		// If the config file exists and the observer process is not running,
 		// the observer process needs to be started.
 		if err := ob.SafeStartObserver(nil); err != nil {
-			process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_START_FAILED, fmt.Sprintf("start observer process failed, err: %v", err))
+			process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Wrap(err, "start observer process failed").Error())
 		}
 	}
 

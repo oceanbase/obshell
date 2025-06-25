@@ -23,6 +23,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -46,22 +47,22 @@ var (
 	modules     = []string{MYSQL_CONNECTOR}
 )
 
-func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 	log.Info("ob upgrade check")
 	upgradeRoute, err := preCheckForObUpgradeCheck(param)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	agents, err := agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	obUpgradeCheckTemplate := buildObUpgradeCheckTemplate(param)
 	obUpgradeCheckTaskContext := buildObUpgradeCheckTaskContext(param, upgradeRoute, agents)
 	obUpgradeCheckDag, err := taskService.CreateDagInstanceByTemplate(obUpgradeCheckTemplate, obUpgradeCheckTaskContext)
 	if err != nil {
 		log.WithError(err).Error("create dag instance by template failed")
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(obUpgradeCheckDag), nil
 }
@@ -120,10 +121,10 @@ func getUpgradeRouteForTask(taskContext *task.TaskContext) (upgradeRoute []Route
 
 func preCheckForObUpgradeCheck(param param.UpgradeCheckParam) (upgradeRoute []RouteNode, err error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please execute `init` first.")
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	if err = checkUpgradeDir(&param.UpgradeDir); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+		return nil, err
 	}
 	upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release)
 	if err != nil {
@@ -184,7 +185,7 @@ func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, 
 
 func checkTargetOBVersionSupport(targetBV string) (err error) {
 	if pkg.CompareVersion(targetBV, constant.SUPPORT_MIN_VERSION) < 0 {
-		return fmt.Errorf("unsupported version '%s', the minimum supported version is '%s'", targetBV, constant.SUPPORT_MIN_VERSION)
+		return errors.Occur(errors.ErrAgentOBVersionNotSupported, targetBV, constant.SUPPORT_MIN_VERSION)
 	}
 	currentBuildVersion, err := obclusterService.GetObBuildVersion()
 	if err != nil {
@@ -193,7 +194,7 @@ func checkTargetOBVersionSupport(targetBV string) (err error) {
 	currentBV := strings.ReplaceAll(currentBuildVersion, "_", "-")
 	log.Info("current build version is ", currentBV)
 	if pkg.CompareVersion(targetBV, currentBV) <= 0 {
-		return fmt.Errorf("target version %s is not greater than current version %s. Please verify if the params have been filled out correctly", targetBV, currentBV)
+		return errors.Occur(errors.ErrObUpgradeToLowerVersion, targetBV, currentBV)
 	}
 	return nil
 }
@@ -205,6 +206,7 @@ func checkForAllRequiredPkgsExist(upgradeRoute []RouteNode, distribution string)
 	}
 	var errs []error
 	needPkgNameList := []string{constant.PKG_OCEANBASE_CE, constant.PKG_OCEANBASE_CE_LIBS}
+	var missingPkgs []string
 	for _, node := range upgradeRoute[1:] {
 		for _, arch := range archList {
 			for _, pkgName := range needPkgNameList {
@@ -219,12 +221,15 @@ func checkForAllRequiredPkgsExist(upgradeRoute []RouteNode, distribution string)
 					pkg, err = obclusterService.GetUpgradePkgInfoByVersionAndRelease(pkgName, node.Version, node.Release, distribution, arch)
 				}
 				if err != nil {
-					err = errors.Wrap(err, name)
-					log.Error(err)
-					errs = append(errs, err)
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						missingPkgs = append(missingPkgs, name)
+						continue
+					} else {
+						return err
+					}
 				}
 
-				if err = CheckPkgChunkCount(pkg.PkgId, pkg.ChunkCount); err != nil {
+				if err = CheckPkgChunkCount(pkg.PkgId, pkg.ChunkCount, pkgName); err != nil {
 					err = errors.Wrapf(err, "check pkg %s chunks count failed", name)
 					log.Error(err)
 					errs = append(errs, err)
@@ -232,19 +237,24 @@ func checkForAllRequiredPkgsExist(upgradeRoute []RouteNode, distribution string)
 			}
 		}
 	}
-	if len(errs) != 0 {
-		return fmt.Errorf("%v", errs)
+	if len(missingPkgs) != 0 {
+		return errors.Occur(errors.ErrObPackageNotExist, missingPkgs)
 	}
+
+	if len(errs) != 0 {
+		return err
+	}
+
 	return nil
 }
 
-func CheckPkgChunkCount(pkgId, chunkCount int) error {
+func CheckPkgChunkCount(pkgId, chunkCount int, pkgName string) error {
 	actualChunkCount, err := obclusterService.GetUpgradePkgChunkCountByPkgId(pkgId)
 	if err != nil {
 		return err
 	}
 	if actualChunkCount != int64(chunkCount) {
-		return errors.New("upgrade pkg chunk count is not equal")
+		return errors.Occur(errors.ErrObPackageCorrupted, pkgName, fmt.Sprintf("actual chunk count %d is not equal to expected chunk count %d", actualChunkCount, chunkCount))
 	}
 	return nil
 }
@@ -263,7 +273,7 @@ func generateUpgradeRouteList(targetVersion, targetRelease, upgradeDepYml string
 		}, nil
 	}
 	if upgradeDepYml == "" {
-		return nil, errors.New("target pkg upgrade dep yaml is empty")
+		return nil, errors.Occur(errors.ErrObUpgradeDepYamlMissing)
 	}
 	return GetOBUpgradeRoute(Repository{currentVersion, currentRelease}, Repository{targetVersion, targetRelease}, upgradeDepYml)
 }

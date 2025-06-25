@@ -16,28 +16,24 @@
 
 package tenant
 
-import (
-	"github.com/oceanbase/obshell/agent/errors"
-)
-
-func LockTenant(tenantName string) *errors.OcsAgentError {
+func LockTenant(tenantName string) error {
 	if err := checkTenantName(tenantName); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return err
 	}
 
 	if err := tenantService.LockTenant(tenantName); err != nil {
-		return errors.Occur(errors.ErrBadRequest, err)
+		return err
 	}
 	return nil
 }
 
-func UnlockTenant(tenantName string) *errors.OcsAgentError {
+func UnlockTenant(tenantName string) error {
 	if err := checkTenantName(tenantName); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return err
 	}
 
 	if err := tenantService.UnlockTenant(tenantName); err != nil {
-		return errors.Occur(errors.ErrBadRequest, err)
+		return err
 	}
 	return nil
 }

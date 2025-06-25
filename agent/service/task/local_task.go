@@ -17,10 +17,9 @@
 package task
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
@@ -69,7 +68,7 @@ func (s *LocalTaskService) GetNodeOperatorBySubTaskId(taskID int64) (int, error)
 	}
 
 	if subTaskInstance.NodeId == 0 {
-		return 0, fmt.Errorf("task %d is a remote task", taskID)
+		return 0, errors.Occurf(errors.ErrCommonUnexpected, "task %d is a remote task", taskID)
 	}
 
 	var node sqlite.NodeInstance

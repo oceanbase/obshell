@@ -20,7 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
@@ -59,10 +58,10 @@ func (t *RestoreParametersTask) Execute() (err error) {
 	return nil
 }
 
-func ParamsRestore(param param.RestoreParams) *errors.OcsAgentError {
+func ParamsRestore(param param.RestoreParams) error {
 	log.Infof("restore params: %v", param.Params)
 	if err := obclusterService.RestoreParamsForUpgrade(param.Params); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	return nil
 }

@@ -61,5 +61,5 @@ func (t *StartOneZoneTask) Execute() (err error) {
 		time.Sleep(constant.TICK_INTERVAL_FOR_OB_STATUS_CHECK)
 		t.TimeoutCheck()
 	}
-	return errors.New("start zone timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "start zone")
 }

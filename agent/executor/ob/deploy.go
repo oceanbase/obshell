@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -84,7 +85,7 @@ func (t *DeployTask) Rollback() error {
 		return t.remoteDestroy()
 	}
 	if err := t.GetContext().GetAgentDataWithValue(&agent, PARAM_DIRS, &t.dirs); err != nil {
-		return errors.Wrap(err, "agent data not set")
+		return err
 	}
 	if err := rmStoreDir(t); err != nil {
 		return err
@@ -109,7 +110,9 @@ func (t *DeployTask) remoteDestroy() error {
 func checkItem(dirs map[string]string) error {
 	for _, key := range allDirOrder {
 		if _, ok := dirs[key]; !ok {
-			return errors.Errorf("dir '%s' unset", key)
+			// There should indeed be an UnexpectedError here.
+			// Users should be not get this error, should be wrapped by ErrRpcError in remoteExecute.
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "dirs", fmt.Sprintf("dir '%s' unset", key))
 		}
 	}
 	return nil
@@ -192,7 +195,7 @@ func mkdir(dir string) error {
 		if isEmpty, err := checkDirIsEmpty(dir); err != nil {
 			return errors.Wrapf(err, "check dir '%s' is empty failed", dir)
 		} else if !isEmpty {
-			return errors.Errorf("dir '%s' is not empty", dir)
+			return errors.Occur(errors.ErrCommonDirNotEmpty, dir)
 		}
 	}
 	return nil

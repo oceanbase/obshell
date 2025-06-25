@@ -18,7 +18,6 @@ package ob
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strings"
 
@@ -64,7 +63,7 @@ func (t *CheckEnvTask) checkEnv() (err error) {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err = cmd.Run(); err != nil {
-		return errors.Wrap(err, "Please check if python is installed.")
+		return errors.Occur(errors.ErrEnvironmentWithoutPython)
 	}
 	output := strings.TrimSpace(out.String())
 	t.ExecuteLogf("Python major version %s", output)
@@ -73,7 +72,7 @@ func (t *CheckEnvTask) checkEnv() (err error) {
 		t.ExecuteLogf("Checking if python module '%s' is installed.", module)
 		cmd = exec.Command("python", "-c", "import "+module)
 		if err = cmd.Run(); err != nil {
-			return errors.Wrap(err, fmt.Sprintf("Please check if python module '%s' is installed.", module))
+			return errors.Occur(errors.ErrEnvironmentWithoutPythonModule, module)
 		}
 	}
 	return nil

@@ -25,10 +25,10 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/pool"
 )
 
-func PurgeRecyclebinTenant(name string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func PurgeRecyclebinTenant(name string) (*task.DagDetailDTO, error) {
 	objectName, err := tenantService.GetRecycledTenantObjectName(name)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Check tenant '%s' exist in recyclebin failed: %s", name, err.Error())
+		return nil, errors.Wrapf(err, "Check tenant '%s' exist in recyclebin failed", name)
 	} else if objectName == "" {
 		return nil, nil
 	}
@@ -36,15 +36,15 @@ func PurgeRecyclebinTenant(name string) (*task.DagDetailDTO, *errors.OcsAgentErr
 	// Get all resource pool.
 	originalTenantId, err := tenantService.GetTenantId(objectName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "Get tenant id of '%s' failed: %s", name, err.Error())
+		return nil, errors.Wrapf(err, "Get tenant id of '%s' failed", name)
 	}
 	resourcePools, err := tenantService.GetTenantResourcePoolNames(originalTenantId)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "Get resource pools of tenant '%s' failed: %s", name, err.Error())
+		return nil, errors.Wrapf(err, "Get resource pools of tenant '%s' failed", name)
 	}
 
 	if err := tenantService.PurgeTenant(objectName); err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Purge tenant '%s' failed: '%s'", name, err.Error())
+		return nil, errors.Wrapf(err, "Purge tenant '%s' failed", name)
 	}
 
 	template := task.NewTemplateBuilder(DAG_WAIT_PURGE_TENANT_FINISHED).
@@ -57,7 +57,7 @@ func PurgeRecyclebinTenant(name string) (*task.DagDetailDTO, *errors.OcsAgentErr
 		SetData(PARAM_DROP_RESOURCE_POOL_LIST, resourcePools)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Create '%s' dag instance failed", DAG_WAIT_PURGE_TENANT_FINISHED)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -77,7 +77,7 @@ func newWaitForPurgeFinishedTask() *WaitForPurgeFinishedTask {
 func (t *WaitForPurgeFinishedTask) Execute() error {
 	var name string
 	if err := t.GetContext().GetParamWithValue(PARAM_OBECJT_NAME, &name); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return err
 	}
 	t.ExecuteLogf("Wait for tenant %s purge finished", name)
 	for {

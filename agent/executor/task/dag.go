@@ -59,25 +59,25 @@ func GetDagDetail(c *gin.Context) {
 	var service taskservice.TaskServiceInterface
 
 	if err := c.BindUri(&dagDTOParam); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	dagID, agent, err := task.ConvertGenericID(dagDTOParam.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(dagDTOParam.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, nil)
@@ -115,12 +115,12 @@ func GetDagDetail(c *gin.Context) {
 			}
 			// If all agents failed, just return original error.
 		}
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 
 	if task.ConvertToGenericID(dag, dag.GetDagType()) != dagDTOParam.GenericID {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "dag id not match"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "dag id not match"))
 		return
 	}
 	dagDetailDTO, err = convertDagDetailDTO(dag, *param.ShowDetails)
@@ -143,14 +143,14 @@ func GetDagDetail(c *gin.Context) {
 // @Router /api/v1/task/dags/ob [get]
 func GetAllClusterDags(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "only cluster agent can get all cluster dags"))
+		errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 		return
 	}
 
 	// TODO: distinguish between obproxy tasks and ob tasks
 	dags, err := clusterTaskService.GetAllDagInstances()
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -183,7 +183,7 @@ func GetAllClusterDags(c *gin.Context) {
 func GetAllAgentDags(c *gin.Context) {
 	dags, err := localTaskService.GetAllDagInstances()
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -219,7 +219,7 @@ func sendToTargetClusterAgentForScaleOut(c *gin.Context, dagDTO *task.DagDetailD
 			common.ForwardRequest(c, &coordinateAgent, dagDTO)
 			return
 		} else {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "coordinate cluster agent is not found or not match"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrCommonUnexpected, "coordinate cluster agent is not found or not match"))
 		}
 	}
 }
@@ -281,30 +281,30 @@ func DagHandler(c *gin.Context) {
 	var service taskservice.TaskServiceInterface
 
 	if err := c.BindUri(&dagOperator.DagDetailDTO); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	dagID, agent, err := task.ConvertGenericID(dagOperator.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if err := c.BindJSON(&dagOperator); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(dagOperator.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, dagOperator)
@@ -322,12 +322,12 @@ func DagHandler(c *gin.Context) {
 
 	dag, err := service.GetDagInstance(dagID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 
 	if task.ConvertToGenericID(dag, dag.GetDagType()) != dagOperator.GenericID {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "dag id not match"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "dag id not match"))
 		return
 	}
 
@@ -341,11 +341,11 @@ func DagHandler(c *gin.Context) {
 	case task.PASS_STR:
 		err = service.PassDag(dag)
 	default:
-		err = fmt.Errorf("invalid operator: %s", dagOperator.Operator)
+		err = errors.Occur(errors.ErrTaskDagOperatorNotSupport, dagOperator.Operator)
 	}
 
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	common.SendResponse(c, nil, nil)
@@ -370,7 +370,7 @@ func GetObLastMaintenanceDag(c *gin.Context) {
 		return
 	}
 	if dag == nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "Cluster is not under maintenance"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "Cluster is not under maintenance"))
 		return
 	}
 	dagDetailDTO, err := convertDagDetailDTO(dag, *param.ShowDetails)
@@ -397,7 +397,7 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 				targetAgent := followerAgent.(meta.AgentInfo)
 				common.ForwardRequest(c, &targetAgent, nil)
 			} else {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, "Get agent last maintenance dag failed"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrCommonUnexpected, "Get agent last maintenance dag failed"))
 			}
 		}
 	}
@@ -407,7 +407,7 @@ func GetAgentLastMaintenanceDag(c *gin.Context) {
 		return
 	}
 	if dag == nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "Agent is not under maintenance"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "Agent is not under maintenance"))
 		return
 	}
 	// construct dagDetailDTO
@@ -480,7 +480,7 @@ func GetUnfinishedDags(c *gin.Context) {
 	case meta.FOLLOWER:
 		master := agentService.GetMasterAgentInfo()
 		if master == nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 			return
 		}
 		common.ForwardRequest(c, master, nil)
@@ -499,7 +499,7 @@ func GetUnfinishedDags(c *gin.Context) {
 	case meta.SINGLE, meta.MASTER, meta.TAKE_OVER_MASTER, meta.TAKE_OVER_FOLLOWER:
 		GetAgentUnfinishDags(c)
 	default:
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "unknown agent identity: %s", meta.OCS_AGENT.GetIdentity()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyUnknown, meta.OCS_AGENT.GetIdentity()))
 	}
 }
 
@@ -517,7 +517,7 @@ func GetUnfinishedDags(c *gin.Context) {
 // @Router /api/v1/task/dag/ob/unfinish [get]
 func GetClusterUnfinishDags(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "only cluster agent can get cluster unfinished dags"))
+		errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 		return
 	}
 

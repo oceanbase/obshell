@@ -158,7 +158,7 @@ func (s *AgentService) DownloadBinary(filePath, version string) error {
 		if err = tx.Model(info).Where("version = ?", version).Where("architecture = ?", global.Architecture).Where("distribution <= ?", constant.DIST).Scan(info).Error; err != nil {
 			return err
 		} else if info.ChunkCount == 0 {
-			return errors.Errorf("No such binary (version: %s, architecture: %s, distribution: %s)", version, global.Architecture, constant.DIST)
+			return errors.Occur(errors.ErrAgentBinaryNotFound, version, global.Architecture, constant.DIST)
 		}
 
 		file, err := os.Create(filePath)

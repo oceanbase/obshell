@@ -21,14 +21,13 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
-func GetAllUpgradePkgInfos() ([]bo.UpgradePkgInfo, *errors.OcsAgentError) {
+func GetAllUpgradePkgInfos() ([]bo.UpgradePkgInfo, error) {
 	upgradePkgInfos, err := obclusterService.GetAllUpgradePkgInfos()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	log.Infof("Get all upgrade pkg infos: %v", upgradePkgInfos)
 	infos := make([]bo.UpgradePkgInfo, 0)

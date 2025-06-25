@@ -17,13 +17,12 @@
 package task
 
 import (
-	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -193,14 +192,14 @@ func (s *taskService) CreateDagInstanceByTemplate(template *task.Template, ctx *
 		return nil, err
 	}
 	if !inited {
-		return nil, errors.New("Status Maintainer is not inited")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "status maintainer is not inited")
 	}
 	if template.IsEmpty() {
-		return nil, errors.New("empty template")
+		return nil, errors.Occur(errors.ErrTaskEmptyTemplate)
 	}
 	dagInstanceBO, err := s.newDagInstanceBO(template, ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "create dag instace bo failed")
 	}
 
 	db, err := s.getDbInstance()
@@ -247,7 +246,7 @@ func (s *taskService) CreateDagInstanceByTemplate(template *task.Template, ctx *
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.WrapRetain(errors.ErrTaskCreateFailed, err, template.Name)
 	}
 	return dag, nil
 }
@@ -315,7 +314,7 @@ func (s *taskService) PassDag(dag *task.Dag) error {
 
 func (s *taskService) getNodesCanRollback(dag *task.Dag) ([]*task.Node, error) {
 	if dag.GetState() != task.FAILED {
-		return nil, errors.New("failed to set dag rollback: dag state is not failed")
+		return nil, errors.Occur(errors.ErrTaskDagOperatorRollbackNotFailedDag)
 	}
 
 	nodes, err := s.GetNodes(dag)
@@ -333,7 +332,7 @@ func (s *taskService) getNodesCanRollback(dag *task.Dag) ([]*task.Node, error) {
 			break
 		}
 		if !node.CanRollback() {
-			return nil, fmt.Errorf("failed to set dag rollback: node %d. %s can not rollback", node.GetID(), node.GetName())
+			return nil, errors.Occur(errors.ErrTaskDagOperatorRollbackNotAllowed, node.GetName())
 		}
 		if node.IsFail() {
 			_idx += 1
@@ -342,7 +341,7 @@ func (s *taskService) getNodesCanRollback(dag *task.Dag) ([]*task.Node, error) {
 	}
 
 	if _idx == 0 {
-		return nil, errors.New("failed to set dag rollback: no node failed")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "failed to set dag rollback: no node failed")
 	}
 
 	return nodes[:_idx], nil
@@ -350,7 +349,7 @@ func (s *taskService) getNodesCanRollback(dag *task.Dag) ([]*task.Node, error) {
 
 func (s *taskService) getNodeCanCancel(dag *task.Dag) (*task.Node, error) {
 	if dag.IsFinished() {
-		return nil, errors.New("failed to cancel dag: dag is finished")
+		return nil, errors.Occur(errors.ErrTaskDagOperatorCancelFinishedDag)
 	}
 
 	nodes, err := s.GetNodes(dag)
@@ -364,21 +363,21 @@ func (s *taskService) getNodeCanCancel(dag *task.Dag) (*task.Node, error) {
 			return nil, err
 		}
 		if !node.CanCancel() {
-			return nil, fmt.Errorf("failed to cancel dag: %s can not cancel", node.GetName())
+			return nil, errors.Occur(errors.ErrTaskDagOperatorCancelNotAllowed, node.GetName())
 		}
 		if !node.IsFinished() {
 			break
 		}
 	}
 	if currentNode == nil {
-		return nil, errors.New("failed to cancel dag: no node found")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "failed to cancel dag: no node found")
 	}
 	return currentNode, nil
 }
 
 func (s *taskService) getNodesCanPass(dag *task.Dag) ([]*task.Node, error) {
 	if !dag.IsFail() {
-		return nil, errors.New("failed to pass dag: dag is not failed")
+		return nil, errors.Occur(errors.ErrTaskDagOperatorPassNotFailedDag)
 	}
 	nodes, err := s.GetNodes(dag)
 	if err != nil {
@@ -397,7 +396,7 @@ func (s *taskService) getNodesCanPass(dag *task.Dag) ([]*task.Node, error) {
 			return nil, err
 		}
 		if !node.CanPass() {
-			return nil, fmt.Errorf("failed to pass dag: %s can not pass", node.GetName())
+			return nil, errors.Occur(errors.ErrTaskDagOperatorPassNotAllowed, node.GetName())
 		}
 	}
 	return nodes[idx:], nil
@@ -405,7 +404,7 @@ func (s *taskService) getNodesCanPass(dag *task.Dag) ([]*task.Node, error) {
 
 func (s *taskService) getNodeCanRetry(dag *task.Dag) (*task.Node, error) {
 	if !dag.IsFail() {
-		return nil, errors.New("failed to set dag retry: dag state is not failed")
+		return nil, errors.Occur(errors.ErrTaskDagOperatorRetryNotFailedDag)
 	}
 	node, err := s.GetNodeByStage(dag.GetID(), dag.GetStage())
 	if err != nil {
@@ -415,7 +414,7 @@ func (s *taskService) getNodeCanRetry(dag *task.Dag) (*task.Node, error) {
 		return nil, err
 	}
 	if !node.CanRetry() {
-		return nil, fmt.Errorf("failed to set dag retry: %s can not retry", node.GetName())
+		return nil, errors.Occur(errors.ErrTaskDagOperatorRetryNotAllowed, node.GetName())
 	}
 	return node, nil
 }
@@ -558,7 +557,7 @@ func (s *taskService) UpdateDagStage(dag *task.Dag, nextSage int) error {
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to update dag: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to update dag")
 	}
 	return nil
 }
@@ -627,7 +626,7 @@ func (s *taskService) updateDagOperator(tx *gorm.DB, dag *task.Dag, operator int
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to update dag operator")
 	}
 	return nil
 }
@@ -653,7 +652,7 @@ func (s *taskService) updateDagState(tx *gorm.DB, dag *task.Dag, state int) erro
 		bo.IsFinished = true
 		bo.EndTime = s.getCurrentTime(tx)
 	default:
-		return fmt.Errorf("invalid dag state '%d'", state)
+		return errors.Occur(errors.ErrTaskDagStateInvalid, state)
 	}
 
 	dagInstance := s.convertDagInstanceBOToDO(bo)
@@ -662,7 +661,7 @@ func (s *taskService) updateDagState(tx *gorm.DB, dag *task.Dag, state int) erro
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to update dag state: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to update dag state")
 	}
 	return nil
 }
@@ -689,7 +688,7 @@ func (s *taskService) updateNodeOperator(tx *gorm.DB, node *task.Node, operator 
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to update instance in tx: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to update node operator")
 	}
 	return nil
 }

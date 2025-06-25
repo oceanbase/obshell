@@ -20,7 +20,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
@@ -72,12 +71,12 @@ var needBackupParamName = []string{
 	"enable_rereplication",
 }
 
-func ParamsBackup() (params []oceanbase.ObParameters, error *errors.OcsAgentError) {
+func ParamsBackup() (params []oceanbase.ObParameters, err error) {
 	log.Infof("backup params: %v", needBackupParamName)
 	paramsForUpgrade, err := obclusterService.GetObParametersForUpgrade(needBackupParamName)
 	if err != nil {
 		log.WithError(err).Error("get ob parameters failed")
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return paramsForUpgrade, nil
 }

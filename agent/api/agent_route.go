@@ -176,7 +176,6 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	recyclebin.DELETE(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinPurgeTenantHandler)
 	recyclebin.POST(constant.URI_TENANT_GROUP+constant.URI_PATH_PARAM_NAME, recyclebinFlashbackTenantHandler)
 	r.NoRoute(func(c *gin.Context) {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "404 not found"))
-		return
+		common.SendResponse(c, nil, errors.Occur(errors.ErrCommonNotFound, "404 not found"))
 	})
 }

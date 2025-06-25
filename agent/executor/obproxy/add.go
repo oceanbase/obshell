@@ -82,18 +82,18 @@ func buildAddObproxyOptions(param *param.AddObproxyParam) (*addObproxyOptions, e
 	return &options, nil
 }
 
-func AddObproxy(param param.AddObproxyParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func AddObproxy(param param.AddObproxyParam) (*task.DagDetailDTO, error) {
 	if meta.IsObproxyAgent() {
-		return nil, errors.Occur(errors.ErrBadRequest, "agent has already managed obproxy")
+		return nil, errors.Occur(errors.ErrOBProxyAlreadyManaged)
 	}
 
 	if err := checkObproxyHomePath(param.HomePath); err != nil {
-		return nil, errors.Occurf(errors.ErrBadRequest, "invalid obproxy home path: %s", err)
+		return nil, errors.Wrap(err, "invalid obproxy home path")
 	}
 
 	options, err := buildAddObproxyOptions(&param)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	if err := checkAndFillObproxyPort(&param, options); err != nil {
@@ -111,7 +111,7 @@ func AddObproxy(param param.AddObproxyParam) (*task.DagDetailDTO, *errors.OcsAge
 
 	if rsList, ok := options.parameters[constant.OBPROXY_CONFIG_RS_LIST]; ok && rsList != "" {
 		if clusterName, err := checkProxyroPasswordAndGetClusterName(rsList, param.ProxyroPassword); err != nil {
-			return nil, errors.Occur(errors.ErrBadRequest, err)
+			return nil, err
 		} else {
 			options.clusterName = clusterName
 			log.Infof("cluster name: %s", clusterName)
@@ -122,15 +122,15 @@ func AddObproxy(param param.AddObproxyParam) (*task.DagDetailDTO, *errors.OcsAge
 	template := buildAddObproxyTemplate(options)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func checkAndFillWorkMode(param *param.AddObproxyParam, options *addObproxyOptions) *errors.OcsAgentError {
+func checkAndFillWorkMode(param *param.AddObproxyParam, options *addObproxyOptions) error {
 	// Check work mode.
 	if param.RsList != nil && param.ConfigUrl != nil {
-		return errors.Occur(errors.ErrBadRequest, "rs_list and config_url can not be specified at the same time")
+		return errors.Occur(errors.ErrOBProxyRsListAndConfigUrlConflicted)
 	}
 
 	if param.RsList != nil {
@@ -140,13 +140,13 @@ func checkAndFillWorkMode(param *param.AddObproxyParam, options *addObproxyOptio
 		options.parameters[constant.OBPROXY_CONFIG_CONFIG_SERVER_URL] = *param.ConfigUrl
 	} else {
 		if !meta.OCS_AGENT.IsClusterAgent() {
-			return errors.Occur(errors.ErrBadRequest, "rs_list or config_url must be specified when agent is not cluster agent")
+			return errors.Occur(errors.ErrOBProxyRsListOrConfigUrlNotSpecified)
 		} else {
 			// Use the rs_list of current ob cluster.
 			rsListStr, err := obclusterService.GetRsListStr()
 			if err != nil {
 				// The observer may be inactive.
-				return errors.Occur(errors.ErrUnexpected, err)
+				return err
 			}
 
 			options.parameters[constant.OBPROXY_CONFIG_RS_LIST] = convertToRootServerList(rsListStr)
@@ -163,7 +163,7 @@ func checkObproxyHomePath(homePath string) error {
 
 	err := syscall.Access(homePath, syscall.O_RDWR)
 	if err != nil {
-		return errors.Errorf("no read/write permission for directory '%s'", homePath)
+		return errors.Occur(errors.ErrCommonFilePermissionDenied, homePath)
 	}
 
 	// Check obproxy is installed.
@@ -178,11 +178,11 @@ func checkObproxyHomePath(homePath string) error {
 	entrys, err := os.ReadDir(filepath.Join(homePath, constant.OBPROXY_DIR_ETC))
 	if err != nil {
 		if !os.IsNotExist(err) {
-			return err
+			return errors.Occur(errors.ErrCommonPathNotExist, filepath.Join(homePath, constant.OBPROXY_DIR_ETC))
 		}
 	}
 	if len(entrys) != 0 {
-		return errors.New("obproxy etc directory is not empty")
+		return errors.Occur(errors.ErrCommonDirNotEmpty, filepath.Join(homePath, constant.OBPROXY_DIR_ETC))
 	}
 
 	return nil
@@ -190,13 +190,13 @@ func checkObproxyHomePath(homePath string) error {
 
 // checkObproxyVersion checks the version of obproxy located at the given homePath.
 // If the version is lower than the minimum supported version (4.0.0), it returns an error.
-func checkAndFillObproxyVersion(param *param.AddObproxyParam, options *addObproxyOptions) *errors.OcsAgentError {
+func checkAndFillObproxyVersion(param *param.AddObproxyParam, options *addObproxyOptions) error {
 	version, err := getObproxyVersion(param.HomePath)
 	if err != nil {
-		return errors.Occur(errors.ErrBadRequest, "get obproxy version failed: %v", err)
+		return errors.Wrap(err, "get obproxy version failed")
 	}
 	if version < constant.OBPROXY_MIN_VERSION_SUPPORT {
-		return errors.Occurf(errors.ErrBadRequest, "obproxy version %s is lower than the minimum supported version %s", version, constant.OBPROXY_MIN_VERSION_SUPPORT)
+		return errors.Occur(errors.ErrOBProxyVersionNotSupported, version, constant.OBPROXY_MIN_VERSION_SUPPORT)
 	}
 	options.version = version
 	return nil
@@ -218,14 +218,15 @@ func checkProxyroPasswordAndGetClusterName(rsListStr string, password string) (c
 		}
 	}()
 	for _, rs := range rsList {
-		observerInfo := meta.NewAgentInfoByString(rs)
-		if observerInfo == nil {
-			err = errors.Errorf("invalid observer info: %s", rs)
+		observerInfo, err := meta.ConvertAddressToAgentInfo(rs)
+		if err != nil {
+			err = errors.Wrap(err, "invalid observer info")
 			continue
 		}
 		dsConfig.SetIp(observerInfo.GetIp()).SetPort(observerInfo.GetPort())
 		tempDb, err = oceanbase.LoadTempOceanbaseInstance(dsConfig)
 		if err != nil {
+			// ignore error, just try next rs.
 			continue
 		}
 		clusterName, err = obproxyService.GetObclusterName(tempDb)
@@ -238,7 +239,7 @@ func checkProxyroPasswordAndGetClusterName(rsListStr string, password string) (c
 	return "", err
 }
 
-func checkAndFillObproxyPort(param *param.AddObproxyParam, options *addObproxyOptions) *errors.OcsAgentError {
+func checkAndFillObproxyPort(param *param.AddObproxyParam, options *addObproxyOptions) error {
 	if param.SqlPort != nil {
 		options.parameters[constant.OBPROXY_CONFIG_LISTEN_PORT] = strconv.Itoa(*param.SqlPort)
 	} else if options.parameters[constant.OBPROXY_CONFIG_LISTEN_PORT] == "" {
@@ -259,7 +260,7 @@ func checkAndFillObproxyPort(param *param.AddObproxyParam, options *addObproxyOp
 	var ports = []string{constant.OBPROXY_CONFIG_LISTEN_PORT, constant.OBPROXY_CONFIG_PROMETHUES_LISTEN_PORT, constant.OBPROXY_CONFIG_RPC_LISTEN_PORT}
 	for _, port := range ports {
 		if _, err := strconv.Atoi(options.parameters[port]); err != nil {
-			return errors.Occur(errors.ErrBadRequest, "invalid port: %s", options.parameters[port])
+			return errors.Occur(errors.ErrCommonInvalidPort, options.parameters[port])
 		}
 	}
 	options.sqlPort, _ = strconv.Atoi(options.parameters[constant.OBPROXY_CONFIG_LISTEN_PORT])
@@ -370,7 +371,7 @@ func (t *StartObproxyTask) Execute() error {
 		}
 		t.obproxySysPassword, err = secure.Decrypt(t.encryptedSysPwd)
 		if err != nil {
-			return errors.Errorf("decrypt obproxy sys password failed: %v", err)
+			return errors.Wrap(err, "decrypt obproxy sys password failed")
 		}
 
 		if err := t.buildStartOptionStr(); err != nil {
@@ -387,7 +388,7 @@ func (t *StartObproxyTask) Execute() error {
 	}
 	t.ExecuteLogf("start obproxy cmd: %s", startCmd)
 	if output, err := exec.Command("/bin/bash", "-c", startCmd).CombinedOutput(); err != nil {
-		return errors.Errorf("failed to start obproxy: %v, output: %s", err, string(output))
+		return errors.Wrapf(err, "failed to start obproxy, output: %s", string(output))
 	}
 
 	if err := t.healthCheck(); err != nil {
@@ -395,9 +396,9 @@ func (t *StartObproxyTask) Execute() error {
 	}
 
 	if pid, err := process.FindPIDByPort(uint32(t.sqlPort)); err != nil {
-		return errors.Errorf("get obproxy pid failed: %v", err)
+		return errors.Wrap(err, "get obproxy pid failed")
 	} else if err := process.WritePidForce(filepath.Join(t.homePath, constant.OBPROXY_DIR_RUN, "obproxy.pid"), int(pid)); err != nil {
-		return errors.Errorf("write obproxy pid failed: %v", err)
+		return errors.Wrap(err, "write obproxy pid failed")
 	}
 	return nil
 }
@@ -448,15 +449,15 @@ func (t *StartObproxyTask) healthCheck() error {
 			continue
 		}
 		if err := obproxyService.UpdateSqlPort(t.sqlPort); err != nil {
-			return errors.Errorf("update obproxy sql port failed: %v", err)
+			return errors.Wrap(err, "update obproxy sql port failed")
 		}
 		if err := obproxyService.UpdateObproxySysPassword(t.obproxySysPassword); err != nil {
-			return errors.Errorf("update obproxy sys password failed: %v", err)
+			return errors.Wrap(err, "update obproxy sys password failed")
 		}
 		return nil
 	}
 
-	return errors.New("obproxy health check timeout")
+	return errors.Occur(errors.ErrOBProxyHealthCheckTimeout)
 }
 
 type PersistObproxyInfoTask struct {
@@ -527,16 +528,16 @@ func (t *PrepareForAddObproxyTask) Execute() error {
 		return err
 	}
 	if t.expectObproxyAgent && !meta.IsObproxyAgent() {
-		return errors.Errorf("This is not an obproxy agent")
+		return errors.Occur(errors.ErrOBProxyNotBeManaged)
 	}
 	if !t.expectObproxyAgent {
 		if meta.IsObproxyAgent() {
-			return errors.Errorf("agent has already managed obproxy")
+			return errors.Occur(errors.ErrOBProxyAlreadyManaged)
 		}
 		// Create obproxy run path
 		runPath := filepath.Join(t.homePath, constant.OBPROXY_DIR_RUN)
 		if err := os.MkdirAll(runPath, 0755); err != nil {
-			return errors.Errorf("create obproxy run path failed: %v", err)
+			return errors.Wrap(err, "create obproxy run path failed")
 		}
 	}
 	return nil
@@ -561,19 +562,19 @@ func NewSetObproxyUserPasswordForObNode(encryptedProxyroPassword string) *task.N
 }
 
 func (t *SetObproxyUserPasswordForObTask) Execute() error {
-	if t.GetContext().GetParamWithValue(PARAM_OBPROXY_PROXYRO_PASSWORD, &t.encryptedProxyroPassword) != nil {
-		return errors.Errorf("get obproxy user password failed")
+	if err := t.GetContext().GetParamWithValue(PARAM_OBPROXY_PROXYRO_PASSWORD, &t.encryptedProxyroPassword); err != nil {
+		return err
 	}
 
 	// Decrypt proxyro password.
 	proxyroPassword, err := secure.Decrypt(t.encryptedProxyroPassword)
 	if err != nil {
-		return errors.Errorf("decrypt proxyro password failed: %v", err)
+		return errors.Wrap(err, "decrypt proxyro password failed")
 	}
 	t.ExecuteLog("set obproxy user password")
 
 	if err := obproxyService.SetProxyroPassword(proxyroPassword); err != nil {
-		return errors.Errorf("set obproxy user password failed: %v", err)
+		return errors.Wrap(err, "set obproxy user password failed")
 	}
 	return nil
 }

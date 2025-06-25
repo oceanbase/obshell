@@ -27,49 +27,49 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func DeleteDatabase(tenantName, databaseName string, password *string) *errors.OcsAgentError {
+func DeleteDatabase(tenantName, databaseName string, password *string) error {
 	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
+		return errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
 	}
 	err = tenantService.DropDatabase(db, databaseName)
 	if err != nil {
-		errors.Occurf(errors.ErrUnexpected, "Failed to drop database %s of tenant %s", databaseName, tenantName)
+		return errors.Wrapf(err, "Failed to drop database %s of tenant %s", databaseName, tenantName)
 	}
 	return nil
 }
 
-func CreateDatabase(tenantName string, param *param.CreateDatabaseParam) *errors.OcsAgentError {
+func CreateDatabase(tenantName string, param *param.CreateDatabaseParam) error {
 	db, err := GetConnectionWithPassword(tenantName, param.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
+		return errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
 	}
 	err = tenantService.CreateDatabase(db, param)
 	if err != nil {
-		errors.Occurf(errors.ErrUnexpected, "Failed to create database %s of tenant %s", param.DbName, tenantName)
+		return errors.Wrapf(err, "Failed to create database %s of tenant %s", param.DbName, tenantName)
 	}
 	return nil
 }
 
-func AlterDatabase(tenantName string, databaseName string, param *param.ModifyDatabaseParam) *errors.OcsAgentError {
+func AlterDatabase(tenantName string, databaseName string, param *param.ModifyDatabaseParam) error {
 	if param.Collation == nil && param.ReadOnly == nil {
 		return nil
 	}
 	db, err := GetConnectionWithPassword(tenantName, param.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
+		return errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
 	}
 	err = tenantService.AlterDatabase(db, databaseName, param)
 	if err != nil {
-		errors.Occurf(errors.ErrUnexpected, "Failed to modify database %s of tenant %s", databaseName, tenantName)
+		return errors.Wrapf(err, "Failed to modify database %s of tenant %s", databaseName, tenantName)
 	}
 	return nil
 }
 
-func GetDatabase(tenantName, databaseName string, password *string) (*bo.Database, *errors.OcsAgentError) {
+func GetDatabase(tenantName, databaseName string, password *string) (*bo.Database, error) {
 	databases, err := ListDatabases(tenantName, password)
 	if err != nil {
 		return nil, err
@@ -79,18 +79,18 @@ func GetDatabase(tenantName, databaseName string, password *string) (*bo.Databas
 			return &database, nil
 		}
 	}
-	return nil, errors.Occurf(errors.ErrNotFound, "Database %s of tenant %s", databaseName, tenantName)
+	return nil, errors.Occur(errors.ErrObDatabaseNotExist, databaseName, tenantName)
 }
 
-func ListDatabases(tenantName string, password *string) ([]bo.Database, *errors.OcsAgentError) {
+func ListDatabases(tenantName string, password *string) ([]bo.Database, error) {
 	db, err := GetConnectionWithPassword(tenantName, password)
 	defer CloseDbConnection(db)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to get db connection of tenant %s, err: %s", tenantName, err.Error())
+		return nil, errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
 	}
 	databases, err := tenantService.ListDatabases(db)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Failed to list databases of tenant %s, err: %s", tenantName, err.Error())
+		return nil, errors.Wrapf(err, "Failed to list databases of tenant %s", tenantName)
 	}
 	obdatabases := make([]bo.Database, 0)
 	for _, database := range databases {

@@ -38,15 +38,12 @@ import (
 //  3. does not lead to directory traversal issues when joined with a generated parent path.
 func CheckPathValid(path string) error {
 	if !strings.HasPrefix(path, "/") {
-		return errors.Errorf("path '%s' should start with '/'", path)
+		return errors.Occur(errors.ErrCommonInvalidPath, path, "should start with '/'")
 	}
 	pattern := "^[a-zA-Z0-9\u4e00-\u9fa5\\-_:@/\\.]*$"
 	match, err := regexp.MatchString(pattern, path)
-	if err != nil {
-		return errors.Wrapf(err, "match pattern %s failed", pattern)
-	}
-	if !match {
-		return fmt.Errorf("%s is not matched", path)
+	if err != nil || !match {
+		return errors.Occur(errors.ErrCommonInvalidPath, path, fmt.Sprintf("should match pattern %s", pattern))
 	}
 
 	parentPath := fmt.Sprintf("/%s", uuid.New().String())
@@ -54,7 +51,7 @@ func CheckPathValid(path string) error {
 	normalizedPath := filepath.Clean(absolutePath)
 	if !strings.HasPrefix(normalizedPath, parentPath) {
 		log.Errorf("'%s' is not a valid path, absolutePath is %s, normalizedPath is %s", path, absolutePath, normalizedPath)
-		return fmt.Errorf("%s is not a valid path", path)
+		return errors.Occur(errors.ErrCommonInvalidPath, path, "should not lead to directory traversal issues when joined with a generated parent path")
 	}
 	return nil
 }
@@ -75,13 +72,13 @@ func CheckDirExists(dir string) error {
 	fileInfo, err := os.Stat(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return err
+			return errors.Occur(errors.ErrCommonPathNotExist, dir)
 		}
 		return errors.Wrapf(err, "failed to stat path %s", dir)
 	}
 
 	if !fileInfo.IsDir() {
-		return errors.Errorf("path '%s' is not a directory", dir)
+		return errors.Occur(errors.ErrCommonPathNotDir, dir)
 	}
 	return nil
 }
@@ -100,5 +97,5 @@ func CheckDirEmpty(path string) error {
 	if err != nil {
 		return errors.Wrapf(err, "failed to read directory %s", path)
 	}
-	return errors.Errorf("directory '%s' is not empty", path)
+	return errors.Occur(errors.ErrCommonDirNotEmpty, path)
 }

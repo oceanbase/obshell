@@ -27,12 +27,12 @@ const (
 	defaultWhitelist = "127.0.0.1"
 )
 
-func ModifyTenantWhitelist(tenantName string, whitelist string) *errors.OcsAgentError {
+func ModifyTenantWhitelist(tenantName string, whitelist string) error {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return err
 	}
 	if err := tenantService.ModifyTenantWhitelist(tenantName, mergeWhitelist(whitelist)); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	return nil
 }
@@ -77,10 +77,10 @@ func newModifyTenantWhitelistTask() *ModifyTenantWhitelistTask {
 
 func (t *ModifyTenantWhitelistTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get tenant name failed")
+		return err
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_WHITELIST, &t.whitelist); err != nil {
-		return errors.Wrapf(err, "get tenant whitelist failed")
+		return err
 	}
 	if err := tenantService.ModifyTenantWhitelist(t.tenantName, mergeWhitelist(t.whitelist)); err != nil {
 		return errors.Wrapf(err, "modify tenant whitelist failed")

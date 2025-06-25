@@ -36,40 +36,39 @@ import (
 	"github.com/oceanbase/obshell/utils"
 )
 
-func AgentUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func AgentUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 	agentErr := preCheckForAgentUpgrade(param)
 	if agentErr != nil {
-		log.WithError(agentErr).Error("obshell upgrade pre-check failed")
 		return nil, agentErr
 	}
 	agents, err := agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	agentUpgradeCheckTemplate := buildAgentUpgradeCheckTemplate(param)
 	agentUpgradeCheckTaskContext := buildAgentUpgradeCheckTaskContext(param, agents)
 	agentUpgradeCheckDag, err := taskService.CreateDagInstanceByTemplate(agentUpgradeCheckTemplate, agentUpgradeCheckTaskContext)
 	if err != nil {
 		log.WithError(err).Error("create dag instance by template failed")
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(agentUpgradeCheckDag), nil
 }
 
-func preCheckForAgentUpgrade(param param.UpgradeCheckParam) (agentErr *errors.OcsAgentError) {
+func preCheckForAgentUpgrade(param param.UpgradeCheckParam) (err error) {
 	log.Info("Starting obshell upgrade pre-check.")
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please confirm if the OBcluster has been initialized and is maintained by obshell.")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	allAgents, err := agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, "Failed to query all agents from ob")
+		return errors.Wrap(err, "failed to query all agents from ob")
 	}
 	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
 	agentsStatus := make(map[string]http.AgentStatus)
 	resErr := secure.SendGetRequest(agentInfo, "/api/v1/agents/status", nil, &agentsStatus)
 	if resErr != nil {
-		return errors.Occur(errors.ErrUnexpected, "Failed to query all agents status")
+		return errors.Wrap(resErr, "failed to query all agents status")
 	}
 	unavailableAgents := make([]string, 0)
 	for agent, agentStatus := range agentsStatus {
@@ -83,16 +82,16 @@ func preCheckForAgentUpgrade(param param.UpgradeCheckParam) (agentErr *errors.Oc
 		}
 	}
 	if len(unavailableAgents) > 0 {
-		return errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found agent %s not running", strings.Join(unavailableAgents, ",")))
+		return errors.Occur(errors.ErrAgentUnavailable, strings.Join(unavailableAgents, ","))
 	}
 	if err := checkUpgradeDir(&param.UpgradeDir); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 	if err := checkTargetVersionSupport(param.Version, param.Release); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 	if err := findTargetPkg(param.Version, param.Release); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 	return nil
 }
@@ -105,7 +104,7 @@ func checkTargetVersionSupport(version, release string) error {
 
 	targetVR := fmt.Sprintf("%s-%s", version, buildNumber)
 	if pkg.CompareVersion(targetVR, constant.VERSION_RELEASE) <= 0 {
-		return fmt.Errorf("target version %s is not greater than current version %s. Please verify if the params have been filled out correctly", targetVR, constant.VERSION_RELEASE)
+		return errors.Occur(errors.ErrAgentUpgradeToLowerVersion, targetVR, constant.VERSION_RELEASE)
 	}
 
 	return nil
@@ -118,15 +117,15 @@ func findTargetPkg(version, release string) error {
 	}
 	var errs []error
 	buildNumber, distribution, _ := pkg.SplitRelease(release)
+	var notFoundPkgs []string
 	for _, arch := range archList {
 		_, err := obclusterService.GetUpgradePkgInfoByVersionAndRelease(constant.PKG_OBSHELL, version, buildNumber, distribution, arch)
 		if err != nil {
-			err = errors.Wrapf(err, "%s-%s-%s.%s.rpm", constant.PKG_OBSHELL, version, release, arch)
-			errs = append(errs, err)
+			notFoundPkgs = append(notFoundPkgs, fmt.Sprintf("%s-%s-%s.%s.rpm", constant.PKG_OBSHELL, version, release, arch))
 		}
 	}
 	if len(errs) > 0 {
-		return fmt.Errorf("%v", errs)
+		return errors.Occur(errors.ErrAgentPackageNotFound, strings.Join(notFoundPkgs, ","))
 	}
 	return nil
 }

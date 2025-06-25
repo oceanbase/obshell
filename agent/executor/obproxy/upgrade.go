@@ -44,21 +44,21 @@ import (
 
 const waitPeriod = 5 // seconds
 
-func UpgradeObproxy(param param.UpgradeObproxyParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func UpgradeObproxy(param param.UpgradeObproxyParam) (*task.DagDetailDTO, error) {
 	if !meta.IsObproxyAgent() {
-		return nil, errors.Occur(errors.ErrBadRequest, "not obproxy agent")
+		return nil, errors.Occur(errors.ErrOBProxyNotBeManaged)
 	}
 	if alive, err := process.CheckObproxyProcess(); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	} else if !alive {
-		return nil, errors.Occur(errors.ErrBadRequest, "obproxy is not running")
+		return nil, errors.Occur(errors.ErrOBProxyNotRunning)
 	}
 
 	if err := checkVersionSupport(param.Version, param.Release); err != nil {
 		return nil, err
 	}
 	if err := checkUpgradeDir(&param.UpgradeDir); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+		return nil, err
 	}
 	if err := findTargetPkg(param.Version, param.Release); err != nil {
 		return nil, err
@@ -68,32 +68,35 @@ func UpgradeObproxy(param param.UpgradeObproxyParam) (*task.DagDetailDTO, *error
 	context := buildUpgradeObproxyTaskContext(param)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func checkVersionSupport(version, release string) *errors.OcsAgentError {
+func checkVersionSupport(version, release string) error {
 	// Check obproxy version
 	curObproxyVersion, err := obproxyService.GetObproxyVersion()
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	buildNumber, _, err := pkg.SplitRelease(release)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	if pkg.CompareVersion(curObproxyVersion, fmt.Sprintf("%s-%s", version, buildNumber)) >= 0 {
-		return errors.Occur(errors.ErrBadRequest, "current obproxy version is greater than or equal to the target version")
+		return errors.Occur(errors.ErrOBProxyUpgradeToLowerVersion, fmt.Sprintf("%s-%s", version, buildNumber), curObproxyVersion)
 	}
 	return nil
 }
 
-func findTargetPkg(version, release string) *errors.OcsAgentError {
+func findTargetPkg(version, release string) error {
 	buildNumber, distribution, _ := pkg.SplitRelease(release)
 	_, err := agentService.GetUpgradePkgInfoByVersionAndRelease(constant.PKG_OBPROXY_CE, version, buildNumber, distribution, global.Architecture)
 	if err != nil {
-		return errors.Occurf(errors.ErrBadRequest, "find target pkg '%s-%s-%s.%s.rpm' failed", constant.PKG_OBPROXY_CE, version, release, global.Architecture)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return errors.Occurf(errors.ErrOBProxyPackageNotFound, "%s-%s-%s.%s.rpm", constant.PKG_OBPROXY_CE, version, release, global.Architecture)
+		}
+		return errors.Wrapf(err, "find target pkg '%s-%s-%s.%s.rpm' failed", constant.PKG_OBPROXY_CE, version, release, global.Architecture)
 	}
 	return nil
 }
@@ -287,7 +290,7 @@ func (t *WaitHotRestartObproxyFinishTask) Execute() error {
 		t.ExecuteLogf("obproxy %d is running", pid)
 		if pid == t.oldPid {
 			t.ExecuteLogf("obproxy %d is still running, waiting for it to exit...", t.oldPid)
-			err = errors.New("obproxy is still running")
+			err = errors.Occurf(errors.ErrCommonUnexpected, "obproxy %d is still running, waiting for it to exit...", t.oldPid)
 			continue
 		}
 		err = t.checkVersion()
@@ -300,10 +303,9 @@ func (t *WaitHotRestartObproxyFinishTask) Execute() error {
 			return errors.Wrapf(err, "write obproxy pid file failed")
 		}
 		return nil
-
 	}
 
-	return errors.Wrapf(err, "wait hot restart obproxy finish timeout")
+	return errors.WrapOverride(errors.ErrOBProxyHotRestartTimeout, err)
 }
 
 func (t *WaitHotRestartObproxyFinishTask) checkVersion() (err error) {
@@ -333,11 +335,13 @@ func (t *WaitHotRestartObproxyFinishTask) checkVersion() (err error) {
 		version := re.FindString(proxyInfo.Info)
 		if version != strings.Join([]string{t.targetVersion, t.buildNumber}, "-") {
 			t.ExecuteLogf("obproxy version is not the target version, current version: %s, target version: %s", version, t.targetVersion)
+			err = errors.Occurf(errors.ErrCommonUnexpected, "obproxy version is not the target version, current version: %s, target version: %s", version, t.targetVersion)
 			continue
 		}
 		return nil
 	}
-	return errors.New("check obproxy version timeout...")
+
+	return errors.WrapRetain(errors.ErrOBProxyHotRestartTimeout, err)
 }
 
 type CreateObproxyUpgradeDirTask struct {
@@ -382,7 +386,7 @@ func (t *CreateObproxyUpgradeDirTask) checkUpgradeDir() (err error) {
 		return err
 	}
 	if !isDirEmpty {
-		return fmt.Errorf("%s is not empty", t.upgradeDir)
+		return errors.Occur(errors.ErrCommonDirNotEmpty, t.upgradeDir)
 	}
 	t.GetContext().SetData(PARAM_CREATE_UPGRADE_DIR_FLAG, true)
 	return nil
@@ -426,7 +430,7 @@ func (t *RemoveUpgradeObproxyDirTask) Execute() (err error) {
 
 func (t *RemoveUpgradeObproxyDirTask) removeUpgradeDir() (err error) {
 	if err := t.GetContext().GetParamWithValue(PARAM_UPGRADE_DIR, &t.upgradeDir); err != nil {
-		return errors.New("get upgrade check task dir failed")
+		return err
 	}
 	return os.RemoveAll(t.upgradeDir)
 }

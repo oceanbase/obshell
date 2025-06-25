@@ -35,7 +35,7 @@ func checkClusterAgentWrapper(f func(*gin.Context)) func(*gin.Context) {
 
 func checkClusterAgent() error {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String())
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	return nil
 }

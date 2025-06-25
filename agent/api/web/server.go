@@ -93,7 +93,7 @@ func NewServer(mode config.AgentMode, conf config.ServerConfig) *Server {
 	router.NoRoute(func(c *gin.Context) {
 		requestedPath := c.Request.URL.Path
 		if strings.Contains(requestedPath, constant.URI_API_V1) || strings.Contains(requestedPath, constant.URI_RPC_V1) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "404 not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrCommonNotFound, "404 not found"))
 			return
 		}
 

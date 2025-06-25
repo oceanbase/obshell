@@ -253,7 +253,7 @@ func (c *Coordinator) getMaintainerbyRpc(agentInfo meta.AgentInfoInterface) erro
 // GetMaintainer will get Coordinator Maintainer with LifeTime.
 func GetMaintainer() (Maintainer, error) {
 	if OCS_COORDINATOR == nil || OCS_COORDINATOR.IsFaulty() {
-		return Maintainer{}, errors.New("coordinator is not initialized")
+		return Maintainer{}, errors.Occur(errors.ErrAgentCoordinatorNotInitialized)
 	} else {
 		var maintainer = *OCS_COORDINATOR.Maintainer
 		maintainer.LifeTime = float64(time.Since(OCS_COORDINATOR.Maintainer.GetLastUpdateTime()).Seconds())

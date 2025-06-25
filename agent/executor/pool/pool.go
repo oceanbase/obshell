@@ -23,26 +23,26 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func DropResourcePool(poolName string) *errors.OcsAgentError {
+func DropResourcePool(poolName string) error {
 	pool, err := tenantService.GetResourcePoolByName(poolName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Get resource pool %s failed: %s", poolName, err.Error())
+		return errors.Wrapf(err, "Get resource pool %s failed", poolName)
 	} else if pool == nil {
 		return nil
 	} else if pool.TenantId != 0 {
-		return errors.Occurf(errors.ErrBadRequest, "resource pool '%s' has already been granted to a tenant", poolName)
+		return errors.Occur(errors.ErrObTenantResourcePoolGranted, poolName)
 	}
 
 	if err := tenantService.DropResourcePool(poolName, false); err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Drop resource pool %s failed: %s", poolName, err.Error())
+		return errors.Wrapf(err, "Drop resource pool %s failed", poolName)
 	}
 	return nil
 }
 
-func GetAllResourcePools() ([]oceanbase.DbaObResourcePool, *errors.OcsAgentError) {
+func GetAllResourcePools() ([]oceanbase.DbaObResourcePool, error) {
 	pools, err := tenantService.GetAllResourcePool()
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Get all resource pool failed: %s", err.Error())
+		return nil, errors.Wrap(err, "Get all resource pool failed")
 	}
 	return pools, nil
 }
@@ -63,7 +63,7 @@ func NewDropResourcePoolTask() *DropResourcePoolTask {
 
 func (t *DropResourcePoolTask) Execute() error {
 	if err := t.GetContext().GetDataWithValue(PARAM_DROP_RESOURCE_POOL_LIST, &t.resourcePools); err != nil {
-		return errors.New("Get resource pools failed.")
+		return err
 	}
 	for _, pool := range t.resourcePools {
 		t.ExecuteLogf("Drop resource pool %s", pool)

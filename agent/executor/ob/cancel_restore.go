@@ -31,16 +31,16 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
 
-func CancelRestoreTaskForTenant(tenantName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func CancelRestoreTaskForTenant(tenantName string) (*task.DagDetailDTO, error) {
 	// Get the running restore task registered in ob by tenant name.
 	job, err := tenantService.GetRunningRestoreTask(tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err, "get running restore task")
+		return nil, errors.Wrap(err, "get running restore task")
 	}
 	// Get the restore dag id by tenant name from obshell.
 	id, err := tenantService.GetTenantLevelDagIDByTenantName(tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err, "get restore dag id")
+		return nil, errors.Wrap(err, "get restore dag id")
 	}
 
 	if job == nil {
@@ -50,10 +50,10 @@ func CancelRestoreTaskForTenant(tenantName string) (*task.DagDetailDTO, *errors.
 			log.Infof("There is no running restore dag for tenant '%s'", tenantName)
 			tenant, err := tenantService.GetTenantByName(tenantName)
 			if err != nil {
-				return nil, errors.Occur(errors.ErrUnexpected, err, "get tenant by name")
+				return nil, errors.Wrap(err, "get tenant by name")
 			}
 			if tenant != nil {
-				return nil, errors.Occurf(errors.ErrBadRequest, "tenant '%s' not in restore", tenantName)
+				return nil, errors.Occur(errors.ErrObRestoreNotRecovering, tenantName)
 			}
 			// TODO: Return a new error type
 			return nil, nil
@@ -79,36 +79,38 @@ func CancelRestoreTaskForTenant(tenantName string) (*task.DagDetailDTO, *errors.
 
 }
 
-func cmpDagAncCancelRestoreForJobNil(dagID int64, tenantName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func cmpDagAncCancelRestoreForJobNil(dagID int64, tenantName string) (*task.DagDetailDTO, error) {
 	log.Infof("The current dag of tenant '%s' is %d", tenantName, dagID)
 	dag, err := taskService.GetDagInstance(dagID)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	expectName := newRestoreDagName(tenantName)
 	log.Infof("dag name is %s, expect name is %s", dag.GetName(), expectName)
 	if dag.GetName() != expectName {
-		return nil, errors.Occur(errors.ErrKnown, "there is no restore dag, %s(%d) is not the restore dag", dag.GetName(), dagID)
+		return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "%s(%d) is not the restore dag", dag.GetName(), dagID)
 	}
 
 	// There is a restore task, so we need to compare the additional data.
 	dagDetail := task.NewDagDetailDTO(dag)
 	uri := fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, dagDetail.GenericID)
 	if err = http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, nil, dagDetail); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	log.Infof("dag additional data is %v", *dagDetail.AdditionalData)
 	if dagDetail.AdditionalData == nil {
-		return nil, errors.Occurf(errors.ErrBadRequest, "additional data is nil, %s(%d) is not the restore backup task", dag.GetName(), dagID)
+		log.Infof("additional data is nil, %s(%d) is not the restore backup task", dag.GetName(), dagID)
+		return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "additional data is nil, %s(%d) is not the restore backup task", dag.GetName(), dagID)
 	}
 
 	data := *(dagDetail.AdditionalData)
 	num, ok := data[ADDL_KEY_RESTORE_JOB_ID].(json.Number)
 	// If the dag additional data has no restore job id, which means the dag is not the restore backup task, return directly.
 	if !ok {
-		return nil, errors.Occurf(errors.ErrBadRequest, "additional data has no restore job id, dag is not the restore backup task")
+		log.Infof("additional data has no restore job id, %s(%d) is not the restore backup task", dag.GetName(), dagID)
+		return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "additional data has no restore job id, %s(%d) is not the restore backup task", dag.GetName(), dagID)
 	}
 	// if restore job id exists, it must be int64, so we can convert it to int64 directly.
 	jobID, _ := num.Int64()
@@ -116,16 +118,16 @@ func cmpDagAncCancelRestoreForJobNil(dagID int64, tenantName string) (*task.DagD
 	if jobID == 0 {
 		return cancelAndRollbackRestoreDag(dag)
 	} else {
-		return nil, errors.Occur(errors.ErrBadRequest, "restore task was succeed, can not cancel")
+		return nil, errors.Occur(errors.ErrObRestoreTaskAlreadySucceed)
 	}
 
 }
 
-func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*task.DagDetailDTO, error) {
 	// Get the dag detail by dag id from obshell.
 	dag, err := taskService.GetDagInstance(dagID)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	if dag.IsSuccess() {
@@ -137,12 +139,12 @@ func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*tas
 		dagDetail := task.NewDagDetailDTO(dag)
 		uri := fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, dagDetail.GenericID)
 		if err = http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, nil, dagDetail); err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err)
+			return nil, err
 		}
 
 		// If the dag does not have additional data, which means the dag is not the restore backup task, return directly.
 		if dagDetail.AdditionalData == nil {
-			return nil, errors.Occurf(errors.ErrBadRequest, "additional data is nil, %s(%d) is not the restore backup task", dag.GetName(), dagID)
+			return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "additional data is nil, %s(%d) is not the restore backup task", dag.GetName(), dagID)
 		} else {
 			log.Infof("dag additional data is %v", *dagDetail.AdditionalData)
 			data := *(dagDetail.AdditionalData)
@@ -150,7 +152,7 @@ func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*tas
 			num, ok := data[ADDL_KEY_RESTORE_JOB_ID].(json.Number)
 			// If the dag additional data has no restore job id, which means the dag is not the restore backup task, return directly.
 			if !ok {
-				return nil, errors.Occurf(errors.ErrBadRequest, "additional data has no restore job id, %s(%d) is not the restore backup task", dag.GetName(), dagID)
+				return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "additional data has no restore job id, %s(%d) is not the restore backup task", dag.GetName(), dagID)
 			}
 			// if restore job id exists, it must be int64, so we can convert it to int64 directly.
 			jobID, _ := num.Int64()
@@ -158,7 +160,7 @@ func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*tas
 			if jobID == 0 || jobID == expectedJobID {
 				return cancelAndRollbackRestoreDag(dag)
 			} else {
-				return nil, errors.Occurf(errors.ErrBadRequest, "%s(%d) is not the restore backup task", dag.GetName(), dagID)
+				return nil, errors.Occurf(errors.ErrObRestoreTaskNotExist, "%s(%d) is not the restore backup task", dag.GetName(), dagID)
 			}
 
 		}
@@ -166,18 +168,18 @@ func cmpDagAndCancelRestore(dagID, expectedJobID int64, tenantName string) (*tas
 
 }
 
-func cancelAndRollbackRestoreDag(dag *task.Dag) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func cancelAndRollbackRestoreDag(dag *task.Dag) (*task.DagDetailDTO, error) {
 	var err error
 	// If the dag is running, cancel the dag.
 	if dag.IsRunning() {
 		if err = taskService.CancelDag(dag); err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err)
+			return nil, err
 		}
 		// Wait for the dag to be failed.
 		for i := 0; i < 60; i++ {
 			dag, err = taskService.GetDagInstance(dag.GetID())
 			if err != nil {
-				return nil, errors.Occur(errors.ErrUnexpected, err)
+				return nil, err
 			}
 			if dag.IsFail() {
 				break
@@ -188,27 +190,27 @@ func cancelAndRollbackRestoreDag(dag *task.Dag) (*task.DagDetailDTO, *errors.Ocs
 
 	// If the dag is failed, set the dag to rollback.
 	if err = taskService.SetDagRollback(dag); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	dagDetail, err := taskService.GetDagDetail(dag.GetID())
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return dagDetail, nil
 }
 
-func createCancelRestoreDag(tenantName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func createCancelRestoreDag(tenantName string) (*task.DagDetailDTO, error) {
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err, "get tenant by name")
+		return nil, errors.Wrap(err, "get tenant by name")
 	}
 	if tenant == nil {
-		return nil, errors.Occurf(errors.ErrBadRequest, "tenant '%s' not found", tenantName)
+		return nil, errors.Occur(errors.ErrObTenantNotExist, tenantName)
 	}
 	pools, err := tenantService.GetResourcePoolsNameByTenantID(tenant.TenantID)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err, "get resource pools")
+		return nil, errors.Wrap(err, "get resource pools")
 	}
 	log.Infof("Get resource pools '%v' by tenant '%s'", pools, tenantName)
 
@@ -225,7 +227,7 @@ func createCancelRestoreDag(tenantName string) (*task.DagDetailDTO, *errors.OcsA
 
 	dag, err := taskService.CreateDagInstanceByTemplate(t, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -245,7 +247,7 @@ func newCancelRestoreTask() *CancelRestoreTask {
 
 func (t *CancelRestoreTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+		return err
 	}
 
 	job, err := tenantService.GetRunningRestoreTask(t.tenantName)
@@ -286,7 +288,7 @@ func newDropResourcePoolTask() *DropResourcePoolTask {
 
 func (t *DropResourcePoolTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_POOLS_NAME, &t.poolsName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_POOLS_NAME)
+		return err
 	}
 
 	if t.GetContext().GetParam(PARAM_NEED_DELETE_RP) != nil {

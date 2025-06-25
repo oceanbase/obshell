@@ -17,12 +17,12 @@
 package param
 
 import (
-	"fmt"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/system"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
@@ -151,18 +151,17 @@ func (p *BackupConfigParam) Check() (backupConf *BackupConf, err error) {
 	p.Format()
 
 	if p.LogArchiveConcurrency != nil && (*p.LogArchiveConcurrency < constant.LOG_ARCHIVE_CONCURRENCY_LOW || *p.LogArchiveConcurrency > constant.LOG_ARCHIVE_CONCURRENCY_HIGH) {
-		return nil, fmt.Errorf("log_archive_concurrency must be between %d and %d", constant.LOG_ARCHIVE_CONCURRENCY_LOW, constant.LOG_ARCHIVE_CONCURRENCY_HIGH)
+		return nil, errors.Occur(errors.ErrObBackupLogArchiveConcurrencyInvalid, constant.LOG_ARCHIVE_CONCURRENCY_LOW, constant.LOG_ARCHIVE_CONCURRENCY_HIGH)
 	}
 
 	if p.HaLowThreadScore != nil && (*p.HaLowThreadScore < constant.HA_LOW_THREAD_SCORE_LOW || *p.HaLowThreadScore > constant.HA_LOW_THREAD_SCORE_HIGH) {
-		return nil, fmt.Errorf("ha_low_thread_score must be between %d and %d", constant.HA_LOW_THREAD_SCORE_LOW, constant.HA_LOW_THREAD_SCORE_HIGH)
+		return nil, errors.Occur(errors.ErrObBackupHaLowThreadScoreInvalid, constant.HA_LOW_THREAD_SCORE_LOW, constant.HA_LOW_THREAD_SCORE_HIGH)
 	}
 
 	if p.Binding != nil &&
 		(*p.Binding != "" && *p.Binding != constant.BINDING_MODE_OPTIONAL &&
 			*p.Binding != constant.BINDING_MODE_MANDATORY) {
-		return nil, fmt.Errorf("invalid binding mode: %s, must be %s or %s",
-			*p.Binding, constant.BINDING_MODE_OPTIONAL, constant.BINDING_MODE_MANDATORY)
+		return nil, errors.Occur(errors.ErrObBackupBindingInvalid, *p.Binding, constant.BINDING_MODE_OPTIONAL, constant.BINDING_MODE_MANDATORY)
 	}
 
 	if err = p.checkPieceSwitchInterval(); err != nil {
@@ -203,7 +202,7 @@ func (p *BackupConfigParam) checkDeletePolicy() error {
 		if p.DeletePolicy.Policy == "" {
 			p.DeletePolicy.Policy = constant.DELETE_POLICY_DEFAULT
 		} else if p.DeletePolicy.Policy != constant.DELETE_POLICY_DEFAULT {
-			return fmt.Errorf("invalid delete policy: '%s', must be '%s'", p.DeletePolicy.Policy, constant.DELETE_POLICY_DEFAULT)
+			return errors.Occur(errors.ErrObBackupDeletePolicyInvalid, p.DeletePolicy.Policy, constant.DELETE_POLICY_DEFAULT)
 		}
 	}
 	return nil
@@ -222,9 +221,9 @@ func (p *BackupConfigParam) checkPieceSwitchInterval() error {
 	}
 
 	if duration < constant.PIECE_SWITCH_INTERVAL_LOW {
-		return fmt.Errorf("piece_switch_interval must be greater than %v", constant.PIECE_SWITCH_INTERVAL_LOW)
+		return errors.Occur(errors.ErrObBackupPieceSwitchIntervalInvalid, constant.PIECE_SWITCH_INTERVAL_LOW, constant.PIECE_SWITCH_INTERVAL_HIGH)
 	} else if duration > constant.PIECE_SWITCH_INTERVAL_HIGH {
-		return fmt.Errorf("piece_switch_interval must be less than %v", constant.PIECE_SWITCH_INTERVAL_HIGH)
+		return errors.Occur(errors.ErrObBackupPieceSwitchIntervalInvalid, constant.PIECE_SWITCH_INTERVAL_LOW, constant.PIECE_SWITCH_INTERVAL_HIGH)
 	}
 
 	return nil
@@ -241,11 +240,11 @@ func (p *BackupConfigParam) checkArchiveLagTarget(t string) error {
 	}
 
 	if duration > constant.ARCHIVE_LAG_TARGET_HIGH {
-		return fmt.Errorf("archive_lag_target must be less than %v", constant.ARCHIVE_LAG_TARGET_HIGH)
+		return errors.Occur(errors.ErrObBackupArchiveLagTargetInvalid, constant.ARCHIVE_LAG_TARGET_HIGH)
 	}
 
 	if t == constant.PROTOCOL_S3 && duration < constant.ARCHIVE_LAG_TARGET_LOW_FOR_S3 {
-		return fmt.Errorf("archive_lag_target must be greater than %v for s3", constant.ARCHIVE_LAG_TARGET_LOW_FOR_S3)
+		return errors.Occur(errors.ErrObBackupArchiveLagTargetForS3Invalid, constant.ARCHIVE_LAG_TARGET_LOW_FOR_S3)
 	}
 	return nil
 }
@@ -272,8 +271,7 @@ func (p *BackupParam) Check() error {
 		constant.BACKUP_MODE_INCREMENTAL:
 		return nil
 	default:
-		return fmt.Errorf("invalid backup mode: %s, must be %s or %s",
-			*p.Mode, constant.BACKUP_MODE_FULL, constant.BACKUP_MODE_INCREMENTAL)
+		return errors.Occur(errors.ErrObBackupModeInvalid, *p.Mode, constant.BACKUP_MODE_FULL, constant.BACKUP_MODE_INCREMENTAL)
 	}
 }
 
@@ -296,8 +294,7 @@ func (p *BackupStatusParam) Check() error {
 	case constant.BACKUP_CANCELED:
 		return nil
 	default:
-		return fmt.Errorf("invalid backup status: '%s', must be '%s'",
-			*p.Status, constant.BACKUP_CANCELED)
+		return errors.Occur(errors.ErrObBackupStatusInvalid, *p.Status, constant.BACKUP_CANCELED)
 	}
 }
 
@@ -321,8 +318,7 @@ func (p *ArchiveLogStatusParam) Check() error {
 		constant.ARCHIVELOG_STATUS_DOING:
 		return nil
 	default:
-		return fmt.Errorf("invalid archive log status: %s, must be %s or %s",
-			*p.Status, constant.ARCHIVELOG_STATUS_STOP, constant.ARCHIVELOG_STATUS_DOING)
+		return errors.Occur(errors.ErrObBackupArchiveLogStatusInvalid, *p.Status, constant.ARCHIVELOG_STATUS_STOP, constant.ARCHIVELOG_STATUS_DOING)
 	}
 }
 

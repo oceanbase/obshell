@@ -23,6 +23,7 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
@@ -89,7 +90,7 @@ func (s *TenantService) SetLogArchiveDest(tenantName string, dest param.LogArchi
 		return
 	}
 	if dest.Location == nil {
-		return fmt.Errorf("location is required")
+		return errors.Occur(errors.ErrCommonUnexpected, "location is required")
 	}
 
 	subsql := fmt.Sprintf("LOCATION=%s", *dest.Location)

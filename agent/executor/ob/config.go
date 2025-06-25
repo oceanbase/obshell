@@ -65,7 +65,7 @@ func newUpdateOBServerConfigTask() *UpdateOBServerConfigTask {
 func CheckOBServerConfigParams(params param.ObServerConfigParams) error {
 	for _, key := range DeniedConfig {
 		if _, ok := params.ObServerConfig[key]; ok {
-			return fmt.Errorf("config %s is not allowed to set", key)
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "observerConfig", fmt.Sprintf("config %s is not allowed to set", key))
 		}
 	}
 	return nil
@@ -95,7 +95,7 @@ func paramToConfig(obServerConfig map[string]string) error {
 	for k, v := range constant.OB_CONFIG_COMPATIBLE_MAP {
 		if val, ok := obServerConfig[k]; ok {
 			if val2, ok2 := obServerConfig[v]; ok2 && val != val2 {
-				return errors.Errorf("You cannot set both %s and %s, use %s instead.", k, v, k)
+				return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "observerConfig", fmt.Sprintf("You cannot set both %s and %s, use %s instead.", k, v, k))
 			}
 		} else if val, ok := obServerConfig[v]; ok {
 			obServerConfig[k] = val
@@ -108,7 +108,7 @@ func paramToConfig(obServerConfig map[string]string) error {
 func (t *UpdateOBServerConfigTask) Execute() error {
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_CONFIG, &t.config); err != nil {
-		return errors.Wrap(err, "get config error")
+		return err
 	}
 	t.deleteAll = ctx.GetParam(PARAM_DELETE_ALL).(bool)
 
@@ -120,7 +120,7 @@ func (t *UpdateOBServerConfigTask) Execute() error {
 	case SCOPE_SERVER:
 		return t.updateServerConfig()
 	}
-	return fmt.Errorf("invalid scope type: %s", t.config.Scope.Type)
+	return errors.Occur(errors.ErrObClusterScopeInvalid, t.config.Scope.Type)
 }
 
 func (t *UpdateOBServerConfigTask) updateGlobalConfig() error {
@@ -350,7 +350,7 @@ func (t *IntegrateObConfigTask) hasRSList() error {
 	t.ExecuteLogf("check rsList config: %s", rsServers)
 	for _, rsServer := range rsServers {
 		if rsServer == "" {
-			return fmt.Errorf("invalid rsList config: %s", val.Value)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, "has empty rsServer")
 		}
 
 		var info []string
@@ -359,7 +359,7 @@ func (t *IntegrateObConfigTask) hasRSList() error {
 			// It means the rsServer is IPv6 address.
 			info = strings.Split(rsServer, "]")
 			if len(info) != 2 {
-				return fmt.Errorf("invalid rsList config: %s", rsServer)
+				return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, rsServer)
 			}
 
 			ip := info[0][1:len(info[0])]
@@ -371,26 +371,26 @@ func (t *IntegrateObConfigTask) hasRSList() error {
 			info = strings.Split(rsServer, ":")
 		}
 		if len(info) != 3 {
-			return fmt.Errorf("invalid rsList config: %s", rsServer)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, rsServer)
 		}
 
 		rpcPort, err := strconv.Atoi(info[1])
 		if err != nil {
-			return fmt.Errorf("invalid rsList config: %s", rsServer)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, rsServer)
 		}
 		observerInfo := *meta.NewAgentInfo(info[0], rpcPort)
 		agentInfo, ok := t.observerMap[observerInfo]
 		if !ok {
-			return fmt.Errorf("invalid rsList config: %s not in cluster", rsServer)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, fmt.Sprintf("%s not in cluster", rsServer))
 		}
 
 		mysqlPort, err := strconv.Atoi(info[2])
 		if err != nil {
-			return fmt.Errorf("invalid rsList config: %s", rsServer)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, rsServer)
 		}
 		portMap := t.portMap[t.agents[agentInfo]]
 		if portMap[constant.CONFIG_MYSQL_PORT] != mysqlPort {
-			return fmt.Errorf("invalid rsList config: %s mysql port not match", rsServer)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, fmt.Sprintf("%s mysql port not match", rsServer))
 		}
 
 		zone := t.agents[agentInfo].Zone
@@ -398,13 +398,13 @@ func (t *IntegrateObConfigTask) hasRSList() error {
 			t.zoneRS[zone] = observerInfo
 			t.zoneOrder = append(t.zoneOrder, zone)
 		} else {
-			return fmt.Errorf("invalid rsList config: %s has more than one rootserver", zone)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, fmt.Sprintf("%s has more than one rootserver", zone))
 		}
 	}
 
 	for zone, _ := range t.zoneConfig {
 		if _, ok := t.zoneRS[zone]; !ok {
-			return fmt.Errorf("invalid rsList config: %s has no rootserver", zone)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, val.Value, fmt.Sprintf("%s has no rootserver", zone))
 		}
 	}
 	return nil
@@ -414,7 +414,7 @@ func (t *IntegrateObConfigTask) setUNRootServer() error {
 	for observerInfo, agentInfo := range t.observerMap {
 		zone := t.agents[agentInfo].Zone
 		if rs, ok := t.zoneRS[zone]; !ok {
-			return fmt.Errorf("invalid rsList config: %s has no rootserver", zone)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, t.globalConfig[constant.CONFIG_RS_LIST].Value, fmt.Sprintf("%s has no rootserver", zone))
 		} else if rs.Equal(&observerInfo) {
 			continue
 		}
@@ -485,10 +485,10 @@ func fillPort(config map[string]string) error {
 		if isValidConfig(config, key) {
 			p, err := strconv.Atoi(config[key])
 			if err != nil {
-				return fmt.Errorf("invalid %s: %s not a int", key, config[key])
+				return errors.Occur(errors.ErrCommonInvalidPort, config[key])
 			}
 			if p < 1025 || p > 65535 {
-				return fmt.Errorf("invalid %s: %d. port must between 1025 and 65535", key, p)
+				return errors.Occur(errors.ErrCommonInvalidPort, config[key])
 			}
 		} else {
 			config[key] = fmt.Sprint(port)
@@ -504,10 +504,11 @@ func fillDir(config map[string]string) error {
 				if parentDir, ok := config[parentDirKey]; ok {
 					config[dir] = filepath.Join(parentDir, dirMap[dir])
 				} else {
-					return fmt.Errorf("fill config error, key %s not in config", parentDirKey)
+					// There should indeed be an UnexpectedError here.
+					return errors.Occurf(errors.ErrCommonUnexpected, "fill config error, key %s not in config", parentDirKey)
 				}
 			} else {
-				return fmt.Errorf("fill config error, key %s not in parentDirKeys", dir)
+				return errors.Occurf(errors.ErrCommonUnexpected, "fill config error, key %s not in parentDirKeys", dir)
 			}
 		}
 	}

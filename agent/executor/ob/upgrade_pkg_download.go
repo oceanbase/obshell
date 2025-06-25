@@ -165,7 +165,7 @@ func (t *GetAllRequiredPkgsTask) CheckDiskFreeSpace() error {
 	}
 	t.ExecuteLogf("The remaining disk size is %d", diskInfo.FreeSizeBytes)
 	if diskInfo.FreeSizeBytes < expectedSize {
-		return fmt.Errorf("the remaining disk space is insufficient, the remaining disk space is %d, and the required disk space is %d", diskInfo.FreeSizeBytes, expectedSize)
+		return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, diskInfo.FreeSizeBytes, expectedSize)
 	}
 	return nil
 }

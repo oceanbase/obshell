@@ -18,7 +18,6 @@ package task
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"runtime"
@@ -26,6 +25,7 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -334,7 +334,22 @@ func (task *Task) ExecuteErrorLog(err error) {
 		task.ExecuteInfoLog(err.Error())
 		return
 	}
-	task.executeLog(log.ErrorLevel, fmt.Sprintf("ERROR: %s", err.Error()))
+
+	var ocsAgentError errors.OcsAgentErrorInterface
+	if tmp, ok := err.(errors.OcsAgentErrorInterface); ok {
+		ocsAgentError = tmp
+	} else if errors.IsMysqlError(err) {
+		exportor := &errors.OcsAgentErrorExporter{}
+		exportor.SetErrorCode(errors.ErrMysqlError)
+		exportor.SetError(err)
+		ocsAgentError = exportor
+	} else {
+		exportor := &errors.OcsAgentErrorExporter{}
+		exportor.SetErrorCode(errors.ErrCommonUnexpected)
+		exportor.SetError(err)
+		ocsAgentError = exportor
+	}
+	task.executeLog(log.ErrorLevel, fmt.Sprintf("ERROR: %s", ocsAgentError.ErrorMessage()))
 }
 
 func isNotPrintErr(err error) bool {

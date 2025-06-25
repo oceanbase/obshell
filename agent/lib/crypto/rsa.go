@@ -21,7 +21,8 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
-	"errors"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 func sectionalEncrypt(raw []byte, pub *rsa.PublicKey) (string, error) {
@@ -106,14 +107,14 @@ func NewRSACryptoFromKey(privateKey string) (*RSACrypto, error) {
 
 func (r *RSACrypto) Encrypt(raw string) (string, error) {
 	if r == nil || r.pk == nil {
-		return "", errors.New(ERR_NO_INIT)
+		return "", errors.Occur(errors.ErrCommonUnexpected, ERR_NO_INIT)
 	}
 	return sectionalEncrypt([]byte(raw), &r.pk.PublicKey)
 }
 
 func (r *RSACrypto) DecryptAndReturnBytes(raw string) ([]byte, error) {
 	if r == nil || r.pk == nil {
-		return nil, errors.New(ERR_NO_INIT)
+		return nil, errors.Occur(errors.ErrCommonUnexpected, ERR_NO_INIT)
 	}
 	decRaw, err := base64.StdEncoding.DecodeString(raw)
 	if err != nil {

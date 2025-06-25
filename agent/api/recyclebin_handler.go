@@ -26,27 +26,27 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-//@ID recyclebinTenantPurge
-//@Summary purge recyclebin tenant
-//@Description purge tenant in recyclebin
-//@Tags recyclebin
-//@Accept application/json
-//@Produce application/json
-//@Param X-OCS-Header header string true "Authorization"
-//@Param name path string true "original tenant name or object name in recyclebin"
-//@Success 200 object http.OcsAgentResponse
-//@Failure 400 object http.OcsAgentResponse
-//@Failure 401 object http.OcsAgentResponse
-//@Failure 500 object http.OcsAgentResponse
-//@Router /api/v1/recyclebin/bin/:name [delete]
+// @ID recyclebinTenantPurge
+// @Summary purge recyclebin tenant
+// @Description purge tenant in recyclebin
+// @Tags recyclebin
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "original tenant name or object name in recyclebin"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/recyclebin/bin/:name [delete]
 func recyclebinPurgeTenantHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name or object name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	if dag, err := recyclebin.PurgeRecyclebinTenant(name); err == nil && dag == nil {
@@ -56,58 +56,58 @@ func recyclebinPurgeTenantHandler(c *gin.Context) {
 	}
 }
 
-//@ID recyclebinTenantList
-//@Summary list all tenants in recyclebin
-//@Description list all tenants in recyclebin
-//@Tags recyclebin
-//@Accept application/json
-//@Produce application/json
-//@Param X-OCS-Header header string true "Authorization"
-//@Success 200 object http.OcsAgentResponse{data=[]oceanbase.DbaRecyclebin}
-//@Failure 400 object http.OcsAgentResponse
-//@Failure 401 object http.OcsAgentResponse
-//@Failure 500 object http.OcsAgentResponse
-//@Router /api/v1/recyclebin/tenants [get]
+// @ID recyclebinTenantList
+// @Summary list all tenants in recyclebin
+// @Description list all tenants in recyclebin
+// @Tags recyclebin
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]oceanbase.DbaRecyclebin}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/recyclebin/tenants [get]
 func recyclebinListTenantHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	tenants, err := recyclebin.ListRecyclebinTenant()
 	common.SendResponse(c, tenants, err)
 }
 
-//@ID recyclebinFlashbackTenant
-//@Summary flashback tenant from recyclebin
-//@Description flashback tenant from recyclebin
-//@Tags recyclebin
-//@Accept application/json
-//@Produce application/json
-//@Param X-OCS-Header header string true "Authorization"
-//@Param name path string true "original tenant name or object name in recyclebin"
-//@Param body body param.FlashBackTenantParam true "Flashback tenant param"
-//@Success 200 object http.OcsAgentResponse
-//@Failure 400 object http.OcsAgentResponse
-//@Failure 401 object http.OcsAgentResponse
-//@Failure 500 object http.OcsAgentResponse
-//@Router /api/v1/recyclebin/flashback/{name} [post]
+// @ID recyclebinFlashbackTenant
+// @Summary flashback tenant from recyclebin
+// @Description flashback tenant from recyclebin
+// @Tags recyclebin
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "original tenant name or object name in recyclebin"
+// @Param body body param.FlashBackTenantParam true "Flashback tenant param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/recyclebin/tenant/{name} [post]
 func recyclebinFlashbackTenantHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name or object name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 		return
 	}
 	var param param.FlashBackTenantParam
 	if err := c.BindJSON(&param); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Flashback tenant param is invalid."))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	if param.NewName != nil && *param.NewName == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "New name can not be empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "new_name", "New name can not be empty."))
 		return
 	}
 	err := recyclebin.FlashbackTenant(name, param.NewName)

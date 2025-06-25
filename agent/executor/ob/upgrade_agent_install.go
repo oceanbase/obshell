@@ -73,7 +73,7 @@ func isRealExecuteAgent(t task.ExecutableTask) (res bool, realExecuteAgent meta.
 			return false, agent, nil
 		}
 	}
-	return false, realExecuteAgent, errors.New("get real execute agent failed")
+	return false, realExecuteAgent, errors.Occur(errors.ErrCommonUnexpected, "get real execute agent failed")
 }
 
 func (t *InstallNewAgentTask) getParams() (err error) {

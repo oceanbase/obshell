@@ -17,8 +17,6 @@
 package ob
 
 import (
-	"fmt"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -27,19 +25,19 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func PatchObclusterBackup(p *param.BackupStatusParam) *errors.OcsAgentError {
+func PatchObclusterBackup(p *param.BackupStatusParam) error {
 	if err := p.Check(); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	tenants, err := tenantService.GetAllUserTenants()
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 
 	for _, tenant := range tenants {
 		if err = stopBackup(&tenant); err != nil {
-			return errors.Occur(errors.ErrUnexpected, err)
+			return err
 		}
 	}
 	return nil
@@ -60,35 +58,35 @@ func stopBackup(tenant *oceanbase.DbaObTenant) error {
 	return tenantService.StopBackup(tenant.TenantName)
 }
 
-func PatchTenantBackup(tenantName string, p *param.BackupStatusParam) *errors.OcsAgentError {
+func PatchTenantBackup(tenantName string, p *param.BackupStatusParam) error {
 	if err := p.Check(); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 
 	if err = stopBackup(tenant); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	return nil
 }
 
-func PatchObclusterArchiveLog(p *param.ArchiveLogStatusParam) *errors.OcsAgentError {
+func PatchObclusterArchiveLog(p *param.ArchiveLogStatusParam) error {
 	if err := p.Check(); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	tenants, err := tenantService.GetAllUserTenants()
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 
 	for _, tenant := range tenants {
 		if err = patchArchiveLogStatus(&tenant, p); err != nil {
-			return errors.Occur(errors.ErrUnexpected, err)
+			return err
 		}
 	}
 	return nil
@@ -101,7 +99,7 @@ func patchArchiveLogStatus(tenant *oceanbase.DbaObTenant, p *param.ArchiveLogSta
 	case constant.ARCHIVELOG_STATUS_STOP:
 		return stopArchiveLog(tenant)
 	default:
-		return fmt.Errorf("invalid archive log status: %s", *p.Status)
+		return errors.Occur(errors.ErrObBackupArchiveLogStatusInvalid, *p.Status, constant.ARCHIVELOG_STATUS_STOP, constant.ARCHIVELOG_STATUS_DOING)
 	}
 }
 
@@ -128,7 +126,7 @@ func startArchiveLog(tenant *oceanbase.DbaObTenant) error {
 		constant.ARCHIVELOG_STATUS_SUSPENDING:
 		return tenantService.EnableArchiveLogDest(tenant.TenantName)
 	case constant.ARCHIVELOG_STATUS_INTERRUPTED:
-		return fmt.Errorf("tenant %s archive log is interrupted,", tenant.TenantName)
+		return errors.Occurf(errors.ErrCommonUnexpected, "tenant %s archive log is interrupted", tenant.TenantName)
 	}
 	return nil
 }
@@ -152,31 +150,31 @@ func stopArchiveLog(tenant *oceanbase.DbaObTenant) error {
 		constant.ARCHIVELOG_STATUS_SUSPENDING:
 		return tenantService.CloseArchiveLog(tenant.TenantName)
 	case constant.ARCHIVELOG_STATUS_INTERRUPTED:
-		return fmt.Errorf("tenant %s archive log is interrupted,", tenant.TenantName)
+		return errors.Occurf(errors.ErrCommonUnexpected, "tenant %s archive log is interrupted", tenant.TenantName)
 	}
 	return nil
 }
 
-func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) *errors.OcsAgentError {
+func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) error {
 	if err := p.Check(); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 
 	if err = patchArchiveLogStatus(tenant, p); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	return nil
 }
 
-func GetObclusterBackupOverview() (*param.BackupOverview, *errors.OcsAgentError) {
+func GetObclusterBackupOverview() (*param.BackupOverview, error) {
 	tenants, err := tenantService.GetAllUserTenants()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	overview := &param.BackupOverview{
@@ -186,7 +184,7 @@ func GetObclusterBackupOverview() (*param.BackupOverview, *errors.OcsAgentError)
 	for _, tenant := range tenants {
 		task, err := getTenantBackupTask(tenant.TenantID)
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err)
+			return nil, err
 		}
 
 		if task != nil {
@@ -195,25 +193,25 @@ func GetObclusterBackupOverview() (*param.BackupOverview, *errors.OcsAgentError)
 	}
 
 	if len(overview.Statuses) == 0 {
-		return nil, errors.Occur(errors.ErrTaskNotFound, "no backup task found")
+		return nil, errors.Occur(errors.ErrCommonNotFound, "backup task")
 	}
 
 	return overview, nil
 }
 
-func GetTenantBackupOverview(name string) (*param.TenantBackupOverview, *errors.OcsAgentError) {
+func GetTenantBackupOverview(name string) (*param.TenantBackupOverview, error) {
 	tenant, err := tenantService.GetTenantByName(name)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	task, err := getTenantBackupTask(tenant.TenantID)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	if task == nil {
-		return nil, errors.Occur(errors.ErrTaskNotFound, "no backup task found")
+		return nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "no backup task")
 	}
 
 	overview := &param.TenantBackupOverview{

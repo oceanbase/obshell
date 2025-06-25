@@ -17,10 +17,11 @@
 package config
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"strings"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 var EncryptionDisabled string = "false"
@@ -62,7 +63,7 @@ func NewServerConfig(ip string, port int, runDir string, UpgradeMode bool) (*Ser
 func generateAddress(ip string, port int) (string, error) {
 	ipParsed := net.ParseIP(ip)
 	if ipParsed == nil {
-		return "", errors.New("invalid ip")
+		return "", errors.Occur(errors.ErrCommonInvalidIp, ip)
 	}
 	if ipParsed.To4() != nil {
 		return fmt.Sprint("0.0.0.0:", port), nil

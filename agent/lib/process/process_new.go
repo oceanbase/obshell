@@ -59,7 +59,7 @@ func NewProcess(conf ProcessConfig) *Process {
 
 func newBuffers(path string) (stdout *switchableBuffer, stderr *switchableBuffer, err error) {
 	if path == "" {
-		return nil, nil, errors.New("file path is empty")
+		return nil, nil, errors.Occur(errors.ErrCommonInvalidPath, "", "path is empty")
 	}
 	parentDir := filepath.Dir(path)
 	if err = os.MkdirAll(parentDir, 0755); err != nil {
@@ -94,7 +94,7 @@ func (p *Process) Start() (err error) {
 	defer p.mu.Unlock()
 
 	if p.running {
-		return errors.New("proc already running")
+		return errors.Occur(errors.ErrCommonUnexpected, "proc already running")
 	}
 
 	p.cmd = newCmd(p.conf)
@@ -160,11 +160,11 @@ func (p *Process) Kill() error {
 
 func (p *Process) signal(s os.Signal) error {
 	if p.cmd == nil {
-		return errors.New("proc not exist")
+		return errors.Occur(errors.ErrCommonUnexpected, "proc not exist")
 	}
 	process := p.cmd.Process
 	if process == nil {
-		return errors.New("proc not exist")
+		return errors.Occur(errors.ErrCommonUnexpected, "proc not exist")
 	}
 	if err := process.Signal(s); err != nil {
 		return err

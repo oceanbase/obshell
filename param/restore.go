@@ -17,11 +17,11 @@
 package param
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
@@ -71,11 +71,11 @@ func (p *RestoreParam) Format() {
 func (p *RestoreParam) Check() error {
 	p.Format()
 	if (p.Timestamp != nil && *p.Timestamp != constant.ZERO_TIME) && (p.SCN != nil && *p.SCN != 0) {
-		return fmt.Errorf("timestamp and scn cannot be set at the same time")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "timestamp or scn", "cannot be set at the same time")
 	}
 
 	if p.HaHighThreadScore != nil && (*p.HaHighThreadScore < 0 || *p.HaHighThreadScore > 100) {
-		return fmt.Errorf("invalid ha_high_thread_score %d, should be in [0, 100]", *p.HaHighThreadScore)
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "ha_high_thread_score", "should be in [0, 100]")
 	}
 	return nil
 }

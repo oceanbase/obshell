@@ -20,6 +20,7 @@ import (
 	"time"
 
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -27,7 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
 
-func EmergencyStart() (*task.DagDetailDTO, *errors.OcsAgentError) {
+func EmergencyStart() (*task.DagDetailDTO, error) {
 	template := task.NewTemplateBuilder(DAG_EMERGENCY_START).
 		SetMaintenance(task.UnMaintenance()).
 		AddTask(newCheckObserverForStartTask(), false).
@@ -38,7 +39,7 @@ func EmergencyStart() (*task.DagDetailDTO, *errors.OcsAgentError) {
 
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template.Build(), taskCtx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -57,8 +58,10 @@ func newGetConnForEStartTask() *GetConnForEStartTask {
 
 func (t *GetConnForEStartTask) Execute() error {
 	t.ExecuteLog("try to get db connection")
+	var err error
+	var db *gorm.DB
 	for i := 0; i < constant.MAX_GET_INSTANCE_RETRIES; i++ {
-		if db, err := oceanbase.GetRestrictedInstance(); db != nil {
+		if db, err = oceanbase.GetRestrictedInstance(); db != nil {
 			return nil
 		} else {
 			log.Error("get db connection failed", err)
@@ -66,5 +69,5 @@ func (t *GetConnForEStartTask) Execute() error {
 		time.Sleep(constant.GET_INSTANCE_RETRY_INTERVAL * time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("get connection failed")
+	return errors.Wrap(err, "get connection failed")
 }

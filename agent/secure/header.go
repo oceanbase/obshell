@@ -118,7 +118,7 @@ func DecryptHeader(ciphertext string) (HttpHeader, error) {
 }
 
 func RepackageHeaderForAutoForward(header *HttpHeader, agentInfo meta.AgentInfoInterface) (headers map[string]string, err error) {
-	err = errors.Occur(errors.ErrUnauthorized)
+	err = errors.Occur(errors.ErrSecurityAuthenticationUnauthorized)
 
 	header.ForwardType = AutoForward
 	header.ForwardAgent = meta.OCS_AGENT.GetAgentInfo()

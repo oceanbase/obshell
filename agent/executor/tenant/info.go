@@ -27,13 +27,13 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, *errors.OcsAgentError) {
+func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, error) {
 	if mode != "" && mode != constant.MYSQL_MODE && mode != constant.ORACAL_MODE {
-		return nil, errors.Occur(errors.ErrBadRequest, "mode should be mysql or oracle")
+		return nil, errors.Occur(errors.ErrObTenantModeNotSupported, mode)
 	}
 	tenants, err := tenantService.GetTenantsOverViewByMode(mode)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	tenantOverviews := make([]oceanbase.TenantOverview, 0)
 	for i := range tenants {
@@ -45,7 +45,7 @@ func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, *errors.OcsAge
 		connectionStrs = append(connectionStrs, connectionStr)
 		readOnly, err := tenantService.GetTenantVariable(tenants[i].TenantName, constant.VARIABLE_READ_ONLY)
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		}
 		if readOnly != nil {
 			tenants[i].ReadOnly = (readOnly.Value == "1")
@@ -58,27 +58,27 @@ func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, *errors.OcsAge
 	return tenantOverviews, nil
 }
 
-func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExist(tenantName)
-	if ocsErr != nil {
-		return nil, ocsErr
+func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
+	tenant, err := checkTenantExist(tenantName)
+	if err != nil {
+		return nil, err
 	}
 
 	whitelist, err := tenantService.GetTenantVariable(tenantName, "ob_tcp_invited_nodes")
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	pools := make([]*bo.ResourcePoolWithUnit, 0)
 	poolInfos, err := tenantService.GetTenantResourcePool(tenant.TenantID)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	for _, poolInfo := range poolInfos {
 		unitConfig, err := unitService.GetUnitConfigById(poolInfo.UnitConfigId)
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		}
 		poolWithUnit := bo.ResourcePoolWithUnit{
 			Name:     poolInfo.Name,
@@ -92,7 +92,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 
 	readOnly, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_READ_ONLY)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	connectionStr := bo.ObproxyAndConnectionString{
@@ -117,11 +117,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, *errors.OcsAgentError) {
 
 	charset, err := tenantService.GetTenantVariable(tenantName, "CHARACTER_SET_SERVER")
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	collatoinMap, err := obclusterService.GetCollationMap()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if charset != nil && collatoinMap != nil {
 		id, _ := strconv.Atoi(charset.Value)

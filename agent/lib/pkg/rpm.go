@@ -17,13 +17,11 @@
 package pkg
 
 import (
-	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strings"
-
 
 	log "github.com/sirupsen/logrus"
 
@@ -49,7 +47,7 @@ func ReadRpm(input multipart.File) (pkg *rpm.Package, err error) {
 func SplitRelease(release string) (buildNumber, distribution string, err error) {
 	releaseSplit := strings.Split(release, ".")
 	if len(releaseSplit) < 2 {
-		return "", "", fmt.Errorf("release format %s is illegal", release)
+		return "", "", errors.Occur(errors.ErrPackageReleaseFormatInvalid, release)
 	}
 	buildNumber = releaseSplit[0]
 	distribution = releaseSplit[len(releaseSplit)-1]
@@ -144,10 +142,10 @@ func handleSymlink(hdr *cpio.Header, installPath string) error {
 
 func CheckCompressAndFormat(pkg *rpm.Package) error {
 	if pkg.PayloadCompression() != "xz" {
-		return fmt.Errorf("unsupported compression '%s', the supported compression is 'xz'", pkg.PayloadCompression())
+		return errors.Occur(errors.ErrPackageCompressionNotSupported, pkg.PayloadCompression())
 	}
 	if pkg.PayloadFormat() != "cpio" {
-		return fmt.Errorf("unsupported payload format '%s', the supported payload format is 'cpio'", pkg.PayloadFormat())
+		return errors.Occur(errors.ErrPackageFormatInvalid, pkg.PayloadFormat())
 	}
 	return nil
 }

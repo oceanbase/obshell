@@ -34,7 +34,7 @@ func isUnkonwnTimeZoneErr(err error) bool {
 	return err != nil && err.Error() == "unknown time zone"
 }
 
-func GetTenantVariables(tenantName string, filter string) ([]oceanbase.CdbObSysVariable, *errors.OcsAgentError) {
+func GetTenantVariables(tenantName string, filter string) ([]oceanbase.CdbObSysVariable, error) {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return nil, err
 	}
@@ -43,32 +43,32 @@ func GetTenantVariables(tenantName string, filter string) ([]oceanbase.CdbObSysV
 	}
 	variables, err := tenantService.GetTenantVariables(tenantName, filter)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	return variables, nil
 }
 
-func GetTenantVariable(tenantName string, variableName string) (*oceanbase.CdbObSysVariable, *errors.OcsAgentError) {
+func GetTenantVariable(tenantName string, variableName string) (*oceanbase.CdbObSysVariable, error) {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return nil, err
 	}
 	variable, err := tenantService.GetTenantVariable(tenantName, variableName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if variable == nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, "variable not found")
+		return nil, errors.Occur(errors.ErrObTenantVariableNotExist, variableName)
 	}
 	return variable, nil
 }
 
-func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenantVariablesParam) *errors.OcsAgentError {
+func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenantVariablesParam) error {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return err
 	}
 	for k, v := range param.Variables {
 		if k == "" || v == nil {
-			return errors.Occur(errors.ErrIllegalArgument, "variable name or value is empty")
+			return errors.Occur(errors.ErrObTenantEmptyVariable)
 		}
 	}
 	transferNumber(param.Variables)
@@ -88,17 +88,17 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 					return timeZoneErrorReporter(value, err)
 				}
 			}
-			return errors.Occur(errors.ErrBadRequest, err)
+			return errors.Wrap(err, "set tenant variables failed")
 		}
 	} else {
 		executeAgent, err := GetExecuteAgentForTenant(tenantName)
 		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error())
+			return errors.Wrap(err, "get execute agent failed")
 		}
 
 		if meta.OCS_AGENT.Equal(executeAgent) {
 			if err := tenantService.SetTenantVariablesWithTenant(tenantName, param.TenantPassword, param.Variables); err != nil {
-				return errors.Occur(errors.ErrUnexpected, err)
+				return err
 			}
 		} else {
 			common.ForwardRequest(c, executeAgent, param)
@@ -109,17 +109,17 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 	return nil
 }
 
-func timeZoneErrorReporter(timeZone interface{}, err error) *errors.OcsAgentError {
+func timeZoneErrorReporter(timeZone interface{}, err error) error {
 	if v, ok := timeZone.(string); ok {
 		pattern := `^[A-Za-z]+/[A-Za-z]+$`
 		re := regexp.MustCompile(pattern)
 		if re.MatchString(v) {
 			if empty, _ := tenantService.IsTimeZoneTableEmpty(); empty {
-				return errors.Occur(errors.ErrBadRequest, errors.Wrapf(err, "Please check whether the sys tenant has been import time zone info"))
+				return errors.Occur(errors.ErrCommonUnexpected, errors.Wrapf(err, "Please check whether the sys tenant has been import time zone info").Error())
 			}
 		}
 	}
-	return errors.Occur(errors.ErrBadRequest, err)
+	return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "time_zone", err.Error())
 }
 
 type SetTenantVariableTask struct {
@@ -131,7 +131,7 @@ type SetTenantVariableTask struct {
 func newSetTenantVariableNode(variables map[string]interface{}) (*task.Node, error) {
 	agents, err := agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
-		return nil, errors.Wrap(err, "create set tenant variable task failed")
+		return nil, err
 	}
 	ctx := task.NewTaskContext().
 		SetParam(task.EXECUTE_AGENTS, agents).
@@ -150,11 +150,11 @@ func newSetTenantVariableTask() *SetTenantVariableTask {
 
 func (t *SetTenantVariableTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_VARIABLES, &t.variables); err != nil {
-		return errors.Wrap(err, "Get tenant variables failed")
+		return err
 	}
 
 	executeAgent, err := tenantService.GetTenantActiveAgent(t.tenantName)
@@ -162,13 +162,13 @@ func (t *SetTenantVariableTask) Execute() error {
 		return err
 	}
 	if executeAgent == nil {
-		return errors.New("tenant is not active")
+		return errors.Occur(errors.ErrObTenantNoActiveServer, t.tenantName)
 	}
 
 	if meta.OCS_AGENT.Equal(executeAgent) {
 		transferNumber(t.variables)
 		if err := tenantService.SetTenantVariablesWithTenant(t.tenantName, "", t.variables); err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "set tenant variables failed: %s", err.Error())
+			return errors.Wrap(err, "set tenant variables failed")
 		}
 	}
 	return nil

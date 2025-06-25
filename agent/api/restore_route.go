@@ -75,26 +75,26 @@ func tenantRestoreHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
+func checkRestoreParam(p *param.RestoreParam) error {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot restore", meta.OCS_AGENT.GetIdentity())
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 
 	if p.TenantName == constant.TENANT_SYS {
-		return errors.Occurf(errors.ErrIllegalArgument, "'%s' is system tenant, cannot restore", p.TenantName)
+		return errors.Occur(errors.ErrObTenantSysOperationNotAllowed)
 	}
 
 	log.Infof("check tenant %s", p.TenantName)
 	tenant, err := tenantService.GetTenantByName(p.TenantName)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	if tenant != nil {
-		return errors.Occurf(errors.ErrIllegalArgument, "tenant '%s' already exists", p.TenantName)
+		return errors.Occur(errors.ErrObTenantExisted, p.TenantName)
 	}
 
 	if len(p.ZoneList) == 0 {
-		return errors.Occurf(errors.ErrIllegalArgument, "zone_list is empty")
+		return errors.Occur(errors.ErrObTenantZoneListEmpty)
 	}
 
 	return nil
@@ -114,17 +114,17 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 // @Router		/api/v1/tenant/:tenantName/restore [delete]
 func cancelRestoreTaskHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "agent identity is %s.", meta.OCS_AGENT.GetIdentity()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
 	tenantName := c.Param(constant.URI_PARAM_NAME)
 	if tenantName == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "tenant name is empty"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 		return
 	}
 	if tenantName == constant.TENANT_SYS {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrIllegalArgument, "'%s' is system tenant, cannot restore", tenantName))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantSysOperationNotAllowed))
 		return
 	}
 

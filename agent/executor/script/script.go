@@ -127,7 +127,7 @@ func (t *ImportScriptForTenantTask) CheckEnv() error {
 	var out bytes.Buffer
 	cmd.Stdout = &out
 	if err := cmd.Run(); err != nil {
-		t.envCheckErr = errors.New("Python is not installed, please install it first.")
+		t.envCheckErr = errors.Occur(errors.ErrEnvironmentWithoutPython)
 		return t.envCheckErr
 	}
 	output := strings.TrimSpace(out.String())
@@ -137,7 +137,7 @@ func (t *ImportScriptForTenantTask) CheckEnv() error {
 		t.ExecuteLogf("Checking if python module '%s' is installed.", module)
 		cmd = exec.Command("python", "-c", "import "+module)
 		if err := cmd.Run(); err != nil {
-			t.envCheckErr = errors.New("Python module not installed, please install it first.")
+			t.envCheckErr = errors.Occur(errors.ErrEnvironmentWithoutPythonModule, module)
 			return t.envCheckErr
 		}
 	}
@@ -181,7 +181,7 @@ func (t *ImportScriptForTenantTask) importByPython(module, scriptPath, sqlfile s
 	}
 	cmd := exec.Command("/bin/bash", "-c", str)
 	if res, err := cmd.CombinedOutput(); err != nil {
-		return errors.Errorf("Import %s failed: %s", module, string(res))
+		return errors.Wrapf(err, "Import %s failed: %s", module, string(res))
 	}
 	return nil
 }

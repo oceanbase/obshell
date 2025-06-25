@@ -17,8 +17,6 @@
 package task
 
 import (
-	"fmt"
-
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -71,10 +69,10 @@ func (ctx *TaskContext) GetAgentDataByAgentKey(agentKey string, key string) inte
 func (ctx *TaskContext) GetParamWithValue(key string, value interface{}) error {
 	v, ok := ctx.Params[key]
 	if !ok {
-		return fmt.Errorf("param `%s` not set", key)
+		return errors.Occur(errors.ErrTaskParamNotSet, key)
 	}
 	if err := convertInterface(v, value); err != nil {
-		return errors.Wrapf(err, "convert `%s` failed", key)
+		return errors.Occur(errors.ErrTaskParamConvertFailed, key, err.Error())
 	}
 	return nil
 }
@@ -82,10 +80,10 @@ func (ctx *TaskContext) GetParamWithValue(key string, value interface{}) error {
 func (ctx *TaskContext) GetDataWithValue(key string, value interface{}) error {
 	v, ok := ctx.Data[key]
 	if !ok {
-		return fmt.Errorf("data `%s` not set", key)
+		return errors.Occur(errors.ErrTaskDataNotSet, key)
 	}
 	if err := convertInterface(v, value); err != nil {
-		return errors.Wrapf(err, "convert `%s` failed", key)
+		return errors.Occur(errors.ErrTaskDataConvertFailed, key, err.Error())
 	}
 	return nil
 }
@@ -96,14 +94,14 @@ func (ctx *TaskContext) GetAgentDataWithValue(agent meta.AgentInfoInterface, key
 
 func (ctx *TaskContext) GetAgentDataByAgentKeyWithValue(agentKey string, key string, value interface{}) error {
 	if ctx.AgentData[agentKey] == nil {
-		return fmt.Errorf("agent %s data %s not set", agentKey, key)
+		return errors.Occur(errors.ErrTaskAgentDataNotSet, agentKey, key)
 	}
 	v, ok := ctx.AgentData[agentKey][key]
 	if !ok {
-		return fmt.Errorf("agent %s data `%s` not set", agentKey, key)
+		return errors.Occur(errors.ErrTaskAgentDataNotSet, agentKey, key)
 	}
 	if err := convertInterface(v, value); err != nil {
-		return errors.Wrapf(err, "convert `%s` failed", key)
+		return errors.Occur(errors.ErrTaskAgentDataConvertFailed, key, err.Error())
 	}
 	return nil
 }

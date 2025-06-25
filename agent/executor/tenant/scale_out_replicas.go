@@ -40,7 +40,7 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 	// Check whether there is already has a replica in the zone
 	for _, zone := range param.ZoneList {
 		if _, ok := replicaInfoMap[zone.Name]; ok {
-			return errors.Errorf("Zone '%s' already has a replica", zone.Name)
+			return errors.Occur(errors.ErrObTenantZoneAlreadyHasReplica, zone.Name)
 		}
 	}
 
@@ -49,7 +49,7 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		return err
 	}
 	if currentTenantUnitNum != param.ZoneList[0].UnitNum {
-		return errors.New("Unit number must be the same as the current tenant unit number")
+		return errors.Occur(errors.ErrObTenantUnitNumInconsistent)
 	}
 
 	for _, zone := range param.ZoneList {
@@ -58,7 +58,7 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 		if exist, err := tenantService.CheckTenantHasPoolOnZone(tenant.TenantID, zone.Name); err != nil {
 			return err
 		} else if exist {
-			return errors.Errorf("Tenant already has a pool located in zone '%s'.", zone.Name)
+			return errors.Occur(errors.ErrObTenantHasPoolOnZone, zone.Name)
 		}
 	}
 
@@ -73,27 +73,27 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 	return nil
 }
 
-func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplicasParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
-	if ocsErr != nil {
-		return nil, ocsErr
+func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplicasParam) (*task.DagDetailDTO, error) {
+	tenant, err := checkTenantExistAndStatus(tenantName)
+	if err != nil {
+		return nil, err
 	}
 
 	zone.RenderZoneParams(param.ZoneList)
 	if err := checkScaleOutTenantReplicasParam(tenant, param); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return nil, err
 	}
 
 	if err := CheckResourceEnough(param.ZoneList); err != nil {
-		return nil, errors.Occur(errors.ErrBadRequest, err.Error())
+		return nil, err
 	}
 
 	// Create 'Scale out tenant replicas' dag instance.
 	template := buildScaleoutTenantReplicasDagTemplate(tenant, param)
-	context := buildScaleoutTenantReplicasDagContext(tenant, param)
+	context := buildScaleoutTenantReplicasDagContext(tenant)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create '%s' dag instance failed", DAG_SCALE_OUT_TENANT_REPLICA)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -108,7 +108,7 @@ func buildScaleoutTenantReplicasDagTemplate(tenant *oceanbase.DbaObTenant, repli
 	return templateBuild.Build()
 }
 
-func buildScaleoutTenantReplicasDagContext(tenant *oceanbase.DbaObTenant, replicasParam *param.ScaleOutTenantReplicasParam) *task.TaskContext {
+func buildScaleoutTenantReplicasDagContext(tenant *oceanbase.DbaObTenant) *task.TaskContext {
 	return task.NewTaskContext().
 		SetParam(PARAM_TENANT_ID, tenant.TenantID).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
@@ -172,15 +172,15 @@ func (t *BatchCreateResourcePoolTask) detachResourcePools() error {
 
 func (t *BatchCreateResourcePoolTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
-		return errors.Wrapf(err, "Get timestamp failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_ZONE_PARAM, &t.zoneParam); err != nil {
-		return errors.Wrap(err, "Get zone params failed")
+		return err
 	}
 
 	tenantName, err := tenantService.GetTenantName(t.tenantId)
@@ -215,15 +215,15 @@ func (t *BatchCreateResourcePoolTask) Execute() error {
 
 func (t *BatchCreateResourcePoolTask) Rollback() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
-		return errors.Wrapf(err, "Get timestamp failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_ZONE_PARAM, &t.zoneParam); err != nil {
-		return errors.Wrap(err, "Get zone params failed")
+		return err
 	}
 
 	tenantName, err := tenantService.GetTenantName(t.tenantId)
@@ -249,7 +249,7 @@ func scaleOutLocality(tenantId int, zone string, localityType string) (map[strin
 	}
 	if _, ok := replicaInfoMap[zone]; ok {
 		if replicaInfoMap[zone] != localityType {
-			return nil, errors.New("Zone already has a replica")
+			return nil, errors.Occur(errors.ErrObTenantZoneAlreadyHasReplica, zone)
 		} else {
 			return nil, nil
 		}

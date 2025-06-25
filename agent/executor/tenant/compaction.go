@@ -23,60 +23,60 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 )
 
-func GetTenantCompaction(tenantName string) (*bo.TenantCompaction, *errors.OcsAgentError) {
+func GetTenantCompaction(tenantName string) (*bo.TenantCompaction, error) {
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Get tenant '%s' failed.", tenantName)
+		return nil, errors.Wrap(err, "Get tenant failed")
 	}
 	if tenant == nil {
-		return nil, errors.Occurf(errors.ErrBadRequest, "Tenant '%s' is not exist.", tenantName)
+		return nil, errors.Occur(errors.ErrObTenantNotExist, tenantName)
 	}
 	tenantCompaction, err := tenantService.GetTenantCompaction(tenant.TenantID)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	return tenantCompaction.ToBO(), nil
 }
 
-func TenantMajorCompaction(tenantName string) *errors.OcsAgentError {
+func TenantMajorCompaction(tenantName string) error {
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Get tenant '%s' failed.", tenantName)
+		return errors.Wrap(err, "Get tenant failed")
 	}
 	if tenant == nil {
-		return errors.Occurf(errors.ErrBadRequest, "Tenant '%s' is not exist.", tenantName)
+		return errors.Occur(errors.ErrObTenantNotExist, tenantName)
 	}
 
 	tenantCompaction, err := tenantService.GetTenantCompaction(tenant.TenantID)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	if tenantCompaction.Status != "IDLE" {
-		return errors.Occurf(errors.ErrIllegalArgument, "Tenant '%s' is in '%s' status, operation not allowed", tenantName, tenantCompaction.Status)
+		return errors.Occur(errors.ErrObTenantCompactionStatusNotIdle, tenantName, tenantCompaction.Status)
 	}
 
 	err = tenantService.TenantMajorCompaction(tenantName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	return nil
 }
 
-func ClearTenantCompactionError(tenantName string) *errors.OcsAgentError {
+func ClearTenantCompactionError(tenantName string) error {
 	if err := tenantService.ClearTenantCompactionError(tenantName); err != nil {
-		return errors.Occurf(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	return nil
 }
 
-func GetTopCompactions(top int) ([]bo.TenantCompactionHistory, *errors.OcsAgentError) {
+func GetTopCompactions(top int) ([]bo.TenantCompactionHistory, error) {
 	tenantCompactions, err := tenantService.GetAllMajorCompactions()
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	tenantIdToNameMap, err := tenantService.GetAllNotMetaTenantIdToNameMap()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	tenantCompactionHistories := make([]bo.TenantCompactionHistory, 0)
 	for _, tenantCompaction := range tenantCompactions {
@@ -96,7 +96,7 @@ func GetTopCompactions(top int) ([]bo.TenantCompactionHistory, *errors.OcsAgentE
 		} else {
 			timeNow, err := obclusterService.GetCurrentTimestamp()
 			if err != nil {
-				return nil, errors.Occurf(errors.ErrUnexpected, err.Error())
+				return nil, err
 			}
 			tenantCompactionHistory.CostTime = int64(timeNow.Sub(tenantCompactionHistory.StartTime) / time.Second)
 		}

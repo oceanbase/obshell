@@ -60,7 +60,7 @@ const (
 
 var (
 	emptyRe          = regexp.MustCompile(`\s+`)
-	recoveryResponse = ocshttp.BuildResponse(nil, errors.Occur(errors.ErrUnexpected, "Internal Server Error"))
+	recoveryResponse = ocshttp.BuildResponse(nil, errors.Occur(errors.ErrCommonUnexpected, "Internal Server Error"))
 )
 
 func SetLocalRouteFlag(c *gin.Context) {
@@ -99,7 +99,7 @@ func UnixSocketMiddleware() func(*gin.Context) {
 			}
 			if err != nil {
 				log.WithContext(NewContextWithTraceId(c)).Errorf("get uid failed, err: %v", err)
-				resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrUserPermissionDenied))
+				resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrSecurityUserPermissionDenied))
 				c.JSON(resp.Status, resp)
 				c.Abort()
 			}
@@ -111,7 +111,7 @@ func UnixSocketMiddleware() func(*gin.Context) {
 		}
 
 		// If authorization fails or credentials are not available, respond with 'permission denied'.
-		resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrUserPermissionDenied))
+		resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrSecurityUserPermissionDenied))
 		c.JSON(resp.Status, resp)
 		c.Abort()
 	}
@@ -243,12 +243,6 @@ func PreHandlers(maskBodyRoutes ...string) func(*gin.Context) {
 	}
 }
 
-func readRequestBody(c *gin.Context) string {
-	body, _ := io.ReadAll(c.Request.Body)
-	c.Request.Body = io.NopCloser(bytes.NewReader(body))
-	return emptyRe.ReplaceAllString(string(body), "")
-}
-
 func getOcsResponseFromContext(c *gin.Context) ocshttp.OcsAgentResponse {
 	ctx := NewContextWithTraceId(c)
 
@@ -257,7 +251,7 @@ func getOcsResponseFromContext(c *gin.Context) ocshttp.OcsAgentResponse {
 		for _, e := range c.Errors {
 			switch e.Type {
 			case gin.ErrorTypeBind:
-				return ocshttp.BuildResponse(nil, errors.Occur(errors.ErrIllegalArgument, e.Err))
+				return ocshttp.BuildResponse(nil, errors.Occur(errors.ErrCommonBindJsonFailed, e.Err))
 			default:
 				subErrors = append(subErrors, ocshttp.ApiUnknownError{Error: e.Err})
 			}
@@ -271,7 +265,7 @@ func getOcsResponseFromContext(c *gin.Context) ocshttp.OcsAgentResponse {
 		}
 	}
 	log.WithContext(ctx).Error("ocsagent found no response object from gin context")
-	return ocshttp.BuildResponse(nil, errors.Occur(errors.ErrUnexpected, "ocsagent cannot build response body"))
+	return ocshttp.BuildResponse(nil, errors.Occur(errors.ErrCommonUnexpected, "ocsagent cannot build response body"))
 }
 
 func PaddingBody() func(*gin.Context) {
@@ -385,7 +379,7 @@ func HeaderDecrypt(skipRoutes ...string) func(*gin.Context) {
 			if err != nil {
 				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
 				c.Abort()
-				SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "header decrypt failed"))
+				SendResponse(c, nil, errors.Occur(errors.ErrSecurityHeaderDecryptFailed, err.Error()))
 				return
 			}
 			c.Set(constant.OCS_AGENT_HEADER, header)
@@ -394,7 +388,7 @@ func HeaderDecrypt(skipRoutes ...string) func(*gin.Context) {
 			if err != nil {
 				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
 				c.Abort()
-				SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "header decrypt failed"))
+				SendResponse(c, nil, errors.Occur(errors.ErrSecurityHeaderDecryptFailed, err.Error()))
 				return
 			}
 			c.Set(constant.OCS_HEADER, header)
@@ -432,7 +426,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		if !ok {
 			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderTypeInvalid))
 			return
 		}
 
@@ -441,7 +435,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("read body failed, err: %v", err)
 			c.Abort()
-			SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "read body failed"))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestBodyReadFailed, err.Error()))
 			return
 		}
 		if len(encryptedBody) == 0 {
@@ -452,7 +446,7 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("body decrypt failed, err: %v", err)
 			c.Abort()
-			SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, "body decrypt failed"))
+			SendResponse(c, nil, errors.WrapRetain(errors.ErrCommonUnauthorized, err))
 			return
 		}
 		c.Request.Body = io.NopCloser(bytes.NewBuffer(body))
@@ -477,12 +471,14 @@ func VerifyObRouters(c *gin.Context, curTs int64, header *secure.HttpHeader, pas
 					pass = true
 				} else {
 					decryptAgentPassword, err1 := secure.Decrypt(header.Auth)
-					if err1 == nil && secure.VerifyAuth(decryptAgentPassword, header.Ts, curTs, secure.AGENT_PASSWORD) == nil {
-						pass = true
+					if err1 == nil {
+						if err = secure.VerifyAuth(decryptAgentPassword, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
+							pass = true
+						}
 					}
 				}
 			} else {
-				err = errors.New("agent password has been set, use agent password to verify")
+				err = errors.Occur(errors.ErrSecurityAuthenticationWithAgentPassword, "agent password has been set")
 			}
 		} else {
 			pass = true
@@ -515,7 +511,7 @@ func VerifyObRouters(c *gin.Context, curTs int64, header *secure.HttpHeader, pas
 	default:
 		if passwordType == secure.OCEANBASE_PASSWORD {
 			if !meta.OCEANBASE_PASSWORD_INITIALIZED && meta.AGENT_PWD.Inited() {
-				err = errors.New("oceanbase password is not initialized, use agent password to verify")
+				err = errors.Occur(errors.ErrSecurityAuthenticationWithAgentPassword, "oceanbase password is not initialized")
 			} else {
 				if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.OCEANBASE_PASSWORD); err == nil {
 					pass = true
@@ -523,7 +519,7 @@ func VerifyObRouters(c *gin.Context, curTs int64, header *secure.HttpHeader, pas
 			}
 		} else {
 			if meta.OCEANBASE_PASSWORD_INITIALIZED && !meta.AGENT_PWD.Inited() {
-				err = errors.New("agent password is not initialized, use oceanbase password to verify")
+				err = errors.Occur(errors.ErrSecurityAuthenticationWithOceanBasePassword, "agent password is not initialized")
 			} else if !meta.AGENT_PWD.Inited() {
 				pass = true
 			} else if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
@@ -534,7 +530,7 @@ func VerifyObRouters(c *gin.Context, curTs int64, header *secure.HttpHeader, pas
 	if !pass {
 		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
 		c.Abort()
-		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		SendResponse(c, nil, errors.WrapRetain(errors.ErrCommonUnauthorized, err))
 		return
 	}
 }
@@ -548,7 +544,7 @@ func VerifyForSetAgentPassword(c *gin.Context, curTs int64, header *secure.HttpH
 				pass = true
 			}
 		} else {
-			err = errors.New("agent password has been set, use agent password to verify")
+			err = errors.Occur(errors.ErrSecurityAuthenticationWithAgentPassword, "agent password has been set")
 		}
 	} else if meta.OCS_AGENT.IsClusterAgent() {
 		if passwordType == secure.OCEANBASE_PASSWORD {
@@ -556,7 +552,7 @@ func VerifyForSetAgentPassword(c *gin.Context, curTs int64, header *secure.HttpH
 				pass = true
 			}
 		} else {
-			err = errors.New("oceanbase password has been set, use oceanbase password to verify")
+			err = errors.Occur(errors.ErrSecurityAuthenticationWithOceanBasePassword, "oceanbase password has been set")
 		}
 	} else if meta.OCS_AGENT.IsSingleAgent() {
 		pass = true
@@ -564,7 +560,7 @@ func VerifyForSetAgentPassword(c *gin.Context, curTs int64, header *secure.HttpH
 	if !pass {
 		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
 		c.Abort()
-		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		SendResponse(c, nil, errors.WrapRetain(errors.ErrCommonUnauthorized, err))
 		return
 	}
 }
@@ -573,20 +569,20 @@ func VerifyAgentRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, p
 	pass := false
 	var err error
 	if passwordType != secure.AGENT_PASSWORD {
-		err = errors.New("Please use agent password to verify")
+		err = errors.Occur(errors.ErrSecurityAuthenticationWithAgentPassword, "this route only support agent password")
 	} else {
 		if meta.AGENT_PWD.Inited() {
 			if err = secure.VerifyAuth(header.Auth, header.Ts, curTs, secure.AGENT_PASSWORD); err == nil {
 				pass = true
 			}
 		} else {
-			err = errors.New("agent password is not initialized")
+			err = errors.Occur(errors.ErrSecurityAuthenticationAgentPasswordNotInitialized)
 		}
 	}
 	if !pass {
 		log.WithContext(NewContextWithTraceId(c)).Errorf("Security verification failed: %s", err.Error())
 		c.Abort()
-		SendResponse(c, nil, errors.Occurf(errors.ErrUnauthorized, err.Error()))
+		SendResponse(c, nil, errors.WrapRetain(errors.ErrCommonUnauthorized, err))
 		return
 	}
 }
@@ -625,7 +621,7 @@ func VerifyFile() func(*gin.Context) {
 		file, _, err := c.Request.FormFile("file")
 		if err != nil {
 			c.Abort()
-			SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed:%s", err))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestFileMissing, "file", err.Error()))
 			return
 		}
 		defer file.Close()
@@ -637,13 +633,13 @@ func VerifyFile() func(*gin.Context) {
 		if err != nil {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("decrypt file sha256 failed, err: %v", err)
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "decrypt file sha256 failed"))
+			SendResponse(c, nil, errors.WrapRetain(errors.ErrCommonUnauthorized, errors.Wrap(err, "decrypt file sha256 failed")))
 			return
 		}
 		if accept != sha256 {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("file sha256 not match, expect: %s, actual: %s", accept, sha256)
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "file sha256 not match"))
+			SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationFileSha256Mismatch))
 			return
 		}
 		c.Next()
@@ -671,13 +667,13 @@ func Verify(routeType ...secure.RouteType) func(*gin.Context) {
 		} else {
 			log.WithContext(NewContextWithTraceId(c)).Error("header not found")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header not found"))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderNotFound))
 			return
 		}
 		if passwordType != secure.AGENT_PASSWORD && len(routeType) != 0 && routeType[0] == secure.ROUTE_OBPROXY {
 			log.WithContext(NewContextWithTraceId(c)).Error("agent header not found")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "aegnt header not found"))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderNotFound))
 			return
 		}
 
@@ -685,14 +681,14 @@ func Verify(routeType ...secure.RouteType) func(*gin.Context) {
 		if !ok {
 			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
 			c.Abort()
-			SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
+			SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderTypeInvalid))
 			return
 		}
 
 		// Verify the URI in the header matches the URI of the request.
 		if header.Uri != c.Request.RequestURI {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("verify uri failed, uri: %s, expect: %s", header.Uri, c.Request.RequestURI)
-			authErr := errors.Occurf(errors.ErrUnauthorized, "uri mismatch")
+			authErr := errors.Occur(errors.ErrSecurityAuthenticationHeaderUriMismatch)
 			c.Abort()
 			SendResponse(c, nil, authErr)
 			return

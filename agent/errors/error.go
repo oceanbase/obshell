@@ -17,47 +17,123 @@
 package errors
 
 import (
+	"errors"
 	"fmt"
 
+	"github.com/go-sql-driver/mysql"
 	"golang.org/x/text/language"
 )
 
 // OcsAgentError defines ocsagent error and implements error interface.
-type OcsAgentError struct {
+type ocsAgentError struct {
 	ErrorCode ErrorCode     // error code
 	Args      []interface{} // args for error message formatting
 }
 
+type OcsAgentErrorExporter struct {
+	errorCode ErrorCode
+	err       error
+}
+
+type OcsAgentErrorWrapper struct {
+	cause error
+	OcsAgentErrorExporter
+}
+
 // Message will return error message composed of errorcode and args.
-func (e OcsAgentError) Message(lang language.Tag) string {
+func (e ocsAgentError) message(lang language.Tag) string {
 	return GetMessage(lang, e.ErrorCode, e.Args)
 }
 
 // DefaultMessage will return err default message.
-func (e OcsAgentError) DefaultMessage() string {
-	return e.Message(defaultLanguage)
+func (e ocsAgentError) Message() string {
+	return e.message(defaultLanguage)
 }
 
-// Error will return error string.
-func (e OcsAgentError) Error() string {
-	return fmt.Sprintf("OcsAgentError: code = %d, message = %s", e.ErrorCode.Code, e.DefaultMessage())
+func (e ocsAgentError) Error() string {
+	return e.Message()
+}
+
+func (e OcsAgentErrorExporter) Error() string {
+	return e.err.Error()
+}
+
+func (e *OcsAgentErrorExporter) ErrorCode() ErrorCode {
+	return e.errorCode
+}
+
+func (e *OcsAgentErrorExporter) SetErrorCode(errorCode ErrorCode) {
+	e.errorCode = errorCode
+}
+
+func (e *OcsAgentErrorExporter) SetError(err error) {
+	e.err = err
+}
+
+func (e OcsAgentErrorExporter) ErrorMessage() string {
+	return fmt.Sprintf("[%s]: %s", e.ErrorCode().Code, e.err.Error())
+}
+
+func (e OcsAgentErrorWrapper) ErrorCode() ErrorCode {
+	return e.OcsAgentErrorExporter.ErrorCode()
+}
+
+func (e OcsAgentErrorWrapper) Error() string {
+	if e.cause != nil {
+		return fmt.Sprintf("%s: %s", e.err.Error(), e.cause.Error())
+	}
+	return e.err.Error()
+}
+
+func (e OcsAgentErrorWrapper) ErrorMessage() string {
+	return fmt.Sprintf("[%s]: %s", e.ErrorCode().Code, e.Error())
+}
+
+func (e OcsAgentErrorWrapper) Unwrap() error {
+	return e.cause
+}
+
+// OccurWithError returns *OcsAgentError composed of errorcode and error message.
+func OccurWithMessage(message string, errorCode ErrorCode, args ...interface{}) *OcsAgentErrorWrapper {
+	return &OcsAgentErrorWrapper{
+		cause: errors.New(message),
+		OcsAgentErrorExporter: OcsAgentErrorExporter{
+			errorCode: errorCode,
+			err: &ocsAgentError{
+				ErrorCode: errorCode,
+				Args:      args,
+			},
+		},
+	}
 }
 
 // Occur returns *OcsAgentError composed of errorcode and args
-func Occur(errorCode ErrorCode, args ...interface{}) *OcsAgentError {
-	err := &OcsAgentError{
-		ErrorCode: errorCode,
-		Args:      args,
+func Occur(errorCode ErrorCode, args ...interface{}) *OcsAgentErrorExporter {
+	return &OcsAgentErrorExporter{
+		err: &ocsAgentError{
+			ErrorCode: errorCode,
+			Args:      args,
+		},
+		errorCode: errorCode,
 	}
-	return err
 }
 
 // Occurf formats according to a format specifier (The first one of the `args`)
 // and returns the resulting string as a value that satisfies `OcsAgentError.Args`.
-func Occurf(errorCode ErrorCode, format string, args ...interface{}) *OcsAgentError {
-	err := &OcsAgentError{
-		ErrorCode: errorCode,
-		Args:      []interface{}{fmt.Sprintf(format, args...)},
+func Occurf(errorCode ErrorCode, format string, args ...interface{}) *OcsAgentErrorExporter {
+	return Occur(errorCode, fmt.Sprintf(format, args...))
+}
+
+func Is(err error, target error) bool {
+	return errors.Is(err, target)
+}
+
+func IsMysqlError(err error) bool {
+	if _, ok := err.(*mysql.MySQLError); ok {
+		return true
 	}
-	return err
+	if x, ok := err.(interface{ Unwrap() error }); ok {
+		return IsMysqlError(x.Unwrap())
+	}
+	return false
 }

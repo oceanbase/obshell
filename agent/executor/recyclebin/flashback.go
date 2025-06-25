@@ -18,12 +18,12 @@ package recyclebin
 
 import "github.com/oceanbase/obshell/agent/errors"
 
-func FlashbackTenant(name string, newName *string) *errors.OcsAgentError {
+func FlashbackTenant(name string, newName *string) error {
 	objectName, err := tenantService.GetRecycledTenantObjectName(name)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Check tenant '%s' exist in recyclebin failed: %s", name, err.Error())
+		return errors.Wrapf(err, "Check tenant '%s' exist in recyclebin failed", name)
 	} else if objectName == "" {
-		return errors.Occurf(errors.ErrBadRequest, "Tenant '%s' not exist in recyclebin", name)
+		return errors.Occur(errors.ErrObRecyclebinTenantNotExist, name)
 	}
 
 	var tenantName string
@@ -31,7 +31,7 @@ func FlashbackTenant(name string, newName *string) *errors.OcsAgentError {
 		// check name is object_name or original_name
 		originalName, err := tenantService.GetRecycledTenantOriginalName(objectName)
 		if err != nil {
-			return errors.Occurf(errors.ErrUnexpected, "Get original name of tenant '%s' failed: %s", name, err.Error())
+			return errors.Wrapf(err, "Get original name of tenant '%s' failed", name)
 		}
 		tenantName = originalName
 	} else {
@@ -40,13 +40,13 @@ func FlashbackTenant(name string, newName *string) *errors.OcsAgentError {
 
 	// check if tenantName is valid
 	if exist, err := tenantService.IsTenantExist(tenantName); err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Check tenant '%s' exist failed: %s", tenantName, err.Error())
+		return errors.Wrapf(err, "Check tenant '%s' exist failed", tenantName)
 	} else if exist {
-		return errors.Occurf(errors.ErrBadRequest, "Tenant '%s' already exist, please set a new_name", tenantName)
+		return errors.Occur(errors.ErrObTenantExisted, tenantName)
 	}
 
 	if err := tenantService.FlashbackTenant(objectName, tenantName); err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Flashback tenant '%s' failed: %s", name, err.Error())
+		return errors.Wrapf(err, "Flashback tenant '%s' failed", name)
 	}
 	return nil
 }

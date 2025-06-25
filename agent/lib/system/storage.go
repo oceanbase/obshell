@@ -353,7 +353,7 @@ func GetStorageInterfaceByURI(uri string) (StorageInterface, error) {
 	} else if strings.HasPrefix(uri, constant.PREFIX_FILE) {
 		return GetNFSStorage(uri)
 	} else {
-		return nil, errors.New("invalid uri protocol")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "invalid uri protocol")
 	}
 }
 
@@ -367,7 +367,7 @@ func GetResourceType(uri string) (t string, err error) {
 	} else if strings.HasPrefix(uri, constant.PREFIX_FILE) {
 		t = constant.PROTOCOL_FILE
 	} else {
-		err = fmt.Errorf("invalid path type: %s", uri)
+		err = errors.Occur(errors.ErrObStorageURIInvalid, "invalid path type")
 	}
 	return
 }
@@ -390,7 +390,7 @@ func GetCOSStorage(url string) (StorageInterface, error) {
 	}
 	conf.AppID = params.Get(appID)
 	if conf.AppID == "" {
-		return nil, errors.New("cos appid is required")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "cos appid is required")
 	}
 	return conf, nil
 }
@@ -410,10 +410,10 @@ func GetNFSStorage(url string) (StorageInterface, error) {
 	conf := &NFSConfig{}
 	conf.Path = strings.TrimPrefix(url, constant.PREFIX_FILE)
 	if strings.ContainsAny(conf.Path, "?") {
-		return nil, errors.New("invalid file path, contains invalid character '?'")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "invalid file path, contains invalid character '?'")
 	}
 	if !strings.HasPrefix(conf.Path, "/") {
-		return nil, errors.New("invalid file path, must start with '/'")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "invalid file path, must start with '/'")
 	}
 	return conf, nil
 }
@@ -421,7 +421,7 @@ func GetNFSStorage(url string) (StorageInterface, error) {
 func (c *BaseConf) parseParams(urlWithoutScheme string) (url.Values, error) {
 	parts := strings.SplitN(urlWithoutScheme, "/", 2)
 	if len(parts) < 2 {
-		return nil, errors.New("invalid url format")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "invalid url format")
 	}
 
 	c.BucketName = parts[0]
@@ -430,7 +430,7 @@ func (c *BaseConf) parseParams(urlWithoutScheme string) (url.Values, error) {
 	rest := parts[1]
 	queryParamsStart := strings.Index(rest, "?")
 	if queryParamsStart == -1 || queryParamsStart == len(rest)-1 {
-		return nil, errors.New("invalid url format, missing query params")
+		return nil, errors.Occur(errors.ErrObStorageURIInvalid, "invalid url format, missing query params")
 	}
 
 	c.ObjectKey = rest[:queryParamsStart]

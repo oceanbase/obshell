@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
 )
@@ -115,7 +116,7 @@ func (t *RemoveFollowerAgentTask) Execute() (err error) {
 	var agent meta.AgentInfo
 	ctx := t.GetContext()
 	if err = ctx.GetParamWithValue(PARAM_AGENT, &agent); err != nil {
-		return errors.Wrap(err, "get param failed")
+		return err
 	}
 
 	t.ExecuteLogf("finding agent %s info", agent.String())
@@ -167,7 +168,7 @@ func (t *SendFollowerRemoveSelfRPCTask) Execute() error {
 		// Send rpc to master agent.
 		resp, err := secure.SendDeleteRequestAndReturnResponse(masterAgent, constant.URI_AGENT_RPC_PREFIX, agent, &dagDTO)
 		if resp != nil && resp.IsError() {
-			return errors.Errorf("send remove agent request to %s failed: %v", masterAgent.String(), resp.Error())
+			return errors.Occur(errors.ErrAgentRPCRequestError, http.DELETE, constant.URI_AGENT_RPC_PREFIX, masterAgent.String(), resp.Error())
 		}
 		if err != nil {
 			t.ExecuteWarnLogf("send remove this agent request failed, err: %v", err)
@@ -185,7 +186,7 @@ func GetFollowerAgent(agent meta.AgentInfoInterface) (agentInstance *meta.AgentI
 	if err != nil {
 		err = errors.Wrap(err, "get agent instance failed")
 	} else if agentInstance != nil && !agentInstance.IsFollowerAgent() {
-		err = errors.Errorf("agent %s is not follower", agent.String())
+		err = errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agentInstance.String(), agentInstance.Identity, meta.FOLLOWER)
 	}
 	return
 }

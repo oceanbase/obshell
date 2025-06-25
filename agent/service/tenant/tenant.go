@@ -57,7 +57,7 @@ func (t *TenantService) CheckVariables(vars map[string]interface{}) error {
 	err := t.TryExecute("create tenant sys resource_pool_list = ('') set " + strings.Join(items, ","))
 	if err == nil {
 		// err could not be nil, because tenant sys is exist.
-		return errors.Wrap(err, "Unexpected error when validate variables.")
+		return errors.Occur(errors.ErrCommonUnexpected, "Unexpected error when validate variables.")
 	} else if strings.Contains(err.Error(), "Error 5156") {
 		/* The validation of the system variables by the observer
 		 * takes place before the tenant is created.'Error 5156
@@ -317,10 +317,10 @@ func (t *TenantService) ModifyTenantWhitelist(tenantName string, whitelist strin
 	return db.Exec(fmt.Sprintf(SQL_ALTER_TENANT_WHITELIST, tenantName, whitelist)).Error
 }
 
-func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd string, newPwd string) *errors.OcsAgentError {
+func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd string, newPwd string) error {
 	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, oldPwd)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	defer func() {
 		db, _ := tempDb.DB()
@@ -329,7 +329,7 @@ func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd strin
 		}
 	}()
 	if err = tempDb.Exec(fmt.Sprintf(SQL_ALTER_TENANT_ROOT_PASSWORD, transfer(newPwd))).Error; err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "modify tenant root password failed: %s", err.Error())
+		return errors.Wrapf(err, "modify tenant root password failed")
 	}
 	return nil
 }
@@ -337,7 +337,7 @@ func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd strin
 func (t *TenantService) SetTenantVariablesWithTenant(tenantName, password string, variables map[string]interface{}) error {
 	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, password)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	defer func() {
 		db, _ := tempDb.DB()
@@ -526,7 +526,7 @@ func ParseLocalityToReplicaInfoMap(locality string) (map[string]string, error) {
 				}
 			}
 		} else {
-			return nil, errors.Occur(errors.ErrUnexpected, "Invalid locality format.")
+			return nil, errors.Occur(errors.ErrObTenantLocalityFormatUnexpected, locality)
 		}
 	}
 	return replicaInfoMap, nil

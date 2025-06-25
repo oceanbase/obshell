@@ -21,7 +21,8 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"errors"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 var aes_key_size = 16
@@ -69,7 +70,7 @@ func AesDecryptAndReturnBytes(raw string, key []byte, iv []byte) ([]byte, error)
 	decrypted := make([]byte, len(decRaw))
 	mode := cipher.NewCBCDecrypter(block, iv)
 	if len(decRaw)%aes.BlockSize != 0 {
-		return nil, errors.New("decrypted string length is not a multiple of the block size")
+		return nil, errors.Occur(errors.ErrRequestBodyDecryptAesContentLengthInvalid)
 	}
 	mode.CryptBlocks(decrypted, []byte(decRaw))
 	decrypted = pkcs5UnPadding(decrypted)

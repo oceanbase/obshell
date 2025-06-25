@@ -21,6 +21,8 @@ import (
 	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 func getObproxyVersion(homepath string) (string, error) {
@@ -31,7 +33,7 @@ func getObproxyVersion(homepath string) (string, error) {
 	re := regexp.MustCompile(`\(OceanBase (\d+\.\d+\.\d+\.\d+) (\d+)\)`)
 	matches := re.FindStringSubmatch(string(output))
 	if len(matches) < 3 {
-		return "", fmt.Errorf("version not found in output: %s", output)
+		return "", errors.Occur(errors.ErrOBProxyVersionOutputUnexpected, fmt.Sprintf("version not found in output: %s", output))
 	}
 	return strings.Join(matches[1:], "-"), nil
 }

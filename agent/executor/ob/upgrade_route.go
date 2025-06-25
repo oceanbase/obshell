@@ -93,7 +93,7 @@ func Build(versionDeps []VersionDep) (map[string]*VersionDep, error) {
 	nodeMap := make(map[string]*VersionDep)
 	for idx, info := range versionDeps {
 		if _, ok := nodeMap[info.Version]; ok {
-			return nil, fmt.Errorf("version %s has duplicate", info.Version)
+			return nil, errors.Occur(errors.ErrCommonUnexpected, fmt.Sprintf("version %s has duplicate", info.Version))
 		}
 		node := BuildVersionNode(&versionDeps[idx])
 		nodeMap[info.Version] = node
@@ -156,7 +156,7 @@ func GetNode(nodeMap map[string]*VersionDep, targetRepo Repository) *VersionDep 
 func FindShortestUpgradePath(nodeMap map[string]*VersionDep, currentRepo, targetRepo Repository) ([]RouteNode, error) {
 	startNode := GetNode(nodeMap, currentRepo)
 	if startNode == nil {
-		return nil, errors.New("Can not find the upgrade path from the current version to the target version")
+		return nil, errors.Occur(errors.ErrObUpgradePathNotExist, currentRepo.Version, targetRepo.Version)
 	}
 	queue := []*VersionDep{startNode}
 	visited := mapset.NewSet(startNode)
@@ -226,7 +226,7 @@ func FindShortestUpgradePath(nodeMap map[string]*VersionDep, currentRepo, target
 		res = append([]*VersionDep{startNode}, res...)
 	}
 	if len(res) > 0 && res[len(res)-1].Deprecated {
-		return nil, errors.New("target version is deprecated")
+		return nil, errors.Occur(errors.ErrObUpgradeToDeprecatedVersion, targetRepo.Version)
 	}
 	res = (AddDeprecatedInfo(nodeMap, res))
 	return FormatRoute(res)

@@ -329,7 +329,7 @@ func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface
 			genericID[0] == constant.OBPROXY_TASK_IPV4_ID_PREFIX) && len(genericID) <= 16 ||
 		(genericID[0] == constant.LOCAL_TASK_IPV6_ID_PREFIX ||
 			genericID[0] == constant.OBPROXY_TASK_IPV6_ID_PREFIX) && len(genericID) <= 45 {
-		err = fmt.Errorf("invalid id: %s", genericID)
+		err = errors.Occur(errors.ErrTaskGenericIDInvalid, genericID)
 		return
 	}
 	var idIdx, ipIdx, portIdx int
@@ -345,14 +345,14 @@ func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface
 		// Ipv6 address.
 		ipIdx, portIdx, idIdx, isV6 = 40, 45, 45, true
 	default:
-		err = fmt.Errorf("invalid id: %s", genericID)
+		err = errors.OccurWithMessage("invalid generic id", errors.ErrTaskGenericIDInvalid, genericID)
 		return
 	}
 
 	if ipIdx > 0 {
 		ipInt, ok := new(big.Int).SetString(genericID[1:ipIdx], 10)
 		if !ok {
-			err = fmt.Errorf("convert id '%s' to bigInt failed", genericID)
+			err = errors.OccurWithMessage("convert id to bigInt failed", errors.ErrTaskGenericIDInvalid, genericID)
 			return
 		}
 		netIp := net.IP(ipInt.Bytes())
@@ -362,12 +362,12 @@ func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface
 			netIp = netIp.To4()
 		}
 		if netIp == nil {
-			err = fmt.Errorf("convert id '%s' to ip failed", genericID)
+			err = errors.OccurWithMessage("convert id to ip failed", errors.ErrTaskGenericIDInvalid, genericID)
 			return
 		}
 		port, perr := strconv.Atoi(genericID[ipIdx:portIdx])
 		if perr != nil {
-			err = errors.Wrap(perr, "parse port failed")
+			err = errors.OccurWithMessage("parse port failed", errors.ErrTaskGenericIDInvalid, genericID)
 			return
 		}
 
@@ -376,7 +376,7 @@ func ConvertGenericID(genericID string) (id int64, agent meta.AgentInfoInterface
 
 	id, perr := strconv.ParseInt(genericID[idIdx:], 10, 64)
 	if perr != nil {
-		err = errors.Wrap(perr, "parse id failed")
+		err = errors.WrapRetain(errors.ErrTaskGenericIDInvalid, perr, genericID)
 	}
 	return
 }

@@ -38,7 +38,7 @@ func TakeOver() (err error) {
 	}
 
 	if err = lk.Lock(); err != nil {
-		return errors.New("lock cluster status failed")
+		return errors.Wrap(err, "lock cluster status failed")
 	}
 	defer func() {
 		if _err := lk.Unlock(); _err != nil {

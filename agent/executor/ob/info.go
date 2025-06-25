@@ -36,7 +36,7 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func GetObInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
+func GetObInfo() (*param.ObInfoResp, error) {
 	identity := meta.OCS_AGENT.GetIdentity()
 	switch identity {
 	case meta.SINGLE, meta.SCALING_IN:
@@ -45,7 +45,7 @@ func GetObInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 		return resp, nil
 	case meta.FOLLOWER:
 		// if agent is follower, it will forward the request to master in handler.
-		return nil, errors.Occurf(errors.ErrUnexpected, "wrong case: the request should be forwarded to master")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "wrong case: the request should be forwarded to master")
 	case meta.MASTER:
 		return getAgentInfo()
 	case meta.CLUSTER_AGENT, meta.TAKE_OVER_FOLLOWER, meta.TAKE_OVER_MASTER, meta.SCALING_OUT:
@@ -54,14 +54,14 @@ func GetObInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 		}
 		return getAgentInfo()
 	default:
-		return nil, errors.Occurf(errors.ErrUnexpected, "unknown agent identity %s", identity)
+		return nil, errors.Occur(errors.ErrAgentIdentifyUnknown, identity)
 	}
 }
 
-func getAgentInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
+func getAgentInfo() (*param.ObInfoResp, error) {
 	agents, err := agentService.GetAllAgentInstances()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	// If err occurs, return empty cluster info.
@@ -78,16 +78,16 @@ func getAgentInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 	return &info, nil
 }
 
-func getClusterAndAgentsInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
+func getClusterAndAgentsInfo() (*param.ObInfoResp, error) {
 	var err error
 	agents, _ := agentService.GetAllAgentsFromOB()
 	if len(agents) == 0 {
 		agents, err = agentService.GetAllAgentInstances()
 		if err != nil {
 			if maintainer, err := coordinator.GetMaintainer(); err != nil {
-				return nil, errors.Occur(errors.ErrUnexpected, errors.Wrap(err, "get maintainer error"))
+				return nil, errors.Wrap(err, "get maintainer error")
 			} else if !maintainer.IsActive() {
-				return nil, errors.Occur(errors.ErrUnexpected, "maintainer is not active")
+				return nil, errors.Occur(errors.ErrAgentMaintainerNotActive)
 			} else {
 				return sendInfoApiTo(&maintainer)
 			}
@@ -95,7 +95,7 @@ func getClusterAndAgentsInfo() (*param.ObInfoResp, *errors.OcsAgentError) {
 	}
 	clusterConfig, err := getClusterConfig()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	resp := &param.ObInfoResp{
 		Agents: agents,
@@ -185,10 +185,10 @@ func getClusterConfig() (resp *param.ClusterConfig, err error) {
 	}, nil
 }
 
-func sendInfoApiTo(agent meta.AgentInfoInterface) (resp *param.ObInfoResp, agentErr *errors.OcsAgentError) {
+func sendInfoApiTo(agent meta.AgentInfoInterface) (resp *param.ObInfoResp, agentErr error) {
 	err := secure.SendGetRequest(agent, constant.URI_OB_API_PREFIX+constant.URI_INFO, nil, &resp)
 	if err != nil {
-		return resp, errors.Occur(errors.ErrUnexpected, err)
+		return resp, err
 	}
 	return resp, nil
 }
@@ -200,7 +200,7 @@ func IsValidScope(s *param.Scope) (err error) {
 		return nil
 	case SCOPE_ZONE:
 		if len(s.Target) == 0 {
-			return errors.New("zone scope must have target")
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", "target is empty")
 		}
 		for _, zone := range s.Target {
 			exist, err := obclusterService.IsZoneExist(zone)
@@ -208,13 +208,13 @@ func IsValidScope(s *param.Scope) (err error) {
 				return err
 			}
 			if !exist {
-				return errors.Errorf("zone '%s' not exist", zone)
+				return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", fmt.Sprintf("zone '%s' not exist", zone))
 			}
 		}
 		return nil
 	case SCOPE_SERVER:
 		if len(s.Target) == 0 {
-			return errors.New("server scope must have target")
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", "target is empty")
 		}
 		for _, server := range s.Target {
 			agentInfo, err := meta.ConvertAddressToAgentInfo(server)
@@ -226,12 +226,12 @@ func IsValidScope(s *param.Scope) (err error) {
 				return err
 			}
 			if !exist {
-				return errors.Errorf("server '%s' not exist", server)
+				return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", fmt.Sprintf("server '%s' not exist", server))
 			}
 		}
 		return nil
 	default:
-		return errors.Errorf("unknow scope type '%v'", s.Type)
+		return errors.Occur(errors.ErrObClusterScopeInvalid, s.Type)
 	}
 }
 
@@ -247,7 +247,7 @@ func GetObAgents() (agents []meta.AgentInfo, err error) {
 		return
 	case meta.FOLLOWER:
 		// if agent is follower, it will forward the request to master in handler.
-		return nil, errors.Errorf("wrong case: the request should be forwarded to master")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "wrong case: the request should be forwarded to master")
 	case meta.MASTER:
 		agents, err = agentService.GetAllAgentsInfo()
 		return
@@ -306,5 +306,5 @@ func GetAllServerFromOBConf() (serversWithRpcPort []meta.AgentInfoInterface, err
 			return
 		}
 	}
-	return nil, fmt.Errorf("not found %s in ob.conf", ETC_KEY_ALL_SERVER_LIST)
+	return nil, errors.Occurf(errors.ErrCommonUnexpected, "not found %s in ob.conf", ETC_KEY_ALL_SERVER_LIST)
 }

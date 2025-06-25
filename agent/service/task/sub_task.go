@@ -17,7 +17,6 @@
 package task
 
 import (
-	"fmt"
 	"time"
 
 	"gorm.io/gorm"
@@ -146,7 +145,7 @@ func (s *taskService) SetSubTaskReady(subtask task.ExecutableTask, operator int)
 		return err
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to set task ready: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to set task ready")
 	}
 	subtask.SetState(subTaskInstanceBO.State)
 	subtask.SetOperator(subTaskInstanceBO.Operator)
@@ -178,11 +177,11 @@ func (s *taskService) StartSubTask(subtask task.ExecutableTask) error {
 
 		taskInstanceBO = s.convertSubTaskInstanceBO(taskInstance)
 		if taskInstanceBO.State != task.RUNNING {
-			return fmt.Errorf("failed to start task: sub task %d state is %d now", subtask.GetID(), taskInstanceBO.State)
+			return errors.Occurf(errors.ErrCommonUnexpected, "failed to start task: sub task %d state is %d now", subtask.GetID(), taskInstanceBO.State)
 		} else if taskInstanceBO.ExecuteTimes != subtask.GetExecuteTimes() {
-			return fmt.Errorf("failed to start task: sub task %d execute times is %d now", subtask.GetID(), taskInstanceBO.ExecuteTimes)
+			return errors.Occurf(errors.ErrCommonUnexpected, "failed to start task: sub task %d execute times is %d now", subtask.GetID(), taskInstanceBO.ExecuteTimes)
 		} else if taskInstanceBO.ExecuterAgentIp != subtask.GetExecuteAgent().Ip || taskInstanceBO.ExecuterAgentPort != subtask.GetExecuteAgent().Port {
-			return fmt.Errorf("failed to start task: sub task %d execute agent is %s now", subtask.GetID(), meta.NewAgentInfo(taskInstanceBO.ExecuterAgentIp, taskInstanceBO.ExecuterAgentPort).String())
+			return errors.Occurf(errors.ErrCommonUnexpected, "failed to start task: sub task %d execute agent is %s now", subtask.GetID(), meta.NewAgentInfo(taskInstanceBO.ExecuterAgentIp, taskInstanceBO.ExecuterAgentPort).String())
 		}
 	}
 	subtask.SetState(taskInstanceBO.State)
@@ -192,7 +191,7 @@ func (s *taskService) StartSubTask(subtask task.ExecutableTask) error {
 
 func (s *taskService) FinishSubTask(subtask task.ExecutableTask, state int) error {
 	if state != task.SUCCEED && state != task.FAILED {
-		return errors.New("invalid state")
+		return errors.Occur(errors.ErrCommonUnexpected, "invalid state")
 	}
 	ctx, err := json.Marshal(subtask.GetContext())
 	if err != nil {
@@ -216,7 +215,7 @@ func (s *taskService) FinishSubTask(subtask task.ExecutableTask, state int) erro
 			return resp.Error
 		}
 		if resp.RowsAffected == 0 {
-			return errors.New("failed to finish sub task: no row affected")
+			return errors.Occur(errors.ErrGormNoRowAffected, "failed to finish sub task")
 		}
 		if s.isLocal && !subtask.IsLocalTask() {
 			// After executing the remote task locally, synchronization is required.
@@ -257,7 +256,7 @@ func (s *taskService) SetSubTaskFailed(subtask task.ExecutableTask, logContent s
 			return err
 		}
 		if resp.RowsAffected == 0 {
-			return errors.New("failed to set task failed: no row affected")
+			return errors.Occur(errors.ErrGormNoRowAffected, "failed to set task failed")
 		}
 		subtask.SetState(taskInstanceBO.State)
 		subtask.SetEndTime(taskInstanceBO.EndTime)
@@ -356,7 +355,7 @@ func (s *taskService) UpdateLocalTaskInstanceByRemoteTask(remoteTask *task.Remot
 				return err
 			}
 		} else {
-			return errors.New("remote task execute times is less than local task execute times")
+			return errors.Occur(errors.ErrCommonUnexpected, "remote task execute times is less than local task execute times")
 		}
 
 		return nil
@@ -451,7 +450,7 @@ func (s *taskService) SetTaskMappingSync(remoteTaskId int64, executeTimes int) e
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to set taskMapping sync: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to set taskMapping sync")
 	}
 	return nil
 }

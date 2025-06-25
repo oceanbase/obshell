@@ -31,13 +31,13 @@ func Rebuild(agentInstance *meta.AgentInstance) error {
 	// Get the entry, check if the agent port is the same.
 	if agentInstance.GetPort() != meta.OCS_AGENT.GetPort() {
 		log.Errorf("agent port is not the same, agent port in all_agents: %d, agent port now: %d", agentInstance.GetPort(), meta.OCS_AGENT.GetPort())
-		return errors.New("could not change agent port")
+		return errors.Occur(errors.ErrAgentRebuildPortNotSame, agentInstance.GetPort(), meta.OCS_AGENT.GetPort())
 	}
 
 	// Check version consistent.
 	if agentInstance.GetVersion() != meta.OCS_AGENT.GetVersion() {
 		log.Errorf("agent version is not the same, agent version in all_agents: %s, agent version now: %s", agentInstance.GetVersion(), meta.OCS_AGENT.GetVersion())
-		return errors.New("could not change agent version")
+		return errors.Occur(errors.ErrAgentRebuildVersionNotSame, agentInstance.GetVersion(), meta.OCS_AGENT.GetVersion())
 	}
 
 	if err := agentService.UpdateAgentPublicKey(secure.Public()); err != nil {

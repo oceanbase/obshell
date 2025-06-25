@@ -17,10 +17,9 @@
 package secure
 
 import (
-	"errors"
-
 	"github.com/google/uuid"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -49,7 +48,7 @@ func VerifyToken(token string) error {
 		return err
 	}
 	if agentToken != token || token == "" {
-		return errors.New("wrong token")
+		return errors.Occur(errors.ErrSecurityAuthenticationIncorrectToken)
 	}
 	return nil
 }
@@ -60,7 +59,7 @@ func VerifyTokenByAgentInfo(token string, agentInfo meta.AgentInfo) error {
 		return err
 	}
 	if agentToken != token {
-		return errors.New("wrong token")
+		return errors.Occur(errors.ErrSecurityAuthenticationIncorrectToken)
 	}
 	return nil
 }

@@ -70,7 +70,7 @@ func LoadOBConfigFromConfigFile() (err error) {
 
 	ip, zone, mysqlPort, rpcPort := GetConfFromObConfFile()
 	if mysqlPort == 0 || rpcPort == 0 || zone == "" {
-		return errors.New("Load observer configs from config file failed")
+		return errors.Occur(errors.ErrCommonUnexpected, "load observer configs from config file failed")
 	}
 	if err = agentService.UpdateAgentIP(ip); err != nil {
 		return err

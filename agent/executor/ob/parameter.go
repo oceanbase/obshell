@@ -17,21 +17,23 @@
 package ob
 
 import (
+	"fmt"
+
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/param"
 	"github.com/oceanbase/obshell/utils"
 )
 
-func GetAllParameters() ([]bo.ClusterParameter, *errors.OcsAgentError) {
+func GetAllParameters() ([]bo.ClusterParameter, error) {
 	obParameters, err := obclusterService.GetAllUnhiddenParameters()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	tenantIdToNameMap, err := tenantService.GetAllNotMetaTenantIdToNameMap()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	parametersMap := make(map[string]*bo.ClusterParameter)
@@ -74,9 +76,6 @@ func GetAllParameters() ([]bo.ClusterParameter, *errors.OcsAgentError) {
 
 		// Set tenant value
 		if obParameter.Scope == PARAMETER_SCOPE_TENANT {
-			if err != nil {
-				return nil, errors.Occur(errors.ErrUnexpected, err.Error())
-			}
 			if len(parametersMap[obParameter.Name].TenantValue) == 0 {
 				parametersMap[obParameter.Name].TenantValue = make([]bo.TenantParameterValue, 0)
 			}
@@ -97,14 +96,14 @@ func GetAllParameters() ([]bo.ClusterParameter, *errors.OcsAgentError) {
 
 }
 
-func SetObclusterParameters(params []param.SetSingleObclusterParameterParam) *errors.OcsAgentError {
+func SetObclusterParameters(params []param.SetSingleObclusterParameterParam) error {
 	if len(params) == 0 {
 		return nil
 	}
 
 	for _, param := range params {
 		if err := checkSetSingleObclusterParameterParam(param); err != nil {
-			return errors.Occur(errors.ErrBadRequest, err.Error())
+			return err
 		}
 	}
 
@@ -112,7 +111,7 @@ func SetObclusterParameters(params []param.SetSingleObclusterParameterParam) *er
 		setParameterParams := buildSetParameterParam(param)
 		for _, setParameterParam := range setParameterParams {
 			if err := obclusterService.SetParameter(setParameterParam); err != nil {
-				return errors.Occur(errors.ErrBadRequest, err.Error())
+				return err
 			}
 		}
 	}
@@ -170,21 +169,21 @@ func buildSetParameterParam(setSingleObclusterParameterParam param.SetSingleObcl
 	return setParameterParams
 }
 
-func checkSetSingleObclusterParameterParam(param param.SetSingleObclusterParameterParam) *errors.OcsAgentError {
+func checkSetSingleObclusterParameterParam(param param.SetSingleObclusterParameterParam) error {
 	if param.Scope != PARAMETER_SCOPE_CLUSTER && param.Scope != PARAMETER_SCOPE_TENANT {
-		return errors.Occur(errors.ErrIllegalArgument, "parameter scope is invalid")
+		return errors.Occur(errors.ErrObParameterScopeInvalid, param.Scope)
 	}
 	if len(param.Zones) != 0 && len(param.Servers) != 0 {
-		return errors.Occur(errors.ErrIllegalArgument, "parameter zones and servers cannot be set at the same time")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "zones or servers", "zones and servers cannot be set at the same time")
 	}
 	if param.Scope == PARAMETER_SCOPE_TENANT {
 		if len(param.Tenants) != 0 && param.AllUserTenant {
-			return errors.Occur(errors.ErrIllegalArgument, "parameter tenants and all_user_tenant cannot be set at the same time")
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "tenants or all_user_tenant", "parameter tenants and all_user_tenant cannot be set at the same time")
 		}
 		// if len(param.Tenants) == 0 && !param.AllUserTenant, set for sys tenant.
 	} else if param.Scope == PARAMETER_SCOPE_CLUSTER {
 		if len(param.Tenants) != 0 || param.AllUserTenant {
-			return errors.Occurf(errors.ErrIllegalArgument, "parameter tenants and all_user_tenant cannot be set when scope is %s", PARAMETER_SCOPE_CLUSTER)
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "tenants or all_user_tenant", fmt.Sprintf("parameter tenants and all_user_tenant cannot be set when scope is %s", PARAMETER_SCOPE_CLUSTER))
 		}
 	}
 	return nil

@@ -47,7 +47,7 @@ func autoForward(c *gin.Context) {
 	agentService := agentservice.AgentService{}
 	master := agentService.GetMasterAgentInfo()
 	if master == nil {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "master agent not found"))
+		SendResponse(c, nil, errors.Occur(errors.ErrRequestForwardMasterAgentNotFound))
 		return
 	}
 
@@ -65,13 +65,13 @@ func autoForward(c *gin.Context) {
 
 	headerByte, exist := c.Get(constant.OCS_HEADER)
 	if headerByte == nil || !exist {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header not found"))
+		SendResponse(c, nil, errors.Occur(errors.ErrRequestForwardHeaderNotExist))
 		return
 	}
 
 	header, ok := headerByte.(secure.HttpHeader)
 	if !ok {
-		SendResponse(c, nil, errors.Occur(errors.ErrUnauthorized, "header type error"))
+		SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderTypeInvalid))
 		return
 	}
 
@@ -97,7 +97,7 @@ func AutoForwardToMaintainerWrapper(f func(*gin.Context)) func(*gin.Context) {
 			}
 			bodyBytes, err := io.ReadAll(c.Request.Body)
 			if err != nil {
-				SendResponse(c, nil, errors.New("Failed to read request body when forwarding request"))
+				SendResponse(c, nil, errors.Occur(errors.ErrRequestBodyReadFailed, err.Error()))
 				return
 			}
 			var bodyInterface interface{}
@@ -108,7 +108,7 @@ func AutoForwardToMaintainerWrapper(f func(*gin.Context)) func(*gin.Context) {
 			ForwardRequest(c, agentInfo, bodyInterface)
 		} else {
 			log.WithContext(ctx).Info("forward request to maintainer but no maintainer found")
-			SendResponse(c, nil, errors.New("forward request to maintainer but no maintainer found"))
+			SendResponse(c, nil, errors.Wrap(errors.Occur(errors.ErrAgentMaintainerNotActive), "forward request to maintainer failed"))
 		}
 	}
 }

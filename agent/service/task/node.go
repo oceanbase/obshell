@@ -17,12 +17,10 @@
 package task
 
 import (
-	"fmt"
-
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
@@ -37,12 +35,12 @@ func (s *taskService) newNodes(template *task.Template, ctx *task.TaskContext) (
 		agents := s.GetExecuteAgents(node.GetContext())
 		if node.IsParallel() {
 			if len(agents) == 0 {
-				return nil, fmt.Errorf("parallel node %s has no execute agents", node.GetName())
+				return nil, errors.Occurf(errors.ErrCommonUnexpected, "parallel node %s has no execute agents", node.GetName())
 			}
 			maxStage = len(agents)
 		} else {
 			if len(agents) > 1 {
-				return nil, fmt.Errorf("serial node %s has more than one execute agents", node.GetName())
+				return nil, errors.Occurf(errors.ErrCommonUnexpected, "serial node %s has more than one execute agents", node.GetName())
 			}
 		}
 		nodeInstancesBO = append(nodeInstancesBO, &bo.NodeInstance{
@@ -117,17 +115,17 @@ func (s *taskService) GetNodes(dag *task.Dag) ([]*task.Node, error) {
 
 func (s *taskService) PassNode(node *task.Node, dag *task.Dag) error {
 	if !dag.IsFail() {
-		return errors.New("failed to pass node: associated dag is not failed")
+		return errors.Occur(errors.ErrTaskNodeOperatorPassNotFailedDag)
 	}
 	if !node.IsFail() {
-		return errors.New("failed to pass node: node is not failed")
+		return errors.Occur(errors.ErrTaskNodeOperatorPassNotFailedNode, node.GetName())
 	}
 
 	if _, err := s.GetSubTasks(node); err != nil {
 		return err
 	}
 	if !node.CanPass() {
-		return fmt.Errorf("failed to pass node: %s can not pass", node.GetName())
+		return errors.Occur(errors.ErrTaskNodeOperatorPassNotAllowed, node.GetName())
 	}
 
 	db, err := s.getDbInstance()
@@ -215,7 +213,7 @@ func (s *taskService) StartNode(node *task.Node) error {
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to start node: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to start node")
 	}
 	node.SetState(nodeInstanceBO.State)
 	node.SetStartTime(nodeInstanceBO.StartTime)
@@ -239,7 +237,7 @@ func (s *taskService) FinishNode(node *task.Node) error {
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("failed to finish node: no row affected")
+		return errors.Occur(errors.ErrGormNoRowAffected, "failed to finish node")
 	}
 	node.SetState(nodeInstanceBO.State)
 	node.SetEndTime(nodeInstanceBO.EndTime)

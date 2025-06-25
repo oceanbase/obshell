@@ -41,11 +41,11 @@ import (
 func poolDropHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Resource pool name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObResourcePoolNameEmpty))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	err := pool.DropResourcePool(name)
@@ -66,7 +66,7 @@ func poolDropHandler(c *gin.Context) {
 // @Router /api/v1/resources-pool [get]
 func poolListHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	pools, err := pool.GetAllResourcePools()

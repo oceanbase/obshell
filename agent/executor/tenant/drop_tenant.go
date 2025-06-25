@@ -24,20 +24,20 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, error) {
 	if param.Name == constant.TENANT_SYS {
-		return nil, errors.Occur(errors.ErrIllegalArgument, "Can't drop sys tenant.")
+		return nil, errors.Occur(errors.ErrObTenantSysOperationNotAllowed)
 	}
 
 	tenant, err := tenantService.GetTenantByName(param.Name)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Get tenant '%s' failed.", param.Name)
+		return nil, errors.Wrapf(err, "Get tenant '%s' failed.", param.Name)
 	}
 	if tenant == nil {
 		return nil, nil
 	}
 	if tenant.Status != NORMAL_TENANT {
-		return nil, errors.Occurf(errors.ErrKnown, "Tenant '%s' status is '%s'.", param.Name, tenant.Status)
+		return nil, errors.Occur(errors.ErrObTenantStatusNotNormal, param.Name, tenant.Status)
 	}
 
 	// Create 'Drop Tenant' dag instance.
@@ -47,7 +47,7 @@ func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, *errors.OcsAg
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create '%s' dag instance failed: %s", DAG_DROP_TENANT, err.Error())
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -77,7 +77,7 @@ func newRecycleTenantTask() *RecycleTenantTask {
 
 func (t *RecycleTenantTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 	tenantName, err := tenantService.GetTenantName(t.tenantId)
 	if err != nil {
@@ -106,13 +106,13 @@ func (t *DropTenantTask) Execute() error {
 	}
 	tenantName, err := tenantService.GetTenantName(t.id)
 	if err != nil {
-		return errors.New("Get tenant name failed.")
+		return errors.Wrap(err, "Get tenant name failed.")
 	}
 	t.ExecuteLogf("Drop tenant %s", tenantName)
 	// Get all resource pool
 	resourcePools, err := tenantService.GetTenantResourcePoolNames(t.id)
 	if err != nil {
-		return errors.New("Get resource pool failed.")
+		return errors.Wrap(err, "Get resource pool failed.")
 	}
 	t.ExecuteLogf("Resource pool list: %v", resourcePools)
 	t.GetContext().SetData(PARAM_DROP_RESOURCE_POOL_LIST, resourcePools)

@@ -80,7 +80,7 @@ func (t *StopZoneTask) Execute() (err error) {
 		time.Sleep(constant.TICK_INTERVAL_FOR_OB_STATUS_CHECK)
 		t.TimeoutCheck()
 	}
-	return errors.New("stop zone timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "stop zone")
 }
 
 // Rollback will start the zone if it is inactive.
@@ -98,7 +98,7 @@ func (t *StopZoneTask) Rollback() error {
 	// Check if the zone is inactive, if not, start it
 	zoneIsInactive, err := obclusterService.IsZoneInactive(t.zone)
 	if err != nil {
-		return fmt.Errorf("check zone %s status failed: %s", t.zone, err.Error())
+		return errors.Wrap(err, "check zone status failed")
 	}
 	if zoneIsInactive {
 		return obclusterService.StartZone(t.zone)

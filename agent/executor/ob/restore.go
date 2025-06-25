@@ -32,7 +32,7 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func TenantRestore(p *param.RestoreParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func TenantRestore(p *param.RestoreParam) (*task.DagDetailDTO, error) {
 	if err := checkRestoreParam(p); err != nil {
 		return nil, err
 	}
@@ -41,24 +41,24 @@ func TenantRestore(p *param.RestoreParam) (*task.DagDetailDTO, *errors.OcsAgentE
 	ctx := buildRestoreTaskContext(p)
 	dag, err := taskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
+func checkRestoreParam(p *param.RestoreParam) error {
 	if err := p.Check(); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	zone.RenderZoneParams(p.ZoneList)
 
 	if err := zone.CheckZoneParams(p.ZoneList); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	if err := zone.CheckAtLeastOnePaxosReplica(p.ZoneList); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	zoneList := make([]string, 0)
@@ -66,7 +66,7 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 		zoneList = append(zoneList, zone.Name)
 	}
 	if err := zone.CheckPrimaryZone(*p.PrimaryZone, zoneList); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 
 	locality := make(map[string]string, 0)
@@ -74,7 +74,7 @@ func checkRestoreParam(p *param.RestoreParam) *errors.OcsAgentError {
 		locality[zone.Name] = zone.ReplicaType
 	}
 	if err := zone.CheckPrimaryZoneAndLocality(*p.PrimaryZone, locality); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err)
+		return err
 	}
 	return nil
 }
@@ -129,11 +129,11 @@ func newPreRestoreCheckTask() *PreRestoreCheckTask {
 
 func (t *PreRestoreCheckTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_RESTORE, &t.param); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_RESTORE)
+		return err
 	}
 	if t.GetContext().GetParam(PARAM_RESTORE_SCN) != nil {
 		if err = t.GetContext().GetParamWithValue(PARAM_RESTORE_SCN, &t.scn); err != nil {
-			return errors.Wrapf(err, "get %s", PARAM_RESTORE_SCN)
+			return err
 		}
 	}
 
@@ -182,22 +182,22 @@ func newStartRestoreTask() *StartRestoreTask {
 
 func (t *StartRestoreTask) getParams() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+		return err
 	}
 
 	if err = t.GetContext().GetParamWithValue(PARAM_RESTORE, &t.param); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_RESTORE)
+		return err
 	}
 	if t.GetContext().GetParam(PARAM_RESTORE_SCN) != nil {
 		if err = t.GetContext().GetParamWithValue(PARAM_RESTORE_SCN, &t.restoreScn); err != nil {
-			return errors.Wrapf(err, "get %s", PARAM_RESTORE_SCN)
+			return err
 		}
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_TASK_TIME, &t.timeStamp); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TASK_TIME)
+		return err
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_HA_HIGH_THREAD_SCORE, &t.haHighThreadScore); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_HA_HIGH_THREAD_SCORE)
+		return err
 	}
 
 	return nil
@@ -263,7 +263,7 @@ func (t *StartRestoreTask) Execute() (err error) {
 		t.TimeoutCheck()
 	}
 	if !metaTenantNormal {
-		return errors.New("create tenant timeout")
+		return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, fmt.Sprintf("create tenant '%s'", t.tenantName))
 	}
 
 	t.ExecuteLogf("Set ha_high_thread_score to %d", t.haHighThreadScore)
@@ -366,7 +366,7 @@ const (
 
 func (t *WaitRestoreFinshTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+		return err
 	}
 
 	t.ExecuteLog("Wait for restore task finish")
@@ -382,7 +382,7 @@ func (t *WaitRestoreFinshTask) Execute() (err error) {
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("wait restore finish timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, fmt.Sprintf("restore tenant '%s'", t.tenantName))
 }
 
 func (t *WaitRestoreFinshTask) GetAdditionalData() map[string]any {
@@ -413,7 +413,7 @@ const (
 
 func (t *ActiveTenantTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+		return err
 	}
 
 	t.ExecuteLogf("Active tenant '%s'", t.tenantName)
@@ -433,7 +433,7 @@ func (t *ActiveTenantTask) Execute() (err error) {
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("wait for tenant role primary timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, fmt.Sprintf("active tenant '%s'", t.tenantName))
 }
 
 type UpgradeTenantTask struct {
@@ -455,7 +455,7 @@ const (
 
 func (t *UpgradeTenantTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrapf(err, "get %s", PARAM_TENANT_NAME)
+		return err
 	}
 
 	t.ExecuteLogf("Upgrade tenant %s", t.tenantName)
@@ -476,13 +476,13 @@ func (t *UpgradeTenantTask) Execute() (err error) {
 		t.TimeoutCheck()
 	}
 
-	return errors.New("wait for upgrade tenant timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, fmt.Sprintf("upgrade tenant '%s'", t.tenantName))
 }
 
-func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e *errors.OcsAgentError) {
+func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e error) {
 	runningTask, err := tenantService.GetRunningRestoreTask(tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	if runningTask != nil {
 		res = &param.RestoreOverview{
@@ -497,7 +497,7 @@ func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e *error
 
 		lastTask, err := tenantService.GetLastRestoreTask(tenantName)
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err)
+			return nil, err
 		}
 
 		if lastTask != nil {
@@ -513,7 +513,7 @@ func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e *error
 	}
 
 	if res == nil {
-		return nil, errors.Occur(errors.ErrTaskNotFound, "restore task not found")
+		return nil, errors.Occur(errors.ErrCommonNotFound, "restore task")
 	}
 
 	dataStorageInterface, _ := system.GetStorageInterfaceByURI(res.RestoreInfo.BackupSetList)
@@ -533,9 +533,9 @@ func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e *error
 	return res, nil
 }
 
-func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWindows, e *errors.OcsAgentError) {
+func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWindows, e error) {
 	if !system.IsFileExist(path.OBAdmin()) {
-		return nil, errors.Occur(errors.ErrKnown, "ob_admin not found")
+		return nil, errors.Occur(errors.ErrEnvironmentWithoutObAdmin)
 	}
 
 	if param.ArchiveLogUri == nil || *param.ArchiveLogUri == "" {
@@ -544,7 +544,7 @@ func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWin
 
 	res, err := system.GetRestoreWindows(param.DataBackupUri, *param.ArchiveLogUri)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return res, nil
 }

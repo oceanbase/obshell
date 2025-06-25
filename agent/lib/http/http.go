@@ -124,7 +124,14 @@ func SendRequestAndBuildReturn(agentInfo meta.AgentInfoInterface, uri string, me
 	if err != nil {
 		return err
 	}
-	return buildRequestReturn(ocsAgentResponse, ret)
+
+	// If the response is wrong, response-related error will be returned.
+	// If an error occurred in the parsing process, parsing-related error will be returned only if the request err is nil.
+
+	if ocsAgentResponse.response.IsError() {
+		return errors.Occur(errors.ErrAgentRPCRequestError, method, uri, agentInfo.String(), ocsAgentResponse.agentResp.Error)
+	}
+	return buildReturn(ocsAgentResponse, ret)
 }
 
 func NewClient() *resty.Client {
@@ -172,37 +179,29 @@ func sendHttpRequest(agentInfo meta.AgentInfoInterface, uri string, method strin
 	case DELETE:
 		response, err = request.Delete(targetUrl)
 	default:
-		return agentResponse, fmt.Errorf("%s method not support", method)
+		return agentResponse, errors.Occur(errors.ErrRequestMethodNotSupport, method)
+	}
+	if err != nil {
+		return agentResponse, errors.Occur(errors.ErrAgentRPCRequestFailed, method, agentInfo.String(), uri, err.Error())
 	}
 	return ocsAgentResponse{
 		response:  response,
 		agentResp: agentResp,
-	}, err
-}
-
-// buildRequestReturn will parses the return value, if specified.
-// If the response is wrong, response-related error will be returned.
-// If an error occurred in the parsing process, parsing-related error will be returned only if the request err is nil.
-func buildRequestReturn(agentResponse ocsAgentResponse, ret interface{}) error {
-	buildRetErr := buildReturn(agentResponse, ret)
-	if agentResponse.response.IsError() {
-		return fmt.Errorf("%s", agentResponse.agentResp.Error)
-	}
-	return buildRetErr
+	}, nil
 }
 
 // buildReturn is used to deserialize the response Data into the specified Ret
 func buildReturn(agentResponse ocsAgentResponse, ret interface{}) error {
 	if ret != nil && agentResponse.response.StatusCode() != http.StatusNoContent {
 		if agentResponse.agentResp.Data == nil {
-			return errors.New("response data is nil")
+			return errors.Occur(errors.ErrAgentResponseDataEmpty)
 		}
 		responseMap, ok := agentResponse.agentResp.Data.(map[string]interface{})
 		if !ok {
-			return errors.New("response data is not map")
+			return errors.Occur(errors.ErrAgentResponseDataFormatInvalid)
 		}
 		if len(responseMap) == 0 {
-			return errors.New("response data is empty")
+			return errors.Occur(errors.ErrAgentResponseDataEmpty)
 		}
 		data, err := json.Marshal(responseMap)
 		if err != nil {

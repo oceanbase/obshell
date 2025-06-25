@@ -30,22 +30,22 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func HandleObStop(param param.ObStopParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func HandleObStop(param param.ObStopParam) (*task.DagDetailDTO, error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "agent identity is '%v'", meta.OCS_AGENT.GetIdentity())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	if err := CheckStopObParam(&param); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+		return nil, err
 	}
 
 	template := buildStopTemplate(param.Force, param.Terminate)
 	taskCtx, err := buildStopTaskContext(param)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, taskCtx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -182,7 +182,7 @@ func (t *ExecStopSqlTask) Execute() (err error) {
 	t.ExecuteLog("Stop observer")
 	ctx := t.GetContext()
 	if err := ctx.GetDataWithValue(DATA_ALL_AGENT_DAG_MAP, &t.allAgentDagMap); err != nil {
-		return errors.Wrap(err, "get all agent dag map failed")
+		return err
 	}
 	defer func() {
 		if err != nil {
@@ -191,11 +191,11 @@ func (t *ExecStopSqlTask) Execute() (err error) {
 	}()
 
 	if exist, err := process.CheckObserverProcess(); err != nil || !exist {
-		return fmt.Errorf("check observer process exist: %v, %v,", exist, err)
+		return err
 	}
 
 	if err = ctx.GetParamWithValue(PARAM_SCOPE, &t.scope); err != nil {
-		return errors.Wrap(err, "get scope failed")
+		return err
 	}
 
 	if err := getOceanbaseInstance(); err != nil {
@@ -208,7 +208,7 @@ func (t *ExecStopSqlTask) Execute() (err error) {
 	case SCOPE_SERVER:
 		return t.stopServer()
 	}
-	return errors.Errorf("invalid scope '%v'", t.scope)
+	return errors.Occur(errors.ErrObClusterScopeInvalid, t.scope.Type)
 }
 
 func (t *ExecStopSqlTask) stopZone() (err error) {
@@ -239,7 +239,7 @@ func (t *ExecStopSqlTask) stopServer() (err error) {
 		t.ExecuteLogf("Stop %s", server)
 		agentInfo, err := meta.ConvertAddressToAgentInfo(server)
 		if err != nil {
-			return errors.Errorf("convert server '%s' to agent info failed: %v", server, err)
+			return errors.Wrapf(err, "convert server '%s' to agent info failed", server)
 		}
 		for _, agent := range agents {
 			if agentInfo.Ip == agent.Ip && agentInfo.Port == agent.Port {
@@ -262,13 +262,13 @@ func (t *PassSubStopDagTask) Execute() (err error) {
 
 func CheckStopObParam(param *param.ObStopParam) error {
 	if param.Scope.Type == SCOPE_GLOBAL && (!param.Force && !param.Terminate) {
-		return errors.New("cannot stop all observer without 'force'")
+		return errors.Occur(errors.ErrObClusterForceStopOrTerminateRequired)
 	}
 	if param.Force && param.Terminate {
-		return errors.New("cannot stop observer with 'force' and 'terminate' at the same time")
+		return errors.Occur(errors.ErrObClusterStopModeConflict)
 	}
 	if !param.Force && oceanbase.GetState() != oceanbase.STATE_CONNECTION_AVAILABLE {
-		return errors.New("The current observer is not available, please stop with 'force'")
+		return errors.Occur(errors.ErrObClusterForceStopRequired)
 	}
 	return nil
 }

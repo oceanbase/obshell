@@ -18,6 +18,7 @@ package sqlite
 
 import (
 	"github.com/oceanbase/obshell/agent/config"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
 
@@ -27,7 +28,7 @@ func LoadSqliteInstance() error {
 	}
 	db, err := createGormDbByConfig(c)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "load sqlite instance failed")
 	}
 	ocs_db_sqlite = db
 	return nil

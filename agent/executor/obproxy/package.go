@@ -123,7 +123,7 @@ func (t *GetObproxyPkgTask) CheckDiskFreeSpace() error {
 	}
 	t.ExecuteLogf("The remaining disk size is %d", diskInfo.FreeSizeBytes)
 	if diskInfo.FreeSizeBytes < expectedSize {
-		return fmt.Errorf("the remaining disk space is insufficient, the remaining disk space is %d, and the required disk space is %d", diskInfo.FreeSizeBytes, expectedSize)
+		return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, diskInfo.FreeSizeBytes, expectedSize)
 	}
 	return nil
 }
@@ -216,7 +216,7 @@ func (t *CheckObproxyPkgTask) checkUpgradePkgFromDb(filePath string) (err error)
 		rpmFile: input,
 	}
 
-	if err = r.CheckUpgradePkg(false); err != nil {
+	if err = r.CheckUpgradePkg(); err != nil {
 		return err
 	}
 	return nil

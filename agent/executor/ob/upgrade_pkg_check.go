@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 )
 
 type CheckAllRequiredPkgsTask struct {
@@ -54,7 +53,6 @@ func (t *CheckAllRequiredPkgsTask) Execute() (err error) {
 }
 
 func (t *CheckAllRequiredPkgsTask) checkAllRequiredPkgs() (err error) {
-	success := true
 	keys, err := getKeyForPkgInfoMap(t.GetContext())
 	if err != nil {
 		return err
@@ -64,8 +62,7 @@ func (t *CheckAllRequiredPkgsTask) checkAllRequiredPkgs() (err error) {
 		var rpmPkgInfo rpmPacakgeInstallInfo
 		if err = t.GetLocalDataWithValue(key, &rpmPkgInfo); err != nil {
 			t.ExecuteErrorLogf("get local data failed, key: %s, err: %s", key, err.Error())
-			success = false
-			continue
+			return err
 		}
 		t.ExecuteLogf("  package name is %s", rpmPkgInfo.RpmName)
 		t.ExecuteLogf("  package build version is %s", rpmPkgInfo.RpmBuildVersion)
@@ -74,13 +71,11 @@ func (t *CheckAllRequiredPkgsTask) checkAllRequiredPkgs() (err error) {
 		t.ExecuteLogf("  package home path is %s", rpmPkgInfo.RpmPkgHomepath)
 		if err = t.checkUpgradePkgFromDb(rpmPkgInfo.RpmPkgPath); err != nil {
 			t.ExecuteErrorLogf("  check failed: %v", err)
-			success = false
+			return err
 		}
 		t.ExecuteLog("The package check is complete.")
 	}
-	if !success {
-		return errors.New("check upgrade pkg failed")
-	}
+
 	t.ExecuteInfoLog("All packages are checked successfully.")
 	return nil
 }

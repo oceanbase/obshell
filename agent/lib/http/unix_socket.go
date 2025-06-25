@@ -17,7 +17,6 @@
 package http
 
 import (
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -106,7 +105,7 @@ func UploadFileViaUnixSocket(socketPath, uri, filePath string, ret interface{}) 
 // If an error occurred in the parsing process, parsing-related error will be returned only if the request err is nil.
 func buildRequestReturnForUnixSocket(agentResponse ocsAgentResponse, ret interface{}) error {
 	if agentResponse.response.IsError() {
-		return fmt.Errorf("%s", agentResponse.agentResp.Error.Message)
+		return agentResponse.agentResp.Error
 	}
 	buildRetErr := buildReturn(agentResponse, ret)
 	return buildRetErr
@@ -161,7 +160,7 @@ func sendRequestViaUnixSocket(socketPath, uri, method string, param interface{},
 	case DELETE:
 		response, err = request.Delete(uri)
 	default:
-		return agentResponse, fmt.Errorf("%s method not support", method)
+		return agentResponse, errors.Occur(errors.ErrRequestMethodNotSupport, method)
 	}
 	return ocsAgentResponse{
 		response:  response,

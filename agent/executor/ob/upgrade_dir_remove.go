@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -55,9 +56,14 @@ func (t *RemoveUpgradeCheckDirTask) Execute() (err error) {
 }
 
 func (t *RemoveUpgradeCheckDirTask) removeUpgradeCheckDir() (err error) {
-	upgradeCheckTaskDir, ok := t.GetLocalData(PARAM_UPGRADE_CHECK_TASK_DIR).(string)
-	if !ok {
-		return errors.New("get upgrade check task dir failed")
+	upgradeCheckTaskDirInterface := t.GetLocalData(PARAM_UPGRADE_CHECK_TASK_DIR)
+	if upgradeCheckTaskDirInterface == nil {
+		return errors.Occur(errors.ErrTaskLocalDataNotSet, PARAM_UPGRADE_CHECK_TASK_DIR)
 	}
+	upgradeCheckTaskDir, ok := upgradeCheckTaskDirInterface.(string)
+	if !ok {
+		return errors.Occur(errors.ErrTaskLocalDataConvertFailed, PARAM_UPGRADE_CHECK_TASK_DIR, fmt.Sprintf("expect string, but got %T", upgradeCheckTaskDirInterface))
+	}
+
 	return os.RemoveAll(upgradeCheckTaskDir)
 }

@@ -67,7 +67,7 @@ func newConvertClusterContext() (*task.TaskContext, error) {
 	if err != nil {
 		return nil, err
 	} else if len(agents) == 0 {
-		return nil, errors.New("no agent which has active server found")
+		return nil, errors.Occur(errors.ErrAgentNoActiveServer)
 	}
 	return task.NewTaskContext().SetParam(task.EXECUTE_AGENTS, agents).SetData(PARAM_ROOT_PWD, password), nil
 }

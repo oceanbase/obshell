@@ -17,6 +17,8 @@
 package rpc
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/oceanbase/obshell/agent/api/common"
@@ -32,7 +34,7 @@ import (
 
 func agentAddTokenHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsMasterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d is not master", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.MASTER))
 		return
 	}
 	var param param.AddTokenParam
@@ -51,7 +53,7 @@ func agentAddTokenHandler(c *gin.Context) {
 		return
 	}
 	if agentInstance != nil {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s:%d already exists", agentInstance.Ip, agentInstance.Port))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentAlreadyExists, agentInstance.String()))
 		return
 	}
 
@@ -60,7 +62,7 @@ func agentAddTokenHandler(c *gin.Context) {
 
 func agentJoinHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsMasterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not master", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.MASTER))
 		return
 	}
 
@@ -81,7 +83,7 @@ func agentJoinHandler(c *gin.Context) {
 	}
 
 	if agentInstance != nil {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s already exists", agentInstance.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentAlreadyExists, agentInstance.String()))
 		return
 	} else {
 		if err := agent.AddFollowerAgent(param); err != nil {
@@ -101,7 +103,7 @@ func agentRemoveHandler(c *gin.Context) {
 	} else if meta.OCS_AGENT.IsSingleAgent() {
 		common.SendResponse(c, task.DagDetailDTO{}, nil)
 	} else {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is %s", meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), strings.Join([]string{(string)(meta.MASTER), (string)(meta.FOLLOWER), (string)(meta.SINGLE)}, " or ")))
 	}
 }
 
@@ -123,7 +125,7 @@ func masterRemoveFollower(c *gin.Context) {
 	} else {
 		dag, err := agent.CreateRemoveFollowerAgentDag(param, false)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+			common.SendResponse(c, nil, err)
 		} else {
 			common.SendResponse(c, task.NewDagDetailDTO(dag), nil)
 		}
@@ -133,7 +135,7 @@ func masterRemoveFollower(c *gin.Context) {
 func followerRemoveSelf(c *gin.Context) {
 	dag, err := agent.CreateToSingleDag()
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+		common.SendResponse(c, nil, err)
 	} else {
 		common.SendResponse(c, task.NewDagDetailDTO(dag), nil)
 	}
@@ -147,11 +149,11 @@ func getMaintainerHandler(c *gin.Context) {
 func updateAllAgentsHandler(c *gin.Context) {
 	var allAgentsSyncData param.AllAgentsSyncData
 	if err := c.BindJSON(&allAgentsSyncData); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	if coordinator.OCS_AGENT_SYNCHRONIZER == nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "agent synchronizer is not initialized"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentSynchronizerNotInitialized))
 		return
 	}
 	coordinator.OCS_AGENT_SYNCHRONIZER.Update(coordinator.ConvertToAllAgentsSyncData(allAgentsSyncData))
@@ -160,12 +162,12 @@ func updateAllAgentsHandler(c *gin.Context) {
 
 func obServerDeployHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsFollowerAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not follower agent", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.FOLLOWER))
 		return
 	}
 	var dirs param.DeployTaskParams
 	if err := c.BindJSON(&dirs); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -179,7 +181,7 @@ func obServerDeployHandler(c *gin.Context) {
 
 func obServerDestroyHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsFollowerAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not follower agent", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.FOLLOWER))
 		return
 	}
 	dag, err := ob.CreateDestroyDag()
@@ -202,7 +204,7 @@ func obStartHandler(c *gin.Context) {
 	} else {
 		var config param.StartTaskParams
 		if err := c.BindJSON(&config); err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+			common.SendResponse(c, nil, err)
 			return
 		}
 
@@ -247,7 +249,7 @@ func obLocalScaleOutHandler(c *gin.Context) {
 func agentUpdateHandler(c *gin.Context) {
 	var params param.SyncAgentParams
 	if err := c.BindJSON(&params); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	dag, err := ob.CreateAgentSyncDag(params.Password)
@@ -256,7 +258,7 @@ func agentUpdateHandler(c *gin.Context) {
 
 func takeOverAgentUpdateBinaryHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsTakeover() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not takeover agent", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), strings.Join([]string{(string)(meta.TAKE_OVER_MASTER), (string)(meta.TAKE_OVER_FOLLOWER)}, " or ")))
 		return
 	}
 
@@ -274,7 +276,7 @@ func takeOverAgentUpdateBinaryHandler(c *gin.Context) {
 // killObserverHandler only used for delete server
 func killObserverHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsScalingInAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not %s agent, can not kill observer.", meta.OCS_AGENT.String(), meta.SCALING_IN))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.SCALING_IN))
 		return
 	}
 	dag, err := ob.CreateKillObserverDag()

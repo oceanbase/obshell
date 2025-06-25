@@ -107,11 +107,11 @@ func tenantCreateHandler(c *gin.Context) {
 		return
 	}
 	if *param.Name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	dag, err := tenant.CreateTenant(&param)
@@ -540,7 +540,7 @@ func getTenantParameter(c *gin.Context) {
 
 	parameterName := c.Param(constant.URI_PARAM_PARA)
 	if parameterName == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Parameter name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantParameterNameEmpty))
 		return
 	}
 
@@ -596,7 +596,7 @@ func getTenantVariable(c *gin.Context) {
 
 	variableName := c.Param(constant.URI_PARAM_VAR)
 	if variableName == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Variable name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantVariableNameEmpty))
 		return
 	}
 
@@ -644,7 +644,8 @@ func getTenantVariables(c *gin.Context) {
 // @Router /api/v1/tenants/overview [get]
 func getTenantOverView(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
 	}
 	mode := c.Query("mode")
 	tenants, err := tenant.GetTenantsOverView(mode)
@@ -702,7 +703,7 @@ func dropUserHandler(c *gin.Context) {
 	}
 	user := c.Param(constant.URI_PARAM_USER)
 	if user == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "User name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObUserNameEmpty))
 		return
 	}
 
@@ -786,7 +787,7 @@ func modifyDbPrivilege(c *gin.Context) {
 	modifyUserDbPrivilegeParam := param.ModifyUserDbPrivilegeParam{}
 	err := c.BindJSON(&modifyUserDbPrivilegeParam)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify user db privilege param parse failed"))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	err = tenant.ModifyUserDbPrivilege(name, user, &modifyUserDbPrivilegeParam)
@@ -835,7 +836,7 @@ func getUserStats(c *gin.Context) {
 func tenantPrecheck(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 		return
 	}
 	var param param.TenantRootPasswordParam
@@ -868,7 +869,7 @@ func modifyGlobalPrivilege(c *gin.Context) {
 	modifyUserGlobalPrivilegeParam := param.ModifyUserGlobalPrivilegeParam{}
 	err := c.BindJSON(&modifyUserGlobalPrivilegeParam)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify user global privilege param parse failed"))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	err = tenant.ModifyUserGlobalPrivilege(name, user, &modifyUserGlobalPrivilegeParam)
@@ -896,7 +897,7 @@ func changePassword(c *gin.Context) {
 	changeUserPasswordParam := param.ChangeUserPasswordParam{}
 	err := c.BindJSON(&changeUserPasswordParam)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Change user password param parse failed"))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	err = tenant.ChangeUserPassword(name, user, &changeUserPasswordParam)
@@ -1052,7 +1053,7 @@ func updateDatabase(c *gin.Context) {
 	modifyDatabaseParam := param.ModifyDatabaseParam{}
 	err := c.BindJSON(&modifyDatabaseParam)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Modify database param parse failed"))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	err = tenant.AlterDatabase(name, databaseName, &modifyDatabaseParam)
@@ -1078,7 +1079,7 @@ func createDatabase(c *gin.Context) {
 	createDatabaseParam := param.CreateDatabaseParam{}
 	err := c.BindJSON(&createDatabaseParam)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Create database param parse failed"))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	err = tenant.CreateDatabase(name, &createDatabaseParam)
@@ -1168,7 +1169,7 @@ func getTenantTopCompactionsHandler(c *gin.Context) {
 	if topStr != "" && topStr != "0" {
 		parsedTop, err := strconv.Atoi(topStr)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid top value."))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamIllegal, "limit"))
 			return
 		}
 		top = parsedTop
@@ -1204,7 +1205,7 @@ func getTenantTopSlowSqlRankHandler(c *gin.Context) {
 	} else {
 		parsedTop, err := strconv.Atoi(top)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid top value."))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamIllegal, "limit"))
 			return
 		}
 		param.Top = parsedTop
@@ -1212,23 +1213,23 @@ func getTenantTopSlowSqlRankHandler(c *gin.Context) {
 	if start_time != "" {
 		parsedTime, err := time.Parse(time.RFC3339, start_time)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid start_time."))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamIllegal, "start_time"))
 			return
 		}
 		param.StartTime = parsedTime
 	} else {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "start_time is required."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamEmpty, "start_time"))
 		return
 	}
 	if end_time != "" {
 		parsedTime, err := time.Parse(time.RFC3339, end_time)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Invalid end_time."))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamIllegal, "end_time"))
 			return
 		}
 		param.EndTime = parsedTime
 	} else {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "end_time is required."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamEmpty, "end_time"))
 		return
 	}
 

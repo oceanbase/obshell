@@ -22,9 +22,9 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-func StartObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
+func StartObproxy() (*task.DagDetailDTO, error) {
 	if !meta.IsObproxyAgent() {
-		return nil, errors.Occur(errors.ErrBadRequest, "This is not an obproxy agent")
+		errors.Occur(errors.ErrOBProxyNotBeManaged)
 	}
 
 	template := task.NewTemplateBuilder(DAG_START_OBPROXY).
@@ -34,8 +34,7 @@ func StartObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
 	context := task.NewTaskContext().SetParam(PARAM_OBPROXY_HOME_PATH, meta.OBPROXY_HOME_PATH)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
-
 }

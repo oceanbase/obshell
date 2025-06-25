@@ -47,7 +47,7 @@ func InitTaskRoutes(r *gin.RouterGroup) {
 func StartTask(c *gin.Context) {
 	var remoteTask task.RemoteTask
 	if err := c.ShouldBind(&remoteTask); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -90,7 +90,7 @@ func StartTask(c *gin.Context) {
 func UpdateTask(c *gin.Context) {
 	var remoteTask task.RemoteTask
 	if err := c.ShouldBind(&remoteTask); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -102,14 +102,14 @@ func UpdateTask(c *gin.Context) {
 	}
 
 	if taskInstance.GetExecuteTimes() != remoteTask.ExecuteTimes {
-		err := errors.Occur(errors.ErrUnexpected, "execute times not match")
+		err := errors.Occur(errors.ErrCommonUnexpected, "execute times not match")
 		log.Warnf("execute times not match, local task %d, remote task %d", taskInstance.GetExecuteTimes(), remoteTask.ExecuteTimes)
 		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if taskInstance.IsPending() || taskInstance.IsFinished() {
-		err := errors.Occur(errors.ErrUnexpected, "task not running")
+		err := errors.Occur(errors.ErrCommonUnexpected, "task not running")
 		log.Warnf("task not running, local task %d, remote task %d", taskInstance.GetExecuteTimes(), remoteTask.ExecuteTimes)
 		common.SendResponse(c, nil, err)
 		return
@@ -118,7 +118,7 @@ func UpdateTask(c *gin.Context) {
 	// Start remote task.
 	if taskInstance.IsReady() {
 		if remoteTask.State != task.RUNNING {
-			err := errors.Occur(errors.ErrUnexpected, "task not running")
+			err := errors.Occur(errors.ErrCommonUnexpected, "task not running")
 			log.Warnf("task not running, local task %d, remote task %d", taskInstance.GetExecuteTimes(), remoteTask.ExecuteTimes)
 			common.SendResponse(c, nil, err)
 			return
@@ -135,7 +135,7 @@ func UpdateTask(c *gin.Context) {
 	// Finish remote task.
 	if taskInstance.IsRunning() {
 		if remoteTask.State != task.FAILED && remoteTask.State != task.SUCCEED {
-			err := errors.Occur(errors.ErrUnexpected, "task is running")
+			err := errors.Occur(errors.ErrCommonUnexpected, "task is running")
 			common.SendResponse(c, nil, err)
 			return
 		}
@@ -155,7 +155,7 @@ func UpdateTask(c *gin.Context) {
 func CancelTask(c *gin.Context) {
 	var remoteTask task.RemoteTask
 	if err := c.ShouldBind(&remoteTask); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
@@ -185,7 +185,7 @@ func CancelTask(c *gin.Context) {
 func SyncLog(c *gin.Context) {
 	var taskLogDTIO task.TaskExecuteLogDTO
 	if err := c.ShouldBind(&taskLogDTIO); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 

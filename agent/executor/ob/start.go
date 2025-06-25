@@ -29,24 +29,23 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func HandleObStart(param param.StartObParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	var startOwnObsvr bool
+func HandleObStart(param param.StartObParam) (*task.DagDetailDTO, error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "agent identity is '%v'", meta.OCS_AGENT.GetIdentity())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	template := buildStartObclusterTemplate(param.Scope.Type)
-	taskCtx, err := buildStartObclusterTaskContext(param, startOwnObsvr)
+	taskCtx, err := buildStartObclusterTaskContext(param)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, taskCtx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func buildStartObclusterTaskContext(param param.StartObParam, startOwnObsvr bool) (*task.TaskContext, error) {
+func buildStartObclusterTaskContext(param param.StartObParam) (*task.TaskContext, error) {
 	agents, err := agentService.GetAllAgentsInfo()
 	if err != nil {
 		return nil, err
@@ -178,7 +177,7 @@ func (t *StartZoneTask) Execute() (err error) {
 	ctx := t.GetContext()
 	scope := param.Scope{}
 	if err := ctx.GetDataWithValue(DATA_ALL_AGENT_DAG_MAP, &t.allAgentDagMap); err != nil {
-		return errors.Wrap(err, "get all agent dag map failed")
+		return err
 	}
 	defer func() {
 		if err != nil {
@@ -187,7 +186,7 @@ func (t *StartZoneTask) Execute() (err error) {
 	}()
 
 	if err = ctx.GetParamWithValue(PARAM_SCOPE, &scope); err != nil {
-		return errors.Wrap(err, "get scope failed")
+		return err
 	}
 
 	if err := getOceanbaseInstance(); err != nil {
@@ -221,7 +220,7 @@ func (t *StartZoneTask) Execute() (err error) {
 		}
 	}
 	if !success {
-		return errors.New("start zone failed")
+		return errors.Occur(errors.ErrCommonUnexpected, "start zone failed")
 	}
 	return nil
 }

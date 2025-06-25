@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/system"
 )
@@ -96,7 +97,7 @@ func (t *CreateUpgradeDirTask) checkUpgradeDir() (err error) {
 		return err
 	}
 	if !isDirEmpty {
-		return fmt.Errorf("%s is not empty", t.upgradeCheckTaskDir)
+		return errors.Occur(errors.ErrCommonDirNotEmpty, t.upgradeCheckTaskDir)
 	}
 	t.SetLocalData(PARAM_UPGRADE_CHECK_TASK_DIR, t.upgradeCheckTaskDir)
 	return nil

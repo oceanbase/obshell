@@ -32,7 +32,7 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	myOBPath := filepath.Join(global.HomePath, constant.DIR_BIN, constant.PROC_OBSERVER)
 	bash := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s -V", global.HomePath, myOBPath)
 	if os.Stat(myOBPath); err != nil {
-		return "", false, errors.Wrap(err, "get my ob version failed")
+		return "", false, errors.Occur(errors.ErrCommonFileNotExist, myOBPath)
 	}
 	out, err := exec.Command("/bin/bash", "-c", bash).CombinedOutput()
 	if err != nil {
@@ -44,7 +44,7 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	regex := regexp.MustCompile(`REVISION:\s*(\d+)-([a-fA-F0-9]+)`)
 	match := regex.FindStringSubmatch(res)
 	if len(match) != 3 {
-		return "", false, errors.New("get my ob build number failed")
+		return "", false, errors.Occur(errors.ErrObBinaryVersionUnexpected, res)
 	}
 	buildNumber := match[1]
 
@@ -52,7 +52,7 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	regex = regexp.MustCompile(`\(OceanBase(_CE)?\s*([\d.]+)\)`)
 	match = regex.FindStringSubmatch(res)
 	if match == nil {
-		return "", false, errors.New("get my ob version failed")
+		return "", false, errors.Occur(errors.ErrObBinaryVersionUnexpected, res)
 	}
 	return fmt.Sprintf("%s-%s", match[2], buildNumber), match[1] != "", nil
 }

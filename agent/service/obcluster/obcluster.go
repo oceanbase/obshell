@@ -668,7 +668,7 @@ func (obclusterService *ObclusterService) RestoreParamsForUpgrade(params []ocean
 			case "CLUSTER":
 				sql = fmt.Sprintf("ALTER SYSTEM SET %s = '%s' SERVER = '%s'", param.Name, param.Value, meta.NewAgentInfo(param.SvrIp, param.SvrPort).String())
 			default:
-				return errors.New("unknown scope")
+				return errors.Occur(errors.ErrObParameterScopeInvalid, param.Scope)
 			}
 			err = tx.Exec(sql).Error
 			if err != nil {

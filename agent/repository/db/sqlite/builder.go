@@ -17,7 +17,6 @@
 package sqlite
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -32,6 +31,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
 )
 
@@ -84,7 +84,7 @@ func CheckFilepath(path string) error {
 func InitSqliteDataSourceConfig(dsConfig config.SqliteDataSourceConfig) (config.SqliteDataSourceConfig, error) {
 	if dsConfig.DataDir == "" {
 		log.Error("sqlite data dir cannot be empty")
-		return dsConfig, errors.New("sqlite data dir cannot be empty")
+		return dsConfig, errors.Occur(errors.ErrCommonUnexpected, "sqlite data dir is empty")
 	}
 	defaultDsConfig := config.DefaultSqliteDataSourceConfig()
 	defaultDsConfigValue := reflect.ValueOf(defaultDsConfig)
@@ -140,7 +140,7 @@ var SqliteTables = []interface{}{
 // The first start is based on whether the `ip` of sqlite's ocs_info table is "".
 func MigrateSqliteTables(forUpgrade bool) (err error) {
 	if ocs_db_sqlite == nil {
-		return errors.New("sqlite db is nil")
+		return errors.Occur(errors.ErrAgentSqliteDBNotInit)
 	}
 
 	// Check if sqlite tables exist.

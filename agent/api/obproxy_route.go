@@ -153,7 +153,7 @@ func obproxyUpgradeHandler(c *gin.Context) {
 func obproxyPkgUploadHandler(c *gin.Context) {
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "get file failed.", err))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestFileMissing, "file", err.Error()))
 		return
 	}
 	defer file.Close()

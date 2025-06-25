@@ -79,7 +79,7 @@ func (t *MinorFreezeTask) GetAllObServer() (servers []oceanbase.OBServer, err er
 
 func (t *MinorFreezeTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_SCOPE, &t.scope); err != nil {
-		return errors.Wrap(err, "get scope failed")
+		return err
 	}
 
 	servers, err := t.GetAllObServer()
@@ -108,7 +108,7 @@ func (t *MinorFreezeTask) Execute() error {
 			return nil
 		}
 	}
-	return errors.New("minor freeze timeout")
+	return errors.Occur(errors.ErrObClusterMinorFreezeTimeout)
 }
 
 func (t *MinorFreezeTask) isMinorFreezeOver(servers []oceanbase.OBServer, oldCheckpointScn map[oceanbase.OBServer]uint64, checkedServer map[oceanbase.OBServer]bool) (bool, error) {

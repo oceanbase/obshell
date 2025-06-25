@@ -21,10 +21,10 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-func ListRecyclebinTenant() ([]oceanbase.DbaRecyclebin, *errors.OcsAgentError) {
+func ListRecyclebinTenant() ([]oceanbase.DbaRecyclebin, error) {
 	tenants, err := tenantService.GetRecycledTenant()
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "List recyclebin's tenants failed: %s", err.Error())
+		return nil, errors.Wrap(err, "List recyclebin's tenants failed")
 	}
 	return tenants, nil
 }

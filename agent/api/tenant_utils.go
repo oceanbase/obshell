@@ -37,13 +37,13 @@ import (
 func getRootPasswordFromBody(c *gin.Context) (*param.TenantRootPasswordParam, error) {
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		return nil, errors.Errorf("read request body failed: %s", err.Error())
+		return nil, errors.Occur(errors.ErrRequestBodyReadFailed, err.Error())
 	}
 	bodyInterface := make(map[string]interface{})
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
-		return nil, errors.Errorf("unmarshal request body failed: %s", err.Error())
+		return nil, errors.Wrapf(err, "unmarshal request body failed")
 	}
 
 	var param param.TenantRootPasswordParam
@@ -61,11 +61,11 @@ func getRootPasswordFromBody(c *gin.Context) (*param.TenantRootPasswordParam, er
 func getBodyFromContext(c *gin.Context) (map[string]interface{}, error) {
 	bodyBytes, err := io.ReadAll(c.Request.Body)
 	if err != nil {
-		return nil, errors.Errorf("read request body failed: %s", err.Error())
+		return nil, errors.Occur(errors.ErrRequestBodyReadFailed, err.Error())
 	}
 	bodyInterface := make(map[string]interface{})
 	if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
-		return nil, errors.Errorf("unmarshal request body failed: %s", err.Error())
+		return nil, errors.Wrapf(err, "unmarshal request body failed")
 	}
 	return bodyInterface, nil
 }
@@ -80,24 +80,24 @@ func tenantHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
 		}
 		tenantName := c.Param(constant.URI_PARAM_NAME)
 		if tenantName == "" {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "tenant name is empty"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 			return
 		}
 		if exist, err := tenantService.IsTenantExist(tenantName); err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' exist failed", tenantName))
+			common.SendResponse(c, nil, errors.Wrapf(err, "check tenant '%s' exist failed", tenantName))
 			return
 		} else if !exist {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "Tenant '%s' not exists.", tenantName))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNotExist, tenantName))
 			return
 		}
 
 		isLocked, err := tenantService.IsTenantLocked(tenantName)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' locked failed", tenantName))
+			common.SendResponse(c, nil, errors.Wrapf(err, "check tenant '%s' lock status failed", tenantName))
 			return
 		}
 		if isLocked {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrKnown, "Tenant has been locked."))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantLocked, tenantName))
 			return
 		}
 
@@ -157,7 +157,7 @@ func ForwardToActiveAgentWrapper(f func(*gin.Context)) func(*gin.Context) {
 
 		executeAgent, err := GetExecuteAgentForTenant(tenantName)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error()))
+			common.SendResponse(c, nil, errors.Wrap(err, "get execute agent failed"))
 			return
 		}
 		if meta.OCS_AGENT.Equal(executeAgent) {
@@ -187,7 +187,7 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 		return nil, err
 	}
 	if executeAgent == nil {
-		return executeAgent, errors.New("tenant is not active")
+		return executeAgent, errors.Occur(errors.ErrObTenantNoActiveServer, tenantName)
 	}
 	return executeAgent, err
 }
@@ -195,10 +195,10 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 func tenantCheckWithName(c *gin.Context) (string, error) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		return "", errors.Occur(errors.ErrIllegalArgument, "Tenant name is empty.")
+		return "", errors.Occur(errors.ErrObTenantNameEmpty)
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return "", errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String())
+		return "", errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	return name, nil
 }

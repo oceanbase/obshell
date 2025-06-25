@@ -44,7 +44,8 @@ type OcsAgentResponse struct {
 
 // ApiError is the api error struct of ocsagent.
 type ApiError struct {
-	Code      int           `json:"code"`                // Error code
+	Code      int           `json:"code,omitempty"`      // Error code v1, deprecated
+	ErrCode   string        `json:"errCode"`             // Error code string
 	Message   string        `json:"message"`             // Error message
 	SubErrors []interface{} `json:"subErrors,omitempty"` // Sub errors
 }
@@ -58,10 +59,18 @@ type ApiFieldError struct {
 
 func (a ApiError) String() string {
 	if len(a.SubErrors) == 0 {
-		return fmt.Sprintf("{Code:%v, Message:%v}", a.Code, a.Message)
+		return fmt.Sprintf("{Code:%v, Message:%v}", a.ErrCode, a.Message)
 	} else {
-		return fmt.Sprintf("{Code:%v, Message:%v, SubErrors:%+v}", a.Code, a.Message, a.SubErrors)
+		return fmt.Sprintf("{Code:%v, Message:%v, SubErrors:%+v}", a.ErrCode, a.Message, a.SubErrors)
 	}
+}
+
+func (a ApiError) Error() string {
+	return a.String()
+}
+
+func (a ApiError) ErrorMessage() string {
+	return fmt.Sprintf("[%s]: %s", a.ErrCode, a.Message)
 }
 
 type IterableData struct {
@@ -86,17 +95,35 @@ func BuildNoContentResponse() OcsAgentResponse {
 }
 
 func buildErrorResponse(err error, response *OcsAgentResponse) *OcsAgentResponse {
-	agenterr, ok := err.(*errors.OcsAgentError)
-	if !ok && err != nil {
-		agenterr = errors.Occur(errors.ErrUnexpected, err)
+	if err == nil {
+		return response
 	}
-	if agenterr != nil {
+
+	agenterr, _ := err.(errors.OcsAgentErrorInterface)
+	if agenterr != nil && !reflect.ValueOf(agenterr).IsNil() {
 		response.Successful = false
-		response.Status = agenterr.ErrorCode.Kind
+		response.Status = agenterr.ErrorCode().Kind
 		response.Error = &ApiError{
-			Code:    agenterr.ErrorCode.Code,
-			Message: agenterr.DefaultMessage()}
+			Code:    agenterr.ErrorCode().OldCode,
+			ErrCode: agenterr.ErrorCode().Code,
+			Message: agenterr.Error()}
+	} else if errors.IsMysqlError(err) {
+		response.Successful = false
+		response.Status = errors.ErrMysqlError.Kind
+		response.Error = &ApiError{
+			Code:    errors.ErrObsoleteCode,
+			ErrCode: errors.ErrMysqlError.Code,
+			Message: err.Error()}
+	} else {
+		response.Successful = false
+		response.Status = errors.ErrCommonUnexpected.Kind
+		response.Error = &ApiError{
+			Code:    errors.ErrObsoleteCode,
+			ErrCode: errors.ErrCommonUnexpected.Code,
+			Message: err.Error(),
+		}
 	}
+
 	return response
 }
 
@@ -137,15 +164,15 @@ func NewSubErrorsResponse(subErrors []interface{}) OcsAgentResponse {
 	}
 
 	var status int
-	var code int
+	var code string
 	var message string
 	if allValidationError {
-		status = errors.ErrBadRequest.Kind
-		code = errors.ErrBadRequest.Code
+		status = errors.ErrCommonBadRequest.Kind
+		code = errors.ErrCommonBadRequest.Code
 		message = "validation error"
 	} else {
-		status = errors.ErrUnexpected.Kind
-		code = errors.ErrUnexpected.Code
+		status = errors.ErrCommonUnexpected.Kind
+		code = errors.ErrCommonUnexpected.Code
 		message = "unhandled error"
 	}
 
@@ -155,7 +182,8 @@ func NewSubErrorsResponse(subErrors []interface{}) OcsAgentResponse {
 		Status:     status,
 		Data:       nil,
 		Error: &ApiError{
-			Code:      code,
+			Code:      errors.ErrObsoleteCode,
+			ErrCode:   code,
 			Message:   message,
 			SubErrors: subErrors,
 		},

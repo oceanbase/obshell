@@ -54,7 +54,7 @@ type obUpgradeParams struct {
 	RequestParam    *param.ObUpgradeParam
 }
 
-func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, error) {
 	log.Info("check and upgrade ob")
 	p, err := preCheckForObUpgrade(param)
 	if err != nil {
@@ -64,14 +64,14 @@ func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, *errors.
 	e := p.initParamsForObUpgrade()
 	if e != nil {
 		log.WithError(e).Error("init params for ob upgrade failed")
-		return nil, errors.Occur(errors.ErrUnexpected, e)
+		return nil, e
 	}
 
 	checkAndUpgradeObTemplate := buildCheckAndUpgradeObTemplate(p)
 	checkAndUpgradeObTaskContext := buildCheckAndUpgradeObTaskContext(p)
 	checkAndUpgradeObDag, e := taskService.CreateDagInstanceByTemplate(checkAndUpgradeObTemplate, checkAndUpgradeObTaskContext)
 	if e != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, e)
+		return nil, e
 	}
 	return task.NewDagDetailDTO(checkAndUpgradeObDag), nil
 }
@@ -249,20 +249,20 @@ func (p *obUpgradeParams) initParamsForObUpgrade() (err error) {
 	return nil
 }
 
-func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *errors.OcsAgentError) {
+func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err error) {
 	log.Info("start precheck for ob upgrade")
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occur(errors.ErrObclusterNotFound, "Cannot be upgraded. Please execute `init` first.")
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
-	allAgents, agentErr := agentService.GetAllAgentsInfoFromOB()
-	if agentErr != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "Failed to query all agents from ob")
+	allAgents, err := agentService.GetAllAgentsInfoFromOB()
+	if err != nil {
+		return nil, err
 	}
 	agentInfo := coordinator.OCS_COORDINATOR.Maintainer
 	agentsStatus := make(map[string]http.AgentStatus)
 	resErr := secure.SendGetRequest(agentInfo, "/api/v1/agents/status", nil, &agentsStatus)
 	if resErr != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, "Failed to query all agents status")
+		return nil, errors.Wrap(resErr, "failed to query all agents status")
 	}
 	unavailableAgents := make([]string, 0)
 	unavailableObservers := make([]string, 0)
@@ -280,14 +280,14 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 		}
 	}
 	if len(unavailableAgents) > 0 {
-		return nil, errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found agent %s not running", strings.Join(unavailableAgents, ",")))
+		return nil, errors.Occur(errors.ErrAgentUnavailable, strings.Join(unavailableAgents, ","))
 	}
 	if len(unavailableObservers) > 0 {
-		return nil, errors.Occur(errors.ErrUnexpected, fmt.Sprintf("Found observer %s not running", strings.Join(unavailableObservers, ",")))
+		return nil, errors.Occur(errors.ErrObServerUnavailable, strings.Join(unavailableObservers, ","))
 	}
 	currentBuildVersion, e := obclusterService.GetObBuildVersion()
 	if e != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, e)
+		return nil, err
 	}
 	p = &obUpgradeParams{
 		RequestParam:   &param,
@@ -298,17 +298,17 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err *
 		return
 	}
 
-	if e = checkUpgradeDir(&param.UpgradeDir); e != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, e)
+	if err = checkUpgradeDir(&param.UpgradeDir); err != nil {
+		return nil, err
 	}
 
-	p.upgradeRoute, e = checkForAllRequiredPkgs(param.Version, param.Release)
-	if e != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, e)
+	p.upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release)
+	if err != nil {
+		return nil, err
 	}
-	p.agents, e = agentService.GetAllAgentsInfoFromOB()
-	if e != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, e)
+	p.agents, err = agentService.GetAllAgentsInfoFromOB()
+	if err != nil {
+		return nil, err
 	}
 	return p, nil
 }
@@ -318,11 +318,11 @@ const (
 	PARAM_STOP_SERVICE_UPGRADE = "STOPSERVICE"
 )
 
-func checkUpgradeMode(param *param.ObUpgradeParam) *errors.OcsAgentError {
+func checkUpgradeMode(param *param.ObUpgradeParam) error {
 	param.Mode = strings.ToUpper(param.Mode)
 	log.Info("check upgrade mode")
 	if param.Mode != PARAM_ROLLING_UPGRADE && param.Mode != PARAM_STOP_SERVICE_UPGRADE {
-		return errors.Occurf(errors.ErrKnown, "upgrade mode '%s' is not supported", param.Mode)
+		return errors.Occur(errors.ErrObUpgradeModeNotSupported, param.Mode)
 	}
 	if param.Mode == PARAM_STOP_SERVICE_UPGRADE {
 		return nil
@@ -330,10 +330,10 @@ func checkUpgradeMode(param *param.ObUpgradeParam) *errors.OcsAgentError {
 
 	zoneCount, err := obclusterService.GetZoneCount()
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, err)
+		return err
 	}
 	if zoneCount < 3 {
-		return errors.Occur(errors.ErrKnown, "not support rolling upgrade when zone num is lower than 3")
+		return errors.Occur(errors.ErrObUpgradeUnableToRollingUpgrade)
 	}
 	return nil
 }

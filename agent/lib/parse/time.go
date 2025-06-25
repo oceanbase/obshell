@@ -17,11 +17,11 @@
 package parse
 
 import (
-	"errors"
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 const (
@@ -38,13 +38,13 @@ func TimeParse(input string) (int, error) {
 
 	// Check if the input matches the pattern
 	if matches == nil {
-		return 0, errors.New("The input string is invalid: " + input)
+		return 0, errors.Occur(errors.ErrCommonInvalidTimeDuration, input, "invalid format")
 	}
 
 	// Convert the captured numeric part of the input to an integer
 	num, err := strconv.Atoi(matches[1])
 	if err != nil {
-		return 0, fmt.Errorf("Error parsing number: %v", err)
+		return 0, errors.Occur(errors.ErrCommonInvalidTimeDuration, input, "invalid number")
 	}
 
 	// Get the unit character (if any) and determine the conversion factor
@@ -62,6 +62,6 @@ func TimeParse(input string) (int, error) {
 	case TIME_DAY:
 		return num * 24 * 60 * 60, nil
 	default:
-		return 0, errors.New("The input string is invalid: " + input)
+		return 0, errors.Occur(errors.ErrCommonInvalidTimeDuration, input, "invalid time unit")
 	}
 }

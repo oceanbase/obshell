@@ -27,30 +27,30 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func ObclusterStartBackup(p *param.BackupParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func ObclusterStartBackup(p *param.BackupParam) (*task.DagDetailDTO, error) {
 	allTenants, err := tenantService.GetAllUserTenants()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	if len(allTenants) == 0 {
-		return nil, errors.Occur(errors.ErrKnown, "no user tenants")
+		return nil, errors.Occur(errors.ErrObBackupNoUserTenants)
 	}
 	for _, tenant := range allTenants {
 		if err = checkAllDest(&tenant); err != nil {
-			return nil, errors.Occur(errors.ErrKnown, err)
+			return nil, err
 		}
 	}
 
 	ctx, err := buildStartClusterBackupCtx(p)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	template := buildStartClusterBackupTemplate(*p.Mode)
 
 	dag, err := taskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -61,7 +61,7 @@ func checkAllDest(tenant *oceanbase.DbaObTenant) error {
 		return errors.Wrapf(err, "get archive dest of %s(%d)", tenant.TenantName, tenant.TenantID)
 	}
 	if dest == "" {
-		return fmt.Errorf("archive dest is empty, tenant: %s(%d)", tenant.TenantName, tenant.TenantID)
+		return errors.Occur(errors.ErrObBackupArchiveDestEmpty, tenant.TenantName, tenant.TenantID)
 	}
 
 	dest, err = tenantService.GetDataBackupDestByID(tenant.TenantID)
@@ -69,7 +69,7 @@ func checkAllDest(tenant *oceanbase.DbaObTenant) error {
 		return errors.Wrapf(err, "get data dest of %s(%d)", tenant.TenantName, tenant.TenantID)
 	}
 	if dest == "" {
-		return fmt.Errorf("data dest is empty, tenant: %s(%d)", tenant.TenantName, tenant.TenantID)
+		return errors.Occur(errors.ErrObBackupDataDestEmpty, tenant.TenantName, tenant.TenantID)
 	}
 	return nil
 }
@@ -190,7 +190,7 @@ func (t *CheckDestTask) Execute() error {
 // 	}
 
 // 	if dest == "" {
-// 		return errors.New("archive dest is empty")
+// 		return errors.Occur(errors.ErrObBackupArchiveDestEmpty, tenant.TenantName, tenant.TenantID)
 // 	}
 
 // 	storage, err := system.GetStorageInterfaceByURI(dest)
@@ -213,7 +213,7 @@ func (t *CheckDestTask) Execute() error {
 // 	}
 
 // 	if dest == "" {
-// 		return errors.New("data dest is empty")
+// 		return errors.Occur(errors.ErrObBackupDataDestEmpty, tenant.TenantName, tenant.TenantID)
 // 	}
 
 // 	storage, err := system.GetStorageInterfaceByURI(dest)
@@ -305,7 +305,7 @@ func (t *OpenArchiveLogTask) Execute() error {
 				return err
 			}
 		case constant.ARCHIVELOG_STATUS_INTERRUPTED:
-			return fmt.Errorf("tenant %s(%d) archive log interrupted,", tenant.TenantName, tenant.TenantID)
+			return errors.Occurf(errors.ErrCommonUnexpected, "tenant %s(%d) archive log interrupted", tenant.TenantName, tenant.TenantID)
 		}
 	}
 	return nil
@@ -332,7 +332,7 @@ func (t *OpenArchiveLogTask) waitArchiveLogOpened(tenant *oceanbase.DbaObTenant)
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("wait archive log opened timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "wait archive log opened")
 }
 
 const (
@@ -356,7 +356,7 @@ func (t *OpenArchiveLogTask) waitArchiveLogDoing(tenant *oceanbase.DbaObTenant) 
 		t.TimeoutCheck()
 	}
 
-	return fmt.Errorf("wait archive log doing timeout, tenant: %s(%d), status: %s", tenant.TenantName, tenant.TenantID, status)
+	return errors.Occurf(errors.ErrObClusterAsyncOperationTimeout, "wait tenant: %s(%d), status: %s archive log doing", tenant.TenantName, tenant.TenantID, status)
 }
 
 func (t *OpenArchiveLogTask) RollBack() (err error) {
@@ -404,11 +404,11 @@ func (t *StartBackupTask) Execute() error {
 
 func (t *StartBackupTask) getParams() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_BACKUP_MODE, &t.mode); err != nil {
-		return errors.Wrap(err, "get backup mode")
+		return err
 	}
 	if t.GetContext().GetParam(PARAM_BACKUP_ENCRYPTION) != nil {
 		if err = t.GetContext().GetParamWithValue(PARAM_BACKUP_ENCRYPTION, &t.encryption); err != nil {
-			return errors.Wrap(err, "get backup encryption")
+			return err
 		}
 	}
 	if t.GetContext().GetParam(PARAM_BACKUP_PLUS_ARCHIVE) != nil {

@@ -74,7 +74,7 @@ func CreateJoinMasterDag(masterAgent meta.AgentInfo, zone string, masterPassword
 	// Encrypt master agent password.
 	agentPassword, err := secure.Encrypt(masterPassword)
 	if err != nil {
-		return nil, errors.Wrap(err, "encrypt master password failed")
+		return nil, err
 	}
 	template := builder.Build()
 	ctx := task.NewTaskContext().SetParam(PARAM_ZONE, zone).SetParam(PARAM_MASTER_AGENT, masterAgent).
@@ -87,19 +87,19 @@ func (t *AgentJoinMasterTask) Execute() error {
 	var masterAgent meta.AgentInfo
 	taskCtx := t.GetContext()
 	if err := taskCtx.GetParamWithValue(PARAM_MASTER_AGENT, &masterAgent); err != nil {
-		return errors.Wrapf(err, "Get Param %s failed", PARAM_MASTER_AGENT)
+		return err
 	}
 	if err := taskCtx.GetParamWithValue(PARAM_MASTER_AGENT_PASSWORD, &t.masterPassword); err != nil {
-		return errors.Wrapf(err, "Get Param %s failed", PARAM_MASTER_AGENT_PASSWORD)
+		return err
 	}
 	// Decrypt master agent password.
 	masterPassword, err := secure.Decrypt(t.masterPassword)
 	if err != nil {
-		return errors.Wrap(err, "decrypt master password failed")
+		return errors.Occur(errors.ErrSecurityDecryptFailed, err.Error())
 	}
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("zone is not set")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 
 	t.ExecuteLog("creating token")
@@ -138,17 +138,17 @@ func (t *AgentBeFollowerTask) Execute() error {
 		return nil
 	}
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		return errors.New("agent is not single")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.SINGLE)
 	}
 
 	var masterAgent meta.AgentInstance
 	taskCtx := t.GetContext()
 	if err := taskCtx.GetDataWithValue(PARAM_MASTER_AGENT, &masterAgent); err != nil {
-		return errors.Wrap(err, "masterAgent is not found")
+		return err
 	}
 	zone, ok := taskCtx.GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("zone is not set")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	if err := agentService.BeFollowerAgent(masterAgent, zone); err != nil {
 		return err
@@ -157,27 +157,27 @@ func (t *AgentBeFollowerTask) Execute() error {
 	return nil
 }
 
-func AddFollowerAgent(param param.JoinMasterParam) *errors.OcsAgentError {
+func AddFollowerAgent(param param.JoinMasterParam) error {
 	targetToken, err := secure.Crypter.Decrypt(param.Token)
 	if err != nil {
-		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.JoinApiParam.AgentInfo.String(), err)
+		return errors.Wrapf(err, "decrypt token of '%s' failed", param.JoinApiParam.AgentInfo.String())
 	}
 
 	agentInstance := meta.NewAgentInstanceByAgentInfo(&param.JoinApiParam.AgentInfo, param.JoinApiParam.ZoneName, meta.FOLLOWER, param.Version)
 	if err = agentService.AddAgent(agentInstance, param.HomePath, param.Os, param.Architecture, param.PublicKey, targetToken); err != nil {
-		return errors.Occurf(errors.ErrKnown, "insert agent failed: %v", err)
+		return errors.Wrap(err, "insert agent failed")
 	}
 	return nil
 }
 
-func AddSingleToken(param param.AddTokenParam) *errors.OcsAgentError {
+func AddSingleToken(param param.AddTokenParam) error {
 	targetToken, err := secure.Crypter.Decrypt(param.Token)
 	if err != nil {
-		return errors.Occurf(errors.ErrKnown, "decrypt token of '%s' failed: %v", param.AgentInfo.String(), err)
+		return errors.Wrapf(err, "decrypt token of '%s' failed", param.AgentInfo.String())
 	}
 
 	if err = agentService.AddSingleToken(&param.AgentInfo, targetToken); err != nil {
-		return errors.Occurf(errors.ErrKnown, "insert token failed: %v", err)
+		return errors.Wrap(err, "insert token failed")
 	}
 	return nil
 }

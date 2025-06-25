@@ -231,7 +231,7 @@ func sendUpdateTaskRpc(remoteTaskId int64, task task.ExecutableTask) error {
 	// In some cases, such as restarting agent,
 	// when there is no maintainer, rpc should not be sent
 	if coordinator.OCS_COORDINATOR.IsFaulty() {
-		return errors.New("faulty does not have maintainer")
+		return errors.Occur(errors.ErrAgentCoordinatorIsFaulty)
 	}
 	log.Infof("send update task rpc to %s, remote task id %d", coordinator.OCS_COORDINATOR.Maintainer.String(), remoteTaskId)
 	remoteTask := createRemoteTask(remoteTaskId, task)

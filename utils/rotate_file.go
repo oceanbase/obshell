@@ -17,7 +17,6 @@
 package utils
 
 import (
-	"errors"
 	"fmt"
 	"io/fs"
 	"os"
@@ -27,6 +26,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 const (
@@ -90,9 +91,7 @@ func (rf *RotateFile) Write(p []byte) (n int, err error) {
 
 	writeLen := int64(len(p))
 	if writeLen > rf.maxSize {
-		return 0, fmt.Errorf(
-			"write length %d exceeds maximum file size %d", writeLen, rf.maxSize,
-		)
+		return 0, errors.Occur(errors.ErrLogWriteExceedMaxSize, writeLen, rf.maxSize)
 	}
 
 	if rf.file == nil {
@@ -153,7 +152,7 @@ func (rf *RotateFile) openExistingOrNew(writeLen int64) error {
 		if os.IsNotExist(err) {
 			return rf.openNew()
 		}
-		return fmt.Errorf("error getting log file info: %s", err)
+		return errors.Wrap(err, "error getting log file info")
 	}
 
 	if info.Size()+writeLen >= int64(rf.maxSize) {
@@ -191,7 +190,7 @@ func (rf *RotateFile) backup() error {
 	if err == nil {
 		newname := rf.backupName()
 		if err := os.Rename(rf.fileName, newname); err != nil {
-			return fmt.Errorf("can't rename log file: %s", err)
+			return errors.Wrap(err, "can't rename log file")
 		}
 
 		if err := rf.chown(info); err != nil {
@@ -205,7 +204,7 @@ func (rf *RotateFile) backup() error {
 func (rf *RotateFile) openNew() error {
 	err := os.MkdirAll(rf.dir, 0755)
 	if err != nil {
-		return fmt.Errorf("can't make directories for new logfile: %s", err)
+		return errors.Wrap(err, "can't make directories for new logfile")
 	}
 
 	mode := os.FileMode(0644)
@@ -216,7 +215,7 @@ func (rf *RotateFile) openNew() error {
 
 	f, err := os.OpenFile(rf.fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, mode)
 	if err != nil {
-		return fmt.Errorf("can't open new logfile: %s", err)
+		return errors.Wrap(err, "can't open new logfile")
 	}
 	rf.file = f
 	rf.size = 0
@@ -225,10 +224,10 @@ func (rf *RotateFile) openNew() error {
 
 func (rf *RotateFile) timeFromName(filename string) (time.Time, error) {
 	if !strings.HasPrefix(filename, rf.prefix) {
-		return time.Time{}, errors.New("mismatched prefix")
+		return time.Time{}, errors.Occur(errors.ErrLogFileNamePrefixMismatched, filename)
 	}
 	if !strings.HasSuffix(filename, rf.ext) {
-		return time.Time{}, errors.New("mismatched extension")
+		return time.Time{}, errors.Occur(errors.ErrLogFileNameExtensionMismatched, filename)
 	}
 	ts := filename[len(rf.prefix) : len(filename)-len(rf.ext)]
 	return time.ParseInLocation(backupTimeFormat, ts, time.Local)

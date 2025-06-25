@@ -17,7 +17,6 @@
 package task
 
 import (
-	"fmt"
 	"strconv"
 
 	"github.com/go-sql-driver/mysql"
@@ -25,6 +24,8 @@ import (
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	bo "github.com/oceanbase/obshell/agent/repository/model/bo"
@@ -55,7 +56,13 @@ func (maintainer *clusterStatusMaintainer) setStatus(tx *gorm.DB, newStatus int,
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to start maintenance: cluster is under maintenance")
+
+		var taskService ClusterTaskService
+		if dag, _ := taskService.GetLastMaintenanceDag(); dag != nil {
+			// Try to get the maintenance dag name
+			return errors.Occur(errors.ErrObClusterUnderMaintenance, dag.GetName())
+		}
+		return errors.Occur(errors.ErrObClusterUnderMaintenance, "unknown")
 	}
 	return nil
 }
@@ -85,7 +92,8 @@ func (maintainer *clusterStatusMaintainer) holdPartialLock(tx *gorm.DB, dag task
 				if err1 := maintainer.getPartialLockForUpdate(tx, &paritialLock); err1 != nil {
 					return err1
 				} else if paritialLock.GmtLocked.After(ZERO_TIME) {
-					return fmt.Errorf("failed to start maintenance: %s is under maintenance", paritialLock.LockName)
+					// TODO: Try to get the maintenance dag name
+					return errors.Occur(errors.ErrObTenantUnderMaintenance, paritialLock.LockName)
 				}
 				return nil
 			}
@@ -121,7 +129,7 @@ func (maintainer *clusterStatusMaintainer) UpdateMaintenanceTask(tx *gorm.DB, da
 	if lock.DagID > 0 && dag.IsFail() && dag.GetID() != lock.DagID {
 		gid := task.ConvertIDToGenericID(dag.GetID(), false, "")
 		oldGid := task.ConvertIDToGenericID(lock.DagID, false, "")
-		return fmt.Errorf("%s has already executed task %s. '%s: %s' cannot be executed. Please submit a new request", lock.LockName, oldGid, gid, dag.GetName())
+		return errors.Occur(errors.ErrTaskExpired, lock.LockName, oldGid, gid, dag.GetName())
 	}
 
 	lockDo := oceanbase.PartialMaintenance{
@@ -201,7 +209,7 @@ func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, o
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to start maintenance: agent is under maintaince")
+		return errors.Occur(errors.ErrAgentUnderMaintenance, meta.OCS_AGENT.String())
 	}
 	return nil
 }
@@ -220,7 +228,7 @@ func (maintainer *agentStatusMaintainer) setObproxyStatus(tx *gorm.DB, newStatus
 				return nil
 			}
 		}
-		return fmt.Errorf("failed to start maintenance: agent is under maintenance")
+		return errors.Occur(errors.ErrAgentUnderMaintenance, meta.OCS_AGENT.String())
 	}
 	return nil
 }

@@ -96,7 +96,7 @@ func (a *Agent) initSqlite() (err error) {
 	return nil
 }
 
-// initServerForUpgrade will only start the unix socket service  When upgrading.
+// initServerForUpgrade will only start the unix socket service When upgrading.
 func (a *Agent) initServerForUpgrade() error {
 	log.Info("init local server [upgrade mode]")
 	serverConfig, err := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), true)
@@ -109,6 +109,7 @@ func (a *Agent) initServerForUpgrade() error {
 	if err != nil {
 		return err
 	}
+
 	a.tmpSocketPath = a.server.SocketPath()
 	a.tmpServer = *a.server
 	a.server.UnixListener = socketListener
@@ -136,7 +137,7 @@ func WaitServerProcKilled(pid int32) error {
 	return errors.New("wait obshell server killed timeout")
 }
 
-// initAgent will get the final agent info based on meta ,incoming configuration, and default value.
+// initAgent will get the final agent info based on meta, incoming configuration, and default value.
 func (a *Agent) initAgent() (err error) {
 	log.Info("initialize agent")
 	if err = agentService.InitAgent(); err != nil {

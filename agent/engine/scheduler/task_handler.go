@@ -18,6 +18,7 @@ package scheduler
 
 import (
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -47,7 +48,7 @@ func (s *Scheduler) advanceTask(node *task.Node) (isFinished bool, isSucceed boo
 	case task.CANCEL:
 		readyTasks, isFinished, isSucceed, err = s.cancelHandler(node)
 	default:
-		return false, false, fmt.Errorf("node %d unknown operator %d", node.GetID(), node.GetOperator())
+		return false, false, errors.Occur(errors.ErrTaskNodeOperatorNotSupport, strconv.Itoa(node.GetOperator()))
 	}
 	log.withScheduler(s).Infof("ready Task num %d, isFinished %t, isSucceed %t", len(readyTasks), isFinished, isSucceed)
 	if err == nil && len(readyTasks) > 0 {

@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/param"
 )
@@ -61,7 +62,7 @@ func (t *RemoteExecutableTask) initial(uri string, method string, params interfa
 
 func (t *RemoteExecutableTask) retmoteExecute() error {
 	if !t.inited {
-		return errors.New("task not inited")
+		return errors.Occur(errors.ErrCommonUnexpected, "task not inited")
 	}
 
 	operator, err := localTaskService.GetNodeOperatorBySubTaskId(t.GetID())
@@ -82,7 +83,7 @@ func (t *RemoteExecutableTask) retmoteExecute() error {
 				}
 			} else {
 				if t.remoteDag.Name != t.GetName() && t.remoteDag.State != task.SUCCEED_STR {
-					return fmt.Errorf("agent is under maintain, can not execute task. Current maintain task is %s %s", t.remoteDag.GenericID, t.remoteDag.Name)
+					return errors.Occur(errors.ErrAgentUnderMaintenanceDag, t.GetExecuteAgent().String(), t.remoteDag.GenericID, t.remoteDag.Name)
 				}
 				return t.handlerCurrentDag()
 			}
@@ -96,7 +97,7 @@ func (t *RemoteExecutableTask) retmoteExecute() error {
 
 func (t *RemoteExecutableTask) remoteRollback() error {
 	if !t.inited {
-		return errors.New("task not inited")
+		return errors.Occur(errors.ErrCommonUnexpected, "task not inited")
 	}
 
 	if err := t.getAgentLastMaintainDag(); err != nil {
@@ -112,7 +113,7 @@ func (t *RemoteExecutableTask) remoteRollback() error {
 		if t.remoteDag.Name == t.rollbackTaskName {
 			return t.handlerRollbackTask()
 		} else if t.remoteDag.State != task.SUCCEED_STR {
-			return errors.Errorf("agent is under maintain, can not execute task. Current maintain task is %s %s", t.remoteDag.GenericID, t.remoteDag.Name)
+			return errors.Occur(errors.ErrAgentUnderMaintenanceDag, t.GetExecuteAgent().String(), t.remoteDag.GenericID, t.remoteDag.Name)
 		}
 		return t.sendRpcToRollback()
 	}
@@ -177,7 +178,7 @@ func (t *RemoteExecutableTask) operatorRemote(operator string) error {
 	t.ExecuteLogf("send operator %s request to %s", operator, uri)
 	for count := 0; count < t.maxRetry; count++ {
 		if resp, err := secure.SendPostRequestAndReturnResponse(&agent, uri, params, nil); resp != nil && resp.IsError() {
-			return errors.Errorf("send %s request failed: %v", operator, resp.Error())
+			return errors.Occur(errors.ErrAgentRPCRequestError, http.POST, uri, agent.String(), resp.Error())
 		} else if err != nil {
 			t.ExecuteLogf("send %s request failed: %v [%d/%d]", operator, err, count, t.maxRetry)
 			time.Sleep(1 * time.Second)
@@ -210,16 +211,16 @@ func (t *RemoteExecutableTask) handlerCurrentDag() error {
 func (t *RemoteExecutableTask) request() error {
 	agent := t.GetExecuteAgent()
 	for count := 0; count < t.maxRetry; count++ {
-		if resp, err := secure.SendRequestAndReturnResponse(&agent, t.uri, t.method, t.params, &t.remoteDag); resp != nil && resp.IsError() {
-			return errors.Errorf("request %s failed: %v", t.uri, resp.Error())
-		} else if err != nil {
+		if resp, err := secure.SendRequestAndReturnResponse(&agent, t.uri, t.method, t.params, &t.remoteDag); err != nil {
 			t.ExecuteWarnLogf("request %s failed: %v [%d/%d]", t.uri, err, count, t.maxRetry)
 			time.Sleep(1 * time.Second)
 			continue
+		} else if resp != nil && resp.IsError() {
+			return errors.Occur(errors.ErrAgentRPCRequestError, t.method, t.uri, agent.String(), resp.Error())
 		}
 		return nil
 	}
-	return errors.Errorf("retry %d times, request %s failed", t.maxRetry, t.uri)
+	return errors.Occur(errors.ErrAgentRPCRequestFailed, t.method, t.uri, agent.String(), fmt.Sprintf("retry %d times", t.maxRetry))
 }
 
 func (t *RemoteExecutableTask) watchRemoteDag() error {
@@ -247,7 +248,7 @@ func (t *RemoteExecutableTask) watchRemoteDag() error {
 		}
 		time.Sleep(1 * time.Second)
 		if resp, err := secure.SendGetRequestAndReturnResponse(&agent, uri, params, &t.remoteDag); resp != nil && resp.IsError() {
-			return errors.Errorf("watch dag failed: %v", resp.Error())
+			return errors.Occur(errors.ErrAgentRPCRequestError, http.GET, uri, agent.String(), resp.Error())
 		} else if err != nil {
 			count += 1
 			t.ExecuteWarnLogf("watch dag failed, count %d, err: %v", count, err)
@@ -256,7 +257,7 @@ func (t *RemoteExecutableTask) watchRemoteDag() error {
 		count = 0
 		t.ExecuteInfoLogf("remote task %s %s running [%d/%d]", t.remoteDag.GenericID, t.remoteDag.Name, t.remoteDag.Stage, t.remoteDag.MaxStage)
 	}
-	return fmt.Errorf("retry %d times, watch remote task %s %s failed", t.maxRetry, t.remoteDag.GenericID, t.remoteDag.Name)
+	return errors.Occur(errors.ErrAgentRPCRequestFailed, http.GET, uri, agent.String(), fmt.Sprintf("retry %d times", t.maxRetry))
 }
 
 func (t *RemoteExecutableTask) getResult() error {
@@ -268,7 +269,7 @@ func (t *RemoteExecutableTask) getResult() error {
 		}
 	}
 	if t.remoteDag.State == task.FAILED_STR {
-		return fmt.Errorf("remote task %s %s failed", t.remoteDag.GenericID, t.remoteDag.Name)
+		return errors.Occur(errors.ErrTaskRemoteTaskFailed, t.remoteDag.GenericID, t.remoteDag.Name)
 	}
 	return nil
 }
@@ -278,7 +279,7 @@ func (t *RemoteExecutableTask) getAgentLastMaintainDag() error {
 	uri := constant.URI_TASK_API_PREFIX + constant.URI_DAG + constant.URI_MAINTAIN + constant.URI_AGENT_GROUP
 	for count := 0; count < 30; count++ {
 		if resp, err := secure.SendGetRequestAndReturnResponse(&agent, uri, nil, &t.remoteDag); resp != nil && resp.IsError() {
-			return errors.Errorf("get current maintain dag failed: %v", resp.Error())
+			return errors.Occur(errors.ErrAgentRPCRequestError, http.GET, uri, agent.String(), fmt.Sprintf("get current maintain dag failed: %v", resp.Error()))
 		} else if err != nil {
 			t.ExecuteWarnLogf("get current maintain dag failed, err: %v", err)
 			time.Sleep(1 * time.Second)

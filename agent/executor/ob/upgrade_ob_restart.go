@@ -170,7 +170,7 @@ func (t *ReinstallAndRestartObTask) waitAllObSeverAvailable() (err error) {
 		t.TimeoutCheck()
 
 	}
-	return errors.New("wait all observer available timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "wait all observer available")
 }
 
 func isAllObSeverAvailable() (res bool, err error) {

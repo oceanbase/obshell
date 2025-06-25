@@ -109,24 +109,24 @@ const (
 	PARAMETERS_TEMPLATE = "parameters"
 )
 
-func checkTenantExist(name string) (*oceanbase.DbaObTenant, *errors.OcsAgentError) {
+func checkTenantExist(name string) (*oceanbase.DbaObTenant, error) {
 	tenant, err := tenantService.GetTenantByName(name)
 	if err != nil {
-		return tenant, errors.Occurf(errors.ErrUnexpected, "Get tenant '%s' failed.", name)
+		return tenant, errors.Wrapf(err, "Get tenant '%s' failed.", name)
 	}
 	if tenant == nil {
-		return tenant, errors.Occurf(errors.ErrBadRequest, "Tenant '%s' is not exist.", name)
+		return tenant, errors.Occur(errors.ErrObTenantNotExist, name)
 	}
 	return tenant, nil
 }
 
-func checkTenantExistAndStatus(name string) (*oceanbase.DbaObTenant, *errors.OcsAgentError) {
+func checkTenantExistAndStatus(name string) (*oceanbase.DbaObTenant, error) {
 	tenant, err := checkTenantExist(name)
 	if err != nil {
 		return tenant, err
 	}
 	if tenant.Status != NORMAL_TENANT {
-		return tenant, errors.Occurf(errors.ErrKnown, "Tenant '%s' status is '%s'.", name, tenant.Status)
+		return tenant, errors.Occur(errors.ErrObTenantStatusNotNormal, name, tenant.Status)
 	}
 	return tenant, nil
 }

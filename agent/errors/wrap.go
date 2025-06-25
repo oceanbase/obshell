@@ -16,7 +16,15 @@
 
 package errors
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
+
+type OcsAgentErrorInterface interface {
+	ErrorCode() ErrorCode
+	Error() string
+	ErrorMessage() string
+}
 
 // New returns an error with the supplied message.
 func New(message string) error {
@@ -30,10 +38,77 @@ func Errorf(format string, args ...interface{}) error {
 
 // Wrap returns an error annotating err with a stack trace
 func Wrap(err error, message string) error {
-	return errors.Wrap(err, message)
+	if err == nil {
+		return nil
+	}
+	if ocsAgentErr, ok := err.(OcsAgentErrorInterface); ok {
+		return OcsAgentErrorWrapper{
+			cause: err,
+			OcsAgentErrorExporter: OcsAgentErrorExporter{
+				errorCode: ocsAgentErr.ErrorCode(),
+				err:       errors.New(message),
+			},
+		}
+	} else {
+		return errors.Wrap(err, message)
+	}
 }
 
 // Wrapf returns an error annotating err with a stack trace
 func Wrapf(err error, format string, args ...interface{}) error {
-	return errors.Wrapf(err, format, args...)
+	if err == nil {
+		return nil
+	}
+	if ocsAgentErr, ok := err.(OcsAgentErrorInterface); ok {
+		return OcsAgentErrorWrapper{
+			cause: err,
+			OcsAgentErrorExporter: OcsAgentErrorExporter{
+				errorCode: ocsAgentErr.ErrorCode(),
+				err:       errors.Errorf(format, args...),
+			},
+		}
+	} else {
+		return errors.Wrapf(err, format, args...)
+	}
+}
+
+// WrapRetain returns an error annotating err with a stack trace
+// WrapRetain will retain the original errorCode if it's OcsAgentError
+func WrapRetain(errorCode ErrorCode, err error, args ...interface{}) *OcsAgentErrorWrapper {
+	if err == nil {
+		return nil
+	}
+	newErr := &OcsAgentErrorWrapper{
+		cause: err,
+		OcsAgentErrorExporter: OcsAgentErrorExporter{
+			errorCode: errorCode,
+			err: ocsAgentError{
+				ErrorCode: errorCode,
+				Args:      args,
+			},
+		},
+	}
+	if originalErr, ok := err.(OcsAgentErrorInterface); ok && originalErr.ErrorCode().Code != ErrCommonUnexpected.Code {
+		newErr.OcsAgentErrorExporter.SetErrorCode(originalErr.ErrorCode())
+	}
+	return newErr
+}
+
+// WrapOverride returns an error annotating err with a stack trace
+// WrapOverride will override the error code if it's OcsAgentError
+func WrapOverride(errorCode ErrorCode, err error, args ...interface{}) *OcsAgentErrorWrapper {
+	if err == nil {
+		return nil
+	}
+	newErr := &OcsAgentErrorWrapper{
+		cause: err,
+		OcsAgentErrorExporter: OcsAgentErrorExporter{
+			errorCode: errorCode,
+			err: ocsAgentError{
+				ErrorCode: errorCode,
+				Args:      args,
+			},
+		},
+	}
+	return newErr
 }

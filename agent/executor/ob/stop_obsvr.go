@@ -17,7 +17,6 @@
 package ob
 
 import (
-	"fmt"
 	"os/exec"
 	"time"
 
@@ -90,13 +89,13 @@ func stopObserver(t task.ExecutableTask) error {
 			return nil
 		}
 	}
-	return errors.New("kill observer process timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "kill observer process")
 }
 
-func CreateStopDag(params CreateSubDagParam) (*CreateSubDagResp, *errors.OcsAgentError) {
+func CreateStopDag(params CreateSubDagParam) (*CreateSubDagResp, error) {
 	lastMainDagId, err := checkMaintenanceAndPassDag(params.ForcePassDagParam.ID)
 	if err != nil {
-		return &CreateSubDagResp{ForcePassDagParam: param.ForcePassDagParam{ID: []string{lastMainDagId}}}, errors.Occur(errors.ErrKnown, err)
+		return &CreateSubDagResp{ForcePassDagParam: param.ForcePassDagParam{ID: []string{lastMainDagId}}}, err
 	}
 
 	stage, template := buildSubStopTemplate(params)
@@ -108,7 +107,7 @@ func CreateStopDag(params CreateSubDagParam) (*CreateSubDagResp, *errors.OcsAgen
 	}
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return resp, errors.Occur(errors.ErrUnexpected, err)
+		return resp, err
 	}
 	resp.GenericID = task.NewDagDetailDTO(dag).GenericID
 	return resp, nil
@@ -163,14 +162,14 @@ func findLastMaintenanceDag(ids []string) (dag *task.Dag, lastMainDagId string, 
 	}
 	if err = dag.GetContext().GetParamWithValue(PARAM_MAIN_DAG_ID, &lastMainDagId); err != nil {
 		log.WithError(err).Error("get last maintenance dag id failed")
-		return nil, "", errors.New("agent is under maintenance")
+		return nil, "", errors.Occur(errors.ErrAgentUnderMaintenanceDag, meta.OCS_AGENT.String(), lastMainDagId, dag.GetName())
 	}
 	for _, id := range ids {
 		if id == lastMainDagId {
 			return
 		}
 	}
-	return nil, lastMainDagId, fmt.Errorf("cluster is under maintenance, dag id: %s. This dag need to be forcibly terminated", lastMainDagId)
+	return nil, lastMainDagId, errors.Occur(errors.ErrAgentUnderMaintenanceDag, meta.OCS_AGENT.String(), lastMainDagId, dag.GetName())
 }
 
 func cancelAndPassSubDag(dag *task.Dag) (err error) {
@@ -201,7 +200,7 @@ func passSubDag(dag *task.Dag) error {
 			}
 		}
 	}
-	return fmt.Errorf("pass %d timeout after %d seconds", dag.GetID(), maxQuerySubDagDetailTimes)
+	return errors.Occur(errors.ErrTaskDagPassTimeout, dag.GetID(), maxQuerySubDagDetailTimes)
 }
 
 func cancelSubDag(dag *task.Dag) error {
@@ -223,7 +222,7 @@ func cancelSubDag(dag *task.Dag) error {
 			}
 		}
 	}
-	return fmt.Errorf("cancel %d timeout after %d seconds", dag.GetID(), maxQuerySubDagDetailTimes)
+	return errors.Occur(errors.ErrTaskDagCancelTimeout, dag.GetID(), maxQuerySubDagDetailTimes)
 }
 
 func GenerateTargetAgentList(scope param.Scope) ([]meta.AgentInfo, error) {

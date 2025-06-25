@@ -120,7 +120,7 @@ func convertDbaObTenantJobToTenantJobBo(job *model.DbaObTenantJob) (*bo.DbaObTen
 	re := regexp.MustCompile(pattern)
 	match := re.FindStringSubmatch(job.ExtraInfo)
 	if match == nil {
-		return nil, errors.New("unexpect error: the target locality of alter locality job is unexpect.")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "the target locality of alter locality job is unexpect.")
 	}
 	to := match[1]
 
@@ -135,7 +135,7 @@ func convertDbaObTenantJobToTenantJobBo(job *model.DbaObTenantJob) (*bo.DbaObTen
 	} else if job.JobType == constant.ALTER_RESOURCE_TENANT_UNIT_NUM {
 		jobBo.CurrentTarget, err = strconv.Atoi(to)
 		if err != nil {
-			return nil, errors.New("unexpect error: the target unit num of alter unit num job is unexpect.")
+			return nil, errors.Occur(errors.ErrCommonUnexpected, "the target unit num of alter unit num job is unexpect.")
 		}
 	}
 	return jobBo, nil

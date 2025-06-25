@@ -28,9 +28,9 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-func StopObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
+func StopObproxy() (*task.DagDetailDTO, error) {
 	if !meta.IsObproxyAgent() {
-		return nil, errors.Occur(errors.ErrBadRequest, "This is not an obproxy agent")
+		return nil, errors.Occur(errors.ErrOBProxyNotBeManaged)
 	}
 
 	template := task.NewTemplateBuilder(DAG_STOP_OBPROXY).
@@ -42,7 +42,7 @@ func StopObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
 	ctx := task.NewTaskContext().SetParam(PARAM_OBPROXY_HOME_PATH, meta.OBPROXY_HOME_PATH)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -103,7 +103,7 @@ func (t *StopObproxyTask) stopObproxy() error {
 			return nil
 		}
 	}
-	return errors.New("kill obproxy process timeout")
+	return errors.Occur(errors.ErrOBProxyStopTimeout)
 }
 
 func (t *StopObproxyTask) stopObproxyd() error {
@@ -135,5 +135,5 @@ func (t *StopObproxyTask) stopObproxyd() error {
 			return nil
 		}
 	}
-	return errors.New("kill obproxyd process timeout")
+	return errors.Occur(errors.ErrOBProxyStopDaemonTimeout)
 }

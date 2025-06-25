@@ -133,8 +133,10 @@ func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
 		}
 
 		// Check if the observer process exists
-		if exist, err := process.CheckObserverProcess(); !exist || err != nil {
-			return fmt.Errorf("check observer process exist: %v, %v.", exist, err)
+		if exist, err := process.CheckObserverProcess(); err != nil {
+			return errors.Occur(errors.ErrObServerProcessCheckFailed, err.Error())
+		} else if !exist {
+			return errors.Occur(errors.ErrObServerProcessNotExist)
 		}
 
 		// Check if the SSTable file exists
@@ -153,20 +155,20 @@ func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
 	}
 
 	// If retries run out, return a timeout error
-	return errors.New("observer health check timeout")
+	return errors.Occur(errors.ErrTaskDagExecuteTimeout, "observer health check")
 }
 
 func (t *StartObserverTask) setPort() (err error) {
 	if val, ok := t.config[constant.CONFIG_MYSQL_PORT]; ok {
 		t.mysqlPort, err = strconv.Atoi(val)
 		if err != nil {
-			return fmt.Errorf("invalid mysql port %s", val)
+			return errors.Occur(errors.ErrCommonInvalidPort, val)
 		}
 	}
 	if val, ok := t.config[constant.CONFIG_RPC_PORT]; ok {
 		t.rpcPort, err = strconv.Atoi(val)
 		if err != nil {
-			return fmt.Errorf("invalid rpc port %s", val)
+			return errors.Occur(errors.ErrCommonInvalidPort, val)
 		}
 	}
 	return nil
@@ -216,10 +218,7 @@ func startObserver(t task.ExecutableTask, config map[string]string) error {
 		return err
 	}
 	t.ExecuteLog("generate start cmd")
-	cmd, err := generateStartCmd(config)
-	if err != nil {
-		return err
-	}
+	cmd := generateStartCmd(config)
 	t.ExecuteLogf("start cmd: %s", cmd)
 	return execStartCmd(cmd)
 }
@@ -230,25 +229,23 @@ func SafeStartObserver(config map[string]string) error {
 	if isFirst, err := isFirstStart(); err != nil {
 		return err
 	} else if isFirst {
-		return errors.New("observer has not started yet, please start it with normal way")
+		return errors.Occur(errors.ErrObServerHasNotBeenStarted)
 	}
 
 	if config == nil {
 		config = make(map[string]string)
 	}
-	cmd, err := generateStartCmd(config)
-	if err != nil {
-		return err
-	}
+	cmd := generateStartCmd(config)
+
 	log.Info("safty start observer, cmd: ", cmd)
 	return execStartCmd(cmd)
 }
 
-func generateStartCmd(config map[string]string) (string, error) {
+func generateStartCmd(config map[string]string) string {
 	cmd := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s/bin/observer ", global.HomePath, global.HomePath)
 	startOptionsCmd := generateStartOpitonCmd(config)
 	additionalCmd := generateAdditionalStartCmd(config)
-	return fmt.Sprintf("%s %s %s", cmd, startOptionsCmd, additionalCmd), nil
+	return fmt.Sprintf("%s %s %s", cmd, startOptionsCmd, additionalCmd)
 }
 
 func requireCheck(t task.ExecutableTask, config map[string]string) error {
@@ -262,7 +259,7 @@ func requireCheck(t task.ExecutableTask, config map[string]string) error {
 	fillStartConfig(config)
 	for _, key := range requiredConfigItems {
 		if _, ok := config[key]; !ok {
-			return fmt.Errorf("config %s is required", key)
+			return errors.Occurf(errors.ErrCommonUnexpected, "config %s is required", key)
 		}
 	}
 	return nil
@@ -323,10 +320,10 @@ func execStartCmd(bash string) error {
 	return nil
 }
 
-func CreateStartDag(params CreateSubDagParam) (*CreateSubDagResp, *errors.OcsAgentError) {
+func CreateStartDag(params CreateSubDagParam) (*CreateSubDagResp, error) {
 	lastMainDagId, err := checkMaintenanceAndPassDag(params.ID)
 	if err != nil {
-		return &CreateSubDagResp{ForcePassDagParam: param.ForcePassDagParam{ID: []string{lastMainDagId}}}, errors.Occur(errors.ErrKnown, err)
+		return &CreateSubDagResp{ForcePassDagParam: param.ForcePassDagParam{ID: []string{lastMainDagId}}}, err
 	}
 
 	taskCtx := task.NewTaskContext().
@@ -354,7 +351,7 @@ func CreateStartDag(params CreateSubDagParam) (*CreateSubDagResp, *errors.OcsAge
 
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template.Build(), taskCtx)
 	if err != nil {
-		return resp, errors.Occur(errors.ErrUnexpected, err)
+		return resp, err
 	}
 	resp.GenericID = task.NewDagDetailDTO(dag).GenericID
 	return resp, nil
@@ -440,13 +437,13 @@ func (t *CheckDagStageTask) Execute() error {
 func (t *CheckDagStageTask) getParams() error {
 	taskCtx := t.GetContext()
 	if err := taskCtx.GetParamWithValue(PARAM_EXPECT_MAIN_NEXT_STAGE, &t.expectedStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 	if err := taskCtx.GetParamWithValue(PARAM_MAIN_DAG_ID, &t.mainDagID); err != nil {
-		return errors.Wrap(err, "get super dag id failed")
+		return err
 	}
 	if err := taskCtx.GetParamWithValue(PARAM_MAIN_AGENT, &t.mainAgent); err != nil {
-		return errors.Wrap(err, "get super agent failed")
+		return err
 	}
 	return nil
 }
@@ -477,7 +474,7 @@ func (t *CheckObserverForStartTask) Execute() error {
 	}
 	if isFirst {
 		if t.GetContext().GetParam(PARAM_START_OWN_OBSVR) != nil {
-			return errors.New("observer has not started yet")
+			return errors.Occur(errors.ErrCommonUnexpected, "observer has not started yet")
 		}
 		t.ExecuteLog("first start, skip check observer process")
 		t.GetContext().SetData(DATA_SKIP_START_TASK, true)
@@ -528,7 +525,7 @@ func getOceanbaseInstance() (err error) {
 		log.Infof("get db instance failed: %v , retry [%d/%d]", err, i, constant.MAX_GET_INSTANCE_RETRIES)
 		time.Sleep(time.Second * constant.GET_INSTANCE_RETRY_INTERVAL)
 	}
-	return errors.New("get db instance timeout")
+	return errors.Wrap(err, "get db instance timeout")
 }
 
 func (t *WaitPassOperatorTask) Execute() error {

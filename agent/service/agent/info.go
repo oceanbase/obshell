@@ -17,7 +17,6 @@
 package agent
 
 import (
-	"errors"
 	"fmt"
 	"runtime"
 
@@ -26,6 +25,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -134,7 +134,7 @@ func (s *AgentService) UpdateAgentInfo(agentInfo meta.AgentInfoInterface) error 
 			return err
 		}
 		if status == task.GLOBAL_MAINTENANCE {
-			return errors.New("agent is under maintenance, can not update agent info")
+			return errors.Occur(errors.ErrAgentUnderMaintenance, agentInfo.String())
 		}
 		return s.updateAgentInfo(tx, agentInfo)
 	})

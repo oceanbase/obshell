@@ -26,28 +26,28 @@ import (
 	"github.com/oceanbase/obshell/agent/secure"
 )
 
-func checkZoneCanBeDeleted(zoneName string) *errors.OcsAgentError {
+func checkZoneCanBeDeleted(zoneName string) error {
 	exist, err := obclusterService.HasUnitInZone(zoneName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "get ob units on zone failed: %s", err.Error())
+		return errors.Wrapf(err, "get ob units on zone failed")
 	}
 	if exist {
-		return errors.Occurf(errors.ErrBadRequest, "The zone '%s' is not empty and can not be deleted", zoneName)
+		return errors.Occur(errors.ErrObZoneNotEmpty, zoneName)
 	}
 
 	// check if there is other zone stopped
 	if exist, err := obclusterService.HasOtherStopTask(zoneName); err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "Check if has other stop task failed: %s", err.Error())
+		return errors.Wrapf(err, "check if has other stop task failed")
 	} else if exist {
-		return errors.Occur(errors.ErrBadRequest, "cannot stop server or stop zone in multiple zones")
+		return errors.Occur(errors.ErrObServerStoppedInMultiZone)
 	}
 	return nil
 }
 
-func DeleteZone(zoneName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func DeleteZone(zoneName string) (*task.DagDetailDTO, error) {
 	zone, err := obclusterService.GetZone(zoneName)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "check zone exist failed: %s", err.Error())
+		return nil, errors.Wrapf(err, "check zone exist failed")
 	}
 	if zone == nil {
 		return nil, nil
@@ -58,16 +58,16 @@ func DeleteZone(zoneName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
 
 	observers, err := obclusterService.GetOBServersByZone(zoneName)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "get observer in zone '%s'failed: %s", zoneName, err.Error())
+		return nil, errors.Wrapf(err, "get observer in zone '%s'failed", zoneName)
 	}
 	agentInfos, err := agentService.GetAgentInfoByZoneFromOB(zoneName)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "get agents by zone from ob failed: %s", err.Error())
+		return nil, errors.Wrapf(err, "get agents by zone from ob failed")
 	}
 
 	for _, agent := range agentInfos {
 		if meta.OCS_AGENT.Equal(&agent) {
-			return nil, errors.Occur(errors.ErrBadRequest, "The current agent is in '%s', please initiate the request through another agent.", zoneName)
+			return nil, errors.Occur(errors.ErrObZoneDeleteSelf, zoneName)
 		}
 	}
 
@@ -96,7 +96,7 @@ func DeleteZone(zoneName string) (*task.DagDetailDTO, *errors.OcsAgentError) {
 
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(builder.Build(), context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create dag instance failed: %s", err.Error())
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -125,7 +125,7 @@ func (t *DeleteZoneTask) Execute() error {
 
 	exist, err := obclusterService.IsZoneExistInOB(t.zoneName)
 	if err != nil {
-		return fmt.Errorf("check zone '%s' exist failed: %s", t.zoneName, err.Error())
+		return errors.Wrapf(err, "check zone '%s' exist failed", t.zoneName)
 	}
 	if exist {
 		return obclusterService.DeleteZone(t.zoneName)
@@ -142,7 +142,7 @@ func (t *DeleteZoneTask) Rollback() error {
 	}
 	exist, err := obclusterService.IsZoneExistInOB(t.zoneName)
 	if err != nil {
-		return errors.Errorf("check zone '%s' exist failed: %s", t.zoneName, err.Error())
+		return errors.Wrapf(err, "check zone '%s' exist failed", t.zoneName)
 	}
 	if !exist {
 		return obclusterService.AddZoneInRegion(t.zoneName, t.region)

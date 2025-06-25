@@ -22,11 +22,10 @@ import (
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-func DeleteObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
+func DeleteObproxy() (*task.DagDetailDTO, error) {
 	if !meta.IsObproxyAgent() {
 		return nil, nil
 	}
@@ -42,7 +41,7 @@ func DeleteObproxy() (*task.DagDetailDTO, *errors.OcsAgentError) {
 	context := task.NewTaskContext().SetParam(PARAM_OBPROXY_HOME_PATH, meta.OBPROXY_HOME_PATH)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(templateBuilder.Build(), context)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -94,7 +93,7 @@ func (t *CleanObproxyDirTask) Execute() (err error) {
 		constant.OBPROXY_DIR_BIN, constant.OBPROXY_DIR_LIB}
 	for _, file := range deleteFiles {
 		if err := os.RemoveAll(filepath.Join(t.obproxyHomePath, file)); err != nil {
-			return errors.Occur(errors.ErrUnexpected, err)
+			return err
 		}
 	}
 	return nil

@@ -226,7 +226,7 @@ func NewAgentInfo(ip string, port int) *AgentInfo {
 
 func ConvertAddressToAgentInfo(host string) (*AgentInfo, error) {
 	if host == "" {
-		return nil, errors.New("host is empty")
+		return nil, errors.Occur(errors.ErrCommonInvalidAddress, host)
 	}
 	if strings.Contains(host, ".") {
 		// If the host contains '.', it might be an IPv4 address, but further validation is needed.
@@ -246,16 +246,16 @@ func convertIPv4ToAgentInfo(host string) (*AgentInfo, error) {
 		return NewAgentInfo(matches[0], constant.DEFAULT_AGENT_PORT), nil
 	} else if len(matches) == 2 {
 		if port, err = strconv.Atoi(matches[1]); err != nil || !utils.IsValidPortValue(port) {
-			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", matches[1])
+			return nil, errors.Occur(errors.ErrCommonInvalidPort, matches[1])
 		}
 		ip = matches[0]
 	} else {
-		return nil, errors.Errorf("Invalid server format: %s", host)
+		return nil, errors.Occur(errors.ErrCommonInvalidAddress, host)
 	}
 
 	ipv4 := net.ParseIP(ip)
 	if ipv4 == nil || ipv4.To4() == nil {
-		return nil, errors.Errorf("%s is not a valid IP address", ip)
+		return nil, errors.Occur(errors.ErrCommonInvalidIp, ip)
 	}
 	return NewAgentInfo(ip, port), nil
 }
@@ -265,7 +265,7 @@ func convertIPv6ToAgentInfo(host string) (*AgentInfo, error) {
 	matches := re.FindStringSubmatch(host)
 
 	if matches == nil {
-		return nil, errors.Errorf("Invalid server format: %s", host)
+		return nil, errors.Occur(errors.ErrCommonInvalidAddress, host)
 	}
 
 	var ip string
@@ -279,13 +279,13 @@ func convertIPv6ToAgentInfo(host string) (*AgentInfo, error) {
 
 	if matches[3] != "" {
 		if port, err = strconv.Atoi(matches[3]); err != nil || !utils.IsValidPortValue(port) {
-			return nil, errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", matches[1])
+			return nil, errors.Occur(errors.ErrCommonInvalidPort, matches[3])
 		}
 	}
 
 	ipv6 := net.ParseIP(ip)
 	if ipv6 == nil || ipv6.To4() != nil {
-		return nil, errors.Errorf("%s is not a valid IP address", ip)
+		return nil, errors.Occur(errors.ErrCommonInvalidIp, ip)
 	}
 	return NewAgentInfo(ip, port), nil
 }

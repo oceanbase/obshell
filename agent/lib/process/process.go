@@ -29,6 +29,7 @@ import (
 	"github.com/shirou/gopsutil/v3/net"
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
 
@@ -325,5 +326,5 @@ func FindPIDByPort(port uint32) (int32, error) {
 			return conn.Pid, nil
 		}
 	}
-	return 0, fmt.Errorf("no process found on port %d", port)
+	return 0, errors.Occurf(errors.ErrCommonUnexpected, "no process found on port %d", port)
 }

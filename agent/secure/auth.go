@@ -17,8 +17,6 @@
 package secure
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
@@ -26,6 +24,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
@@ -45,12 +44,11 @@ const (
 func VerifyTimeStamp(ts string, curTs int64) error {
 	tsInt, err := strconv.ParseInt(ts, 10, 64)
 	if err != nil {
-		log.WithError(err).Errorf("parse ts failed, ts:%v", ts)
-		return err
+		return errors.Occur(errors.ErrSecurityAuthenticationTimestampInvalid, ts, err.Error())
 	}
 	if curTs > int64(tsInt) {
 		log.Warnf("auth expired at: %v, current: %v", ts, curTs)
-		return errors.New("auth expired")
+		return errors.Occur(errors.ErrSecurityAuthenticationExpired)
 	}
 	return nil
 }
@@ -64,7 +62,7 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 
 	if verifyType == AGENT_PASSWORD {
 		if pwd != meta.AGENT_PWD.GetPassword() {
-			return fmt.Errorf("access denied: %s", "agent password is incorrect")
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectAgentPassowrd)
 		}
 	} else if verifyType == OCEANBASE_PASSWORD {
 		if pwd != meta.OCEANBASE_PWD {
@@ -74,14 +72,14 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 				}
 				if err := dumpPassword(); err != nil {
 					log.WithError(err).Error("dump password failed")
-					return err
+					return errors.Wrap(err, "dump password failed")
 				}
 			} else {
-				return fmt.Errorf("access denied: %s", "oceanbase password is incorrect")
+				return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
 			}
 		}
 	} else {
-		return errors.New("unknown password type")
+		return errors.Occur(errors.ErrSecurityAuthenticationUnknownPasswordType)
 	}
 	return nil
 }
@@ -89,10 +87,10 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 func VerifyOceanbasePassword(password string) error {
 	if err := oceanbase.LoadOceanbaseInstanceForTest(config.NewObDataSourceConfig().SetPassword(password)); err != nil {
 		if strings.Contains(err.Error(), "Access denied") {
-			return errors.New("access denied")
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
 		}
 		if meta.OCEANBASE_PWD != password {
-			return errors.New("access denied")
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
 		}
 		log.WithError(err).Error("unexpected db error")
 		return nil

@@ -24,13 +24,13 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/repository/driver"
 	"github.com/oceanbase/obshell/agent/repository/logger"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
@@ -81,7 +81,7 @@ func createGormDbByConfig(datasourceConfig *config.ObDataSourceConfig) (db *gorm
 		log.WithError(err).Info("open oceanbase failed")
 		if !datasourceConfig.GetSkipPwdCheck() && isPasswordError(err.Error()) {
 			log.WithError(err).Info("password error")
-			return
+			return nil, err
 		}
 
 		if err := CheckObserverProcess(); err != nil {
@@ -110,7 +110,7 @@ func isPasswordError(errMsg string) bool {
 // CreateDataBase will query whether the ocs db exists, create it if it does not exist
 func CreateDataBase(dBname string) (err error) {
 	if dbInstance == nil {
-		return errors.New("oceanbase db is nil")
+		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
 	}
 	sql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s READ WRITE", dBname)
 	err = dbInstance.Exec(sql).Error
@@ -163,7 +163,7 @@ func AutoMigrateObTables(parallel bool) (err error) {
 
 func autoMigrateObTables() (err error) {
 	if dbInstance == nil {
-		return errors.New("oceanbase db is nil")
+		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
 	}
 	// When the ob db instance exists, do ob table migration
 	return dbInstance.AutoMigrate(tableList...)
@@ -171,7 +171,7 @@ func autoMigrateObTables() (err error) {
 
 func parallelAutoMigrateObTables() (err error) {
 	if dbInstance == nil {
-		return errors.New("oceanbase db is nil")
+		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
 	}
 	for _, table := range tableList {
 		for i := 0; i < 10; i++ {

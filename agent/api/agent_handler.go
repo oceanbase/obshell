@@ -17,6 +17,9 @@
 package api
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 
 	"github.com/oceanbase/obshell/agent/api/common"
@@ -55,7 +58,7 @@ func agentJoinHandler(c *gin.Context) {
 		return
 	}
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not single agent", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.SINGLE))
 		return
 	}
 
@@ -66,30 +69,41 @@ func agentJoinHandler(c *gin.Context) {
 	} else {
 		var agentStatus meta.AgentStatus
 		if err = http.SendGetRequest(&param.AgentInfo, constant.URI_API_V1+constant.URI_INFO, nil, &agentStatus); err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "get agent info failed: %s", err.Error()))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrCommonUnexpected, fmt.Sprintf("get agent info failed: %s", err.Error())))
+			// TODO: 这里对于 4xx 和 5xx 不好区分，这里如果是不存在的 agent，http code 应该是4xx，但实际返回是5xx
 			return
 		} else if !agentStatus.AgentInstance.IsMasterAgent() {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not master agent", param.AgentInfo.String()))
+			common.SendResponse(c, nil, errors.Occur(
+				errors.ErrAgentIdentifyNotSupportOperation,
+				param.AgentInfo.String(),
+				agentStatus.AgentInstance.Identity,
+				meta.MASTER,
+			))
 			return
 		}
 
 		// check version consistent
 		if agentStatus.Version != constant.VERSION_RELEASE {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "obshell version is not consistent between %s(%s) and %s(%s)",
-				param.AgentInfo.String(), agentStatus.Version, meta.OCS_AGENT.String(), constant.VERSION_RELEASE))
+			common.SendResponse(c, nil, errors.Occur(
+				errors.ErrAgentVersionInconsistent,
+				param.AgentInfo.String(),
+				agentStatus.Version,
+				meta.OCS_AGENT.String(),
+				constant.VERSION_RELEASE,
+			))
 			return
 		}
 		if obVersion, _, err := binary.GetMyOBVersion(); err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error()))
+			common.SendResponse(c, nil, err)
 			return
 		} else if obVersion != agentStatus.OBVersion {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "ob version is not consistent between %s(%s) and %s(%s)",
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentOBVersionInconsistent,
 				param.AgentInfo.String(), agentStatus.OBVersion, meta.OCS_AGENT.String(), obVersion))
 			return
 		}
 		// send token to master early.
 		if err = agent.SendTokenToMaster(param.AgentInfo, param.MasterPassword); err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+			common.SendResponse(c, nil, err)
 			return
 		}
 
@@ -97,7 +111,7 @@ func agentJoinHandler(c *gin.Context) {
 	}
 
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	common.SendResponse(c, task.NewDagDetailDTO(dag), nil)
@@ -128,13 +142,13 @@ func agentRemoveHandler(c *gin.Context) {
 	case meta.FOLLOWER:
 		master := agentService.GetMasterAgentInfo()
 		if master == nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 			return
 		}
 		var agentStatus http.AgentStatus
 		if err = http.SendGetRequest(master, constant.URI_API_V1+constant.URI_STATUS, nil, &agentStatus); err == nil {
 			if agentStatus.UnderMaintenance {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is under maintenance"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentUnderMaintenance, master.String()))
 				return
 			}
 		}
@@ -146,28 +160,27 @@ func agentRemoveHandler(c *gin.Context) {
 		dag, err = agent.CreaetFollowerRemoveSelfDag()
 	case meta.MASTER:
 		if isRunning, err := localTaskService.IsRunning(); err != nil {
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "get local task status failed: %s", err.Error()))
+			common.SendResponse(c, nil, errors.Wrapf(err, "get local task status failed"))
 			return
 		} else if !isRunning {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is under maintenance"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentUnderMaintenance, meta.OCS_AGENT.String()))
 			return
 		}
 
 		if meta.OCS_AGENT.Equal(&param) {
 			dag, err = agent.CreateRemoveAllAgentsDag()
-		} else {
-			targetAgent, err := agentService.FindAgentInstance(&param)
-			if err != nil {
-				common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "get agent instance failed: %s", err.Error()))
-				return
-			}
-			if targetAgent == nil {
-				common.SendNoContentResponse(c, nil)
-				return
-			} else {
-				dag, err = agent.CreateRemoveFollowerAgentDag(param, true)
-			}
+			break
 		}
+		targetAgent, err1 := agentService.FindAgentInstance(&param)
+		if err1 != nil {
+			common.SendResponse(c, nil, errors.Wrap(err1, "get agent instance failed"))
+			return
+		}
+		if targetAgent == nil {
+			common.SendNoContentResponse(c, nil)
+			return
+		}
+		dag, err = agent.CreateRemoveFollowerAgentDag(param, true)
 	case meta.SINGLE:
 		if meta.OCS_AGENT.Equal(&param) {
 			common.SendNoContentResponse(c, nil)
@@ -175,12 +188,16 @@ func agentRemoveHandler(c *gin.Context) {
 		}
 		fallthrough
 	default:
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s is not master or follower agent", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(
+			errors.ErrAgentIdentifyNotSupportOperation,
+			meta.OCS_AGENT.String(),
+			meta.OCS_AGENT.GetIdentity(),
+			strings.Join([]string{(string)(meta.MASTER), (string)(meta.FOLLOWER)}, " or ")))
 		return
 	}
 
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskCreateFailed, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	common.SendResponse(c, task.NewDagDetailDTO(dag), nil)

@@ -29,7 +29,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckResult, *errors.OcsAgentError) {
+func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckResult, error) {
 	isPasswordExists := password == nil
 	isConnectable := false
 	db, err := GetConnectionWithPassword(tenantName, password)
@@ -37,7 +37,7 @@ func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckRe
 	isConnectable = (err == nil)
 	isEmptyRootPassword, err := IsEmptyRootPassword(tenantName)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' password if empty failed", tenantName)
+		return nil, errors.Wrapf(err, "check tenant '%s' password if empty failed", tenantName)
 	}
 
 	return &bo.ObTenantPreCheckResult{

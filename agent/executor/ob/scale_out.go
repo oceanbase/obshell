@@ -61,47 +61,46 @@ type LocalScaleOutResp struct {
 	ParamWaitStartRetryStage  int `json:"paramWaitStartRetryStage" binding:"required"`
 }
 
-func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO, error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent", meta.OCS_AGENT.String())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	// Check scaling agent status.
 	var agent meta.AgentStatus
 	if err := http.SendGetRequest(&param.AgentInfo, constant.URI_API_V1+constant.URI_INFO, nil, &agent); err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "get %s status failed", param.AgentInfo.String())
+		return nil, errors.Wrapf(err, "get %s status failed", param.AgentInfo.String())
 	}
 	if !agent.IsSingleAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "%s is not single agent", param.AgentInfo.String())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, param.AgentInfo.String(), agent.String(), meta.OCS_AGENT.GetIdentity())
 	}
 
 	// check ob version is consistent
 	if obVersion, _, err := binary.GetMyOBVersion(); err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "get ob version failed: %s", err.Error())
+		return nil, errors.Wrap(err, "get ob version failed")
 	} else if obVersion != agent.OBVersion {
-		return nil, errors.Occurf(errors.ErrBadRequest, "ob version is not consistent between %s(%s) and %s(%s)",
-			param.AgentInfo.String(), agent.OBVersion, meta.OCS_AGENT.String(), obVersion)
+		return nil, errors.Occur(errors.ErrAgentOBVersionInconsistent, param.AgentInfo.String(), agent.OBVersion, meta.OCS_AGENT.String(), obVersion)
 	}
 
 	var targetVersion string
 	agentVersion := strings.Split(agent.Version, "-")[0]
 	log.Infof("scale out agent %s(%s) into cluster agent %s(%s)", agent.String(), agentVersion, meta.OCS_AGENT.String(), constant.VERSION)
 	if cmp := pkg.CompareVersion(constant.VERSION, agentVersion); cmp < 0 {
-		return nil, errors.Occurf(errors.ErrBadRequest, "scale out a higer version agent(%s) into cluster agent(%s) is not allowed", agentVersion, constant.VERSION)
+		return nil, errors.Occur(errors.ErrObClusterScaleOutHigherVersion, agent.String(), agentVersion, meta.OCS_AGENT.String(), constant.VERSION)
 	} else if cmp > 0 {
 		if pkg.CompareVersion(agentVersion, constant.AGENT_V4241) < 0 {
-			return nil, errors.Occurf(errors.ErrBadRequest, "scale out a lower version agent(%s before %s) into cluster agent(%s) is not allowed", agentVersion, constant.AGENT_V4241, constant.VERSION)
+			return nil, errors.Occur(errors.ErrObClusterScaleOutLowerVersion, agentVersion, constant.AGENT_V4241, constant.VERSION)
 		}
 		if exist, err := agentService.TargetVersionAgentExists(constant.VERSION); err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, "check target version agent exists failed")
+			return nil, errors.Wrap(err, "check target version agent exists failed")
 		} else if !exist {
-			return nil, errors.Occurf(errors.ErrBadRequest, "There is no aviailable agent(version: %s, architecture: %s) in OB", constant.VERSION, global.Architecture)
+			return nil, errors.Occur(errors.ErrAgentBinaryNotFound, constant.VERSION, global.Architecture, constant.DIST)
 		}
 		targetVersion = constant.VERSION
 	}
 
 	param.ObConfigs[constant.CONFIG_HOME_PATH] = agent.HomePath
 	if err := paramToConfig(param.ObConfigs); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	var rpcPort int
@@ -109,7 +108,7 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 	if ok {
 		var err error
 		if rpcPort, err = strconv.Atoi(rpcPortStr); err != nil {
-			return nil, errors.Occur(errors.ErrIllegalArgument, "rpc_port is not a number")
+			return nil, errors.Occur(errors.ErrCommonInvalidPort, rpcPortStr)
 		}
 	} else {
 		rpcPort = constant.DEFAULT_RPC_PORT
@@ -118,35 +117,35 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 
 	// Check the server is not already in the cluster.
 	if exist, err := obclusterService.IsServerExist(*srvInfo); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	} else if exist {
-		return nil, errors.Occurf(errors.ErrBadRequest, "server %s already exists in the cluster", srvInfo.String())
+		return nil, errors.Occur(errors.ErrAgentAlreadyExists, srvInfo.String())
 	}
 
 	// Create Cluster Scale Out Dag
 	dag, err := CreateClusterScaleOutDag(param, targetVersion)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	return dag, nil
 }
 
-func HandleLocalScaleOut(params param.LocalScaleOutParam) (*LocalScaleOutResp, *errors.OcsAgentError) {
+func HandleLocalScaleOut(params param.LocalScaleOutParam) (*LocalScaleOutResp, error) {
 	// Create Local Scale Out Dag.
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "%s is not single agent", meta.OCS_AGENT.String())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	if params.Dirs[constant.CONFIG_HOME_PATH] != global.HomePath {
-		return nil, errors.Occur(errors.ErrUnexpected, "home path is not right")
+		return nil, errors.Occur(errors.ErrCommonIllegalArgument, "homePath in dirs")
 	}
 	dag, err := CreateLocalScaleOutDag(params)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	encryptedToken, err := secure.NewToken(&params.AgentInfo)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrKnown, "create token failed")
+		return nil, errors.Wrap(err, "create token failed")
 	}
 	return &LocalScaleOutResp{
 		DagDetailDTO: *task.NewDagDetailDTO(dag),
@@ -175,11 +174,11 @@ func CreateClusterScaleOutDag(param param.ClusterScaleOutParam, targetVersion st
 		return nil, errors.Wrap(err, "encrypt agent password failed")
 	}
 
-	template := buildClusterScaleOutTaskTemplate(param, !isZoneExist)
+	template := buildClusterScaleOutTaskTemplate(!isZoneExist)
 	context := buildClusterScaleOutDagContext(param, !isZoneExist, targetVersion, encryptAgentPassword)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Wrap(err, "create dag instance failed")
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -196,27 +195,27 @@ func CreateLocalScaleOutDag(param param.LocalScaleOutParam) (*task.Dag, error) {
 		}
 		if dag.GetName() == DAG_NAME_LOCAL_SCALE_OUT {
 			var uuid string
-			if dag.GetContext().GetParamWithValue(PARAM_SCALE_OUT_UUID, &uuid) != nil {
-				return nil, errors.Wrap(err, "get coordinate dag id failed")
+			if err := dag.GetContext().GetParamWithValue(PARAM_SCALE_OUT_UUID, &uuid); err != nil {
+				return nil, err
 			}
 			if uuid == param.Uuid {
 				return dag, nil
 			}
 		}
-		return nil, errors.New("agent is under maintenance")
+		return nil, errors.Occur(errors.ErrAgentUnderMaintenanceDag, meta.OCS_AGENT.String(), task.ConvertIDToGenericID(dag.GetID(), true, ""), dag.GetName())
 	}
 	if err := secure.UpdateObPassword(param.RootPwd); err != nil {
 		return nil, errors.Wrap(err, "update ob password failed")
 	}
 	dag, err := localTaskService.CreateDagInstanceByTemplate(buildLocalScaleOutTaskTemplate(param), buildLocalScaleOutDagContext(param))
 	if err != nil {
-		return nil, errors.Wrap(err, "create dag instance failed")
+		return nil, err
 	}
 
-	return dag, err
+	return dag, nil
 }
 
-func buildClusterScaleOutTaskTemplate(param param.ClusterScaleOutParam, isNewZone bool) *task.Template {
+func buildClusterScaleOutTaskTemplate(isNewZone bool) *task.Template {
 	templateBuild := task.NewTemplateBuilder(DAG_NAME_CLUSTER_SCALE_OUT).
 		AddTask(newIntegrateSingleObConfigTask(), false).
 		AddTask(newCreateLocalScaleOutDagTask(), false).
@@ -312,13 +311,13 @@ func newScaleCoordinateTask(name string) *scaleCoordinateTask {
 func (t *scaleCoordinateTask) init() error {
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_COORDINATE_AGENT, &t.coordinateAgent); err != nil {
-		return errors.Wrap(err, "get coordinate agent failed")
+		return err
 	}
 	if err := ctx.GetParamWithValue(PARAM_COORDINATE_DAG_ID, &t.coordinateDagId); err != nil {
-		return errors.Wrap(err, "get coordinate dag id failed")
+		return err
 	}
 	if err := ctx.GetParamWithValue(PARAM_ALL_AGENTS, &t.allAgent); err != nil {
-		return errors.Wrap(err, "get all coordinate agent id failed")
+		return err
 	}
 	return nil
 }
@@ -327,17 +326,17 @@ func (t *scaleCoordinateTask) initFromData() error {
 	ctx := t.GetContext()
 	if ctx.GetData(PARAM_COORDINATE_DAG_ID) != nil {
 		if err := ctx.GetDataWithValue(PARAM_COORDINATE_DAG_ID, &t.coordinateDagId); err != nil {
-			return errors.Wrap(err, "get coordinate dag id failed")
+			return err
 		}
 	} else {
 		t.coordinateDagId = ""
 		return nil
 	}
 	if err := ctx.GetDataWithValue(PARAM_COORDINATE_AGENT, &t.coordinateAgent); err != nil {
-		return errors.Wrap(err, "get coordinate agent failed")
+		return err
 	}
 	if err := ctx.GetDataWithValue(PARAM_ALL_AGENTS, &t.allAgent); err != nil {
-		return errors.Wrap(err, "get coordinate all agent failed")
+		return err
 	}
 	return nil
 }
@@ -405,10 +404,10 @@ func (t *scaleCoordinateTask) syncCoordinateDag() (bool, error) {
 			return true, nil
 		} else {
 			// Retry asks for success
-			return false, errors.New("retry coordinate dag failed")
+			return false, errors.Occur(errors.ErrObClusterScaleOutRetryCoordinateDagFailed, t.coordinateDagId)
 		}
 	} else {
-		return false, errors.Errorf("not support operator %s", task.OPERATOR_MAP[node.GetOperator()])
+		return false, errors.Occur(errors.ErrTaskNodeOperatorNotSupport, task.OPERATOR_MAP[node.GetOperator()])
 	}
 }
 
@@ -418,7 +417,7 @@ func (t *scaleCoordinateTask) getCoordinateDag() (*task.DagDetailDTO, error) {
 		uri := fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, t.coordinateDagId)
 		requestParams := &param.TaskQueryParams{ShowDetails: constant.PTR_TRUE}
 		if resp, err := secure.SendGetRequestAndReturnResponse(&t.coordinateAgent, uri, requestParams, &coordinateDag); resp != nil && resp.IsError() {
-			return nil, errors.Errorf("get remote dag failed %v", resp.Error())
+			return nil, errors.Occur(errors.ErrAgentRPCRequestError, http.GET, uri, t.coordinateAgent.String(), resp.Error())
 		} else if err != nil {
 			if i == len(t.allAgent) {
 				return nil, errors.Wrap(err, "get remote dag failed")
@@ -448,12 +447,12 @@ func (t *AgentBeScalingOutTask) Execute() error {
 		return nil
 	}
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		return errors.New("agent is not single")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.SINGLE)
 	}
 
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("zone is not set")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	if err := agentService.BeScalingOutAgent(zone); err != nil {
 		return err
@@ -544,7 +543,7 @@ func (t *WatchDagTask) Execute() error {
 		}
 		// Failed only when remote dag failed.
 		if coordinateDag.Operator == task.RUN_STR && coordinateDag.State == task.FAILED_STR || coordinateDag.Operator == task.ROLLBACK_STR {
-			return errors.Errorf("remote task %s %s failed", coordinateDag.GenericID, coordinateDag.Name)
+			return errors.Wrap(errors.Occur(errors.ErrTaskDagFailed, coordinateDag.GenericID, coordinateDag.Name), "watch dag failed")
 		}
 		time.Sleep(1 * time.Second)
 	}
@@ -558,7 +557,7 @@ func (t *WatchDagTask) Rollback() error {
 	}
 	var expectStage int
 	if err := t.GetContext().GetParamWithValue(PARAM_EXPECT_ROLLBACK_NEXT_STAGE, &expectStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 	expectStage -= 1
 	for {
@@ -706,11 +705,11 @@ func newIntegrateSingleObConfigTask() *IntegrateSingleObConfigTask {
 func (t *IntegrateSingleObConfigTask) Execute() error {
 	var configs map[string]string
 	if err := t.GetContext().GetParamWithValue(PARAM_CONFIG, &configs); err != nil {
-		return errors.Wrap(err, "get server configs failed")
+		return err
 	}
 	var agentInfo meta.AgentInfo
-	if t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo) != nil {
-		return errors.New("agent info is not set")
+	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
+		return err
 	}
 	zone := t.GetContext().GetParam(PARAM_ZONE).(string)
 	configs[constant.CONFIG_ZONE] = zone
@@ -759,10 +758,10 @@ func newCreateLocalScaleOutDagTask() *CreateLocalScaleOutDagTask {
 func (t *CreateLocalScaleOutDagTask) Execute() error {
 	var agentInfo meta.AgentInfo
 	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_TARGET_AGENT_PASSWORD, &t.targetAgentPassword); err != nil {
-		return errors.Wrap(err, "get target agent password failed")
+		return err
 	}
 	// Send rpc to target agent.
 	param, err := t.buildLocalScaleOutParam()
@@ -792,15 +791,15 @@ func (t *CreateLocalScaleOutDagTask) buildLocalScaleOutParam() (*param.LocalScal
 	var agentInfo meta.AgentInfo
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return nil, errors.Wrap(err, "get agent info failed")
+		return nil, err
 	}
 	var dirs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_DIRS, &dirs); err != nil {
-		return nil, errors.Wrap(err, "get dirs failed")
+		return nil, err
 	}
 	var configs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_CONFIG, &configs); err != nil {
-		return nil, errors.Wrap(err, "get configs failed")
+		return nil, err
 	}
 	zone := ctx.GetParam(PARAM_ZONE).(string)
 	remoteTaskId, err := clusterTaskService.GetRemoteTaskIdByLocalTaskId(t.GetID())
@@ -824,7 +823,7 @@ func (t *CreateLocalScaleOutDagTask) buildLocalScaleOutParam() (*param.LocalScal
 
 	var targetVersion string
 	if err := ctx.GetParamWithValue(PARAM_TARGET_AGENT_VERSION, &targetVersion); err != nil {
-		return nil, errors.Wrap(err, "get target version failed")
+		return nil, err
 	}
 	param := param.LocalScaleOutParam{
 		ScaleOutParam: param.ScaleOutParam{
@@ -855,7 +854,7 @@ func (t *CreateLocalScaleOutDagTask) Rollback() error {
 	} else {
 		var agentInfo meta.AgentInfo
 		if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-			return errors.Wrap(err, "get agent info failed")
+			return err
 		}
 		t.coordinateAgent = agentInfo
 		if t.GetContext().GetData(PARAM_SCALE_OUT_UUID) == nil {
@@ -866,7 +865,7 @@ func (t *CreateLocalScaleOutDagTask) Rollback() error {
 			return errors.Wrap(err, "get coordinater last maintain dag failed")
 		}
 		if dag.AdditionalData == nil {
-			return errors.New("get coordinater last maintain dag failed, additional data is nil")
+			return errors.Occur(errors.ErrCommonUnexpected, "get coordinater last maintain dag failed, additional data is nil")
 		}
 		additionalData := *(dag.AdditionalData)
 		if dag == nil || additionalData[PARAM_SCALE_OUT_UUID].(string) != t.GetContext().GetData(PARAM_SCALE_OUT_UUID).(string) {
@@ -912,29 +911,32 @@ func newWaitScalingReadyTask() *WaitScalingReadyTask {
 	return newTask
 }
 
-// Execute will wait for the ‘Be Scaling Agent Task’ of local scale out dag to complete.
+// Execute will wait for the 'Be Scaling Agent Task' of local scale out dag to complete.
 func (t *WaitScalingReadyTask) Execute() error {
 	t.initFromData()
 	var expectStage int
 	if err := t.GetContext().GetDataWithValue(PARAM_WAIT_DEPLOY_RETRY_STAGE, &expectStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 	expectStage -= 2
 	for i := 0; i < WAIT_REMOTE_TASK_FINISH_TIMES; i++ {
 		dag, err := t.getCoordinateDag()
 		if err != nil {
 			t.ExecuteErrorLogf("get remote dag failed, %s", err.Error())
+			time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
+			continue
 		}
 		if dag.Nodes[expectStage].IsSucceed() {
 			t.ExecuteInfoLogf("local scale out dag task %s is succeed", dag.Nodes[expectStage].Name)
 			return nil
 		}
 		if dag.Nodes[expectStage].IsFailed() {
-			return errors.New("wait scaling out ready failed")
+			err = errors.Occur(errors.ErrTaskRemoteTaskFailed, dag.GenericID, dag.Name)
+			return errors.Wrap(err, "wait scaling out ready failed")
 		}
 		time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
 	}
-	return errors.New("wait scaling out ready failed, timeout...")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "wait scaling out ready")
 }
 
 func (t *WaitScalingReadyTask) Rollback() error {
@@ -961,7 +963,7 @@ func (t *WaitRemoteDeployTaskFinish) Execute() error {
 	t.initFromData()
 	var expectStage int
 	if err := t.GetContext().GetDataWithValue(PARAM_WAIT_DEPLOY_RETRY_STAGE, &expectStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 	expectStage -= 1
 	// Send retry.
@@ -992,7 +994,7 @@ func (t *WaitRemoteDeployTaskFinish) Execute() error {
 		}
 		time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
 	}
-	return errors.New("wait remote deploy task finish failed")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "wait remote deploy task finish")
 }
 
 func (t *scaleCoordinateTask) getMessage(dag *task.DagDetailDTO, node *task.NodeDetailDTO) error {
@@ -1003,7 +1005,7 @@ func (t *scaleCoordinateTask) getMessage(dag *task.DagDetailDTO, node *task.Node
 		}
 	}
 	if node.State == task.FAILED_STR {
-		return fmt.Errorf("dag %s %s failed: [%s] %s", dag.GenericID, dag.Name, node.Name, log)
+		return errors.Occurf(errors.ErrCommonUnexpected, "dag %s %s failed: [%s] %s", dag.GenericID, dag.Name, node.Name, log)
 	}
 	return nil
 }
@@ -1032,7 +1034,7 @@ func (t *WaitRemoteStartTaskFinish) Execute() error {
 	t.initFromData()
 	var expectStage int
 	if err := t.GetContext().GetDataWithValue(PARAM_WAIT_START_RETRY_STAGE, &expectStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 	expectStage -= 1
 	for i := 0; i < DEFAULT_REMOTE_REQUEST_RETRY_TIMES; i++ {
@@ -1062,7 +1064,7 @@ func (t *WaitRemoteStartTaskFinish) Execute() error {
 		}
 		time.Sleep(WAIT_REMOTE_TASK_FINISH_INTERVAL)
 	}
-	return errors.New("wait remote start observer task finish failed")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "wait remote start observer task finish")
 }
 
 func (t *WaitRemoteStartTaskFinish) Rollback() error {
@@ -1089,19 +1091,19 @@ func (t *PrevCheckTask) Execute() error {
 	t.ExecuteLog("PrevCheckTask execute")
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	isNewZone, ok := t.GetContext().GetParam(PARAM_IS_NEW_ZONE).(bool)
 	if !ok {
-		return errors.New("get isNewZone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_IS_NEW_ZONE)
 	}
 	/* check if the zone is exist */
 	isZoneExist, err := obclusterService.IsZoneExistInOB(zone)
 	if err != nil {
-		return errors.New("check if the zone is exist failed")
+		return errors.Wrap(err, "check if the zone is exist failed")
 	}
 	if isZoneExist == isNewZone {
-		return errors.New("zone has been changed")
+		return errors.Occur(errors.ErrCommonUnexpected, "zone has been changed")
 	}
 	return nil
 }
@@ -1130,11 +1132,11 @@ func (t *AddNewZoneTask) Execute() error {
 	t.ExecuteLog("AddZoneTask execute")
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	/* add a new zone */
 	if err := obclusterService.AddZone(zone); err != nil {
-		return errors.Errorf("add zone %s failed", zone)
+		return errors.Wrapf(err, "add zone %s failed", zone)
 	}
 	return nil
 }
@@ -1147,12 +1149,12 @@ func (t *AddNewZoneTask) Rollback() error {
 	t.ExecuteLog("AddZoneTask rollback")
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	/* delete a zone */
 	exist, err := obclusterService.IsZoneExistInOB(zone)
 	if err != nil {
-		return errors.Errorf("check zone %s exist failed", zone)
+		return errors.Wrapf(err, "check zone %s exist failed", zone)
 	}
 	if !exist {
 		return nil
@@ -1176,11 +1178,11 @@ func (t *StartNewZoneTask) Execute() error {
 	t.ExecuteLog("StartZoneTask execute")
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	/* start zone */
 	if err := obclusterService.StartZone(zone); err != nil {
-		return errors.Errorf("start zone %s failed", zone)
+		return errors.Wrapf(err, "start zone %s failed", zone)
 	}
 	return nil
 }
@@ -1193,11 +1195,11 @@ func (t *StartNewZoneTask) Rollback() error {
 	t.ExecuteLog("StartZoneTask rollback")
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	/* stop zone */
 	if err := obclusterService.StopZone(zone); err != nil {
-		return errors.Errorf("stop zone %s failed", zone)
+		return errors.Wrapf(err, "stop zone %s failed", zone)
 	}
 	return nil
 }
@@ -1219,15 +1221,15 @@ func (t *AddServerTask) Execute() error {
 	var agentInfo meta.AgentInfo
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	var configs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_CONFIG, &configs); err != nil {
-		return errors.Wrap(err, "get configs failed")
+		return err
 	}
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 
 	port, err := strconv.Atoi(configs[constant.CONFIG_RPC_PORT])
@@ -1238,7 +1240,7 @@ func (t *AddServerTask) Execute() error {
 	serverInfo := meta.NewAgentInfo(agentInfo.Ip, port)
 	err = obclusterService.AddServer(*serverInfo, zone)
 	if err != nil {
-		return errors.Errorf("add server %s failed", serverInfo.String())
+		return errors.Wrapf(err, "add server %s failed", serverInfo.String())
 	}
 
 	t.GetContext().SetParam(PARAM_ADD_SERVER_SUCCEED, true)
@@ -1254,7 +1256,7 @@ func (t *AddServerTask) Rollback() error {
 	var agentInfo meta.AgentInfo
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	if agentInfo.Equal(meta.OCS_AGENT) {
 		agentService.BeScalingOutAgent(t.GetContext().GetParam(PARAM_ZONE).(string))
@@ -1270,11 +1272,11 @@ func (t *AddServerTask) Rollback() error {
 
 	var configs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_CONFIG, &configs); err != nil {
-		return errors.Wrap(err, "get configs failed")
+		return err
 	}
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 
 	port, err := strconv.Atoi(configs[constant.CONFIG_RPC_PORT])
@@ -1286,14 +1288,14 @@ func (t *AddServerTask) Rollback() error {
 	// Check whether addserver task execute successfully.
 	exist, err := obclusterService.IsServerExistWithZone(*serverInfo, zone)
 	if err != nil {
-		return errors.Errorf("check server %s exist failed", agentInfo.String())
+		return errors.Wrapf(err, "check server %s exist failed", agentInfo.String())
 	}
 	if !exist {
 		return nil
 	}
 
 	if err = obclusterService.DeleteServerInZone(*serverInfo, zone); err != nil {
-		return errors.Errorf("delete server %s failed", serverInfo.String())
+		return errors.Wrapf(err, "delete server %s failed", serverInfo.String())
 	}
 	return nil
 }
@@ -1314,19 +1316,19 @@ func (t *AddAgentTask) Execute() error {
 	var agentInfo meta.AgentInfo
 	ctx := t.GetContext()
 	if err := ctx.GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	var configs map[string]string
 	if err := ctx.GetDataWithValue(PARAM_CONFIG, &configs); err != nil {
-		return errors.Wrap(err, "get configs failed")
+		return err
 	}
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("get zone failed")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	var scalingAgent param.JoinMasterParam
 	if err := ctx.GetDataWithValue(PARAM_JOIN_MASTER_INFO, &scalingAgent); err != nil {
-		return errors.Wrap(err, "get scaling agent info failed")
+		return err
 	}
 	mysqlPort, err := strconv.Atoi(configs[constant.CONFIG_MYSQL_PORT])
 	if err != nil {
@@ -1350,7 +1352,7 @@ func (t *AddAgentTask) Execute() error {
 		RpcPort:      rpcPort,
 	}
 	if err := agentService.AddAgentInOB(agentInstance); err != nil {
-		return errors.New("add agent failed")
+		return errors.Wrap(err, "add agent failed")
 	}
 	return nil
 }
@@ -1361,7 +1363,7 @@ func (t *AddAgentTask) Rollback() error {
 	}
 	var agentInfo meta.AgentInfo
 	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	if agentInfo.Equal(meta.OCS_AGENT) {
 		agentService.BeScalingOutAgent(t.GetContext().GetParam(PARAM_ZONE).(string))
@@ -1392,7 +1394,7 @@ func (t *FinishTask) Execute() error {
 	t.ExecuteLog("FinishTask execute")
 	var agentInfo meta.AgentInfo
 	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	var agent meta.AgentStatus
 	for i := 0; i < DEFAULT_REMOTE_REQUEST_RETRY_TIMES; i++ {
@@ -1409,7 +1411,7 @@ func (t *FinishTask) Execute() error {
 		continue
 	}
 	if !agent.IsClusterAgent() {
-		return errors.New("agent is not cluster agent")
+		return errors.Occur(errors.ErrCommonUnexpected, "agent has not been cluster agent")
 	}
 	return nil
 }
@@ -1421,7 +1423,7 @@ func (t *FinishTask) Rollback() error {
 	}
 	var agentInfo meta.AgentInfo
 	if err := t.GetContext().GetParamWithValue(PARAM_AGENT_INFO, &agentInfo); err != nil {
-		return errors.Wrap(err, "get agent info failed")
+		return err
 	}
 	if agentInfo.Equal(meta.OCS_AGENT) {
 		agentService.BeScalingOutAgent(t.GetContext().GetParam(PARAM_ZONE).(string))

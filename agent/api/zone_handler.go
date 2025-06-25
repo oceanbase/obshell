@@ -25,7 +25,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-//@ID DeleteZone
+// @ID DeleteZone
 //
 // @Summary delete zone
 // @Description delete zone
@@ -42,11 +42,11 @@ import (
 func zoneDeleteHandler(c *gin.Context) {
 	zoneName := c.Param(constant.URI_PARAM_NAME)
 	if zoneName == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "zone name is empty"))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObZoneNameEmpty))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	dag, err := ob.DeleteZone(zoneName)

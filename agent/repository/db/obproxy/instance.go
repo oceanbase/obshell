@@ -40,7 +40,7 @@ var (
 
 func LoadObproxyInstance() (db *gorm.DB, err error) {
 	if meta.OBPROXY_SQL_PORT == 0 {
-		return nil, errors.New("obproxy sql port has not been initialized")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "obproxy sql port has not been initialized")
 	}
 	dsConfig := config.NewObproxyDataSourceConfig().SetPort(meta.OBPROXY_SQL_PORT).SetPassword(meta.OBPROXY_SYS_PWD)
 

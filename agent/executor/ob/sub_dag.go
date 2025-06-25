@@ -17,7 +17,6 @@
 package ob
 
 import (
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -95,16 +94,16 @@ func (t *CreateSubDagTask) getParams(agent meta.AgentInfo) (err error) {
 	log.Infof("main dag id is %v", t.mainDagID)
 
 	if err := ctx.GetParamWithValue(PARAM_FORCE_PASS_DAG, &t.forcePassDag); err != nil {
-		return errors.Wrap(err, "get force pass dag failed")
+		return err
 	}
 	if err := ctx.GetParamWithValue(PARAM_URI, &t.uri); err != nil {
-		return errors.Wrap(err, "get uri failed")
+		return err
 	}
 	if ctx.GetAgentData(&agent, DATA_SUB_DAG_NEED_EXEC_CMD) != nil {
 		t.needExecCmd = true
 	}
 	if err := ctx.GetParamWithValue(PARAM_EXPECT_MAIN_NEXT_STAGE, &t.expectedStage); err != nil {
-		return errors.Wrap(err, "get expected stage failed")
+		return err
 	}
 
 	t.param = &CreateSubDagParam{
@@ -131,7 +130,7 @@ func (t *CreateSubDagTask) execute() error {
 	}
 
 	var resp *CreateSubDagResp
-	var err *errors.OcsAgentError
+	var err error
 	switch t.uri {
 	case constant.URI_OB_RPC_PREFIX + constant.URI_STOP:
 		resp, err = CreateStopDag(*t.param)
@@ -139,7 +138,7 @@ func (t *CreateSubDagTask) execute() error {
 		resp, err = CreateStartDag(*t.param)
 	}
 	if err != nil {
-		t.ExecuteErrorLog(errors.New(err.Error()))
+		t.ExecuteErrorLog(err)
 	} else {
 		if resp != nil {
 			t.ExecuteLogf("create task %s successfully", resp.GenericID)
@@ -211,20 +210,23 @@ func (t *CheckSubDagReadyTask) execute() (err error) {
 func (t *CheckSubDagReadyTask) checkSubDagCreated() (err error) {
 	ctx := t.GetContext()
 	if err = ctx.GetParamWithValue(PARAM_ALL_AGENTS, &t.agents); err != nil {
-		return errors.Wrap(err, "get all agents failed")
+		return err
 	}
 
+	var failedAgents []string
 	for _, agent := range t.agents {
 		var dagInfo SubDagInfo
 		if err = ctx.GetAgentDataWithValue(&agent, DATA_SUB_DAG_INFO, &dagInfo); err == nil {
 			t.allAgentDagMap[agent.String()] = dagInfo
+		} else {
+			failedAgents = append(failedAgents, agent.String())
 		}
 	}
 
 	ctx.SetData(DATA_ALL_AGENT_DAG_MAP, t.allAgentDagMap)
 
 	if len(t.agents) != len(t.allAgentDagMap) {
-		return errors.New("Not all tasks created. main dag failed")
+		return errors.Occur(errors.ErrTaskSubDagNotAllCreated, failedAgents)
 	}
 
 	t.ExecuteLog("All agents have created the tasks successfully")
@@ -256,7 +258,7 @@ func (t *CheckSubDagReadyTask) checkCanAdvanceSubDag() (err error) {
 		}
 
 		if !canBeAdvanced {
-			return fmt.Errorf("wait for %s to be ready timeout", agent)
+			return errors.Occur(errors.ErrTaskSubDagNotAllReady, agent)
 		}
 	}
 	return nil
@@ -277,7 +279,7 @@ func NewRetrySubDagTask() *RetrySubDagTask {
 func (t *RetrySubDagTask) execute() (err error) {
 	ctx := t.GetContext()
 	if err = ctx.GetDataWithValue(DATA_ALL_AGENT_DAG_MAP, &t.allAgentDagMap); err != nil {
-		return errors.Wrap(err, "get all agent dag map failed")
+		return err
 	}
 
 	defer func() {
@@ -287,15 +289,17 @@ func (t *RetrySubDagTask) execute() (err error) {
 	}()
 
 	success := true
+	failedAgents := make([]string, 0)
 	for agent, dag := range t.allAgentDagMap {
 		t.ExecuteLogf("advance %s to execute the task", agent)
 		if err := sendDagOperatorRequest(task.RETRY, dag.GenericID); err != nil {
 			t.ExecuteErrorLog(err)
 			success = false
+			failedAgents = append(failedAgents, agent)
 		}
 	}
 	if !success {
-		return errors.New("failed to advance all agents")
+		return errors.Occur(errors.ErrTaskSubDagNotAllAdvanced, failedAgents)
 	}
 	return nil
 }
@@ -431,13 +435,15 @@ func (t *PassSubDagTask) cancel() {
 func (t *PassSubDagTask) checkSubDagsucceed() (err error) {
 	ctx := t.GetContext()
 	if err = ctx.GetParamWithValue(PARAM_ALL_AGENTS, &t.agents); err != nil {
-		return errors.Wrap(err, "get all agents failed")
+		return err
 	}
 
 	succeed := true
+	failedAgents := make([]string, 0)
 	for _, agent := range t.agents {
 		if _, ok := t.GetContext().GetAgentData(&agent, DATA_SUB_DAG_SUCCEED).(bool); !ok {
 			t.ExecuteErrorLogf("agent %s not succeed", agent.String())
+			failedAgents = append(failedAgents, agent.String())
 			succeed = false
 		}
 	}
@@ -445,19 +451,19 @@ func (t *PassSubDagTask) checkSubDagsucceed() (err error) {
 		t.ExecuteInfoLog("Check the final result: SUCCEED!")
 		return nil
 	}
-	return errors.New("not all agents succeed. main dag failed")
+	return errors.Occur(errors.ErrTaskSubDagNotAllSucceed, failedAgents)
 }
 
 func (t *PassSubDagTask) execute() (err error) {
 	ctx := t.GetContext()
 	if err := ctx.GetDataWithValue(DATA_ALL_AGENT_DAG_MAP, &t.allAgentDagMap); err != nil {
-		return errors.Wrap(err, "get all agent dag map failed")
+		return err
 	}
 
 	defer func() {
 		t.cancel()
 		if !t.pass() && err == nil {
-			err = errors.New("failed to end all tasks")
+			err = errors.Occur(errors.ErrTaskSubDagNotAllPassed)
 		}
 	}()
 

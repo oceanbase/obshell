@@ -17,6 +17,7 @@
 package zone
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -54,7 +55,7 @@ func CheckPrimaryZoneAndLocality(primaryZone string, locality map[string]string)
 		if firstPriorityRegion == "" {
 			firstPriorityRegion = zoneToRegionMap[zone]
 		} else if firstPriorityRegion != zoneToRegionMap[zone] {
-			return errors.New("Tenant primary zone could not span regions.")
+			return errors.Occur(errors.ErrObTenantPrimaryZoneCrossRegion, primaryZone)
 		}
 	}
 
@@ -83,7 +84,7 @@ func CheckPrimaryZoneAndLocality(primaryZone string, locality map[string]string)
 		}
 	}
 	if fullReplicaNum < 2 {
-		return errors.Errorf("The region %v where the first priority of tenant zone is located needs to have at least 2 F replicas. In fact, there are only %d full replicas.", firstPriorityRegion, fullReplicaNum)
+		return errors.Occur(errors.ErrObTenantPrimaryRegionFullReplicaNotEnough, firstPriorityRegion, fullReplicaNum)
 	}
 
 	return nil
@@ -92,7 +93,7 @@ func CheckPrimaryZoneAndLocality(primaryZone string, locality map[string]string)
 func GetFirstPriorityPrimaryZone(locality string, primaryZone string) ([]string, error) {
 	replicaInfoMap, err := tenantservice.ParseLocalityToReplicaInfoMap(locality)
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 	var firstPriorityZones []string
 	if primaryZone == constant.PRIMARY_ZONE_RANDOM {
@@ -155,9 +156,9 @@ func CheckFirstPriorityPrimaryZoneChangedWhenAlterPrimaryZone(tenant *oceanbase.
 		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, constant.PARAMETER_ENABLE_REBALANCE); err != nil {
 			return err
 		} else if enableRebalance == nil {
-			return errors.New("Get enable_rebalance failed.")
+			return errors.Wrap(err, "Get enable_rebalance failed.")
 		} else if enableRebalance.Value != "True" {
-			return errors.New("Change first priority zone of primary zone is not allowed when tenant 'enable_rebalance' is disabled")
+			return errors.Occur(errors.ErrObTenantRebalanceDisabled, "Change first priority zone of primary zone")
 		}
 	}
 	return nil
@@ -172,9 +173,9 @@ func CheckFirstPriorityPrimaryZoneChangedWhenAlterLocality(tenant *oceanbase.Dba
 		if enableRebalance, err := tenantService.GetTenantParameter(tenant.TenantID, constant.PARAMETER_ENABLE_REBALANCE); err != nil {
 			return err
 		} else if enableRebalance == nil {
-			return errors.New("Get enable_rebalance failed.")
+			return errors.Wrap(err, "Get enable_rebalance failed.")
 		} else if enableRebalance.Value != "True" {
-			return errors.New("Change first priority zone of primary zone is not allowed when tenant 'enable_rebalance' is disabled")
+			return errors.Occur(errors.ErrObTenantRebalanceDisabled, "Change first priority zone of locality")
 		}
 	}
 	return nil
@@ -190,9 +191,9 @@ func CheckPrimaryZone(primaryZone string, zoneList []string) error {
 		zonesCommaSeparated := strings.Split(zones, ",")
 		for _, zone := range zonesCommaSeparated {
 			if !utils.ContainsString(zoneList, zone) {
-				return errors.Errorf("Zone '%s' is not in zone_list.", zone)
+				return errors.Occur(errors.ErrObTenantPrimaryZoneInvalid, primaryZone, fmt.Sprintf("Zone '%s' is not in zone_list.", zone))
 			} else if utils.ContainsString(exsitZones, zone) {
-				return errors.Errorf("Zone '%s' is repeated in primary_zone.", zone)
+				return errors.Occur(errors.ErrObTenantPrimaryZoneInvalid, primaryZone, fmt.Sprintf("Zone '%s' is repeated in primary_zone.", zone))
 			} else {
 				exsitZones = append(exsitZones, zone)
 			}
@@ -207,12 +208,12 @@ func CheckAtLeastOnePaxosReplica(zoneList []param.ZoneParam) error {
 			return nil
 		}
 	}
-	return errors.New("At least one zone should be FULL replica.")
+	return errors.Occur(errors.ErrObTenantNoPaxosReplica, "At least one zone should have full replica.")
 }
 
 func CheckZoneParams(zoneList []param.ZoneParam) error {
 	if len(zoneList) == 0 {
-		return errors.New("zone_list is empty")
+		return errors.Occur(errors.ErrObTenantZoneListEmpty)
 	}
 
 	if err := StaticCheckForZoneParams(zoneList); err != nil {
@@ -224,14 +225,14 @@ func CheckZoneParams(zoneList []param.ZoneParam) error {
 		if exist, err := obclusterService.IsZoneExistInOB(zone.Name); err != nil {
 			return err
 		} else if !exist {
-			return errors.Errorf("Zone '%s' is not exist.", zone.Name)
+			return errors.Occur(errors.ErrObZoneNotExist, zone.Name)
 		}
 
 		// Check unit config if exsits.
 		if exist, err := unitService.IsUnitConfigExist(zone.UnitConfigName); err != nil {
 			return err
 		} else if !exist {
-			return errors.Errorf("Unit config '%s' is not exist.", zone.UnitConfigName)
+			return errors.Occur(errors.ErrObResourceUnitConfigNotExist, zone.UnitConfigName)
 		}
 
 		servers, err := obclusterService.GetServerByZone(zone.Name)
@@ -239,7 +240,7 @@ func CheckZoneParams(zoneList []param.ZoneParam) error {
 			return err
 		}
 		if len(servers) < zone.UnitNum {
-			return errors.Errorf("The number of servers in zone '%s' is %d, less than the number of units %d.", zone.Name, len(servers), zone.UnitNum)
+			return errors.Occur(errors.ErrObTenantUnitNumExceedsLimit, zone.UnitNum, len(servers), zone.Name)
 		}
 	}
 	return nil
@@ -250,12 +251,12 @@ func StaticCheckForZoneParams(zoneList []param.ZoneParam) error {
 	existZones := make([]string, 0)
 	for _, zone := range zoneList {
 		if utils.ContainsString(existZones, zone.Name) {
-			return errors.Errorf("Zone '%s' is repeated.", zone.Name)
+			return errors.Occur(errors.ErrObTenantZoneRepeated, zone.Name)
 		}
 		existZones = append(existZones, zone.Name)
 
 		if zone.UnitConfigName == "" {
-			return errors.New("unit_config_name should not be empty.")
+			return errors.Occur(errors.ErrObResourceUnitConfigNameEmpty)
 		}
 
 		// Check replica type.
@@ -265,11 +266,11 @@ func StaticCheckForZoneParams(zoneList []param.ZoneParam) error {
 
 		// Check unit num.
 		if zone.UnitNum <= 0 {
-			return errors.New("unit_num should be positive.")
+			return errors.Occur(errors.ErrObTenantUnitNumInvalid, zone.UnitNum, "unit num should be greater than 0")
 		}
 
 		if zone.UnitNum != unitNum && unitNum != 0 {
-			return errors.New("unit_num should be same in all zones.")
+			return errors.Occur(errors.ErrObTenantUnitNumInconsistent)
 		}
 		unitNum = zone.UnitNum
 	}
@@ -278,7 +279,7 @@ func StaticCheckForZoneParams(zoneList []param.ZoneParam) error {
 
 func CheckReplicaType(localityType string) error {
 	if localityType != constant.REPLICA_TYPE_FULL && localityType != constant.REPLICA_TYPE_READONLY && localityType != "" {
-		return errors.New("ReplicaType should be 'FULL' or 'READONLY'")
+		return errors.Occur(errors.ErrObTenantReplicaTypeInvalid, localityType)
 	}
 	return nil
 }

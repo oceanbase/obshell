@@ -17,11 +17,12 @@
 package system
 
 import (
-	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 type TimeUnit string
@@ -59,7 +60,7 @@ func ParseTimeWithRange(s string, minUnit, maxUnit time.Duration) (duration time
 	match := re.FindStringSubmatch(s)
 
 	if match == nil {
-		err = fmt.Errorf("invalid time duration %s", s)
+		err = errors.Occur(errors.ErrCommonInvalidTimeDuration, s, "invalid format")
 		return
 	}
 
@@ -68,24 +69,24 @@ func ParseTimeWithRange(s string, minUnit, maxUnit time.Duration) (duration time
 
 	valInt, err := strconv.Atoi(value)
 	if err != nil {
-		err = fmt.Errorf("invalid time duration %s", s)
+		err = errors.Occur(errors.ErrCommonInvalidTimeDuration, s, "invalid number")
 		return
 	}
 
 	unitValue, ok := unitMap[TimeUnit(unit)]
 	if !ok {
-		err = fmt.Errorf("invalid time unit %s", unit)
+		err = errors.Occur(errors.ErrCommonInvalidTimeDuration, s, "invalid time unit")
 		return
 	}
 
 	duration = time.Duration(valInt) * unitValue
 	if duration < minUnit {
-		err = fmt.Errorf("time duration %s is less than min unit %s", s, minUnit)
+		err = errors.Occur(errors.ErrCommonInvalidTimeDuration, s, "time duration is less than min unit")
 		return
 	}
 
 	if duration > maxUnit {
-		err = fmt.Errorf("time duration %s is greater than max unit %s", s, maxUnit)
+		err = errors.Occur(errors.ErrCommonInvalidTimeDuration, s, "time duration is greater than max unit")
 		return
 	}
 

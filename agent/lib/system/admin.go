@@ -221,7 +221,7 @@ func CheckRestoreTime(dataURI, logURI string, scn int64) (err error) {
 		return errors.Wrapf(err, "check restore time")
 	}
 	if !canRestore {
-		return errors.New("restore time is not valid")
+		return errors.Occur(errors.ErrObRestoreTimeNotValid, scn)
 	}
 	return nil
 }

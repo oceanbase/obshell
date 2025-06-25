@@ -70,18 +70,18 @@ type upgradeRpmPkgInfo struct {
 	distribution         string
 }
 
-func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, *errors.OcsAgentError) {
+func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, error) {
 	r := &upgradeRpmPkgInfo{
 		rpmFile: input,
 	}
 
 	if err := r.CheckUpgradePkg(true); err != nil {
-		return nil, errors.Occur(errors.ErrKnown, err)
+		return nil, err
 	}
 
 	record, err := obclusterService.DumpUpgradePkgInfoAndChunkTx(r.rpmPkg, r.rpmFile, r.upgradeDepYml)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return record, nil
 }
@@ -102,7 +102,7 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	case constant.PKG_OCEANBASE_CE_LIBS:
 		err = r.dirCheckForLibs()
 	default:
-		err = fmt.Errorf("unsupported name '%s', the supported name are [%s]", r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES, ", "))
+		err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES, ", "))
 	}
 	if err != nil {
 		return
@@ -120,7 +120,7 @@ func (r *upgradeRpmPkgInfo) dirCheckForLibs() (err error) {
 			return nil
 		}
 	}
-	return errors.New("dir not found")
+	return errors.Occur(errors.ErrObPackageMissingFile, r.rpmPkg.Name(), "/home/admin/oceanbase/lib")
 }
 
 func (r *upgradeRpmPkgInfo) fileCheck() (err error) {
@@ -149,7 +149,7 @@ func (r *upgradeRpmPkgInfo) checkVersion() (err error) {
 		return
 	}
 	if pkg.CompareVersion(r.rpmPkg.Version(), constant.SUPPORT_MIN_VERSION) < 0 {
-		return fmt.Errorf("unsupported version '%s', the minimum supported version is '%s'", r.rpmPkg.Version(), constant.SUPPORT_MIN_VERSION)
+		return errors.Occur(errors.ErrAgentOBVersionNotSupported, r.rpmPkg.Version(), constant.SUPPORT_MIN_VERSION)
 	}
 	return nil
 }
@@ -159,8 +159,7 @@ func (r *upgradeRpmPkgInfo) checkFiles() (err error) {
 	expected := append(defalutFilesForOB, defaultFilesForAgent...)
 	obBuildVersion, err := obclusterService.GetObBuildVersion()
 	if err != nil {
-		log.WithError(err).Error("Get ob version failed")
-		return err
+		return errors.Wrapf(err, "get ob version failed")
 	}
 	obVerRel := strings.Split(obBuildVersion, "_")
 	obVer := obVerRel[0]
@@ -193,7 +192,7 @@ func (r *upgradeRpmPkgInfo) findAllExpectedFiles(expected []string) (err error) 
 		}
 	}
 	if !succeed {
-		return fmt.Errorf("these files are missing: '%v'", missingFiles)
+		return errors.Occur(errors.ErrObPackageMissingFile, r.rpmPkg.Name(), missingFiles)
 	}
 	return nil
 }

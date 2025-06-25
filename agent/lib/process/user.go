@@ -58,7 +58,7 @@ func GetObserverUid() (uint32, error) {
 		pid, _ := strconv.Atoi(pidStr) // Won't err, if pidStr is not empty, it must be a number.
 		return GetUidFromPid(pid)
 	}
-	return 0, errors.New("observer process not found")
+	return 0, errors.Occur(errors.ErrObServerProcessNotExist)
 }
 
 func GetUidFromPid(pid int) (uint32, error) {
@@ -84,5 +84,5 @@ func GetUidFromPid(pid int) (uint32, error) {
 			}
 		}
 	}
-	return 0, errors.New("uid not found")
+	return 0, errors.Occur(errors.ErrCommonUnexpected, "uid not found")
 }

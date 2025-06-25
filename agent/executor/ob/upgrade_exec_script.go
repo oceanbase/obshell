@@ -100,7 +100,7 @@ func (t *ExecScriptTask) Execute() (err error) {
 	}
 	scanner := bufio.NewScanner(stderr)
 	for scanner.Scan() {
-		t.ExecuteErrorLog(errors.New(scanner.Text()))
+		t.ExecuteErrorLog(errors.Occur(errors.ErrCommonUnexpected, scanner.Text()))
 	}
 	if err = cmd.Wait(); err != nil {
 		return errors.Wrapf(err, "failed to execute script '%s'", t.scriptFile)

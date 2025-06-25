@@ -17,12 +17,11 @@
 package agent
 
 import (
-	"fmt"
-
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -399,7 +398,7 @@ func (s *AgentService) CheckCanBeTakeOverMaster() (bool, error) {
 	}
 
 	if !self_exist {
-		return false, fmt.Errorf("%s not in cluster", meta.NewAgentInfo(meta.OCS_AGENT.GetIp(), meta.RPC_PORT).String())
+		return false, errors.Occur(errors.ErrAgentTakeOverNotExistInCluster, meta.NewAgentInfo(meta.OCS_AGENT.GetIp(), meta.RPC_PORT).String())
 	}
 
 	return other_exist, nil

@@ -22,7 +22,7 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
-func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObParameter, *errors.OcsAgentError) {
+func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObParameter, error) {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return nil, err
 	}
@@ -32,40 +32,40 @@ func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObPara
 	}
 	parameters, err := tenantService.GetTenantParameters(tenantName, filter)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	return parameters, nil
 }
 
-func GetTenantParameter(tenantName string, parameterName string) (*oceanbase.GvObParameter, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
-	if ocsErr != nil {
-		return nil, ocsErr
+func GetTenantParameter(tenantName string, parameterName string) (*oceanbase.GvObParameter, error) {
+	tenant, err := checkTenantExistAndStatus(tenantName)
+	if err != nil {
+		return nil, err
 	}
 	parameter, err := tenantService.GetTenantParameter(tenant.TenantID, parameterName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if parameter == nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, "parameter not found")
+		return nil, errors.Occur(errors.ErrObTenantParameterNotExist, parameterName)
 	}
 	return parameter, nil
 }
 
-func SetTenantParameters(tenantName string, parameters map[string]interface{}) *errors.OcsAgentError {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
-	if ocsErr != nil {
-		return ocsErr
+func SetTenantParameters(tenantName string, parameters map[string]interface{}) error {
+	tenant, err := checkTenantExistAndStatus(tenantName)
+	if err != nil {
+		return err
 	}
 
 	if err := checkParameters(parameters); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return err
 	}
 
 	transferNumber(parameters)
 	if err := tenantService.SetTenantParameters(tenant.TenantName, parameters); err != nil {
-		return errors.Occur(errors.ErrBadRequest, err)
+		return errors.Wrap(err, "set tenant parameters failed")
 	}
 	return nil
 }
@@ -92,10 +92,10 @@ func newSetTenantParameterTask() *SetTenantParamterTask {
 
 func (t *SetTenantParamterTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_PARAMETER, &t.parameters); err != nil {
-		return errors.Wrapf(err, "Get tenant parameter failed")
+		return err
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 
 	transferNumber(t.parameters)

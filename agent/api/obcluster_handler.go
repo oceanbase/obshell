@@ -17,6 +17,8 @@
 package api
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
@@ -39,7 +41,7 @@ func parseRootPwd(pwd string, isForward bool) (string, error) {
 		parsedPwd, err := secure.Crypter.Decrypt(pwd)
 		if err != nil {
 			if isForward {
-				return "", errors.New("Please don't encrypt the password, and send /api/v1/obcluster/config to master agent.")
+				return "", errors.Occur(errors.ErrObClusterPasswordEncrypted)
 			}
 			return pwd, nil
 		}
@@ -87,11 +89,11 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 			return
 		}
 		if params.ClusterId == nil || *params.ClusterId <= 0 {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "cluster id is invalid"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterIdInvalid))
 			return
 		}
 		if params.ClusterName == nil || *params.ClusterName == "" {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "cluster name is empty"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterNameEmpty))
 			return
 		}
 
@@ -99,13 +101,13 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 		case meta.FOLLOWER:
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, params)
 		case meta.CLUSTER_AGENT:
 			if deleteAll {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cluster has already initialized."))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterAlreadyInitialized))
 				return
 			}
 			fallthrough
@@ -115,14 +117,14 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 				var err error
 				*params.RootPwd, err = parseRootPwd(*params.RootPwd, isForward)
 				if err != nil {
-					common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+					common.SendResponse(c, nil, err)
 					return
 				}
 				// encrypt root pwd
 				pwd, err := secure.Crypter.Encrypt(*params.RootPwd)
 				if err != nil {
 					log.WithContext(common.NewContextWithTraceId(c)).WithError(err).Error("request from local route, encrypt password failed")
-					common.SendResponse(c, nil, err)
+					common.SendResponse(c, nil, errors.Wrap(err, "encrypt password failed"))
 					return
 				}
 				params.RootPwd = &pwd
@@ -132,7 +134,7 @@ func obclusterConfigHandler(deleteAll bool) func(c *gin.Context) {
 			common.SendResponse(c, dag, err)
 
 		default:
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s agent can not update ob cluster config", meta.OCS_AGENT.GetIdentity()))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), strings.Join([]string{string(meta.MASTER), string(meta.FOLLOWER)}, " or ")))
 		}
 	}
 }
@@ -157,13 +159,13 @@ func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 			common.SendResponse(c, nil, err)
 			return
 		}
-		if params.ObServerConfig == nil || len(params.ObServerConfig) == 0 {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "config is empty"))
+		if len(params.ObServerConfig) == 0 {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "observerConfig", "config is empty"))
 			return
 		}
 
 		if err := ob.CheckOBServerConfigParams(params); err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err.Error()))
+			common.SendResponse(c, nil, err)
 			return
 		}
 
@@ -171,25 +173,25 @@ func obServerConfigHandler(deleteAll bool) func(c *gin.Context) {
 		case meta.FOLLOWER:
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, params)
 		case meta.CLUSTER_AGENT:
 			if deleteAll {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cluster has already initialized."))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterAlreadyInitialized))
 				return
 			}
 			fallthrough
 		case meta.MASTER:
 			if err := ob.IsValidScope(&params.Scope); err != nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+				common.SendResponse(c, nil, err)
 				return
 			}
 			dag, err := ob.CreateUpdateOBServerConfigDag(params, deleteAll)
 			common.SendResponse(c, dag, err)
 		default:
-			common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s agent can not update ob cluster config", meta.OCS_AGENT.GetIdentity()))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), strings.Join([]string{string(meta.MASTER), string(meta.FOLLOWER)}, " or ")))
 		}
 	}
 }
@@ -219,14 +221,14 @@ func obInitHandler(c *gin.Context) {
 	case meta.FOLLOWER:
 		master := agentService.GetMasterAgentInfo()
 		if master == nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 			return
 		}
 		common.ForwardRequest(c, master, nil)
 	case meta.CLUSTER_AGENT:
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Failed to initialize cluster, cluster has already initialized."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterAlreadyInitialized))
 	default:
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrBadRequest, "%s can not init", meta.OCS_AGENT.GetIdentity()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), strings.Join([]string{string(meta.MASTER), string(meta.FOLLOWER)}, " or ")))
 	}
 }
 
@@ -290,18 +292,11 @@ func obStartHandler(c *gin.Context) {
 
 	hasStart, e := ob.HasStarted()
 	if e != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, e))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	if !hasStart {
-		if meta.OCS_AGENT.IsSingleAgent() {
-			err = errors.Occur(errors.ErrKnown, "There is no 'OceanBase' cluster present. Please execute the 'join' operation first.")
-		} else if meta.OCS_AGENT.IsMasterAgent() || meta.OCS_AGENT.IsFollowerAgent() {
-			err = errors.Occur(errors.ErrKnown, "There is no 'OceanBase' cluster present. Please execute the 'init' operation first.")
-		} else {
-			err = errors.Occur(errors.ErrKnown, "Observer has not been previously started. Please initialize the cluster first.")
-		}
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObClusterNotInitialized))
 		return
 	}
 
@@ -360,11 +355,11 @@ func obClusterScaleInHandler(c *gin.Context) {
 		return
 	}
 	if meta.OCS_AGENT.Equal(&param.AgentInfo) {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Cannot delete the current server."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObServerDeleteSelf))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	dag, err := ob.ClusterScaleIn(param)
@@ -388,7 +383,7 @@ func obInfoHandler(c *gin.Context) {
 	if meta.OCS_AGENT.IsFollowerAgent() {
 		master := agentService.GetMasterAgentInfo()
 		if master == nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 			return
 		}
 		common.ForwardRequest(c, master, nil)
@@ -411,7 +406,7 @@ func obInfoHandler(c *gin.Context) {
 // @Router			/api/v1/obcluster/info [get]
 func obclusterInfoHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	clusterInfo, err := ob.GetObclusterSummary()
@@ -431,7 +426,7 @@ func obclusterInfoHandler(c *gin.Context) {
 // @Router			/api/v1/obcluster/parameters [get]
 func obclusterParametersHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	clusterInfo, err := ob.GetAllParameters()
@@ -453,7 +448,7 @@ func obclusterParametersHandler(c *gin.Context) {
 // @Router			/api/v1/obcluster/parameters [patch]
 func obclusterSetParametersHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	var param param.SetObclusterParametersParam
@@ -464,12 +459,12 @@ func obclusterSetParametersHandler(c *gin.Context) {
 	common.SendResponse(c, nil, ob.SetObclusterParameters(param.Params))
 }
 
-func isEmergencyMode(c *gin.Context, scope *param.Scope) (res bool, agentErr *errors.OcsAgentError) {
+func isEmergencyMode(c *gin.Context, scope *param.Scope) (bool, error) {
 	if common.IsLocalRoute(c) && ob.ScopeOnlySelf(scope) && !meta.OCS_AGENT.IsClusterAgent() {
 		return true, nil
 	}
 	if err := ob.IsValidScope(scope); err != nil {
-		return false, errors.Occur(errors.ErrIllegalArgument, err)
+		return false, err
 	}
 	return false, nil
 }
@@ -534,12 +529,12 @@ func obUpgradeCheckHandler(c *gin.Context) {
 // @Router /api/v1/upgrade/package [post]
 func pkgUploadHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to proceed with package upload. Please ensure the 'init' command is executed before attempting to upload."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed: %s", err))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestFileMissing, "file", err.Error()))
 		return
 	}
 	defer file.Close()
@@ -560,7 +555,7 @@ func pkgUploadHandler(c *gin.Context) {
 // @Router /api/v1/upgrade/package/info [get]
 func pkgInfoHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to get package infos from ocs database. Please ensure the 'init' command is executed before attempting to upload."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -583,12 +578,12 @@ func pkgInfoHandler(c *gin.Context) {
 // @Router /api/v1/package [post]
 func newPkgUploadHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrObclusterNotFound, "Unable to proceed with package upload. Please ensure the 'init' command is executed before attempting to upload."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	file, _, err := c.Request.FormFile("file")
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "get file failed: %s", err))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestFileMissing, "file", err.Error()))
 		return
 	}
 	defer file.Close()
@@ -685,7 +680,7 @@ func obAgentsHandler(c *gin.Context) {
 	if meta.OCS_AGENT.IsFollowerAgent() {
 		master := agentService.GetMasterAgentInfo()
 		if master == nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "master is not found"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 			return
 		}
 		common.ForwardRequest(c, master, nil)
@@ -708,7 +703,7 @@ func obAgentsHandler(c *gin.Context) {
 // @Router /api/v1/obcluster/charsets [get]
 func getObclusterCharsets(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	charsets, err := ob.GetObclusterCharsets()

@@ -17,7 +17,6 @@
 package pkg
 
 import (
-	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -63,17 +62,4 @@ func getVersionAndRelease(version string) ([]string, int) {
 	}
 	rel, _ := strconv.Atoi(info[1])
 	return strings.Split(info[0], "."), rel
-}
-
-func CheckVersionReleaseValidity(vr string) error {
-	info := strings.Split(vr, "-")
-	switch len(info) {
-	case 1:
-		return nil
-	case 2:
-		_, err := strconv.Atoi(info[1])
-		return err
-	default:
-		return fmt.Errorf("invalid version-release: %s", vr)
-	}
 }

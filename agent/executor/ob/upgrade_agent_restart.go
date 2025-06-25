@@ -86,7 +86,7 @@ func (t *RestartAgentTask) getOcsInstance() (err error) {
 		time.Sleep(time.Second * constant.GET_INSTANCE_RETRY_INTERVAL)
 		t.TimeoutCheck()
 	}
-	return errors.New("get ocs instance timeout")
+	return errors.Wrap(err, "get ocs instance failed")
 }
 
 func (t *RestartAgentTask) getParams() (err error) {
@@ -126,7 +126,7 @@ func (t *RestartAgentTask) checkVersion() (err error) {
 
 		// If the previous version is lower than the current version, then return error.
 		if pkg.CompareVersion(constant.VERSION_RELEASE, t.prevBuildVersion) < 0 {
-			err = fmt.Errorf("current version %s is lower than previous version %s", constant.VERSION_RELEASE, t.prevBuildVersion)
+			return errors.Occur(errors.ErrCommonUnexpected, fmt.Sprintf("current version %s is lower than previous version %s", constant.VERSION_RELEASE, t.prevBuildVersion))
 		}
 
 	} else {
@@ -138,7 +138,7 @@ func (t *RestartAgentTask) checkVersion() (err error) {
 
 		// If the current version is not the target version, then return error.
 		if pkg.CompareVersion(constant.VERSION_RELEASE, t.targetBuildVersion) < 0 {
-			err = fmt.Errorf("current version %s is lower than target version %s", constant.VERSION_RELEASE, t.targetBuildVersion)
+			return errors.Occur(errors.ErrCommonUnexpected, fmt.Sprintf("current version %s is lower than target version %s", constant.VERSION_RELEASE, t.targetBuildVersion))
 		}
 	}
 	return

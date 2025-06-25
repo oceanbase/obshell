@@ -17,10 +17,10 @@
 package coordinator
 
 import (
-	"errors"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
@@ -56,7 +56,7 @@ func (s *CoordinatorService) UpdateMaintainerToOb(maintainer oceanbase.TaskMaint
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("update maintainer failed")
+		return errors.Occur(errors.ErrGormNoRowAffected, "update maintainer failed")
 	}
 	return nil
 }
@@ -75,7 +75,7 @@ func (s *CoordinatorService) RenewalMaintainer(maintainer oceanbase.TaskMaintain
 		return resp.Error
 	}
 	if resp.RowsAffected == 0 {
-		return errors.New("update maintainer failed")
+		return errors.Occur(errors.ErrGormNoRowAffected, "update maintainer failed")
 	}
 	return nil
 

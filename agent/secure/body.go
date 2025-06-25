@@ -18,10 +18,10 @@ package secure
 
 import (
 	"crypto/rand"
-	"errors"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/crypto"
 	"github.com/oceanbase/obshell/agent/lib/json"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -38,14 +38,14 @@ var encryptMethod = EncryptMethodAes
 func BodyDecrypt(body []byte, keys ...string) ([]byte, error) {
 	if encryptMethod == EncryptMethodAes {
 		if len(keys) == 0 {
-			return nil, errors.New("no key for aes")
+			return nil, errors.Occur(errors.ErrRequestBodyDecryptAesNoKey)
 		}
 		return bodyDecryptWithAes(string(body), keys[0])
 	} else if encryptMethod == EncryptMethodRsa {
 		return bodyDecryptWithRsa(string(body))
 	} else if encryptMethod == EncryptMethodSm4 {
 		if len(keys) == 0 {
-			return nil, errors.New("no key for sm4")
+			return nil, errors.Occur(errors.ErrRequestBodyDecryptSm4NoKey)
 		}
 		return bodyDecryptWithSm4(string(body), keys[0])
 	}
@@ -155,7 +155,7 @@ func transferKeys(Keys string) (aesKey []byte, aesIv []byte, err error) {
 		key_size = crypto.GetAesKeySize()
 	}
 	if len(keys) < key_size {
-		return nil, nil, errors.New("aes key and iv size error")
+		return nil, nil, errors.Occur(errors.ErrRequestBodyDecryptAesKeyAndIvInvalid)
 	}
 	aesKey = keys[:key_size]
 	aesIv = keys[key_size:]

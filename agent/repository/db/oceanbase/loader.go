@@ -19,13 +19,13 @@ package oceanbase
 import (
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/driver"
 )
@@ -262,7 +262,7 @@ func fillConfigPort(dsConfig *config.ObDataSourceConfig) error {
 	}
 	// Get mysql port.
 	if meta.MYSQL_PORT == 0 {
-		return errors.New("mysql port has not been initialized")
+		return errors.Occur(errors.ErrObClusterMysqlPortNotInitialized)
 	}
 	dsConfig.SetPort(meta.MYSQL_PORT)
 	return nil

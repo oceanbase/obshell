@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/mattn/go-isatty"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -217,7 +218,7 @@ func (f *TextFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 		levelStr := fmt.Sprint(levelRaw)
 		level, err := logrus.ParseLevel(levelStr)
 		if err != nil {
-			return nil, fmt.Errorf("parse %+v to logrus.Level failed, err:+%v", level, err)
+			return nil, errors.Wrapf(err, "parse %+v to logrus.Level failed", level)
 		}
 		if !entry.Logger.IsLevelEnabled(level) {
 			return nil, nil

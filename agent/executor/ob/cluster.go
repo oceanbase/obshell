@@ -18,7 +18,6 @@ package ob
 
 import (
 	"github.com/oceanbase/obshell/agent/constant"
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/tenant"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
@@ -26,13 +25,13 @@ import (
 )
 
 // only for mysql
-func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
+func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	var info bo.ClusterInfo
 
 	// Get all tenant infos
 	tenantOverviews, err := tenantService.GetTenantsOverViewByMode(constant.MYSQL_MODE)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	for _, tenantOverview := range tenantOverviews {
 		tenantInfo, err := tenant.GetTenantInfo(tenantOverview.TenantName)
@@ -44,36 +43,36 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 
 	// Set basic cluster info
 	if err := observerService.GetOBParatemerByName("cluster", &info.ClusterName); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if err := observerService.GetOBParatemerByName("cluster_id", &info.ClusterId); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	isCommunityEdition, err := obclusterService.IsCommunityEdition()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	info.IsCommunityEdition = isCommunityEdition
 	info.Status = oceanbase.OBStateShortMap[oceanbase.GetState()]
 	version, err := obclusterService.GetObVersion()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	info.ObVersion = version
 
 	rootServers, err := obclusterService.GetAllZoneRootServers()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	zones, err := obclusterService.GetAllZone()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	serverResourceMap, err := obclusterService.GetAllObserverResourceMap()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 
 	allAgents, _ := agentService.GetAllAgentsDOFromOB()
@@ -98,7 +97,7 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 		}
 		observers, err := obclusterService.GetOBServersByZone(zone.Zone)
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		}
 
 		for _, server := range observers {
@@ -133,7 +132,7 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 	for _, tenant := range info.Tenants {
 		tenantSysStatsMap, err := obclusterService.GetTenantMutilSysStat(tenant.Id, []int{SYS_STAT_CPU_USAGE_STAT_ID, SYS_STAT_MEMORY_USAGE_STAT_ID, SYS_STAT_MAX_CPU_STAT_ID, SYS_STAT_MEMORY_SIZE_STAT_ID})
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		}
 
 		var tenantResourceStat bo.TenantResourceStat
@@ -158,7 +157,7 @@ func GetObclusterSummary() (*bo.ClusterInfo, *errors.OcsAgentError) {
 		tenantResourceStat.MemoryUsedPercent = memoryUsage / memorySize * 100
 		tenantDataDiskUsageMap, err := tenantService.GetTenantDataDiskUsageMap()
 		if err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		}
 		tenantResourceStat.DataDiskUsage = tenantDataDiskUsageMap[tenant.Id]
 		info.TenantStats = append(info.TenantStats, tenantResourceStat)

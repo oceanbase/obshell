@@ -25,60 +25,63 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func PostTenantBackupConfig(tenantName string, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	if p.DataBaseUri == nil || *p.DataBaseUri == "" || p.ArchiveBaseUri == nil || *p.ArchiveBaseUri == "" {
-		return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("data_base_uri or archive_base_uri cannot be empty"))
+func PostTenantBackupConfig(tenantName string, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, error) {
+	if p.DataBaseUri == nil || *p.DataBaseUri == "" {
+		return nil, errors.Occur(errors.ErrObBackupDataBaseUriEmpty)
+	}
+	if p.ArchiveBaseUri == nil || *p.ArchiveBaseUri == "" {
+		return nil, errors.Occur(errors.ErrObBackupArchiveBaseUriEmpty)
 	}
 	return tenantBackupConfig(tenantName, p)
 }
 
-func PatchTenantBackupConfig(tenant *oceanbase.DbaObTenant, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func PatchTenantBackupConfig(tenant *oceanbase.DbaObTenant, p *param.TenantBackupConfigParam) (*task.DagDetailDTO, error) {
 	if p.ArchiveBaseUri == nil || *p.ArchiveBaseUri == "" {
 		if p.Binding != nil && *p.Binding != "" {
-			return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("If binding is set, archive_base_uri must be set"))
+			return nil, errors.OccurWithMessage("If binding is set, archive_base_uri must be set", errors.ErrObBackupArchiveBaseUriEmpty)
 		}
 		if p.PieceSwitchInterval != nil && *p.PieceSwitchInterval != "" {
-			return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("If piece_switch_interval is set, archive_base_uri must be set"))
+			return nil, errors.OccurWithMessage("If piece_switch_interval is set, archive_base_uri must be set", errors.ErrObBackupArchiveBaseUriEmpty)
 		}
 	}
 	return tenantBackupConfig(tenant.TenantName, p)
 }
 
-func tenantBackupConfig(tenantName string, tenantP *param.TenantBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func tenantBackupConfig(tenantName string, tenantP *param.TenantBackupConfigParam) (*task.DagDetailDTO, error) {
 	log.Infof("Start to set backup config for %s", tenantName)
 	p := param.NewBackupConfigParamForTenant(tenantP)
 	backupConf, err := p.Check()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, errors.Wrap(err, "backup config is invalid"))
+		return nil, err
 	}
 
 	template := buildSetBackupConfigTemplate(&tenantName)
 	ctx, err := buildSetBackupConfigTaskContext(backupConf, &tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	dag, err := taskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func TenantStartBackup(tenant *oceanbase.DbaObTenant, p *param.BackupParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func TenantStartBackup(tenant *oceanbase.DbaObTenant, p *param.BackupParam) (*task.DagDetailDTO, error) {
 	if err := checkAllDest(tenant); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+		return nil, err
 	}
 	ctx, err := buildStartTenantBackupCtx(p, tenant.TenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	template := buildStartTenantBackupTemplate(*p.Mode, tenant.TenantName)
 
 	dag, err := taskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }

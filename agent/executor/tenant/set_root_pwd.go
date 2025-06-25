@@ -49,12 +49,12 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 		return nil, err
 	}
 	if executeAgent == nil {
-		return executeAgent, errors.New("tenant is not active")
+		return executeAgent, errors.Occur(errors.ErrObTenantNoActiveServer, tenantName)
 	}
 	return executeAgent, err
 }
 
-func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) *errors.OcsAgentError {
+func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) error {
 	// check password connectable by calling precheck api with password
 	body := &param.TenantRootPasswordParam{
 		RootPassword: &rootPassword,
@@ -64,25 +64,25 @@ func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) 
 	result := &bo.ObTenantPreCheckResult{}
 	err := secure.SendGetRequest(agentInfo, uri, body, result)
 	if err != nil {
-		return errors.Occur(errors.ErrUnexpected, "Failed to check tenant connectable using password.")
+		return errors.Wrap(err, "Failed to check tenant connectable using password.")
 	}
 	if !result.IsConnectable {
-		return errors.Occur(errors.ErrUnexpected, "The provided password is unable to connect to the tenant.")
+		return errors.Occur(errors.ErrObTenantRootPassowrdIncorrect)
 	}
 	tenant.GetPasswordMap().Set(tenantName, rootPassword)
 	return nil
 }
 
-func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (*errors.OcsAgentError, bool) {
+func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (error, bool) {
 	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
 		return err, false
 	}
 	if tenantName == constant.TENANT_SYS {
-		return errors.Occur(errors.ErrIllegalArgument, "Can not modify root password for sys tenant."), false
+		return errors.Occur(errors.ErrObTenantSysOperationNotAllowed), false
 	}
 	executeAgent, err := GetExecuteAgentForTenant(tenantName)
 	if err != nil {
-		return errors.Occurf(errors.ErrUnexpected, "get execute agent failed: %s", err.Error()), false
+		return errors.Wrap(err, "get execute agent failed"), false
 	}
 
 	if meta.OCS_AGENT.Equal(executeAgent) {
@@ -113,12 +113,12 @@ func newSetRootPwdTask() *SetRootPwdTask {
 
 func (t *SetRootPwdTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_NAME, &t.tenantName); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return err
 	}
 	t.ExecuteLogf("Set root password for tenant '%s'", t.tenantName)
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_NEW_PASSWORD, &t.newPassword); err != nil {
-		return errors.Wrap(err, "Get tenant new password failed")
+		return err
 	}
 
 	executeAgent, err := tenantService.GetTenantActiveAgent(t.tenantName)
@@ -126,7 +126,7 @@ func (t *SetRootPwdTask) Execute() error {
 		return err
 	}
 	if executeAgent == nil {
-		return errors.New("tenant is not active")
+		return errors.Occur(errors.ErrObTenantNoActiveServer, t.tenantName)
 	}
 
 	if err := secure.SendPutRequest(executeAgent, constant.URI_API_V1+constant.URI_TENANT+"/"+t.tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{

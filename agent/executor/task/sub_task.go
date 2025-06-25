@@ -48,25 +48,25 @@ func GetSubTaskDetail(c *gin.Context) {
 	var service taskservice.TaskServiceInterface
 
 	if err := c.BindUri(&taskDTOParam); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	taskID, agent, err := task.ConvertGenericID(taskDTOParam.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(taskDTOParam.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, nil)
@@ -84,7 +84,7 @@ func GetSubTaskDetail(c *gin.Context) {
 
 	subTask, err := service.GetSubTaskByTaskID(taskID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 
@@ -92,12 +92,12 @@ func GetSubTaskDetail(c *gin.Context) {
 	if subTask.IsLocalTask() {
 		dag, err := service.GetDagBySubTaskId(subTask.GetID())
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 			return
 		}
 		dagType = dag.GetDagType()
 		if task.ConvertToGenericID(dag, dag.GetDagType())[0] != taskDTOParam.GenericID[0] {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "sub task type not match"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "sub task type not match"))
 			return
 		}
 
@@ -105,7 +105,7 @@ func GetSubTaskDetail(c *gin.Context) {
 
 	taskDetailDTO, err = getSubTaskDetail(service, subTask, dagType)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	taskDetailDTO.SetVisible(true)
@@ -140,25 +140,25 @@ func GetFullSubTaskLogs(c *gin.Context) {
 	var service taskservice.TaskServiceInterface
 
 	if err := c.BindUri(&taskDTOParam); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	taskID, agent, err := task.ConvertGenericID(taskDTOParam.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(taskDTOParam.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, nil)
@@ -176,7 +176,7 @@ func GetFullSubTaskLogs(c *gin.Context) {
 
 	subTaskLogs, err := service.GetFullSubTaskLogsByTaskID(taskID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 

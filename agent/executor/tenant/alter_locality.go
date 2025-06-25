@@ -61,17 +61,17 @@ func newAlterLocalityTask() *AlterLocalityTask {
 func (t *AlterLocalityTask) Execute() error {
 	var err error
 	if err = t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_ZONE_NAME, &t.zone); err != nil {
-		return errors.Wrap(err, "Get zone failed")
+		return err
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_ALTER_LOCALITY_TYPE, &t.option); err != nil {
-		return errors.Wrap(err, "Get alter locality type failed")
+		return err
 	}
 	if t.option == SCALE_OUT_REPLICA || t.option == MODIFY_REPLICA_TYPE {
 		if err = t.GetContext().GetParamWithValue(PARAM_LOCALITY_TYPE, &t.localityType); err != nil {
-			return errors.Wrap(err, "Get locality type failed")
+			return err
 		}
 	}
 
@@ -105,8 +105,7 @@ func (t *AlterLocalityTask) Execute() error {
 				return errors.Wrap(err, "Wait for alter tenant locality succeed failed")
 			}
 		} else {
-			t.ExecuteErrorLogf("There is already a job for altering tenant locality to %s", targetLocality)
-			return errors.Errorf("There is already a job for altering tenant locality to %s", targetLocality)
+			return errors.Occur(errors.ErrObTenantJobConflict, constant.ALTER_TENANT_LOCALITY)
 		}
 	} else {
 		t.ExecuteLogf("Alter tenant locality to %s", targetLocality)
@@ -126,7 +125,7 @@ func waitAlterTenantLocalitySucceed(t task.Task, tenantId int, locality string) 
 	if err != nil {
 		return errors.Wrap(err, "Get tenant job failed")
 	} else if jobId == 0 {
-		return errors.Occur(errors.ErrUnexpected, "There is no job for altering tenant locality to %s", locality)
+		return errors.Occurf(errors.ErrObTenantJobNotExist, "altering tenant locality to %s", locality)
 	}
 	return waitTenantJobSucceed(t, jobId)
 }
@@ -143,13 +142,13 @@ func waitTenantJobSucceed(t task.Task, jobId int) error {
 		if jobStatus == "SUCCESS" {
 			return nil
 		} else if jobStatus != "INPROGRESS" {
-			return errors.Errorf("Job %d failed, job status is %s", jobId, jobStatus)
+			return errors.Occur(errors.ErrObTenantJobFailed, jobId, jobStatus)
 		} else {
 			retryTimes--
 			time.Sleep(constant.CHECK_JOB_INTERVAL)
 		}
 	}
-	return errors.Errorf("Wait job %d timeout", jobId)
+	return errors.Occur(errors.ErrObTenantJobWaitTimeout, jobId)
 }
 
 func buildLocality(replicaInfoMap map[string]string) string {

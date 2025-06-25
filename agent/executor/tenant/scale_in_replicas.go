@@ -37,7 +37,7 @@ func checkScaleInTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *param
 		return err
 	}
 	if len(replicaInfoMap) == 1 {
-		return errors.Errorf("tenant %s only has one replica", tenant.TenantName)
+		return errors.Occur(errors.ErrObTenantReplicaOnlyOne, tenant.TenantName)
 	}
 
 	if err := checkScaleInLocalityValid(replicaInfoMap, param.Zones); err != nil {
@@ -81,7 +81,7 @@ func checkScaleInLocalityValid(replicaInfoMap map[string]string, zoneList []stri
 	if curPaxosNum > 1 || curPaxosNum == 1 && prePaxosNum == 1 {
 		return nil
 	}
-	return errors.New("violate locality principal not allowed") // tenant with arb service should only support 4->2
+	return errors.Occur(errors.ErrObTenantLocalityPrincipalNotAllowed) // tenant with arb service should only support 4->2
 }
 
 func scaleInLocality(tenantId int, zone string) (map[string]string, error) {
@@ -94,7 +94,7 @@ func scaleInLocality(tenantId int, zone string) (map[string]string, error) {
 	}
 	delete(replicaInfoMap, zone)
 	if len(replicaInfoMap) == 0 { // double check
-		return nil, errors.New("Could not delete all replica")
+		return nil, errors.Occur(errors.ErrObTenantReplicaDeleteAll)
 	}
 	return replicaInfoMap, nil
 }
@@ -114,32 +114,32 @@ func filterZones(tenantId int, param *param.ScaleInTenantReplicasParam) error {
 	return nil
 }
 
-func ScaleInTenantReplicas(tenantName string, param *param.ScaleInTenantReplicasParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
-	if ocsErr != nil {
-		return nil, ocsErr
+func ScaleInTenantReplicas(tenantName string, param *param.ScaleInTenantReplicasParam) (*task.DagDetailDTO, error) {
+	tenant, err := checkTenantExistAndStatus(tenantName)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := filterZones(tenant.TenantID, param); err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if len(param.Zones) == 0 {
 		return nil, nil
 	}
 
 	if err := checkScaleInTenantReplicasParam(tenant, param); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return nil, err
 	}
 
 	// Create 'Scale in tenant replicas' dag instance.
 	template, err := buildScaleInTenantReplicasDagTemplate(tenant, *param)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "build '%s' dag template failed", DAG_SCALE_IN_TENANT_REPLICA)
+		return nil, err
 	}
 	context := buildScaleInTenantReplicasDagContext(tenant, *param)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create '%s' dag instance failed: %s", DAG_SCALE_IN_TENANT_REPLICA, err.Error())
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -208,15 +208,15 @@ func newSplitResourcePoolTask() *SplitResourcePoolTask {
 
 func (t *SplitResourcePoolTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_SPLIT_RESOURCE_POOL_LIST, &t.poolList); err != nil {
-		return errors.New("Get resource pool list failed.")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
-		return errors.Wrap(err, "Get timestamp for pool name failed")
+		return err
 	}
 
 	poolInfos, err := tenantService.GetTenantResourcePool(t.tenantId)
@@ -271,11 +271,11 @@ func buildZoneList(zoneList string) []string {
 
 func (t *BatchDropResourcePoolTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_ZONE_LIST, &t.zoneList); err != nil {
-		return errors.New("Get zone list failed.")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant name failed")
+		return err
 	}
 
 	poolInfos, err := tenantService.GetTenantResourcePool(t.tenantId)

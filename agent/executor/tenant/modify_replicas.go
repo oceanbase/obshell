@@ -44,7 +44,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 	existZones := make([]string, 0)
 	for _, zone := range param {
 		if utils.ContainsString(existZones, zone.Name) {
-			return errors.Errorf("Zone %s is repeated.", zone.Name)
+			return errors.Occur(errors.ErrObTenantZoneRepeated, zone.Name)
 		}
 
 		// Check replica type.
@@ -57,17 +57,17 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 		// Check unit num.
 		if zone.UnitNum != nil {
 			if *zone.UnitNum <= 0 {
-				return errors.New("unit_num should be positive.")
+				return errors.Occur(errors.ErrObTenantUnitNumInvalid, *zone.UnitNum, "unit num must be greater than 0")
 			}
 			servers, err := obclusterService.GetServerByZone(zone.Name)
 			if err != nil {
 				return err
 			}
 			if len(servers) < *zone.UnitNum {
-				return errors.Errorf("The number of servers in zone %s is %d, less than the number of units %d.", zone.Name, len(servers), *zone.UnitNum)
+				return errors.Occur(errors.ErrObTenantUnitNumExceedsLimit, *zone.UnitNum, len(servers), zone.Name)
 			}
 			if *zone.UnitNum != unitNum && unitNum != 0 {
-				return errors.New("unit_num should be same in all zones.")
+				return errors.Occur(errors.ErrObTenantUnitNumInconsistent)
 			}
 			unitNum = *zone.UnitNum
 			nums += 1
@@ -78,7 +78,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 			if exist, err := unitService.IsUnitConfigExist(*zone.UnitConfigName); err != nil {
 				return err
 			} else if !exist {
-				return errors.Errorf("Resource unit config '%s' is not exist.", *zone.UnitConfigName)
+				return errors.Occur(errors.ErrObResourceUnitConfigNotExist, *zone.UnitConfigName)
 			}
 		}
 	}
@@ -88,7 +88,7 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 		return err
 	}
 	if unitNum != 0 && nums != replicaNum && unitNum != currentUnitNum {
-		return errors.New("Could not modify unit num partially.")
+		return errors.Occur(errors.ErrObTenantModifyUnitNumPartially)
 	}
 	if unitNum != 0 && unitNum != currentUnitNum {
 		// Check if enable_rebalance is true.
@@ -96,9 +96,9 @@ func checkModifyReplicaZoneParams(tenant *oceanbase.DbaObTenant, param []param.M
 			return err
 		} else {
 			if enableRebalance == nil {
-				return errors.New("Get enable_rebalance failed.")
+				return errors.Wrap(err, "Get enable_rebalance failed.")
 			} else if enableRebalance.Value != "True" {
-				return errors.New("Could not modify unit num when enable_rebalance is false.")
+				return errors.Occur(errors.ErrObTenantRebalanceDisabled, "modify unit num")
 			}
 		}
 	}
@@ -194,7 +194,7 @@ func renderModifyReplicasParam(param *param.ModifyReplicasParam) {
 
 func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplicasParam *param.ModifyReplicasParam) error {
 	if modifyReplicasParam.ZoneList == nil || len(modifyReplicasParam.ZoneList) == 0 {
-		return errors.New("zone_list is empty.")
+		return errors.Occur(errors.ErrObTenantZoneListEmpty)
 	}
 
 	renderModifyReplicasParam(modifyReplicasParam)
@@ -206,7 +206,7 @@ func checkModifyTenantReplicasParam(tenant *oceanbase.DbaObTenant, modifyReplica
 	}
 	for _, zone := range modifyReplicasParam.ZoneList {
 		if _, ok := replicaInfoMap[zone.Name]; !ok {
-			return errors.Errorf("zone '%s' does not have a replica", zone.Name)
+			return errors.Occur(errors.ErrObTenantZoneWithoutReplica, zone.Name)
 		}
 	}
 
@@ -260,7 +260,7 @@ func checkModifyLocalityValid(replicaInfoMap map[string]string, zoneList []param
 		}
 	}
 	if curPaxosNum < 1 || curPaxosNum == 1 && prePaxosNum > 1 {
-		return errors.New("violate locality principal not allowed")
+		return errors.Occur(errors.ErrObTenantLocalityPrincipalNotAllowed)
 	}
 	return nil
 }
@@ -271,31 +271,29 @@ func modifyLocality(tenantId int, zone string, replicaType string) (map[string]s
 		return nil, err
 	}
 	if _, ok := replicaInfoMap[zone]; !ok {
-		return nil, errors.Errorf("zone '%s' does not have a replica", zone)
+		return nil, errors.Occur(errors.ErrObTenantZoneWithoutReplica, zone)
 	}
 	replicaInfoMap[zone] = replicaType
 	return replicaInfoMap, nil
 }
 
-func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	tenant, ocsErr := checkTenantExistAndStatus(tenantName)
-	if ocsErr != nil {
-		return nil, ocsErr
+func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*task.DagDetailDTO, error) {
+	tenant, err := checkTenantExistAndStatus(tenantName)
+	if err != nil {
+		return nil, err
 	}
 
 	if err := checkModifyTenantReplicasParam(tenant, param); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return nil, err
 	}
 
 	options, err := buildModifyReplicaOptions(tenant, param.ZoneList)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrBadRequest, "Build modify replica options failed: %s.", err.Error())
+		return nil, err
 	}
 
-	template, err := buildModifyReplicaTemplate(tenant, options)
-	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "Build modify replica template failed: %s.", err.Error())
-	}
+	template := buildModifyReplicaTemplate(tenant, options)
+
 	if template.IsEmpty() {
 		return nil, nil
 	}
@@ -304,12 +302,12 @@ func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create '%s' dag instance failed", DAG_MODIFY_TENANT_REPLICA)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
-func buildModifyReplicaTemplate(tenant *oceanbase.DbaObTenant, options *ModifyReplicaOption) (*task.Template, error) {
+func buildModifyReplicaTemplate(tenant *oceanbase.DbaObTenant, options *ModifyReplicaOption) *task.Template {
 	templateBuilder := task.NewTemplateBuilder(DAG_MODIFY_TENANT_REPLICA).SetMaintenance(task.TenantMaintenance(tenant.TenantName))
 	if options.replicaTypeChanged != nil && len(options.replicaTypeChanged) != 0 {
 		// Modify 'FULL' replica to 'READONLY' replica firstly.
@@ -339,7 +337,7 @@ func buildModifyReplicaTemplate(tenant *oceanbase.DbaObTenant, options *ModifyRe
 		ctx := task.NewTaskContext().SetParam(PARAM_TENANT_UNIT_NUM, options.unitNumChanged)
 		templateBuilder.AddNode(task.NewNodeWithContext(newAlterResourcePoolUnitNumTask(), false, ctx))
 	}
-	return templateBuilder.Build(), nil
+	return templateBuilder.Build()
 }
 
 type AlterResourcePoolUnitConfTask struct {
@@ -363,10 +361,10 @@ func newAlterResourcePoolUnitConfTask() *AlterResourcePoolUnitConfTask {
 
 func (t *AlterResourcePoolUnitConfTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 	if err := t.GetContext().GetParamWithValue(PARAM_ZONE_WITH_UNIT, &t.zoneWithUnitConf); err != nil {
-		return errors.Wrap(err, "Get tenant zone name failed")
+		return err
 	}
 	poolInfo, err := tenantService.GetTenantResourcePool(t.tenantId)
 	if err != nil {
@@ -413,7 +411,7 @@ func waitAlterTenantUnitNumSucceed(t task.Task, tenantId int, targetUnitNum int)
 	}
 
 	if jobId == 0 {
-		return errors.Occur(errors.ErrUnexpected, "There is no job for altering tenant %s unit num to %d", tenantName, targetUnitNum)
+		return errors.Occurf(errors.ErrObTenantJobNotExist, "altering tenant %s unit num to %d", tenantName, targetUnitNum)
 	} else {
 		return waitTenantJobSucceed(t, jobId)
 	}
@@ -421,11 +419,11 @@ func waitAlterTenantUnitNumSucceed(t task.Task, tenantId int, targetUnitNum int)
 
 func (t *AlterResourcePoolUnitNumTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.tenantId); err != nil {
-		return errors.Wrap(err, "Get tenant id failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_UNIT_NUM, &t.unitNum); err != nil {
-		return errors.Wrap(err, "Get tenant unit num failed")
+		return err
 	}
 
 	tenantName, err := tenantService.GetTenantName(t.tenantId)
@@ -450,7 +448,7 @@ func (t *AlterResourcePoolUnitNumTask) Execute() error {
 			}
 		} else {
 			t.ExecuteErrorLogf("There already exists a inprogress job alter unit num to %d", t.unitNum)
-			return errors.Errorf("There already exists a inprogress job alter unit num to %d", t.unitNum)
+			return errors.Occur(errors.ErrObTenantJobConflict, constant.ALTER_RESOURCE_TENANT_UNIT_NUM)
 		}
 	} else {
 		t.ExecuteLogf("Alter tenant '%s' unit num to %d", tenantName, t.unitNum)

@@ -22,6 +22,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/secure"
 )
@@ -81,7 +82,7 @@ func (t *AgentRemoveFollowerRPCTask) Execute() error {
 		resp, err := secure.SendDeleteRequestAndReturnResponse(&agent, constant.URI_AGENT_RPC_PREFIX, agent, &dagDTO)
 
 		if resp != nil && resp.IsError() {
-			return errors.Errorf("send remove agent request to %s failed: %v", agent.String(), resp.Error())
+			return errors.Occur(errors.ErrAgentRPCRequestError, http.DELETE, constant.URI_AGENT_RPC_PREFIX, agent.String(), resp.Error())
 		}
 		if err != nil {
 			t.ExecuteWarnLogf("send remove agent request failed, err: %v", err)

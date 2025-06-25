@@ -88,7 +88,7 @@ func (t *ClusterBoostrapTask) generateBootstrapCmd() (string, error) {
 	for _, zone := range t.zoneOrder {
 		observerInfo, ok := t.zoneRS[zone]
 		if !ok {
-			return "", fmt.Errorf("zone %s has no rs", zone)
+			return "", errors.Occurf(errors.ErrCommonUnexpected, "zone %s has no rs", zone)
 		}
 		agent := meta.NewAgentInfo(observerInfo.Ip, observerInfo.Port)
 		list = append(list, fmt.Sprintf("ZONE '%s' SERVER '%s'", zone, agent.String()))

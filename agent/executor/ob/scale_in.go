@@ -39,12 +39,12 @@ func isAllLsMultiPaxosAlive(svrInfo meta.ObserverSvrInfo, infoFunc func(string, 
 	// Get all log infos.
 	logInfos, err := obclusterService.GetLogInfosInServer(svrInfo)
 	if err != nil {
-		return false, errors.New("get all log info failed")
+		return false, errors.Wrapf(err, "get all log info failed")
 	}
 	for _, logStat := range logInfos {
 		infoFunc("check multi paxos member alive of tenant '%d', log stream '%d'", logStat.TenantId, logStat.LsId)
 		if alive, err := obclusterService.IsLsMultiPaxosAlive(logStat.LsId, logStat.TenantId, svrInfo); err != nil {
-			return false, errors.Errorf("check multi paxos member alive failed: %s", err.Error())
+			return false, errors.Wrapf(err, "check multi paxos member alive failed")
 		} else if !alive {
 			infoFunc("the log stream %d of tenant %d has no majority alive.", logStat.LsId, logStat.TenantId)
 			return false, nil
@@ -53,11 +53,11 @@ func isAllLsMultiPaxosAlive(svrInfo meta.ObserverSvrInfo, infoFunc func(string, 
 	return true, nil
 }
 
-func ClusterScaleIn(param param.ClusterScaleInParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func ClusterScaleIn(param param.ClusterScaleInParam) (*task.DagDetailDTO, error) {
 	agentInfo := param.AgentInfo
 	server, err := obclusterService.GetOBServerByAgentInfo(agentInfo)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "check server exist failed: %s", err.Error())
+		return nil, errors.Wrapf(err, "check server exist failed")
 	}
 	if server == nil {
 		return nil, nil
@@ -66,9 +66,9 @@ func ClusterScaleIn(param param.ClusterScaleInParam) (*task.DagDetailDTO, *error
 
 	if param.ForceKill {
 		if alive, err := isAllLsMultiPaxosAlive(svrInfo, log.Infof); err != nil {
-			return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+			return nil, err
 		} else if !alive {
-			return nil, errors.Occur(errors.ErrBadRequest, "check multi paxos member alive failed")
+			return nil, errors.Occur(errors.ErrObClusterMultiPaxosNotAlive)
 		}
 	}
 
@@ -96,7 +96,7 @@ func ClusterScaleIn(param param.ClusterScaleInParam) (*task.DagDetailDTO, *error
 
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(builder.Build(), context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create dag instance failed: %s", err.Error())
+		return nil, err
 	}
 
 	return task.NewDagDetailDTO(dag), nil
@@ -126,7 +126,7 @@ func (t *BaseDeleteObserverTask) Execute() error {
 
 	observer, err := obclusterService.GetOBServer(t.server)
 	if err != nil {
-		return errors.Errorf("find observer %s failed.", t.server.String())
+		return errors.Wrapf(err, "find observer %s failed", t.server.String())
 	}
 
 	if observer == nil {
@@ -136,9 +136,8 @@ func (t *BaseDeleteObserverTask) Execute() error {
 
 	if observer.Status != constant.OBSERVER_STATUS_DELETING {
 		if err = obclusterService.DeleteServer(t.server); err != nil {
-			return errors.Errorf("delete observer %s failed: %s", t.server.String(), err.Error())
+			return errors.Wrapf(err, "delete observer %s failed", t.server.String())
 		}
-
 	}
 	return nil
 }
@@ -156,16 +155,16 @@ func (t *BaseDeleteObserverTask) Rollback() error {
 
 	observer, err := obclusterService.GetOBServer(t.server)
 	if err != nil {
-		return errors.Errorf("find observer %s failed.", t.server.String())
+		return errors.Wrapf(err, "find observer %s failed", t.server.String())
 	}
 
 	if observer == nil {
-		return errors.Errorf("observer '%s' is already not in cluster.", t.server.String())
+		return errors.Occur(errors.ErrObServerNotExist, t.server.String())
 	}
 
 	if observer.Status == constant.OBSERVER_STATUS_DELETING {
 		if err = obclusterService.CancelDeleteServer(t.server); err != nil {
-			return errors.Errorf("cancel delete observer %s failed: %s", t.server.String(), err.Error())
+			return errors.Wrapf(err, "cancel delete observer %s failed", t.server.String())
 		}
 	}
 	return nil
@@ -247,7 +246,7 @@ func (t *SetAgentToScaleInTask) Execute() error {
 
 	for _, agent := range t.agentInfo {
 		if err := agentService.UpdateAgentIdentity(&agent, meta.SCALING_IN); err != nil {
-			return errors.Errorf("update %s identity to 'SCALING IN' failed", agent.String())
+			return errors.Wrapf(err, "update %s identity to 'SCALING IN' failed", agent.String())
 		}
 	}
 
@@ -284,7 +283,7 @@ func (t *SetAgentToScaleInTask) Rollback() error {
 
 	for _, agent := range t.agentInfo {
 		if err := agentService.UpdateAgentIdentity(&agent, meta.CLUSTER_AGENT); err != nil {
-			return errors.Errorf("update %s identity to '%s' failed", agent.String(), meta.CLUSTER_AGENT)
+			return errors.Wrapf(err, "update %s identity to '%s' failed", agent.String(), meta.CLUSTER_AGENT)
 		}
 	}
 
@@ -332,17 +331,17 @@ func (t *WaitDeleteServerSuccessTask) Execute() error {
 		t.TimeoutCheck()
 		time.Sleep(WAIT_DELETE_SERVER_FINISH_INTERVAL)
 		if observer, err := obclusterService.GetOBServer(t.server); err != nil {
-			return errors.Errorf("find observer %s failed: ", t.server.String())
+			return errors.Wrapf(err, "find observer %s failed", t.server.String())
 		} else if observer == nil {
 			t.ExecuteLogf("observer '%s' has been deleted successfully", t.server.String())
 			return nil
 		} else if observer.Status == constant.OBSERVER_STATUS_DELETING {
 			continue
 		} else {
-			return errors.Errorf("delete observer %s failed: status is %s", t.server.String(), observer.Status)
+			return errors.Occur(errors.ErrObServerNotDeleting, t.server.String(), observer.Status)
 		}
 	}
-	return errors.Errorf("delete observer %s timeout", t.server.String())
+	return errors.Occurf(errors.ErrObClusterAsyncOperationTimeout, "delete observer %s", t.server.String())
 }
 
 type DeleteAgentTask struct {
@@ -402,7 +401,7 @@ func (t *CheckMultiPaxosMemberAliveTask) Execute() error {
 	if alive, err := isAllLsMultiPaxosAlive(t.server, t.ExecuteInfoLogf); err != nil {
 		return err
 	} else if !alive {
-		return errors.Errorf("check multi paxos member alive failed")
+		return errors.Occur(errors.ErrObClusterMultiPaxosNotAlive)
 	}
 	return nil
 }
@@ -459,7 +458,7 @@ func (t *TryToInformToKillObserverTask) Execute() error {
 	var dagDetailDTO task.DagDetailDTO
 	if err := secure.SendDeleteRequest(&t.agent, constant.URI_OBSERVER_RPC_PREFIX, nil, &dagDetailDTO); err != nil {
 		if t.forceKill {
-			return errors.Errorf("inform agent %s to kill observer failed: %v", t.agent.String(), err)
+			return errors.Wrapf(err, "inform agent %s to kill observer failed", t.agent.String())
 		} else {
 			// Igonre any error because this task won't influence deleting server.
 			t.ExecuteWarnLogf("inform agent %s to kill observer failed: %v", t.agent.String(), err)
@@ -495,20 +494,20 @@ func (t *TryToInformToKillObserverTask) Rollback() error {
 	// launch target observer.
 	var dag *task.DagDetailDTO
 	if err := secure.SendPostRequest(&t.agent, constant.URI_OBSERVER_RPC_PREFIX, nil, &dag); err != nil {
-		return errors.Errorf("rollback kill observer of agent '%s' failed: %v", t.agent.String(), err)
+		return errors.Wrapf(err, "rollback kill observer of agent '%s' failed", t.agent.String())
 	}
 	if dag != nil && dag.GenericDTO != nil {
 		// Watch the dag until it is finished.
 		for {
 			t.TimeoutCheck()
 			if err := secure.SendGetRequest(&t.agent, fmt.Sprintf("%s%s/%s", constant.URI_TASK_API_PREFIX, constant.URI_DAG, dag.GenericID), nil, dag); err != nil {
-				return errors.Errorf("watch start observer dag %s failed: %v", dag.GenericID, err)
+				return errors.Wrapf(err, "watch start observer dag %s failed", dag.GenericID)
 			}
 			if dag.IsSucceed() {
 				return nil
 			}
 			if dag.IsFailed() {
-				return errors.Errorf("launch observer dag %s failed", dag.GenericID)
+				return errors.Occurf(errors.ErrCommonUnexpected, "launch observer dag %s failed", dag.GenericID)
 			}
 			time.Sleep(WAIT_START_OBSERVER_INTERVAL)
 		}

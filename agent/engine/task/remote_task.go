@@ -17,9 +17,9 @@
 package task
 
 import (
-	"errors"
 	"time"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
@@ -46,7 +46,7 @@ func (t *RemoteTask) GetStructName() string {
 }
 
 func (t *RemoteTask) Execute() error {
-	return errors.New("remote task struct can not execute")
+	return errors.Occur(errors.ErrCommonUnexpected, "remote task can not be executed")
 }
 
 func NewRemoteTask(

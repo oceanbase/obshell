@@ -45,11 +45,11 @@ func unitConfigCreateHandler(c *gin.Context) {
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	if *param.Name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Resource unit name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "name", "Resource unit name is empty."))
 		return
 	}
 	err := unit.CreateUnitConfig(param)
@@ -71,11 +71,11 @@ func unitConfigCreateHandler(c *gin.Context) {
 func unitConfigDropHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Resource unit name is empty."))
+
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	err := unit.DropUnitConfig(name)
@@ -96,7 +96,7 @@ func unitConfigDropHandler(c *gin.Context) {
 // @Router /api/v1/units/config [get]
 func unitConfigListHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	units, err := unit.GetAllUnitConfig()
@@ -118,11 +118,11 @@ func unitConfigListHandler(c *gin.Context) {
 func unitConfigGetHandler(c *gin.Context) {
 	name := c.Param(constant.URI_PARAM_NAME)
 	if name == "" {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, "Resource unit name is empty."))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObResourceUnitConfigNameEmpty))
 		return
 	}
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "%s is not cluster agent.", meta.OCS_AGENT.String()))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	unit, err := unit.GetUnitConfig(name)

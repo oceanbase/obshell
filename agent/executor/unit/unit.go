@@ -23,78 +23,78 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func DropUnitConfig(name string) *errors.OcsAgentError {
+func DropUnitConfig(name string) error {
 	if exist, err := unitService.IsUnitConfigExist(name); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	} else if !exist {
 		return nil
 	}
 	if err := unitService.DropUnit(name); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	return nil
 }
 
 func validateCreateResourceUnitConfigParams(param param.CreateResourceUnitConfigParams) error {
 	if *param.Name == "" {
-		return errors.New("Name is empty.")
+		return errors.Occur(errors.ErrObResourceUnitConfigNameEmpty)
 	}
 	if _, pass := parse.CapacityParser(*param.MemorySize); !pass {
-		return errors.Errorf("memory_size %s is illegal.", *param.MemorySize)
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "memory_size", "capacity is illegal")
 	}
 	if param.LogDiskSize != nil {
 		if _, pass := parse.CapacityParser(*param.LogDiskSize); !pass {
-			return errors.Errorf("log_disk_size %s is illegal.", *param.LogDiskSize)
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "log_disk_size", "capacity is illegal")
 		}
 	}
 
 	if *param.MaxCpu <= 0 {
-		return errors.New("max_cpu should be positive.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "max_cpu", "max_cpu should be positive.")
 	}
 
 	if param.MinCpu != nil && *param.MinCpu <= 0 {
-		return errors.New("min_cpu should be positive.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "min_cpu", "min_cpu should be positive.")
 	}
 
 	if param.MinIops != nil && *param.MinIops <= 0 {
-		return errors.New("min_iops should be positive.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "min_iops", "min_iops should be positive.")
 	}
 
 	if param.MaxIops != nil && *param.MaxIops <= 0 {
-		return errors.New("max_iops should be positive.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "max_iops", "max_iops should be positive.")
 	}
 
 	if param.MinCpu != nil && *param.MaxCpu < *param.MinCpu {
-		return errors.New("Incorrect arguments to min_cpu, min_cpu is greater than max_cpu.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "min_cpu", "min_cpu should not be greater than max_cpu.")
 	}
 
 	if *param.MaxCpu < constant.RESOURCE_UNIT_CONFIG_CPU_MINE {
-		return errors.New("invalid max_cpu value, min value is 1.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "max_cpu", "min value is 1.")
 	}
 
 	if param.MinCpu != nil && *param.MinCpu < constant.RESOURCE_UNIT_CONFIG_CPU_MINE {
-		return errors.New("invalid min_cpu value, min value is 1.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "min_cpu", "min value is 1.")
 	}
 
 	if param.MaxIops != nil && param.MinIops != nil && *param.MaxIops < *param.MinIops {
-		return errors.New("Incorrect arguments to min_iops, min_iops is greater than max_iops.")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "min_iops", "min_iops should not be greater than max_iops.")
 	}
 	return nil
 }
 
-func CreateUnitConfig(param param.CreateResourceUnitConfigParams) *errors.OcsAgentError {
+func CreateUnitConfig(param param.CreateResourceUnitConfigParams) error {
 	if err := validateCreateResourceUnitConfigParams(param); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return err
 	}
 
 	if exist, err := unitService.IsUnitConfigExist(*param.Name); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	} else if exist {
-		return errors.Occurf(errors.ErrBadRequest, "Resource unit '%s' already exists.", *param.Name)
+		return errors.Occur(errors.ErrObResourceUnitConfigExisted, *param.Name)
 	}
 
 	if err := unitService.CreateUnit(param); err != nil {
-		return errors.Occur(errors.ErrUnexpected, err.Error())
+		return err
 	}
 	return nil
 }
@@ -103,13 +103,13 @@ func GetAllUnitConfig() ([]oceanbase.DbaObUnitConfig, error) {
 	return unitService.GetAllUnitConfig()
 }
 
-func GetUnitConfig(name string) (*oceanbase.DbaObUnitConfig, *errors.OcsAgentError) {
+func GetUnitConfig(name string) (*oceanbase.DbaObUnitConfig, error) {
 	unitConfig, err := unitService.GetUnitConfigByName(name)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	if unitConfig == nil {
-		return nil, errors.Occurf(errors.ErrBadRequest, "Resource unit config '%s' is not exist.", name)
+		return nil, errors.Occur(errors.ErrObResourceUnitConfigNotExist, name)
 	}
 	return unitConfig, nil
 }

@@ -51,25 +51,25 @@ func GetNodeDetail(c *gin.Context) {
 	var service taskservice.TaskServiceInterface
 
 	if err := c.BindUri(&nodeDTOParam); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	nodeID, agent, err := task.ConvertGenericID(nodeDTOParam.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(nodeDTOParam.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, nil)
@@ -88,29 +88,29 @@ func GetNodeDetail(c *gin.Context) {
 
 	node, err := service.GetNodeByNodeId(nodeID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 
 	if *param.ShowDetails {
 		_, err = service.GetSubTasks(node)
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+			common.SendResponse(c, nil, err)
 			return
 		}
 
 		dag, err := service.GetDagInstance(int64(node.GetDagId()))
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+			common.SendResponse(c, nil, err)
 			return
 		}
 		if task.ConvertToGenericID(dag, dag.GetDagType())[0] != nodeDTOParam.GenericID[0] {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, "node type not match"))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "node type not match"))
 			return
 		}
 		nodeDetailDTO, err = getNodeDetail(service, node, dag.GetDagType())
 		if err != nil {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrUnexpected, err))
+			common.SendResponse(c, nil, err)
 			return
 		}
 	}
@@ -154,34 +154,34 @@ func NodeHandler(c *gin.Context) {
 	var nodeOperator task.DagOperator
 
 	if err := c.BindUri(&nodeDTOParam); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	nodeID, agent, err := task.ConvertGenericID(nodeDTOParam.GenericID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 
 	if err := c.BindJSON(&nodeOperator); err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrIllegalArgument, err))
+		common.SendResponse(c, nil, err)
 		return
 	}
 	if strings.ToUpper(nodeOperator.Operator) != task.PASS_STR {
-		common.SendResponse(c, nil, errors.Occurf(errors.ErrKnown, "invalid operator: %s", nodeOperator.Operator))
+		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNodeOperatorNotSupport, nodeOperator.Operator))
 		return
 	}
 
 	if agent != nil && !meta.OCS_AGENT.Equal(agent) {
 		if task.IsObproxyTask(nodeDTOParam.GenericID) {
-			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+			common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFoundWithReason, "obproxy task not found"))
 		}
 		if meta.OCS_AGENT.IsFollowerAgent() {
 			// forward request to master
 			master := agentService.GetMasterAgentInfo()
 			if master == nil {
-				common.SendResponse(c, nil, errors.Occur(errors.ErrBadRequest, "Master Agent is not found"))
+				common.SendResponse(c, nil, errors.Occur(errors.ErrAgentNoMaster))
 				return
 			}
 			common.ForwardRequest(c, master, nil)
@@ -199,13 +199,13 @@ func NodeHandler(c *gin.Context) {
 
 	node, err := service.GetNodeByNodeId(nodeID)
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 
 	dag, err := service.GetDagInstance(int64(node.GetDagId()))
 	if err != nil {
-		common.SendResponse(c, nil, errors.Occur(errors.ErrTaskNotFound, err))
+		common.SendResponse(c, nil, errors.WrapRetain(errors.ErrTaskNotFound, err))
 		return
 	}
 

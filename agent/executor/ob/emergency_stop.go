@@ -18,10 +18,9 @@ package ob
 
 import (
 	"github.com/oceanbase/obshell/agent/engine/task"
-	"github.com/oceanbase/obshell/agent/errors"
 )
 
-func EmergencyStop() (*task.DagDetailDTO, *errors.OcsAgentError) {
+func EmergencyStop() (*task.DagDetailDTO, error) {
 	template := task.NewTemplateBuilder(DAG_EMERGENCY_STOP).
 		SetMaintenance(task.UnMaintenance()).
 		AddTask(newStopObserverTask(), false)
@@ -30,7 +29,7 @@ func EmergencyStop() (*task.DagDetailDTO, *errors.OcsAgentError) {
 
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template.Build(), taskCtx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }

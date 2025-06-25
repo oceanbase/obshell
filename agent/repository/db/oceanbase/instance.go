@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	ERR_OBSERVER_NOT_EXIST = errors.New("observer process not exist")
+	ERR_OBSERVER_NOT_EXIST = errors.Occur(errors.ErrObServerProcessNotExist)
 )
 
 // GetOcsInstance will return a connection to the OCS database.
@@ -38,7 +38,7 @@ func GetOcsInstance() (db *gorm.DB, err error) {
 	if isOcs {
 		return db, nil
 	}
-	return nil, errors.New("current database is not ocs")
+	return nil, errors.Occur(errors.ErrAgentOceanbaseDBNotOcs)
 }
 
 // GetInstance will return the current connection regardless of the database it is connected with.
@@ -73,7 +73,7 @@ func checkObAvailable() (bool, error) {
 func GetAvailableInstance() (db *gorm.DB, err error) {
 	// If the ob instance currently in memory is nil, it will return an error.
 	if dbInstance == nil {
-		return nil, errors.New("oceanbase db is nil")
+		return nil, errors.Occur(errors.ErrAgentOceanbaseNotHold)
 	}
 
 	if canUse, err := checkObAvailable(); err == nil && canUse {
@@ -86,14 +86,14 @@ func GetAvailableInstance() (db *gorm.DB, err error) {
 	}
 
 	// If the above checks pass, the current db is unavailable
-	return nil, errors.New("oceanbase db is useless")
+	return nil, errors.Occur(errors.ErrAgentOceanbaseUesless)
 }
 
 // GetSqlExecutableInstance will return the connection which can execute the specified sql command.
 func getSqlExecutableInstance(sql string) (db *gorm.DB, err error) {
 	// If the ob instance currently in memory is nil, it will return an error.
 	if dbInstance == nil {
-		return nil, errors.New("oceanbase db is nil")
+		return nil, errors.Occur(errors.ErrAgentOceanbaseNotHold)
 	}
 
 	// If the db instance in the current memory is not nil,
@@ -108,14 +108,14 @@ func getSqlExecutableInstance(sql string) (db *gorm.DB, err error) {
 	}
 
 	// If the above checks pass, the current db is unavailable
-	return nil, errors.New("oceanbase db is useless")
+	return nil, errors.Occur(errors.ErrAgentOceanbaseUesless)
 }
 
 // if observer process not exist, return error
 func CheckObserverProcess() error {
 	exist, err := process.CheckObserverProcess()
 	if err != nil {
-		return errors.Wrap(err, "check observer process failed")
+		return errors.Occur(errors.ErrObServerProcessCheckFailed, err.Error())
 	}
 	if !exist {
 		return ERR_OBSERVER_NOT_EXIST

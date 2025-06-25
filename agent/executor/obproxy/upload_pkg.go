@@ -39,30 +39,30 @@ type upgradeRpmPkgInfo struct {
 	distribution string
 }
 
-func UpgradePkgUpload(input multipart.File) (*sqlite.UpgradePkgInfo, *errors.OcsAgentError) {
+func UpgradePkgUpload(input multipart.File) (*sqlite.UpgradePkgInfo, error) {
 	r := &upgradeRpmPkgInfo{
 		rpmFile: input,
 	}
 
-	if err := r.CheckUpgradePkg(true); err != nil {
-		return nil, errors.Occur(errors.ErrKnown, err)
+	if err := r.CheckUpgradePkg(); err != nil {
+		return nil, err
 	}
 
 	pkgInfo, err := obproxyService.DumpUpgradePkgInfoAndChunkTx(r.rpmPkg, r.rpmFile)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return pkgInfo, nil
 }
 
-func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
+func (r *upgradeRpmPkgInfo) CheckUpgradePkg() (err error) {
 	if r.rpmPkg, err = pkg.ReadRpm(r.rpmFile); err != nil {
 		return
 	}
 	r.version = r.rpmPkg.Version()
 
 	if r.rpmPkg.Name() != constant.PKG_OBPROXY_CE {
-		return fmt.Errorf("unsupported name '%s', the supported name is '%s'", r.rpmPkg.Name(), constant.PKG_OBPROXY_CE)
+		return errors.Occur(errors.ErrOBProxyPackageNameInvalid, r.rpmPkg.Name(), constant.PKG_OBPROXY_CE)
 	}
 	return r.fileCheck()
 }
@@ -82,7 +82,7 @@ func (r *upgradeRpmPkgInfo) checkVersion() (err error) {
 		return
 	}
 	if pkg.CompareVersion(r.rpmPkg.Version(), constant.OBPROXY_MIN_VERSION_SUPPORT) < 0 {
-		return fmt.Errorf("unsupported obproxy version '%s', the minimum supported version is '%s'", r.rpmPkg.Version(), constant.SUPPORT_MIN_VERSION)
+		return errors.Occur(errors.ErrOBProxyVersionNotSupported, r.rpmPkg.Version(), constant.SUPPORT_MIN_VERSION)
 	}
 	return nil
 }
@@ -107,7 +107,7 @@ func (r *upgradeRpmPkgInfo) findAllExpectedFiles(expected []string) (err error) 
 		}
 	}
 	if !succeed {
-		return fmt.Errorf("these files are missing: '%v'", missingFiles)
+		return errors.Occur(errors.ErrOBProxyPackageMissingFile, missingFiles)
 	}
 	return nil
 }

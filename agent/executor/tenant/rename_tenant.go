@@ -17,13 +17,12 @@
 package tenant
 
 import (
-	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/param"
 )
 
-func RenameTenant(param param.RenameTenantParam) *errors.OcsAgentError {
+func RenameTenant(param param.RenameTenantParam) error {
 	if err := checkTenantName(*param.NewName); err != nil {
-		return errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return err
 	}
 
 	if _, err := checkTenantExistAndStatus(param.Name); err != nil {
@@ -31,7 +30,7 @@ func RenameTenant(param param.RenameTenantParam) *errors.OcsAgentError {
 	}
 
 	if err := tenantService.RenameTenant(param.Name, *param.NewName); err != nil {
-		return errors.Occur(errors.ErrBadRequest, err)
+		return err
 	}
 	return nil
 }

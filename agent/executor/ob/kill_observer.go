@@ -17,10 +17,10 @@
 package ob
 
 import (
-	"errors"
 	"time"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 )
@@ -132,5 +132,5 @@ func (t *StartObserverForScaleInRollbackTask) Execute() error {
 		}
 		time.Sleep(WAIT_START_OBSERVER_INTERVAL)
 	}
-	return errors.New("start observer failed")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "start observer")
 }

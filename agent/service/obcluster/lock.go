@@ -44,8 +44,8 @@ func (obclusterService *ObclusterService) GetClusterStatusLock() (*TxLock, error
 		return nil, err
 	}
 
-	if obclusterService.setSessionObQueryTimeout(oceanbaseDb, 20000000) != nil {
-		return nil, errors.New("set session ob query timeout failed")
+	if err := obclusterService.setSessionObQueryTimeout(oceanbaseDb, 20000000); err != nil {
+		return nil, errors.Wrap(err, "set session ob query timeout failed")
 	}
 	return &TxLock{tx: oceanbaseDb}, nil
 }

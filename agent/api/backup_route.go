@@ -61,23 +61,22 @@ func InitBackupRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	obclusterGroup.GET(constant.URI_BACKUP+constant.URI_OVERVIEW, obclusterBackupOverviewHandler)
 }
 
-//	@ID				obclusterBackupConfig
-//	@Summary		Set backup config for all tenants
-//	@Description	Set backup config for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			body			body	param.ClusterBackupConfigParam	true	"Backup config"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup/config [post]
+// @ID				obclusterBackupConfig
+// @Summary		Set backup config for all tenants
+// @Description	Set backup config for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string							true	"Authorization"
+// @Param			body			body	param.ClusterBackupConfigParam	true	"Backup config"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup/config [post]
 func obclusterBackupConfigHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -90,23 +89,22 @@ func obclusterBackupConfigHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				patchObclusterBackupConfig
-//	@Summary		Patch backup config for all tenants
-//	@Description	Patch backup config for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			body			body	param.ClusterBackupConfigParam	true	"Backup config"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup/config [patch]
+// @ID				patchObclusterBackupConfig
+// @Summary		Patch backup config for all tenants
+// @Description	Patch backup config for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string							true	"Authorization"
+// @Param			body			body	param.ClusterBackupConfigParam	true	"Backup config"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup/config [patch]
 func patchObclusterBackupConfigHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -119,20 +117,20 @@ func patchObclusterBackupConfigHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				tenantBackupConfig
-//	@Summary		Set backup config for tenant
-//	@Description	Set backup config for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			name			path	string							true	"Tenant name"
-//	@Param			body			body	param.TenantBackupConfigParam	true	"Backup config"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/tenant/{name}/backup/config [post]
+// @ID				tenantBackupConfig
+// @Summary		Set backup config for tenant
+// @Description	Set backup config for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string							true	"Authorization"
+// @Param			name			path	string							true	"Tenant name"
+// @Param			body			body	param.TenantBackupConfigParam	true	"Backup config"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/config [post]
 func tenantBackupConfigHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -149,19 +147,19 @@ func tenantBackupConfigHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				patchTenantBackupConfig
-//	@Summary		Patch backup config for tenant
-//	@Description	Patch backup config for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string							true	"Authorization"
-//	@Param			name			path	string							true	"Tenant name"
-//	@Param			body			body	param.TenantBackupConfigParam	true	"Backup config"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
+// @ID				patchTenantBackupConfig
+// @Summary		Patch backup config for tenant
+// @Description	Patch backup config for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string							true	"Authorization"
+// @Param			name			path	string							true	"Tenant name"
+// @Param			body			body	param.TenantBackupConfigParam	true	"Backup config"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
 func patchTenantBackupConfigHandler(c *gin.Context) {
 	tenantName, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -178,47 +176,46 @@ func patchTenantBackupConfigHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaObTenant, *errors.OcsAgentError) {
+func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaObTenant, error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		return nil, errors.Occurf(errors.ErrKnown, "agent identity is %s.", meta.OCS_AGENT.GetIdentity())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 
 	tenantName := c.Param(constant.URI_PARAM_NAME)
 	if tenantName == "" {
-		return nil, errors.Occur(errors.ErrBadRequest, "tenant name is empty")
+		return nil, errors.Occur(errors.ErrObTenantNameEmpty)
 	}
 
 	if tenantName == constant.TENANT_SYS {
-		return nil, errors.Occurf(errors.ErrIllegalArgument, "tenant %s is system tenant, cannot backup", tenantName)
+		return nil, errors.Occur(errors.ErrObTenantSysOperationNotAllowed)
 	}
 
 	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	if tenant == nil {
-		return nil, errors.Occurf(errors.ErrIllegalArgument, "tenant %s not found", tenantName)
+		return nil, errors.Occur(errors.ErrObTenantNotExist, tenantName)
 	}
 	return tenant, nil
 }
 
-//	@ID				obclusterStartBackup
-//	@Summary		Start backup for all tenants
-//	@Description	Start backup for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string				true	"Authorization"
-//	@Param			body			body	param.BackupParam	true	"Backup param"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup [post]
+// @ID				obclusterStartBackup
+// @Summary		Start backup for all tenants
+// @Description	Start backup for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string				true	"Authorization"
+// @Param			body			body	param.BackupParam	true	"Backup param"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup [post]
 func obclusterStartBackupHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -233,20 +230,20 @@ func obclusterStartBackupHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				tenantStartBackup
-//	@Summary		Start backup for tenant
-//	@Description	Start backup for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string				true	"Authorization"
-//	@Param			name			path	string				true	"Tenant name"
-//	@Param			body			body	param.BackupParam	true	"Backup param"
-//	@Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/tenant/{name}/backup [post]
+// @ID				tenantStartBackup
+// @Summary		Start backup for tenant
+// @Description	Start backup for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string				true	"Authorization"
+// @Param			name			path	string				true	"Tenant name"
+// @Param			body			body	param.BackupParam	true	"Backup param"
+// @Success		200				object	http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup [post]
 func tenantStartBackupHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -264,23 +261,22 @@ func tenantStartBackupHandler(c *gin.Context) {
 	common.SendResponse(c, dag, err)
 }
 
-//	@ID				patchObclusterBackup
-//	@Summary		Patch backup status for all tenants
-//	@Description	Patch backup status for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			body			body	param.BackupStatusParam	true	"Backup status"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup [patch]
+// @ID				patchObclusterBackup
+// @Summary		Patch backup status for all tenants
+// @Description	Patch backup status for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string					true	"Authorization"
+// @Param			body			body	param.BackupStatusParam	true	"Backup status"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup [patch]
 func patchObclusterBackupHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -294,20 +290,20 @@ func patchObclusterBackupHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				patchTenantBackup
-//	@Summary		Patch backup status for tenant
-//	@Description	Patch backup status for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string					true	"Authorization"
-//	@Param			name			path	string					true	"Tenant name"
-//	@Param			body			body	param.BackupStatusParam	true	"Backup status"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/tenant/{name}/backup [patch]
+// @ID				patchTenantBackup
+// @Summary		Patch backup status for tenant
+// @Description	Patch backup status for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string					true	"Authorization"
+// @Param			name			path	string					true	"Tenant name"
+// @Param			body			body	param.BackupStatusParam	true	"Backup status"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup [patch]
 func patchTenantBackupHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -325,23 +321,22 @@ func patchTenantBackupHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				patchObclusterArchiveLog
-//	@Summary		Patch archive log status for all tenants
-//	@Description	Patch archive log status for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			body			body	param.ArchiveLogStatusParam	true	"Archive log status"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup/log [patch]
+// @ID				patchObclusterArchiveLog
+// @Summary		Patch archive log status for all tenants
+// @Description	Patch archive log status for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string						true	"Authorization"
+// @Param			body			body	param.ArchiveLogStatusParam	true	"Archive log status"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup/log [patch]
 func patchObclusterArchiveLogHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -355,20 +350,20 @@ func patchObclusterArchiveLogHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				patchTenantArchiveLog
-//	@Summary		Patch archive log status for tenant
-//	@Description	Patch archive log status for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string						true	"Authorization"
-//	@Param			name			path	string						true	"Tenant name"
-//	@Param			body			body	param.ArchiveLogStatusParam	true	"Archive log status"
-//	@Success		200				object	http.OcsAgentResponse
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/tenant/{name}/backup/log [patch]
+// @ID				patchTenantArchiveLog
+// @Summary		Patch archive log status for tenant
+// @Description	Patch archive log status for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string						true	"Authorization"
+// @Param			name			path	string						true	"Tenant name"
+// @Param			body			body	param.ArchiveLogStatusParam	true	"Archive log status"
+// @Success		200				object	http.OcsAgentResponse
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/log [patch]
 func patchTenantArchiveLogHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -386,22 +381,21 @@ func patchTenantArchiveLogHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
-//	@ID				obclusterBackupOverview
-//	@Summary		Get backup overview for all tenants
-//	@Description	Get backup overview for all tenants
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Success		200				object	http.OcsAgentResponse{data=param.BackupOverview}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/obcluster/backup/overview [get]
+// @ID				obclusterBackupOverview
+// @Summary		Get backup overview for all tenants
+// @Description	Get backup overview for all tenants
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse{data=param.BackupOverview}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/backup/overview [get]
 func obclusterBackupOverviewHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
-		err := errors.Occurf(errors.ErrKnown, "agent identity is '%v', cannot backup", meta.OCS_AGENT.GetIdentity())
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 
@@ -409,19 +403,19 @@ func obclusterBackupOverviewHandler(c *gin.Context) {
 	common.SendResponse(c, overview, err)
 }
 
-//	@ID				tenantBackupOverview
-//	@Summary		Get backup overview for tenant
-//	@Description	Get backup overview for tenant
-//	@Tags			Backup
-//	@Accept			application/json
-//	@Produce		application/json
-//	@Param			X-OCS-Header	header	string	true	"Authorization"
-//	@Param			name			path	string	true	"Tenant name"
-//	@Success		200				object	http.OcsAgentResponse{data=param.BackupOverview}
-//	@Failure		400				object	http.OcsAgentResponse
-//	@Failure		401				object	http.OcsAgentResponse
-//	@Failure		500				object	http.OcsAgentResponse
-//	@Router			/api/v1/tenant/{name}/backup/overview [get]
+// @ID				tenantBackupOverview
+// @Summary		Get backup overview for tenant
+// @Description	Get backup overview for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			name			path	string	true	"Tenant name"
+// @Success		200				object	http.OcsAgentResponse{data=param.BackupOverview}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/overview [get]
 func tenantBackupOverviewHandler(c *gin.Context) {
 	tenant, err := checkTenantAndGetName(c)
 	if err != nil {

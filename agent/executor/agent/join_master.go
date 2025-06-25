@@ -48,12 +48,12 @@ func (t *AgentJoinSelfTask) Execute() error {
 		return nil
 	}
 	if !meta.OCS_AGENT.IsSingleAgent() {
-		return errors.New("agent is not single")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.SINGLE)
 	}
 
 	zone, ok := t.GetContext().GetParam(PARAM_ZONE).(string)
 	if !ok {
-		return errors.New("zone is not set")
+		return errors.Occur(errors.ErrTaskParamNotSet, PARAM_ZONE)
 	}
 	if err := agentService.BeMasterAgent(zone); err != nil {
 		return err

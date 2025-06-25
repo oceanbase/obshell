@@ -34,22 +34,21 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func AgentUpgrade(param param.UpgradeCheckParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
-	agentErr := preCheckForAgentUpgrade(param)
-	if agentErr != nil {
-		log.WithError(agentErr).Error("pre check for agent upgrade failed")
-		return nil, agentErr
+func AgentUpgrade(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
+	err := preCheckForAgentUpgrade(param)
+	if err != nil {
+		log.WithError(err).Error("pre check for agent upgrade failed")
+		return nil, err
 	}
 	agents, err := agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	agentUpgradeTemplate := buildAgentUpgradeTemplate(param)
 	agentUpgradeTaskContext := buildAgentUpgradeCheckTaskContext(param, agents)
 	agentUpgradeDag, err := taskService.CreateDagInstanceByTemplate(agentUpgradeTemplate, agentUpgradeTaskContext)
 	if err != nil {
-		log.WithError(err).Error("create dag instance by template failed")
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(agentUpgradeDag), nil
 }
@@ -94,7 +93,7 @@ func TakeOverUpdateAgentVersion() (*task.DagDetailDTO, error) {
 		if dag, err1 := localTaskService.FindLastMaintenanceDag(); err1 != nil {
 			return nil, errors.Wrapf(err1, "get last maintenance dag failed")
 		} else if dag == nil || dag.GetName() != DAG_TAKE_OVER_UPDATE_AGENT_VERSION {
-			return nil, errors.Wrapf(err, "create dag instance by template failed")
+			return nil, err
 		} else {
 			return task.NewDagDetailDTO(dag), nil
 		}
@@ -123,7 +122,7 @@ func newInstallClusterAgentBinaryTask() *UpgradeToClusterAgentVersionTask {
 
 func (t *UpgradeToClusterAgentVersionTask) Execute() (err error) {
 	if err := t.GetContext().GetParamWithValue(PARAM_TARGET_AGENT_VERSION, &t.targetVersion); err != nil {
-		return errors.Wrap(err, "get target version failed")
+		return err
 	}
 
 	if t.targetVersion == "" {
@@ -156,7 +155,7 @@ func (t *UpgradeToClusterAgentVersionTask) Execute() (err error) {
 
 func installTargetAgent(targetVersion string) error {
 	if err := os.RemoveAll(path.ObshellBinPath()); err != nil {
-		return errors.New("remove old agent binary failed")
+		return errors.Wrap(err, "remove old agent binary failed")
 	}
 	if err := agentService.DownloadBinary(path.ObshellBinPath(), targetVersion); err != nil {
 		return errors.Wrap(err, "download binary failed")
@@ -186,14 +185,14 @@ func getClusterAgentVersion() (targetVersion string, err error) {
 			if clusterVersion == "" {
 				clusterVersion = agent.Version
 				if pkg.CompareVersion(clusterVersion, meta.OCS_AGENT.GetVersion()) < 0 {
-					return "", fmt.Errorf("take over a higher version agent(%s) into cluster agent(%s) is not allowed", meta.OCS_AGENT.GetVersion(), clusterVersion)
+					return "", errors.Occur(errors.ErrAgentTakeOverHigherVersion, meta.OCS_AGENT.GetVersion(), clusterVersion)
 				}
 			} else if clusterVersion != agent.Version {
-				return "", errors.New("unexpect error: cluster agent version is not consistent")
+				return "", errors.Occur(errors.ErrAgentVersionInconsistent, agent.String(), agent.Version, "cluster version", clusterVersion)
 			}
 		} else if agent.IsTakeover() {
 			if agent.Version != meta.OCS_AGENT.GetVersion() {
-				return "", errors.New("agent version is not consistent")
+				return "", errors.Occur(errors.ErrAgentVersionInconsistent, agent.String(), agent.Version, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetVersion())
 			}
 		}
 		// Other identifies is not considered.
@@ -223,7 +222,7 @@ func canGetTargetBinary(targetVersion string) error {
 		// TODO: 查询 OB 是否有可用的 rpm 包。
 		return err
 	} else if !exist {
-		return fmt.Errorf("There is no aviailable agent(version: %s, architecture: %s) in OB", targetVersion, global.Architecture)
+		return errors.Occur(errors.ErrAgentBinaryNotFound, targetVersion, global.Architecture, constant.DIST)
 	}
 	return nil
 }

@@ -50,11 +50,11 @@ func checkCharsetAndCollation(charset string, collation string) (err error) {
 	}
 	if res == nil {
 		if charset != "" && collation != "" {
-			return errors.Errorf("Charset '%s' and Collation '%s' is not match.", charset, collation)
+			return errors.Occurf(errors.ErrObTenantCollationInvalid, "Charset '%s' and Collation '%s' is not match.", charset, collation)
 		} else if charset != "" {
-			return errors.Errorf("Charset '%s' is not exist.", charset)
+			return errors.Occurf(errors.ErrObTenantCollationInvalid, "Charset '%s' is not exist.", charset)
 		} else {
-			return errors.Errorf("Collation '%s' is not exist.", collation)
+			return errors.Occurf(errors.ErrObTenantCollationInvalid, "Collation '%s' is not exist.", collation)
 		}
 	}
 
@@ -77,7 +77,7 @@ func transferNumber(mp map[string]interface{}) {
 func checkVariables(vars map[string]interface{}) error {
 	for k, v := range vars {
 		if k == "" || v == nil {
-			return errors.New("Variable name and value should not be empty.")
+			return errors.Occur(errors.ErrObTenantEmptyVariable)
 		}
 	}
 
@@ -88,16 +88,16 @@ func checkVariables(vars map[string]interface{}) error {
 func checkParameters(parameters map[string]interface{}) error {
 	for k, v := range parameters {
 		if k == "" || v == nil {
-			return errors.New("Variable name and value should not be empty.")
+			return errors.Occur(errors.ErrObTenantEmptyParameter)
 		}
 	}
 
 	for k := range parameters {
 		// Check whether the parameter is exist.
 		if param, err := tenantService.GetTenantParameter(constant.TENANT_SYS_ID, k); err != nil {
-			return errors.Wrap(err, "Get tenant parameter failed.")
+			return err
 		} else if param == nil {
-			return errors.Errorf("Parameter '%s' is not exist.", k)
+			return errors.Occur(errors.ErrObTenantParameterNotExist, k)
 		}
 	}
 
@@ -111,10 +111,10 @@ func checkAndLoadScenario(param *param.CreateTenantParam, scenario string) error
 
 	scenarios := getAllSupportedScenarios()
 	if len(scenarios) == 0 {
-		return errors.New("current observer does not support scenario")
+		return errors.Occur(errors.ErrObTenantSetScenarioNotSupported)
 	}
 	if !utils.ContainsString(scenarios, strings.ToLower(scenario)) {
-		errors.Errorf("scenario only support to be one of %s", strings.Join(scenarios, ", "))
+		return errors.Occur(errors.ErrObTenantScenarioNotSupported, scenario, strings.Join(scenarios, ", "))
 	}
 
 	variables, err := parseTemplate(VARIABLES_TEMPLATE, path.ObshellDefaultVariablePath(), scenario)
@@ -160,7 +160,7 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 				if tcp, ok := value.(string); ok {
 					param.Whitelist = &tcp
 				} else {
-					return errors.New("Incorrect argument type to variable 'ob_tcp_invited_nodes'")
+					return errors.Occur(errors.ErrObTenantVariableInvalid, constant.VARIABLE_OB_TCP_INVITED_NODES, "Incorrect type")
 				}
 			}
 		}
@@ -171,7 +171,7 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 		if timeZone, ok := value.(string); ok {
 			param.TimeZone = timeZone
 		} else {
-			return errors.New("Incorrect argument type to variable 'time_zone'")
+			return errors.Occur(errors.ErrObTenantVariableInvalid, constant.VARIABLE_TIME_ZONE, "Incorrect type")
 		}
 		delete(param.Variables, constant.VARIABLE_TIME_ZONE)
 	}
@@ -189,11 +189,11 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 
 func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 	if len(param.ZoneList) == 0 {
-		return errors.New("zone_list is empty")
+		return errors.Occur(errors.ErrObTenantZoneListEmpty)
 	}
 
 	if param.Mode != constant.MYSQL_MODE {
-		return errors.New("only support mysql mode")
+		return errors.Occur(errors.ErrObTenantModeNotSupported, param.Mode)
 	}
 
 	if err = zone.CheckZoneParams(param.ZoneList); err != nil {
@@ -209,7 +209,7 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 		zoneList = append(zoneList, zone.Name)
 	}
 	if err = zone.CheckPrimaryZone(param.PrimaryZone, zoneList); err != nil {
-		return
+		return err
 	}
 
 	if err = checkCharsetAndCollation(param.Charset, param.Collation); err != nil {
@@ -241,16 +241,16 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 
 func checkTenantName(name string) error {
 	if name == "" {
-		return errors.New("Tenant name should not be empty.")
+		return errors.Occur(errors.ErrObTenantNameEmpty)
 	}
 	if strings.Contains(name, "$") {
-		return errors.New("since 4.2.1, manually creating a tenant name containing '$' is not supported")
+		return errors.Occur(errors.ErrObTenantNameInvalid, name, "Since 4.2.1, manually creating a tenant name containing '$' is not supported")
 	}
 	if name == constant.TENANT_ALL || name == constant.TENANT_ALL_META || name == constant.TENANT_ALL_USER {
-		return errors.Errorf("since 4.2.1, using '%s' (case insensitive) as a tenant name is not supported", name)
+		return errors.Occur(errors.ErrObTenantNameInvalid, name, fmt.Sprintf("Since 4.2.1, using '%s' (case insensitive) as a tenant name is not supported", name))
 	}
 	if !regexp.MustCompile(TENANT_NAME_PATTERN).MatchString(name) {
-		return errors.New("Tenant names may only contain letters, numbers, and special characters(- _ # ~ +).")
+		return errors.Occur(errors.ErrObTenantNameInvalid, name, "Tenant names may only contain letters, numbers, and special characters(- _ # ~ +).")
 	}
 	return nil
 }
@@ -258,17 +258,17 @@ func checkTenantName(name string) error {
 func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 	source, err := obclusterService.GetObserverCapacityByZone(zone)
 	if err != nil {
-		return errors.New("Get servers's info failed.")
+		return errors.Wrap(err, "Get servers's info failed.")
 	}
 	unit, err := unitService.GetUnitConfigByName(unitName)
 	if err != nil {
-		return errors.New("Get unit config failed.")
+		return errors.Wrap(err, "Get unit config failed.")
 	}
 
 	var validServer int
 	var checkErr error
 	if len(source) < unitNum {
-		return errors.Errorf("The number of servers in zone '%s' is %d, less than the number of units %d.", zone, len(source), unitNum)
+		return errors.Occur(errors.ErrObTenantUnitNumExceedsLimit, unitNum, len(source), zone)
 	}
 	for _, server := range source {
 		gatheredUnitInfo, err := gatherAllUnitsOnServer(server.SvrIp, server.SvrPort)
@@ -280,15 +280,15 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 		log.Infof("server %s used resource: %v", serverStr, gatheredUnitInfo)
 		if server.CpuCapacity-gatheredUnitInfo.MinCpu < unit.MinCpu ||
 			server.CpuCapacityMax-gatheredUnitInfo.MaxCpu < unit.MaxCpu {
-			checkErr = errors.Errorf("server %s CPU resource not enough", serverStr)
+			checkErr = errors.Occur(errors.ErrObTenantResourceNotEnough, serverStr, "CPU")
 			continue
 		}
 		if server.MemCapacity-gatheredUnitInfo.MemorySize < unit.MemorySize {
-			checkErr = errors.Errorf("server %s MEMORY_SIZE resource not enough", serverStr)
+			checkErr = errors.Occur(errors.ErrObTenantResourceNotEnough, serverStr, "MEMORY_SIZE")
 			continue
 		}
 		if server.LogDiskCapacity-gatheredUnitInfo.LogDiskSize < unit.LogDiskSize {
-			checkErr = errors.Errorf("server %s LOG_DISK_SIZE resource not enough", serverStr)
+			checkErr = errors.Occur(errors.ErrObTenantResourceNotEnough, serverStr, "LOG_DISK_SIZE")
 			continue
 		}
 		validServer += 1
@@ -309,7 +309,7 @@ type gatheredUnitInfo struct {
 func gatherAllUnitsOnServer(svrIp string, svrPort int) (*gatheredUnitInfo, error) {
 	units, err := obclusterService.GetObUnitsOnServer(svrIp, svrPort)
 	if err != nil {
-		return nil, errors.Errorf("Get all units on server %s failed.", meta.NewAgentInfo(svrIp, svrPort).String())
+		return nil, errors.Wrapf(err, "Get all units on server %s failed.", meta.NewAgentInfo(svrIp, svrPort).String())
 	}
 	used := &gatheredUnitInfo{}
 	for _, unit := range units {
@@ -330,48 +330,44 @@ func CheckResourceEnough(zoneList []param.ZoneParam) error {
 	return nil
 }
 
-func CreateTenant(param *param.CreateTenantParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func CreateTenant(param *param.CreateTenantParam) (*task.DagDetailDTO, error) {
 	if err := checkTenantName(*param.Name); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return nil, err
 	}
 
 	if exist, err := tenantService.IsTenantExist(*param.Name); err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "check tenant '%s' exist failed", *param.Name)
+		return nil, err
 	} else if exist {
-		return nil, errors.Occurf(errors.ErrBadRequest, "Tenant '%s' already exists.", *param.Name)
+		return nil, errors.Occur(errors.ErrObTenantExisted, *param.Name)
 	}
 
 	renderCreateTenantParam(param)
 
 	if err := checkCreateTenantParam(param); err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err.Error())
+		return nil, err
 	}
 
 	if err := CheckResourceEnough(param.ZoneList); err != nil {
-		return nil, errors.Occur(errors.ErrBadRequest, err.Error())
+		return nil, err
 	}
 
 	// Create 'Create tenant' dag instance.
 	template, err := buildCreateTenantDagTemplate(param)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err.Error())
+		return nil, err
 	}
 	context := buildCreateTenantDagContext(param)
 	dag, err := clusterTaskService.CreateDagInstanceByTemplate(template, context)
 	if err != nil {
-		return nil, errors.Occurf(errors.ErrUnexpected, "create '%s' dag instance failed: %s", DAG_CREATE_TENANT, err.Error())
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
 
 func buildCreateTenantDagTemplate(param *param.CreateTenantParam) (*task.Template, error) {
-	createTenantNode, err := newCreateTenantNode(param)
-	if err != nil {
-		return nil, err
-	}
 	templateBuilder := task.NewTemplateBuilder(fmt.Sprintf(DAG_CREATE_TENANT, *param.Name)).
 		SetMaintenance(task.TenantMaintenance(*param.Name)).
-		AddNode(createTenantNode)
+		AddNode(newCreateTenantNode(param))
 	if param.TimeZone != "" {
 		templateBuilder.AddNode(newSetTenantTimeZoneNode(param.TimeZone))
 	}
@@ -442,11 +438,11 @@ type CreateTenantTask struct {
 	id                      int // tenant id
 }
 
-func newCreateTenantNode(param *param.CreateTenantParam) (*task.Node, error) {
+func newCreateTenantNode(param *param.CreateTenantParam) *task.Node {
 	ctx := task.NewTaskContext().
 		SetParam(PARAM_CREATE_TENANT, param).
 		SetParam(PARAM_TIMESTAMP, time.Now().Unix())
-	return task.NewNodeWithContext(newCreateTenantTask(), false, ctx), nil
+	return task.NewNodeWithContext(newCreateTenantTask(), false, ctx)
 }
 
 func newCreateTenantTask() *CreateTenantTask {
@@ -520,11 +516,11 @@ func buildCreateTenantSql(param *param.CreateTenantParam, poolList []string) (st
 
 func (t *CreateTenantTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_CREATE_TENANT, &t.CreateTenantParam); err != nil {
-		return errors.Wrapf(err, "Get create tenant param failed")
+		return err
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
-		return errors.Wrapf(err, "Get timestamp failed")
+		return err
 	}
 
 	t.createResourcePoolParam = buildCreateResourcePoolTaskParam(*t.CreateTenantParam.Name, t.CreateTenantParam.ZoneList, t.timestamp)
@@ -562,14 +558,14 @@ func (t *CreateTenantTask) Rollback() error {
 	}
 
 	if err := t.GetContext().GetParamWithValue(PARAM_TIMESTAMP, &t.timestamp); err != nil {
-		return errors.Wrapf(err, "Get timestamp failed")
+		return err
 	}
 
 	// If error, tenant id will be 0.
 	t.GetContext().GetParamWithValue(PARAM_TENANT_ID, &t.id)
 
 	if t.CreateTenantParam.Name == nil {
-		return errors.Errorf("Unexpected error, tenant name is nil")
+		return errors.Occur(errors.ErrCommonUnexpected, "tenant name is nil")
 	}
 
 	t.ExecuteLogf("Drop tenant %s if exist", *t.CreateTenantParam.Name)
@@ -577,9 +573,9 @@ func (t *CreateTenantTask) Rollback() error {
 	if t.id != 0 {
 		tenantName, err := tenantService.GetTenantName(t.id)
 		if err != nil {
-			return errors.New("Get tenant name failed.")
+			return errors.Wrap(err, "Get tenant name failed.")
 		} else if tenantName != *t.CreateTenantParam.Name {
-			return errors.Errorf("Tenant name %s is not equal to %s", tenantName, *t.CreateTenantParam.Name)
+			return errors.Occur(errors.ErrObTenantNameInvalid, tenantName, fmt.Sprintf("Tenant name is not equal to %s", *t.CreateTenantParam.Name))
 		}
 		if err := tenantService.DropTenant(tenantName); err != nil {
 			return errors.Wrap(err, "Drop tenant failed.")

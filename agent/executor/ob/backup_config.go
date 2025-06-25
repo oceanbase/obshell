@@ -30,49 +30,49 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func PostObclusterBackupConfig(p *param.ClusterBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func PostObclusterBackupConfig(p *param.ClusterBackupConfigParam) (*task.DagDetailDTO, error) {
 	if p.BackupBaseUri == nil || *p.BackupBaseUri == "" {
-		return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("backup_base_uri cannot be empty"))
+		return nil, errors.Occur(errors.ErrObBackupBaseUriEmpty)
 	}
 	return obclusterBackupConfig(p)
 }
 
-func PatchObclusterBackupConfig(p *param.ClusterBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func PatchObclusterBackupConfig(p *param.ClusterBackupConfigParam) (*task.DagDetailDTO, error) {
 	if p.BackupBaseUri == nil || *p.BackupBaseUri == "" {
 		if p.Binding != nil && *p.Binding != "" {
-			return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("If binding is set, backup_base_uri must be set"))
+			return nil, errors.OccurWithMessage("If binding is set, backup_base_uri must be set", errors.ErrObBackupBaseUriEmpty)
 		}
 		if p.PieceSwitchInterval != nil && *p.PieceSwitchInterval != "" {
-			return nil, errors.Occur(errors.ErrIllegalArgument, errors.New("If piece_switch_interval is set, backup_base_uri must be set"))
+			return nil, errors.OccurWithMessage("If piece_switch_interval is set, backup_base_uri must be set", errors.ErrObBackupBaseUriEmpty)
 		}
 	}
 	return obclusterBackupConfig(p)
 }
 
-func obclusterBackupConfig(clusterParam *param.ClusterBackupConfigParam) (*task.DagDetailDTO, *errors.OcsAgentError) {
+func obclusterBackupConfig(clusterParam *param.ClusterBackupConfigParam) (*task.DagDetailDTO, error) {
 	allTenants, err := tenantService.GetAllUserTenants()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	if len(allTenants) == 0 {
-		return nil, errors.Occur(errors.ErrKnown, "no user tenants")
+		return nil, errors.Occur(errors.ErrObBackupNoUserTenants)
 	}
 
 	p := param.NewBackupConfigParamForCluster(clusterParam)
 
 	backupConf, err := p.Check()
 	if err != nil {
-		return nil, errors.Occur(errors.ErrIllegalArgument, err)
+		return nil, err
 	}
 	template := buildSetBackupConfigTemplate(nil)
 	taskCtx, err := buildSetBackupConfigTaskContext(backupConf, nil)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 
 	dag, err := taskService.CreateDagInstanceByTemplate(template, taskCtx)
 	if err != nil {
-		return nil, errors.Occur(errors.ErrUnexpected, err)
+		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
 }
@@ -127,7 +127,7 @@ func newCheckBackupConfigTask() *CheckBackupConfigTask {
 
 func (t *CheckBackupConfigTask) Execute() (err error) {
 	if err = t.GetContext().GetParamWithValue(PARAM_BACKUP_CONFIG, &t.conf); err != nil {
-		return errors.Wrap(err, "get backup config")
+		return err
 	}
 	t.tenants, err = getTenantFromCtx(t.GetContext())
 	if err != nil {
@@ -240,7 +240,7 @@ func (t *SetBackupConfigTask) getParams() (err error) {
 		return errors.Wrap(err, "get tenant from context")
 	}
 	if err = t.GetContext().GetParamWithValue(PARAM_BACKUP_CONFIG, &t.conf); err != nil {
-		return errors.Wrap(err, "get backup config")
+		return err
 	}
 
 	if t.clusterID, err = getClusterID(); err != nil {
@@ -323,7 +323,7 @@ func (t *SetBackupConfigTask) waitForArchiveLogStop(tenant *oceanbase.DbaObTenan
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return fmt.Errorf("wait archive log to be '%s' timeout", constant.ARCHIVELOG_STATUS_STOP)
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "stop archive log")
 }
 
 func (t *SetBackupConfigTask) setLogArchiveDest() (err error) {
@@ -403,7 +403,7 @@ func (t *SetBackupConfigTask) waitForArchiveLogClosed(tenant *oceanbase.DbaObTen
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("wait archive log closed timeout")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "close archive log")
 }
 
 func (t *SetBackupConfigTask) setDataBackupDest() error {
@@ -502,7 +502,7 @@ func waitBackupFinish(t task.ExecutableTask, tenant *oceanbase.DbaObTenant) erro
 		time.Sleep(time.Second)
 		t.TimeoutCheck()
 	}
-	return errors.New("wait backup finish timeout")
+	return errors.Occurf(errors.ErrObClusterAsyncOperationTimeout, "backup for %s(%d)", tenant.TenantName, tenant.TenantID)
 }
 
 func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaObTenant, err error) {
@@ -514,7 +514,7 @@ func getTenantFromCtx(ctx *task.TaskContext) (tenants []oceanbase.DbaObTenant, e
 	} else {
 		var tenantName string
 		if err := ctx.GetParamWithValue(PARAM_NEED_BACKUP_TENANT, &tenantName); err != nil {
-			return nil, errors.Wrap(err, "get need backup tenant")
+			return nil, err
 		}
 		tenant, err := tenantService.GetTenantByName(tenantName)
 		if err != nil {

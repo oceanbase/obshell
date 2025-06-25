@@ -127,7 +127,7 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 		}
 	}
 	if !success {
-		return errors.New("failed to unpack and check all required pkgs")
+		return errors.Wrap(err, "failed to unpack and check all required pkgs")
 	}
 	return nil
 }
@@ -205,7 +205,7 @@ func (t *InstallAllRequiredPkgsTask) uninstallAllRequiredPkgs() (err error) {
 		}
 	}
 	if !success {
-		return errors.New("uninstall all required pkgs failed")
+		return errors.Wrap(err, "uninstall all required pkgs failed")
 	}
 	return nil
 }
