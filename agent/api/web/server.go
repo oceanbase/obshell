@@ -18,7 +18,6 @@ package web
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/fs"
 	"net"
@@ -117,7 +116,7 @@ func NewServer(mode config.AgentMode, conf config.ServerConfig) *Server {
 }
 
 func writeIndexlHtml(c *gin.Context) {
-	staticFp, _ := fs.Sub(frontend.Dist, "dist")
+	staticFp, _ := fs.Sub(frontend.Dist, "frontend/dist")
 	content, err := staticFp.Open("index.html")
 	if err != nil {
 		log.Fatalf("Critical error: %s file not found in the static file system!", "index.html")
@@ -178,7 +177,7 @@ func (s *Server) ListenUnixSocket() (err error) {
 	s.UnixListener, err = s.NewUnixListener()
 	if err != nil {
 		log.Error(err)
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("create socket listerner failed: %v\n", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentUnixSocketListenerCreateFailed, err))
 	}
 	return nil
 }
@@ -195,7 +194,7 @@ func (s *Server) ListenTcpSocket() (err error) {
 	s.TcpListener, err = http2.NewTcpListener(s.Config.Address)
 	if err != nil {
 		log.Error(err)
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("create tcp listerner failed: %v\n", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentTCPListenerCreateFailed, err))
 	}
 	return nil
 }
@@ -211,7 +210,7 @@ func (s *Server) RunLocalServer() {
 			}
 			log.WithError(err).Error("obshell serve on unix listener failed")
 			if s.IsStarting() {
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("serve on unix listener failed: %v\n", err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentServeOnUnixSocketFailed, err))
 			}
 		}
 	}()
@@ -238,7 +237,7 @@ func (s *Server) RunTcpServer() {
 		if err != nil {
 			log.WithError(err).Error("serve on tcp listener failed")
 			if s.IsStarting() {
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("serve on tcp listener failed: %v\n", err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentServeOnTcpSocketFailed, err))
 			}
 		}
 	}()

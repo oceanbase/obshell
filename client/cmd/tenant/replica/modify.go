@@ -17,18 +17,15 @@
 package replica
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -46,23 +43,13 @@ func newModifyCmd() *cobra.Command {
 	modifyCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_MODIFY,
 		Short: "Modify tenant replicas.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := replicaModify(cmd, args[0], &opts.ZoneParamsFlags); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return replicaModify(cmd, args[0], &opts.ZoneParamsFlags)
+		}),
 		Example: `  obshell tenant replica modify t1 --unit s2 --unit_num 2
   obshell tenant replica modify t1 -z zone1,zone2 --zone1.replica_type=READONLY --zone2.unit=s2`,
 	})
@@ -95,7 +82,7 @@ func BuildModifyReplicaZoneParams(cmd *cobra.Command, tenantName string, opts *Z
 		for _, v := range arr {
 			split := strings.SplitN(v, "@", 2)
 			if len(split) != 2 {
-				return nil, fmt.Errorf("unexpect error: bad locality format: '%s'", obInfo.Locality)
+				return nil, errors.Occur(errors.ErrObTenantLocalityFormatUnexpected, obInfo.Locality)
 			} else {
 				zones = append(zones, split[1])
 			}
@@ -124,12 +111,10 @@ func BuildModifyReplicaZoneParams(cmd *cobra.Command, tenantName string, opts *Z
 		kv := strings.Split(flag[2:], "=")
 		arr := strings.Split(kv[0], ".")
 		if len(arr) != 2 || !contain(zones, arr[0]) || !contain(zoneFlags, arr[1]) {
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 		if _, ok := zoneParams[arr[0]]; !ok {
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 		switch arr[1] {
 		case "unit":
@@ -139,13 +124,11 @@ func BuildModifyReplicaZoneParams(cmd *cobra.Command, tenantName string, opts *Z
 		case "unit_num":
 			num, err := strconv.Atoi(kv[1])
 			if err != nil {
-				cmd.SilenceUsage = false
-				return nil, fmt.Errorf("bad flag syntax: %s", flag)
+				return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 			}
 			zoneParams[arr[0]].UnitNum = &num
 		default:
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 	}
 	for _, zoneParam := range zoneParams {

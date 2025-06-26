@@ -48,20 +48,13 @@ func NewScaleInCmd() *cobra.Command {
 	scaleInCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SCALE_IN,
 		Short: "Delete a observer or a zone from OceanBase cluster.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			ocsagentlog.SetDBLoggerLevel(ocsagentlog.Silent)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
-			if err := clusterScaleIn(cmd, opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterScaleIn(cmd, opts)
+		}),
 		Example: `  obshell cluster scale-in -s 192.168.1.1:2886
   obshell cluster scale-in -z zone1`,
 	})
@@ -80,13 +73,12 @@ func NewScaleInCmd() *cobra.Command {
 
 func clusterScaleIn(cmd *cobra.Command, flags *ClusterScaleInFlags) (err error) {
 	if flags.server == "" && flags.zone == "" {
-		err = errors.New("Please specify one of the server or zone to scale in.")
+		err = errors.Occur(errors.ErrCliUsageError, "Please specify one of the server or zone to scale in.")
 	}
 	if flags.server != "" && flags.zone != "" {
-		err = errors.New("Please specify only one of the server or zone to scale in.")
+		err = errors.Occur(errors.ErrCliUsageError, "Please specify only one of the server or zone to scale in.")
 	}
 	if err != nil {
-		cmd.SilenceUsage = false
 		return err
 	}
 
@@ -121,10 +113,10 @@ func deleteServer(server string, forceKill bool) (*task.DagDetailDTO, error) {
 	}
 	pass, err := stdio.Confirm(message)
 	if err != nil {
-		return nil, errors.New("ask for scale-in confirmation failed")
+		return nil, errors.Wrap(err, "ask for scale-in confirmation failed")
 	}
 	if !pass {
-		return nil, errors.New("scale-in cancelled")
+		return nil, errors.Occur(errors.ErrCliOperationCancelled)
 	}
 
 	scaleInParam := param.ClusterScaleInParam{
@@ -149,7 +141,7 @@ func deleteZone(zone string) (*task.DagDetailDTO, error) {
 		return nil, errors.Wrap(err, "ask for scale-in confirmation failed")
 	}
 	if !pass {
-		return nil, errors.New("scale-in cancelled")
+		return nil, errors.Occur(errors.ErrCliOperationCancelled)
 	}
 
 	stdio.StartLoading("Calling API to delete zone")

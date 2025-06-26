@@ -23,11 +23,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -50,18 +48,10 @@ func newJoinCmd() *cobra.Command {
 		Use:     CMD_JOIN,
 		Short:   "Join the cluster by specifying the target node before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
-			if err := agentJoin(cmd, opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return agentJoin(cmd, opts)
+		}),
 		Example: joinCmdExample(),
 	})
 
@@ -115,7 +105,7 @@ func agentJoin(cmd *cobra.Command, flags *AgentJoinFlags) error {
 		return err
 	}
 
-	if params.ObServerConfig != nil && len(params.ObServerConfig) > 0 {
+	if len(params.ObServerConfig) > 0 {
 		dag, err = api.CallApiAndPrintStage(constant.URI_API_V1+constant.URI_OBSERVER_GROUP+constant.URI_CONFIG, params)
 		if err != nil {
 			return err
@@ -153,11 +143,11 @@ func checkStatus() error {
 	}
 	stdio.Verbosef("My agent is %s", agentStatus.Agent.GetIdentity())
 	if !agentStatus.Agent.IsSingleAgent() {
-		return errors.New("The current node is already in a cluster and cannot join another cluster.")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agentStatus.Agent.String(), agentStatus.Agent.GetIdentity(), meta.SINGLE)
 	}
 	stdio.Verbosef("My agent is under maintenance: %v", agentStatus.UnderMaintenance)
 	if agentStatus.UnderMaintenance {
-		return errors.New("The current node is under maintenance and cannot join the cluster.")
+		return errors.Occur(errors.ErrAgentUnderMaintenance, agentStatus.Agent.String())
 	}
 	return nil
 }
@@ -198,14 +188,14 @@ func checkServerConfigFlags(config map[string]string) error {
 	if mysqlPort, ok := config[constant.CONFIG_MYSQL_PORT]; ok {
 		stdio.Verbosef("Check mysql port: %s", mysqlPort)
 		if !utils.IsValidPort(mysqlPort) {
-			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", mysqlPort)
+			return errors.Occur(errors.ErrCommonInvalidPort, mysqlPort)
 		}
 	}
 
 	if rpcPort, ok := config[constant.CONFIG_RPC_PORT]; ok {
 		stdio.Verbosef("Check rpc port: %s", rpcPort)
 		if !utils.IsValidPort(rpcPort) {
-			return errors.Errorf("Invalid port: %s. Port number should be in the range [1024, 65535].", rpcPort)
+			return errors.Occur(errors.ErrCommonInvalidPort, rpcPort)
 		}
 	}
 
@@ -214,7 +204,7 @@ func checkServerConfigFlags(config map[string]string) error {
 		stdio.Verbosef("Check log level: %s", logLevel)
 		config[constant.CONFIG_LOG_LEVEL] = strings.ToUpper(logLevel)
 		if !isValidLogLevel(config[constant.CONFIG_LOG_LEVEL]) {
-			return errors.Errorf("Invalid log level: %s. (support: %v)", logLevel, LOGLEVEL)
+			return errors.Occurf(errors.ErrCliUsageError, "Invalid log level: %s. (support: %v)", logLevel, LOGLEVEL)
 		}
 	}
 
@@ -222,22 +212,22 @@ func checkServerConfigFlags(config map[string]string) error {
 	if rsList, ok := config[constant.CONFIG_RS_LIST]; ok {
 		stdio.Verbose("Check rs_list is valid or not")
 		if !isValidRsList(rsList) {
-			return errors.Errorf("Invalid rs_list format '%s'. Please use the format `--rs 'ip:rpc_port:mysql_port;ip:rpc_port:mysql_port'`", rsList)
+			return errors.Occur(errors.ErrObParameterRsListInvalid, rsList, "Please use the format `--rs 'ip:rpc_port:mysql_port;ip:rpc_port:mysql_port'")
 		}
 	}
 
 	// Check the validity of the data directory path and redo log directory path.
 	if dataDir, ok := config[constant.CONFIG_DATA_DIR]; ok {
 		stdio.Verbosef("Check data directory: %s", dataDir)
-		if utils.CheckPathValid(dataDir) != nil {
-			return errors.Errorf("Invalid data directory: %s", dataDir)
+		if err := utils.CheckPathValid(dataDir); err != nil {
+			return errors.Wrap(err, "Invalid data directory")
 		}
 	}
 
 	if redoDir, ok := config[constant.CONFIG_REDO_DIR]; ok {
 		stdio.Verbosef("Check redo directory: %s", redoDir)
-		if utils.CheckPathValid(redoDir) != nil {
-			return errors.Errorf("Invalid redo directory: %s", redoDir)
+		if err := utils.CheckPathValid(redoDir); err != nil {
+			return errors.Wrap(err, "Invalid redo directory")
 		}
 	}
 	return nil
@@ -251,7 +241,7 @@ func parseObserverConfigFlags(cmd *cobra.Command, flags *ObserverConfigFlags) er
 	for k, v := range constant.OB_CONFIG_COMPATIBLE_MAP {
 		if val, ok := config[k]; ok {
 			if val2, ok2 := config[v]; ok2 && val != val2 {
-				return errors.Errorf("You cannot set both %s and %s, use %s instead.", k, v, k)
+				return errors.Occurf(errors.ErrCliUsageError, "You cannot set both %s and %s in '%s', use %s instead.", k, v, flags.optStr, k)
 			}
 			delete(config, v)
 		} else if val, ok := config[v]; ok {
@@ -282,7 +272,7 @@ func parseObserverConfigFlags(cmd *cobra.Command, flags *ObserverConfigFlags) er
 	for k, v := range flagConfigs {
 		if v != "" {
 			if val, ok := config[k]; ok && v != val {
-				return errors.Errorf("Duplicate observer config: %s", k)
+				return errors.Occurf(errors.ErrCliUsageError, "Duplicate observer config: %s", k)
 			} else {
 				config[k] = strings.TrimSpace(v)
 			}

@@ -74,7 +74,6 @@ var (
 	ErrCommonUnexpected                 = NewErrorCode("Common.Unexpected", unexpected, "err.common.unexpected")                              // "unexpected error: %s"
 	ErrCommonUnauthorized               = NewErrorCode("Common.Unauthorized", unauthorized, "err.common.unauthorized")                        // "unauthorized"
 	ErrCommonInvalidTimeDuration        = NewErrorCode("Common.InvalidTimeDuration", illegalArgument, "err.common.invalid.time.duration")     // "time duration '%s' is invalid: %s"
-
 	// Log
 	ErrLogWriteExceedMaxSize          = NewErrorCode("Log.WriteExceedMaxSize", unexpected, "err.log.write.exceed.max.size")                   // "write length %d exceeds maximum file size %d"
 	ErrLogFileNamePrefixMismatched    = NewErrorCode("Log.FileNamePrefixMismatched", unexpected, "err.log.file.name.prefix.mismatched")       // "file name '%s' prefix mismatched"
@@ -103,8 +102,7 @@ var (
 	ErrObTenantPrimaryZoneCrossRegion            = NewErrorCode("OB.Tenant.PrimaryZone.CrossRegion", illegalArgument, "err.ob.tenant.primary.zone.cross.region")                          // "primary zone '%s' is cross region, please check tenant's primary zone"
 	ErrObTenantPrimaryRegionFullReplicaNotEnough = NewErrorCode("OB.Tenant.PrimaryRegion.FullReplica.NotEnough", illegalArgument, "err.ob.tenant.primary.region.full.replica.not.enough") // "The region %v where the first priority of tenant zone is located needs to have at least 2 F replicas. In fact, there are only %d full replicas."
 	ErrObTenantResourceNotEnough                 = NewErrorCode("OB.Tenant.ResourceNotEnough", badRequest, "err.ob.tenant.resource.not.enough")                                           // "server %s %s resource not enough"
-	ErrObTenantStatusNotNormal                   = NewErrorCode("OB.Tenant.StatusNotNormal", badRequest, "err.ob.tenant.status.not.normal")                                               // "tenant '%s' status is '%s'"
-	ErrObTenantResourcePoolGranted               = NewErrorCode("OB.Tenant.ResourcePoolGranted", badRequest, "err.ob.tenant.resource.pool.granted")                                       // "resource pool '%s' has already been granted to a tenant"
+	ErrObTenantStatusNotNormal                   = NewErrorCode("OB.Tenant.StatusNotNormal", badRequest, "err.ob.tenant.status.not.normal")                                               // "tenant '%s' status is '%s'"                                     // "resource pool '%s' has already been granted to a tenant"
 	ErrObTenantZoneAlreadyHasReplica             = NewErrorCode("OB.Tenant.ZoneAlreadyHasReplica", badRequest, "err.ob.tenant.zone.already.has.replica")                                  // "zone '%s' already has a replica"
 	ErrObTenantZoneWithoutReplica                = NewErrorCode("OB.Tenant.ZoneWithoutReplica", badRequest, "err.ob.tenant.zone.without.replica")                                         // "zone '%s' does not have a replica"
 	ErrObTenantHasPoolOnZone                     = NewErrorCode("OB.Tenant.HasPoolOnZone", badRequest, "err.ob.tenant.has.pool.on.zone")                                                  // "tenant already has a pool located in zone '%s'"
@@ -177,6 +175,7 @@ var (
 
 	// OB.Cluster
 	ErrObClusterUnderMaintenance                 = NewErrorCode("OB.Cluster.UnderMaintenance", known, "err.ob.cluster.under.maintenance")
+	ErrObClusterUnderMaintenanceWithDag          = NewErrorCode("OB.Cluster.UnderMaintenanceWithDag", known, "err.ob.cluster.under.maintenance.with.dag")
 	ErrObClusterPasswordEncrypted                = NewErrorCode("OB.Cluster.Password.Encrypted", illegalArgument, "err.ob.cluster.password.encrypted")
 	ErrObClusterIdInvalid                        = NewErrorCode("OB.Cluster.Id.Invalid", illegalArgument, "err.ob.cluster.id.invalid")
 	ErrObClusterScopeInvalid                     = NewErrorCode("OB.Cluster.Scope.Invalid", illegalArgument, "err.ob.cluster.scope.invalid")
@@ -193,7 +192,7 @@ var (
 	ErrObClusterStopModeConflict                 = NewErrorCode("OB.Cluster.StopModeConflict", illegalArgument, "err.ob.cluster.stop.mode.conflict")
 	ErrObClusterForceStopRequired                = NewErrorCode("OB.Cluster.ForceStopRequired", illegalArgument, "err.ob.cluster.force.stop.required")
 	ErrObClusterForceStopOrTerminateRequired     = NewErrorCode("OB.Cluster.ForceStopOrTerminateRequired", illegalArgument, "err.ob.cluster.force.stop.or.terminate.required")
-
+	ErrObClusterPasswordIncorrect                = NewErrorCode("OB.Cluster.Password.Incorrect", illegalArgument, "err.ob.cluster.password.incorrect") // "password incorrect"
 	// OB.Server
 	ErrObServerDeleteSelf         = NewErrorCode("OB.Server.DeleteSelf", illegalArgument, "err.ob.server.delete.self")
 	ErrObServerProcessCheckFailed = NewErrorCode("OB.Server.Process.CheckFailed", unexpected, "err.ob.server.process.check.failed")      // "check observer process exist: %s."
@@ -252,6 +251,7 @@ var (
 	ErrAgentNoMaster                    = NewErrorCode("Agent.NoMaster", unexpected, "err.agent.no.master")
 	ErrAgentNotUnderMaintenance         = NewErrorCode("Agent.NotUnderMaintenance", illegalArgument, "err.agent.not.under.maintenance")
 	ErrAgentUnderMaintenance            = NewErrorCode("Agent.UnderMaintenance", known, "err.agent.under.maintenance")
+	ErrAgentCurrentUnderMaintenance     = NewErrorCode("Agent.Current.UnderMaintenance", known, "err.agent.current.under.maintenance")
 	ErrAgentUnderMaintenanceDag         = NewErrorCode("Agent.UnderMaintenanceDag", known, "err.agent.under.maintenance.dag")
 	ErrAgentUnavailable                 = NewErrorCode("Agent.Unavailable", unexpected, "err.agent.unavailable")
 	ErrAgentAddressInvalid              = NewErrorCode("Agent.Address.Invalid", illegalArgument, "err.agent.address.invalid")
@@ -373,7 +373,42 @@ var (
 	ErrTaskNodeOperatorPassNotAllowed      = NewErrorCode("Task.Node.Operator.PassNotAllowed", illegalArgument, "err.task.node.operator.pass.not.allowed")
 	ErrTaskEngineUnexpected                = NewErrorCode("Task.Engine.Unexpected", unexpected, "err.task.engine.unexpected")
 
-	ErrGormNoRowAffected = NewErrorCode("Gorm.NoRowAffected", unexpected, "err.gorm.no.row.affected") // "%s: no row affected" // TODO: 这个 error 和 模块都有点牵强
+	ErrGormNoRowAffected = NewErrorCode("Gorm.NoRowAffected", unexpected, "err.gorm.no.row.affected") // "%s: no row affected"
 
 	ErrMysqlError = NewErrorCode("Mysql.Error", badRequest, "err.mysql.error") // "%s"
+
+	ErrPackageNameMismatch   = NewErrorCode("Package.NameMismatch", illegalArgument, "err.package.name.mismatch")     // "rpm package name %s not match %s"
+	ErrPackageReleaseInvalid = NewErrorCode("Package.ReleaseInvalid", illegalArgument, "err.package.release.invalid") // "rpm package release %s not match format"
+
+	// cli
+	ErrCliFlagRequired                          = NewErrorCode("Cli.FlagRequired", illegalArgument, "err.cli.flag.required")                                                    // "required flag(s) \"%s\" not set"
+	ErrCliOperationCancelled                    = NewErrorCode("Cli.OperationCancelled", known, "err.cli.operation.cancelled")                                                  // "operation cancelled"
+	ErrCliUsageError                            = NewErrorCode("Cli.UsageError", illegalArgument, "err.cli.usage.error")                                                        // "Incorrect usage: %s"
+	ErrCliNotFound                              = NewErrorCode("Cli.NotFound", notFound, "err.cli.not.found")                                                                   // "not found: %s"
+	ErrCliUpgradePackageNotFoundInPath          = NewErrorCode("Cli.Upgrade.PackageNotFoundInPath", badRequest, "err.cli.upgrade.package.not.found.in.path")                    // "no valid %s package found in %s"
+	ErrCliTakeOverWithObserverNotInConf         = NewErrorCode("Cli.TakeOver.WithObserverNotInConf", unexpected, "err.cli.take.over.with.observer.not.in.conf")                 // "server %s is not in the ob conf"
+	ErrCliTakeOverMultiServerOnSameHost         = NewErrorCode("Cli.TakeOver.MultiServerOnSameHost", unexpected, "err.cli.take.over.multi.server.on.same.host")                 // "multi-server on the same host when take over by 'cluster start'"
+	ErrCliObClusterNotTakenOver                 = NewErrorCode("Cli.ObCluster.NotTakenOver", unexpected, "err.cli.ob.cluster.not.taken.over")                                   // "Cluster not taken over. Run 'obshell cluster start -a' to start it."
+	ErrCliUpgradeNoValidTargetBuildVersionFound = NewErrorCode("Cli.Upgrade.NoValidTargetBuildVersionFound", unexpected, "err.cli.upgrade.no.valid.target.build.version.found") // "no valid target build version found by '%s'"
+	ErrCliStartRemoteAgentFailed                = NewErrorCode("Cli.StartRemoteAgentFailed", unexpected, "err.cli.start.remote.agent.failed")                                   // "failed to start remote agent"
+	ErrCliUnixSocketRequestFailed               = NewErrorCode("Cli.UnixSocket.RequestFailed", unexpected, "err.cli.unix.socket.request.failed")                                // "request unix-socket [%s]%s failed: %v"
+	ErrEmpty                                    = NewErrorCode("Empty", unexpected, "err.empty")                                                                                // this error code won't be display
+
+	// 启动相关
+	ErrAgentUnixSocketListenerCreateFailed = NewErrorCode("Agent.Unix.Socket.Listener.CreateFailed", unexpected, "err.agent.unix.socket.listener.create.failed") // "create unix socket listerner failed"
+	ErrAgentTCPListenerCreateFailed        = NewErrorCode("Agent.TCP.Listener.CreateFailed", unexpected, "err.agent.tcp.listener.create.failed")                 // "create tcp listerner failed"
+	ErrAgentAlreadyInitialized             = NewErrorCode("Agent.AlreadyInitialized", unexpected, "err.agent.already.initialized")                               // "agent already initialized"
+	ErrAgentNotInitialized                 = NewErrorCode("Agent.NotInitialized", unexpected, "err.agent.not.initialized")                                       // "agent not initialized"
+	ErrAgentIpInconsistentWithOBServer     = NewErrorCode("Agent.IP.InconsistentWithOBServer", unexpected, "err.agent.ip.inconsistent.with.ob.server")           // "agent ip inconsistent with observer"
+	ErrAgentLoadOBConfigFailed             = NewErrorCode("Agent.Load.OBConfigFailed", unexpected, "err.agent.load.ob.config.failed")                            // "load ob config from config file failed"
+	ErrAgentInfoNotEqual                   = NewErrorCode("Agent.Info.NotEqual", unexpected, "err.agent.info.not.equal")                                         // "agent info not equal"
+	ErrAgentStartWithInvalidInfo           = NewErrorCode("Agent.Start.WithInvalidInfo", unexpected, "err.agent.start.with.invalid.info")                        // "agent start with invalid info: %v"
+	ErrAgentNeedToTakeOver                 = NewErrorCode("Agent.NeedToTakeOver", illegalArgument, "err.agent.need.to.takeover")                                 // "obshell need to be cluster. Please do takeover first."
+	ErrAgentStartObserverFailed            = NewErrorCode("Agent.Start.ObserverFailed", unexpected, "err.agent.start.observer.failed")                           // "start observer via flag failed, err: %v"
+	ErrAgentTakeOverFailed                 = NewErrorCode("Agent.TakeOverFailed", unexpected, "err.agent.take.over.failed")                                      // "take over or rebuild failed: %v"
+	ErrAgentServeOnUnixSocketFailed        = NewErrorCode("Agent.ServeOnUnixSocketFailed", unexpected, "err.agent.serve.on.unix.socket.failed")                  // "serve on unix listener failed: %v\n"
+	ErrAgentServeOnTcpSocketFailed         = NewErrorCode("Agent.ServeOnTcpSocketFailed", unexpected, "err.agent.serve.on.tcp.socket.failed")                    // "serve on tcp listener failed: %v\n"
+	ErrAgenDaemonServeOnUnixSocketFailed   = NewErrorCode("AgenDaemon.ServeOnUnixSocketFailed", unexpected, "err.agen.daemon.serve.on.unix.socket.failed")       // "daemon serve on socket listener failed: %s\n"
+	ErrAgentOceanbasePasswordLoadFailed    = NewErrorCode("Agent.Oceanbase.Password.LoadFailed", unexpected, "err.agent.oceanbase.password.load.failed")         // "check password of root@sys in sqlite failed: not cluster agent"
+	ErrAgentUpgradeKillOldServerTimeout    = NewErrorCode("Agent.Upgrade.KillOldServerTimeout", unexpected, "err.agent.upgrade.kill.old.server.timeout")         // "wait obshell server killed timeout"
 )

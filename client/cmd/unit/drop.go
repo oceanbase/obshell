@@ -17,14 +17,11 @@
 package unit
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -38,24 +35,15 @@ func newDropCmd() *cobra.Command {
 	dropCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_DROP,
 		Short: "Drop a resource unit config.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			// get unit config name
 			if len(args) <= 0 {
-				stdio.Error("unit config name is required")
-				return errors.New("unit config name is required")
+				return errors.Occur(errors.ErrCliUsageError, "unit config name is required")
 			}
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
-			if err := unitConfigDrop(args[0], opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return unitConfigDrop(args[0], opts)
+		}),
 		Example: `  obshell unit drop s1`,
 	})
 
@@ -69,10 +57,10 @@ func newDropCmd() *cobra.Command {
 func unitConfigDrop(name string, opts *global.DropFlags) error {
 	pass, err := stdio.Confirmf("Please confirm if you need to drop unit config %s", name)
 	if err != nil {
-		return errors.New("ask for confirmation failed")
+		return errors.Wrap(err, "ask for confirmation failed")
 	}
 	if !pass {
-		return nil
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	if opts.IfExist {
 		unitConfigs := make([]oceanbase.DbaObUnitConfig, 0)

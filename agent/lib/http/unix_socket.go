@@ -50,18 +50,6 @@ func SendDeleteRequestViaUnixSocket(socketPath string, uri string, param, ret in
 	return SendRequestAndBuildReturnViaUnixSocket(socketPath, uri, DELETE, param, ret, nil)
 }
 
-func SendRequestAndReturnResponseViaUnixSocket(socketPath string, uri string, method string, param, ret interface{}, headers map[string]string) (*resty.Response, error) {
-	response, err := sendRequestViaUnixSocket(socketPath, uri, method, param, ret, nil)
-	if err != nil {
-		return response.response, err
-	}
-	err = buildReturn(response, ret)
-	if err != nil {
-		return response.response, err
-	}
-	return response.response, nil
-}
-
 func SendRequestAndBuildReturnViaUnixSocket(socketPath, uri, method string, param, ret interface{}, headers map[string]string) error {
 	response, err := sendRequestViaUnixSocket(socketPath, uri, method, param, ret, headers)
 	if err != nil {
@@ -162,10 +150,13 @@ func sendRequestViaUnixSocket(socketPath, uri, method string, param interface{},
 	default:
 		return agentResponse, errors.Occur(errors.ErrRequestMethodNotSupport, method)
 	}
+	if err != nil {
+		return agentResponse, errors.Occur(errors.ErrCliUnixSocketRequestFailed, method, uri, err.Error())
+	}
 	return ocsAgentResponse{
 		response:  response,
 		agentResp: agentResp,
-	}, err
+	}, nil
 }
 
 func SocketIsActive(socketPath string) bool {

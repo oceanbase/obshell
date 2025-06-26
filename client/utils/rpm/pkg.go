@@ -17,15 +17,15 @@
 package rpm
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/cavaliergopher/rpm"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 func GetAllRpmsInDirByName(pkgDir, pkgName string) (pkgs map[string]*rpm.Package, err error) {
@@ -54,7 +54,7 @@ func GetAllRpmsInDirByName(pkgDir, pkgName string) (pkgs map[string]*rpm.Package
 	}
 
 	if len(pkgs) == 0 {
-		return nil, fmt.Errorf("no rpm package %s found in %s", pkgName, pkgDir)
+		return nil, errors.Occur(errors.ErrCliUpgradePackageNotFoundInPath, pkgName, pkgDir)
 	}
 	return pkgs, nil
 }
@@ -86,11 +86,12 @@ func checkFileName(path, name string) (*rpm.Package, error) {
 		return nil, err
 	}
 	if pkg.Name() != name {
-		return nil, fmt.Errorf("rpm package name %s not match %s", pkg.Name(), name)
+		return nil, errors.Occur(errors.ErrPackageNameMismatch, pkg.Name(), name)
 	}
+	pkg.Version()
 	items := strings.Split(pkg.Release(), ".")
 	if len(items) != 2 {
-		return nil, fmt.Errorf("rpm package release %s not match format", pkg.Release())
+		return nil, errors.Occur(errors.ErrPackageReleaseInvalid, pkg.Release())
 	}
 	return pkg, nil
 }

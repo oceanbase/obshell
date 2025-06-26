@@ -17,10 +17,9 @@
 package cmd
 
 import (
-	"errors"
-	"fmt"
-
 	"github.com/spf13/cobra"
+
+	"github.com/oceanbase/obshell/agent/errors"
 )
 
 const (
@@ -29,7 +28,7 @@ const (
 
 func ValidateArgs(cmd *cobra.Command, args []string) error {
 	if len(args) > 0 {
-		return fmt.Errorf("unspecified arguments: %v", args)
+		return errors.Occurf(errors.ErrCliUsageError, "unspecified arguments: %v", args)
 	}
 	return nil
 }
@@ -37,9 +36,9 @@ func ValidateArgs(cmd *cobra.Command, args []string) error {
 func ValidateArgTenantName(cmd *cobra.Command, args []string) (err error) {
 	length := len(args)
 	if length == 0 {
-		err = errors.New("please specify the tenant name")
+		err = errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 	} else if length > CMD_ARG_COUNT {
-		err = fmt.Errorf("too many arguments, expected %d, got %d", CMD_ARG_COUNT, length)
+		err = errors.Occurf(errors.ErrCliUsageError, "too many arguments, expected %d, got %d", CMD_ARG_COUNT, length)
 	}
 	return err
 }

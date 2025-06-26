@@ -25,12 +25,10 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -60,19 +58,12 @@ func newStopCmd() *cobra.Command {
 		Use:     CMD_STOP,
 		Short:   "Stop observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
-			if err := clusterStop(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterStop(opts)
+		}),
 		Example: stopCmdExample(),
 	})
 
@@ -112,7 +103,7 @@ func clusterStop(flags *ClusterStopFlags) (err error) {
 	}
 
 	if agentStatus.OBState != oceanbase.STATE_CONNECTION_AVAILABLE && !flags.force {
-		return errors.New("The current observer is not available, please use '-f'.")
+		return errors.Occur(errors.ErrCliUsageError, "The current observer is not available, please use '-f'.")
 	}
 
 	if flags.server == "" && flags.zone == "" && !flags.global {
@@ -136,7 +127,7 @@ func confirmStop() error {
 		return errors.Wrap(err, "ask for stop confirmation failed")
 	}
 	if !res {
-		return errors.New("stop ob cancelled")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return nil
 }
@@ -228,16 +219,16 @@ func newScopeParam(flags *scopeFlags) param.Scope {
 func vaildStopFlags(flags *stopBehaviorFlags) (err error) {
 	stdio.Verbosef("Validating stop flags: %+v", flags)
 	if flags.force && flags.terminate && flags.immediate {
-		return errors.New("Only one of the flags -f, -t, -I can be specified")
+		return errors.Occur(errors.ErrCliUsageError, "Only one of the flags -f, -t, -I can be specified")
 	}
 	if flags.force && flags.terminate {
-		return errors.New("Only one of the flags -f, -t can be specified")
+		return errors.Occur(errors.ErrCliUsageError, "Only one of the flags -f, -t can be specified")
 	}
 	if flags.force && flags.immediate {
-		return errors.New("Only one of the flags -f, -I can be specified")
+		return errors.Occur(errors.ErrCliUsageError, "Only one of the flags -f, -I can be specified")
 	}
 	if flags.terminate && flags.immediate {
-		return errors.New("Only one of the flags -t, -I can be specified")
+		return errors.Occur(errors.ErrCliUsageError, "Only one of the flags -t, -I can be specified")
 	}
 	return nil
 }

@@ -17,19 +17,16 @@
 package replica
 
 import (
-	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -94,23 +91,13 @@ func newAddCmd() *cobra.Command {
 	addCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_ADD,
 		Short: "Add tenant replicas.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := replicaAdd(cmd, args[0], &opts.ZoneParamsFlags); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return replicaAdd(cmd, args[0], &opts.ZoneParamsFlags)
+		}),
 		Example: `  obshell tenant replica add t1 -z zone4,zone5 --unit s1
   obshell tenant replica add t1 -z zone4,zone5 --zone4.unit=s4 --zone5.unit=s5
   obshell tenant replica add t1 -z zone4,zone5 --zone4.replica_type=FULL --zone5.replica_type=READONLY --unit s1`,
@@ -137,7 +124,7 @@ func BuildZoneParams(cmd *cobra.Command, opts *ZoneParamsFlags) ([]param.ZonePar
 	if !cmd.Flags().Changed(FLAG_ZONE) && !cmd.Flags().Changed(FLAG_ZONE_SH) {
 		obInfo, err := api.GetObInfo()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get ob info")
 		}
 		for z := range obInfo.Config.ZoneConfig {
 			zones = append(zones, z)
@@ -164,12 +151,10 @@ func BuildZoneParams(cmd *cobra.Command, opts *ZoneParamsFlags) ([]param.ZonePar
 		kv := strings.Split(flag[2:], "=")
 		arr := strings.Split(kv[0], ".")
 		if len(arr) != 2 || !contain(zones, arr[0]) || !contain(zoneFlags, arr[1]) {
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 		if _, ok := zoneParams[arr[0]]; !ok {
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 		switch arr[1] {
 		case "unit":
@@ -179,13 +164,11 @@ func BuildZoneParams(cmd *cobra.Command, opts *ZoneParamsFlags) ([]param.ZonePar
 		case "unit_num":
 			num, err := strconv.Atoi(kv[1])
 			if err != nil {
-				cmd.SilenceUsage = false
-				return nil, fmt.Errorf("bad flag syntax: %s", flag)
+				return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 			}
 			zoneParams[arr[0]].UnitNum = num
 		default:
-			cmd.SilenceUsage = false
-			return nil, fmt.Errorf("bad flag syntax: %s", flag)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "bad flag syntax: %s", flag)
 		}
 	}
 	for _, zoneParam := range zoneParams {

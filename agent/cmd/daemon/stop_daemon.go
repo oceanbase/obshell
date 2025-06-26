@@ -47,7 +47,7 @@ func (d *Daemon) stop() error {
 	}
 	log.Info("stop daemon")
 	if !d.casState(constant.STATE_RUNNING, constant.STATE_STOPPING) {
-		return errors.New("daemon is not running")
+		return errors.Occur(errors.ErrCommonUnexpected, "daemon is not running")
 	}
 
 	svc := d.server

@@ -24,10 +24,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/tenant/replica"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -64,21 +62,14 @@ func newRestoreCmd() *cobra.Command {
 		Use:     CMD_RESTORE,
 		Short:   "Restore tenant from backup",
 		PreRunE: cmdlib.ValidateArgTenantName,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
-			if err := tenantRestore(cmd, opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantRestore(cmd, opts)
+		}),
 		Example: RestoreCmdExample(),
 	})
 
@@ -132,7 +123,7 @@ func ConfirmRestore() error {
 		return errors.Wrap(err, "ask for restore confirmation failed")
 	}
 	if !res {
-		return errors.New("cancel restore")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return nil
 }

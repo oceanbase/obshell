@@ -17,14 +17,11 @@
 package tenant
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -39,18 +36,10 @@ func newShowCmd() *cobra.Command {
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SHOW,
 		Short: "Show tenant in recyclebin.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(verbose)
-			if err := tenantShow(args...); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantShow(args...)
+		}),
 		Example: `  obshell recyclebin tenant show t1
   obshell recyclebin tenant show '__recycle_$_1_1720679549921648'
   obshell recyclebin tenant show`,
@@ -74,7 +63,7 @@ func tenantShow(name ...string) error {
 			}
 		}
 		if len(data) == 0 {
-			return fmt.Errorf("Tenant '%s' is not exist in recyclebin", name[0])
+			return errors.Occur(errors.ErrObRecyclebinTenantNotExist, name[0])
 		}
 	} else {
 		for _, n := range tenants {

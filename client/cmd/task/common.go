@@ -20,17 +20,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
-
-func requireTaskID(s string) string {
-	id := strings.TrimSpace(s)
-	if id == "" {
-		stdio.Error("Please specify the task ID.")
-	}
-	return id
-}
 
 func askConfirmForTaskOperation(id string, operator string) error {
 	msg := fmt.Sprintf("Please confirm if you need to %s the task with ID %s ", strings.ToLower(operator), id)
@@ -39,7 +31,7 @@ func askConfirmForTaskOperation(id string, operator string) error {
 		return errors.Wrapf(err, "ask for task %s confirmation failed", strings.ToLower(operator))
 	}
 	if !confirmed {
-		return errors.New("operation cancelled")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return nil
 }

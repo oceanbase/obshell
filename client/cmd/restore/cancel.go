@@ -17,16 +17,14 @@
 package restore
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -47,21 +45,14 @@ func newCancelCmd() *cobra.Command {
 		Use:     CMD_CANCEL,
 		Short:   "Cancel the restore task for the specific tenant.",
 		PreRunE: cmdlib.ValidateArgTenantName,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
-			if err := cancel(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return cancel(opts)
+		}),
 		Example: cancelCmdExample(),
 	})
 
@@ -80,7 +71,7 @@ func cancel(opts *CancelFlags) error {
 		return err
 	}
 	if !skip {
-		return errors.New("Operation canceled")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 
 	var dag task.DagDetailDTO

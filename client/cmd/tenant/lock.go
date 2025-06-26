@@ -17,14 +17,11 @@
 package tenant
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -37,23 +34,13 @@ func newLockCmd() *cobra.Command {
 		Use:   CMD_LOCK,
 		Short: "Lock a tenant.",
 		Long:  "After lock tenant, the tenant will be read-only",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := tenantLock(args[0]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantLock(args[0])
+		}),
 		Example: `  obshell tenant lock t1`,
 	})
 	lockCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}

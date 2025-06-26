@@ -22,10 +22,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
 	"github.com/oceanbase/obshell/client/cmd/tenant"
 	"github.com/oceanbase/obshell/client/command"
@@ -45,19 +43,12 @@ func NewSetConfigCmd() *cobra.Command {
 		Use:     CMD_SET_CONFIG,
 		Short:   "Set the backup configuration for the OceanBase cluster.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.Verbose)
 			stdio.SetSilenceMode(false)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
-			if err := SetbackupConfig(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return SetbackupConfig(opts)
+		}),
 		Example: setConfigCmdExample(),
 	})
 
@@ -89,7 +80,7 @@ func SetbackupConfig(opts *SetConfigFlags) error {
 		return errors.Wrap(err, "ask for confirmation failed")
 	}
 	if !res {
-		return errors.New("cancel set backup config")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 
 	// Set the backup configuration.
@@ -97,7 +88,8 @@ func SetbackupConfig(opts *SetConfigFlags) error {
 		stdio.Verbosef("Setting the backup configuration for tenant %s", opts.TenantName)
 
 		if opts.BackupBaseUri != "" {
-			return errors.New("'backup_base_uri' is not required when setting the backup configuration for a specific tenant")
+
+			return errors.Occur(errors.ErrCliUsageError, "'backup_base_uri' is not required when setting the backup configuration for a specific tenant")
 		}
 
 		// Set the backup configuration for the tenant.
@@ -116,7 +108,7 @@ func SetbackupConfig(opts *SetConfigFlags) error {
 	} else {
 		stdio.Verbose("Setting the backup configuration for the entire cluster")
 		if opts.DataBackupUri != "" || opts.ArchiveLogUri != "" {
-			return errors.New("'data_backup_uri' and 'archive_log_uri' are not required when setting the backup configuration for the entire cluster")
+			return errors.Occur(errors.ErrCliUsageError, "'data_backup_uri' and 'archive_log_uri' are not required when setting the backup configuration for the entire cluster")
 		}
 
 		// Set the backup configuration for the cluster.

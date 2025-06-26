@@ -17,7 +17,6 @@
 package server
 
 import (
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -61,7 +60,7 @@ func (a *Agent) runServer() (err error) {
 		case <-a.startChan:
 			if err = a.runTcpServer(); err != nil {
 				log.Errorf("run tcp server failed, err: %v", err)
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("run tcp server failed, err: %v", err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentServeOnTcpSocketFailed, err))
 			}
 		}
 	}()
@@ -86,7 +85,7 @@ func (a *Agent) restoreSecure() (err error) {
 	if err != nil {
 		log.WithError(err).Info("check password of root@sys in sqlite failed")
 		if !meta.OCS_AGENT.IsClusterAgent() {
-			process.ExitWithFailure(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, "check password of root@sys in sqlite failed: not cluster agent")
+			process.ExitWithError(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, errors.WrapRetain(errors.ErrAgentOceanbasePasswordLoadFailed, err))
 		}
 	} else {
 		log.Info("check password of root@sys in sqlite successed")
@@ -143,7 +142,7 @@ func (a *Agent) startConnenctModule() (err error) {
 		return a.handleUnidentified()
 	} else if a.NeedStartOB() {
 		if err = CheckAndStartOBServer(); err != nil {
-			process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_START_FAILED, fmt.Sprintf("start observer via flag failed, err: %v", err))
+			process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.WrapRetain(errors.ErrAgentStartObserverFailed, err))
 		}
 	}
 	return nil
@@ -182,7 +181,7 @@ func CheckAndStartOBServer() error {
 		// If the config file exists and the observer process is not running,
 		// the observer process needs to be started.
 		if err := ob.SafeStartObserver(nil); err != nil {
-			process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Wrap(err, "start observer process failed").Error())
+			process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Wrap(err, "start observer process failed"))
 		}
 	}
 
@@ -192,7 +191,7 @@ func CheckAndStartOBServer() error {
 		return errors.Wrap(err, "get observer uid failed")
 	}
 	if process.Uid() != 0 && process.Uid() != observerUid {
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_START_FAILED, "the user of obshell has no permission to start observer")
+		process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Occur(errors.ErrSecurityUserPermissionDenied))
 	}
 	return nil
 }
@@ -222,7 +221,7 @@ func waitDbConnectInit() {
 		if !oceanbase.IsConnecting() && oceanbase.HasAttemptedConnection() {
 			if _, err = oceanbase.GetInstance(); err != nil {
 				if oceanbase.IsInitPasswordError() {
-					process.ExitWithFailure(constant.EXIT_CODE_ERROR_OB_PWD_ERROR, oceanbase.GetLastInitError().Error())
+					process.ExitWithError(constant.EXIT_CODE_ERROR_OB_PWD_ERROR, errors.Occur(errors.ErrObClusterPasswordIncorrect))
 				} else {
 					log.WithError(err).Error("get ob connection failed")
 					return

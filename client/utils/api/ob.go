@@ -17,19 +17,19 @@
 package api
 
 import (
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 )
 
 func CheckOBMaintenance() (bool, error) {
 	stdio.Verbose("check ob maintenance")
 	dag, err := GetLastOBMaintainDag()
 	if err != nil {
-		return false, errors.Errorf("get last maintain dag failed: %s", err)
+		return false, errors.Wrap(err, "get last maintain dag failed")
 	}
 	if dag == nil || dag.IsSucceed() {
 		return true, nil

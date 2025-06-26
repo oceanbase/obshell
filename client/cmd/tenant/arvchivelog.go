@@ -21,11 +21,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -50,21 +48,14 @@ func newArchiveLogCmd() *cobra.Command {
 		Use:     CMD_ARCHIVE_LOG,
 		Short:   "Open the archive log of the specified tenant.",
 		PreRunE: cmdlib.ValidateArgTenantName,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetSilenceMode(false)
 
 			opts.tenantName = args[0]
-			if err := tenantOperatorArchiveLog(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantOperatorArchiveLog(opts)
+		}),
 		Example: `  obshell tenant archivelog t1`,
 	})
 
@@ -84,7 +75,7 @@ func confirmArchiveLog() error {
 		return errors.Wrap(err, "ask for archivelog confirmation failed")
 	}
 	if !res {
-		return errors.New("cancel backup")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return nil
 }

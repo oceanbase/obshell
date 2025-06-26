@@ -60,9 +60,9 @@ func (maintainer *clusterStatusMaintainer) setStatus(tx *gorm.DB, newStatus int,
 		var taskService ClusterTaskService
 		if dag, _ := taskService.GetLastMaintenanceDag(); dag != nil {
 			// Try to get the maintenance dag name
-			return errors.Occur(errors.ErrObClusterUnderMaintenance, dag.GetName())
+			return errors.Occur(errors.ErrObClusterUnderMaintenanceWithDag, dag.GetName())
 		}
-		return errors.Occur(errors.ErrObClusterUnderMaintenance, "unknown")
+		return errors.Occur(errors.ErrObClusterUnderMaintenance)
 	}
 	return nil
 }

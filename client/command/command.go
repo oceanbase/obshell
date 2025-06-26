@@ -27,6 +27,7 @@ import (
 	"github.com/spf13/pflag"
 	"golang.org/x/term"
 
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 )
@@ -137,7 +138,7 @@ func NewCommand(cmd *cobra.Command) *Command {
 		flagMap: map[string]*Flag{},
 	}
 	t.originalPreRunE = cmd.PreRunE
-	cmd.PreRunE = t.preRunE
+	cmd.PreRunE = WithErrorHandler(t.preRunE)
 
 	// Override the flag error function to customize error handling.
 	cmd.SetFlagErrorFunc(func(c *cobra.Command, err error) error {
@@ -356,14 +357,10 @@ func (cmd *Command) printExample() {
 
 func (cmd *Command) preRunE(ccmd *cobra.Command, args []string) error {
 	if err := cmd.flagCheck(); err != nil {
-		stdio.Error(err.Error())
-		ccmd.SilenceErrors = true
 		return err
 	}
 	if cmd.originalPreRunE != nil {
 		if err := cmd.originalPreRunE(cmd.Command, args); err != nil {
-			stdio.Error(err.Error())
-			cmd.SilenceErrors = true
 			return err
 		}
 	} else if cmd.PreRun != nil {
@@ -385,7 +382,7 @@ func (cmd *Command) flagCheck() (err error) {
 		}
 	})
 	if len(missingFlagNames) > 0 {
-		return fmt.Errorf(`required flag(s) "%s" not set`, strings.Join(missingFlagNames, `", "`))
+		return errors.Occur(errors.ErrCliFlagRequired, strings.Join(missingFlagNames, `", "`))
 	}
 	return err
 }

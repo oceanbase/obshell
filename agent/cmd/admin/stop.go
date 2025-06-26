@@ -82,5 +82,5 @@ func (a *Admin) stopDaemonByPid(pid int32) (err error) {
 		}
 		time.Sleep(time.Second)
 	}
-	return errors.New("wait for daemon process exit timeout")
+	return errors.Occur(errors.ErrCommonUnexpected, "wait for daemon process exit timeout")
 }

@@ -17,13 +17,12 @@
 package server
 
 import (
-	"errors"
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/lib/process"
 	"github.com/oceanbase/obshell/agent/meta"
@@ -33,7 +32,7 @@ import (
 func (a *Agent) handleTakeOverOrRebuild() {
 	if err := a.takeOverOrRebuild(); err != nil {
 		log.WithError(err).Error("take over or rebuild failed")
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_TAKE_OVER_FAILED, fmt.Sprintf("take over or rebuild failed: %v", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_TAKE_OVER_FAILED, errors.WrapRetain(errors.ErrAgentTakeOverFailed, err))
 	}
 	a.Server.startChan <- true
 }

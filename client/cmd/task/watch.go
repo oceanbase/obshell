@@ -19,8 +19,6 @@ package task
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -39,18 +37,10 @@ func newWatchCmd() *cobra.Command {
 		Use:     CMD_WATCH,
 		Short:   "Watch OceanBase task running info.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSilenceMode(false)
-			if err := taskWatch(opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return taskWatch(opts)
+		}),
 		Example: `  obshell task watch -i 11`,
 	})
 

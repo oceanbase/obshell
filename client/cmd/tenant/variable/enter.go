@@ -17,14 +17,11 @@
 package variable
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/cmd/tenant/parameter"
 	"github.com/oceanbase/obshell/client/command"
@@ -62,28 +59,16 @@ func newShowCmd() *cobra.Command {
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SHOW,
 		Short: "Show speciaic variable.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
 			if len(args) < 2 {
-				stdio.Error("variable is required")
-				cmd.SilenceUsage = false
-				return errors.New("variable is required)")
+				return errors.Occur(errors.ErrCliUsageError, "variable is required)")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := showVariable(cmd, args[0], args[1]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return showVariable(cmd, args[0], args[1])
+		}),
 		Example: `  obshell tenant variable show t1 max_connections`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> [variable]"}
@@ -107,7 +92,7 @@ func showVariable(cmd *cobra.Command, tenant string, variable string) error {
 	if len(data) != 0 {
 		stdio.PrintTable([]string{"Name", "Value"}, data)
 	} else {
-		return errors.New("No such variables")
+		return errors.Occur(errors.ErrCliNotFound, variable)
 	}
 	return nil
 }
@@ -118,28 +103,16 @@ func newSetCmd() *cobra.Command {
 	setCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SET,
 		Short: "Set speciaic variables.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
 			if len(args) < 2 {
-				stdio.Error("variable is required")
-				cmd.SilenceUsage = false
-				return errors.New("variable is required)")
+				return errors.Occur(errors.ErrCliUsageError, "variable is required)")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := setVariable(cmd, args[0], args[1], tenantPassword); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return setVariable(cmd, args[0], args[1], tenantPassword)
+		}),
 		Example: `  obshell tenant variable set t1 max_connections=10000,recyclebin=true`,
 	})
 	setCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <name=value>"}
@@ -151,7 +124,6 @@ func newSetCmd() *cobra.Command {
 func setVariable(cmd *cobra.Command, tenant string, str string, tenantPassword string) error {
 	variables, err := parameter.BuildVariableOrParameterMap(str)
 	if err != nil {
-		cmd.SilenceUsage = false
 		return err
 	}
 	params := param.SetTenantVariablesParam{

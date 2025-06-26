@@ -28,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/api/web"
 	"github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/process"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/db/sqlite"
@@ -77,11 +78,11 @@ func newAgent(flag *cmd.CommonFlag) *Agent {
 func (a *Agent) start() {
 	if err := a.init(); err != nil {
 		log.WithError(err).Error("initialize failed")
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, fmt.Sprintf("initialize failed: %v", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, errors.Wrap(err, "initialize failed"))
 	}
 	if err := a.run(); err != nil {
 		log.WithError(err).Error("run failed")
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, fmt.Sprintf("run failed: %v", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, errors.Wrap(err, "run failed"))
 	}
 	a.cleanup()
 	a.wait()

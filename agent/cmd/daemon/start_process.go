@@ -36,7 +36,7 @@ func (s *Server) Start() (err error) {
 	}
 
 	if !s.casState(constant.STATE_STOPPED, constant.STATE_STARTING) {
-		return errors.New("obshell server already started")
+		return errors.Occur(errors.ErrCommonUnexpected, "obshell server already started")
 	}
 
 	if err = s.startProc(); err != nil {
@@ -89,7 +89,7 @@ func (s *Server) startProcWithCount(count *int, procState *process.ProcState) (e
 		if s.conf.MinLiveTime > 0 && liveTime < s.conf.MinLiveTime {
 			log.Warnf("obshell server exited too quickly. live time: %d, MinLiveTime: %d, count: %d", liveTime, s.conf.MinLiveTime, count)
 			if *count > s.conf.QuickExitLimit {
-				return errors.New("daemon retry limit exceeded")
+				return errors.Occur(errors.ErrCommonUnexpected, "daemon retry limit exceeded")
 			}
 		}
 	}

@@ -17,20 +17,17 @@
 package cluster
 
 import (
-	"fmt"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/global"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -68,23 +65,12 @@ func newStartCmd() *cobra.Command {
 		Use:     CMD_START,
 		Short:   "Start observers within the specified range.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
-			if err := clusterStart(opts); err != nil {
-				if stdio.IsBusy() {
-					stdio.LoadFailed(err.Error())
-				} else {
-					stdio.Error(err.Error())
-				}
-				return err
-			}
-			return nil
-		},
+			return clusterStart(opts)
+		}),
 		Example: startCmdExample(),
 	})
 
@@ -141,11 +127,11 @@ func callStartEachApi(flags *ClusterStartFlags) (err error) {
 	case ob.SCOPE_SERVER:
 		err = handleTakeoverForStart(flags)
 	case ob.SCOPE_ZONE:
-		err = errors.New("not support zone scope for non-cluster agent, please use -s or -a")
+		err = errors.Occur(errors.ErrCliUsageError, "not support zone scope for non-cluster agent, please use -s or -a")
 	case ob.SCOPE_GLOBAL:
 		err = handleTakeoverForStart(flags)
 	default:
-		err = errors.New("invalid scope type")
+		err = errors.Occur(errors.ErrObParameterScopeInvalid, getScopeType(&flags.scopeFlags))
 	}
 	return err
 }
@@ -191,14 +177,22 @@ func hanldUnderMaintenance(mainDags, maintainDags []*task.DagDetailDTO) error {
 		stdio.Error("Due to the cluster currently being under maintenance, other maintenance operations cannot be performed at this time.\nPlease address the ongoing maintenance tasks before attempting further actions.")
 		printer.PrintDagsTable(allDags)
 		stdio.Printf("Please view the task details by '%s/bin/obshell task show -i <ID> -d'", global.HomePath)
-		return errors.New("Cluster is under maintenance")
+		// get the agent by maintainDags
+		var agents []string
+		for _, dag := range maintainDags {
+			_, agent, err := task.ConvertGenericID(dag.GenericID)
+			if err == nil {
+				agents = append(agents, agent.String())
+			}
+		}
+		return errors.Occur(errors.ErrAgentUnderMaintenance, strings.Join(agents, ","))
 	} else {
 		// If there are non-emergency DAGs, offer to auto-finish tasks if confirmed by the user.
 		stdio.Warn("The cluster is currently under maintenance.")
 		printer.PrintDagsTable(mainDags)
 		autoPass, err := stdio.Confirm("Would you like to automatically finish prerequisite tasks, regardless of whether they are currently running?")
 		if err != nil {
-			return err
+			return errors.Wrap(err, "ask for auto finish main dag confirmation failed")
 		}
 		if autoPass {
 			return autoFinishMainDag(mainDags)
@@ -238,7 +232,7 @@ func autoFinishMainDag(dags []*task.DagDetailDTO) error {
 func cancelAndPassSubDags(dag *task.DagDetailDTO) (err error) {
 	subDagIDs, ok := api.GetSubDagIDs(dag)
 	if !ok {
-		return fmt.Errorf("get sub dags of %s failed", dag.GenericID)
+		return errors.Occurf(errors.ErrCommonUnexpected, "get sub dags of %s failed", dag.GenericID)
 	}
 	stdio.Verbosef("sub dags of %s is %v", dag.GenericID, subDagIDs)
 
@@ -355,7 +349,7 @@ func waitDagFinished(id string) (err error) {
 		}
 		time.Sleep(time.Second)
 	}
-	return fmt.Errorf("wait dag %s finished time out", id)
+	return errors.Occurf(errors.ErrCommonUnexpected, "wait dag %s finished time out", id)
 }
 
 func newForcePassIdParam(idStr string) (p *param.ForcePassDagParam) {
@@ -382,16 +376,16 @@ func getScopeType(flags *scopeFlags) string {
 func validateScopeFlags(flags *scopeFlags) error {
 	stdio.Verbosef("validate cmd flags %+v", flags)
 	if flags.server != "" && flags.zone != "" && flags.global {
-		return errors.New("-s, -z and -a cannot be specified at the same time")
+		return errors.Occur(errors.ErrCliUsageError, "-s, -z and -a cannot be specified at the same time")
 	}
 	if flags.server != "" && flags.zone != "" {
-		return errors.New("-s and -z cannot be specified at the same time")
+		return errors.Occur(errors.ErrCliUsageError, "-s and -z cannot be specified at the same time")
 	}
 	if flags.server != "" && flags.global {
-		return errors.New("-s and -a cannot be specified at the same time")
+		return errors.Occur(errors.ErrCliUsageError, "-s and -a cannot be specified at the same time")
 	}
 	if flags.zone != "" && flags.global {
-		return errors.New("-z and -a cannot be specified at the same time")
+		return errors.Occur(errors.ErrCliUsageError, "-z and -a cannot be specified at the same time")
 	}
 	return nil
 }

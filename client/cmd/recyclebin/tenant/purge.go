@@ -17,15 +17,12 @@
 package tenant
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/global"
@@ -39,24 +36,14 @@ func newPurgeCmd() *cobra.Command {
 		Use:   CMD_PURGE,
 		Short: "Purge a tenant in recyclebin.",
 		Long:  "Resource will be free later",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant or object name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant or object name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant or object name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.Verbose)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
-			if err := tenantPurge(args[0]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantPurge(args[0])
+		}),
 		Example: `  obshell recyclebin tenant purge t1
   obshell recyclebin tenant purge '__recycle_$_1_1720679549921648'`,
 	})
@@ -71,7 +58,7 @@ func newPurgeCmd() *cobra.Command {
 func tenantPurge(name string) error {
 	pass, err := stdio.Confirmf("Please confirm if you need to purge tenant %s", name)
 	if err != nil {
-		return errors.New("ask for confirmation failed")
+		return errors.Wrap(err, "ask for confirmation failed")
 	}
 	if !pass {
 		return nil

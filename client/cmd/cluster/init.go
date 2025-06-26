@@ -18,16 +18,16 @@ package cluster
 
 import (
 	"strconv"
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -49,18 +49,10 @@ func newInitCmd() *cobra.Command {
 	initCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_INIT,
 		Short: "Perform one-time-only initialization of a OceanBase cluster.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
-			if err := clusterInit(cmd, opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterInit(cmd, opts)
+		}),
 		Example: initCmdExample(),
 	})
 
@@ -153,7 +145,7 @@ func callObclusterConfig(flags *ClusterInitFlags) error {
 func callObserverConfig(configs map[string]string) error {
 	obGlobalConfigParams := buildObGlobalConfigParams(configs)
 
-	if obGlobalConfigParams.ObServerConfig != nil && len(obGlobalConfigParams.ObServerConfig) > 0 {
+	if len(obGlobalConfigParams.ObServerConfig) > 0 {
 		dag, err := api.CallApiAndPrintStage(constant.URI_API_V1+constant.URI_OBSERVER_GROUP+constant.URI_CONFIG, obGlobalConfigParams)
 		if err != nil {
 			return err
@@ -195,12 +187,12 @@ func checkInitStatus() error {
 
 	stdio.Verbosef("My agent is %s", agentStatus.Agent.GetIdentity())
 	if !agentStatus.Agent.IsFollowerAgent() && !agentStatus.Agent.IsMasterAgent() {
-		return errors.Errorf("%s can not init.", string(agentStatus.Agent.Identity))
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agentStatus.Agent.String(), agentStatus.Agent.GetIdentity(), strings.Join([]string{(string)(meta.FOLLOWER), (string)(meta.MASTER)}, " or "))
 	}
 
 	stdio.Verbosef("My agent is under maintenance: %v", agentStatus.UnderMaintenance)
 	if agentStatus.UnderMaintenance {
-		return errors.New("The current node is under maintenance.")
+		return errors.Occur(errors.ErrAgentUnderMaintenance, agentStatus.Agent.String())
 	}
 	return nil
 }

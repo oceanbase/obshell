@@ -134,7 +134,7 @@ func WaitServerProcKilled(pid int32) error {
 		log.Infof("%d still exist, wait 1s", pid)
 		time.Sleep(time.Second)
 	}
-	return errors.New("wait obshell server killed timeout")
+	return errors.Occur(errors.ErrAgentUpgradeKillOldServerTimeout)
 }
 
 // initAgent will get the final agent info based on meta, incoming configuration, and default value.
@@ -149,7 +149,7 @@ func (a *Agent) initAgent() (err error) {
 		if !a.upgradeMode {
 			if err = ob.LoadOBConfigFromConfigFile(); err != nil {
 				log.WithError(err).Error("load ob config from config file failed")
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, fmt.Sprintf("load ob config from config file failed: %v\n", err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, errors.WrapRetain(errors.ErrAgentLoadOBConfigFailed, err))
 			}
 		}
 	} else if meta.OCS_AGENT.IsUnidentified() {
@@ -181,13 +181,13 @@ func (a *Agent) updateAgent() (err error) {
 	switch meta.OCS_AGENT.GetIdentity() {
 	case meta.UNIDENTIFIED:
 		if meta.OCS_AGENT.GetIp() != a.AgentInfo.Ip {
-			process.ExitWithFailure(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, fmt.Sprintf("agent ip not match, input is %s, meta is %s", a.AgentInfo.Ip, meta.OCS_AGENT.GetIp()))
+			process.ExitWithError(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, errors.Occur(errors.ErrAgentInfoNotEqual, a.AgentInfo, meta.OCS_AGENT))
 		}
 		fallthrough
 	case meta.SINGLE:
 		err = agentService.UpdateAgentInfo(&a.AgentInfo)
 	default:
-		err = fmt.Errorf("agent info not equal, input is %v, meta is %v", a.AgentInfo, meta.OCS_AGENT)
+		err = errors.Occur(errors.ErrAgentInfoNotEqual, a.AgentInfo, meta.OCS_AGENT)
 	}
 
 	return
@@ -216,11 +216,11 @@ func (a *Agent) checkAgentInfo() {
 	// If agent ip or port is empty, exit.
 	if a.AgentInfo.Ip == "" || a.AgentInfo.Port == 0 {
 		log.Error("agent info is invalid")
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_INVAILD_AGENT, fmt.Sprintf("agent info is invalid: %v", a.AgentInfo))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_INVAILD_AGENT, errors.Occur(errors.ErrAgentStartWithInvalidInfo, a.AgentInfo))
 	}
 
 	if a.NeedBeCluster && !meta.OCS_AGENT.IsClusterAgent() {
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, "obshell need to be cluster. Please do takeover first.")
+		process.ExitWithError(constant.EXIT_CODE_ERROR_NOT_CLUSTER_AGENT, errors.Occur(errors.ErrAgentNeedToTakeOver))
 	}
 }
 
@@ -229,7 +229,7 @@ func (a *Agent) initServer() {
 	log.Info("init server")
 	serverConfig, err := config.NewServerConfig(meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort(), path.RunDir(), false)
 	if err != nil {
-		process.ExitWithFailure(constant.EXIT_CODE_ERROR_INVAILD_AGENT, fmt.Sprintf("init server failed, err: %v", err))
+		process.ExitWithError(constant.EXIT_CODE_ERROR_INVAILD_AGENT, err)
 	}
 	log.Infof("server config is %v", serverConfig)
 	a.server = web.NewServer(config.DebugMode, *serverConfig)

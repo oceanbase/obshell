@@ -17,14 +17,11 @@
 package unit
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -47,23 +44,14 @@ func newCreateCmd() *cobra.Command {
 	createCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_CREATE,
 		Short: "Create a resource unit config.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			// get unit config name
 			if len(args) <= 0 {
-				stdio.Error("unit config name is required")
-				return errors.New("unit config name is required")
+				return errors.Occur(errors.ErrCliUsageError, "unit config name is required")
 			}
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.Verbose)
-			if err := unitConfigCreate(cmd, args[0], &opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return unitConfigCreate(cmd, args[0], &opts)
+		}),
 		Example: `  obshell unit create s1 -m 5G -c 2`,
 	})
 

@@ -23,10 +23,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -65,20 +63,12 @@ func newBackupCmd() *cobra.Command {
 		Use:     CMD_BACKUP,
 		Short:   "Initiate a backup operation with options to specify the backup mode and various other configurations.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.Verbose)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetSilenceMode(false)
-
-			if err := clusterBackup(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterBackup(opts)
+		}),
 		Example: backupCmdExample(),
 	})
 
@@ -136,7 +126,7 @@ func ConfirmBackup() error {
 		return errors.Wrap(err, "ask for backup confirmation failed")
 	}
 	if !res {
-		return errors.New("cancel backup")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return nil
 }

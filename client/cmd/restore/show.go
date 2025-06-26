@@ -19,8 +19,6 @@ package restore
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -41,20 +39,13 @@ func newShowCmd() *cobra.Command {
 		Use:     CMD_SHOW,
 		Short:   "Displays the restore status for the specific tenant.",
 		PreRunE: cmdlib.ValidateArgTenantName,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
-			if err := show(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return show(opts)
+		}),
 		Example: showCmdExample(),
 	})
 

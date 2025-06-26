@@ -17,14 +17,11 @@
 package pool
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/global"
@@ -37,24 +34,14 @@ func newDropCmd() *cobra.Command {
 	dropCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_DROP,
 		Short: "Drop a resource pool.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
-			// get unit config name
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("resource pool name is required")
-				return errors.New("resource pool name is required")
+				return errors.Occur(errors.ErrCliUsageError, "resource pool name is required")
 			}
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
-			if err := rpDrop(args[0], opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return rpDrop(args[0], opts)
+		}),
 		Example: `  obshell rp drop p1`,
 	})
 
@@ -68,7 +55,7 @@ func newDropCmd() *cobra.Command {
 func rpDrop(name string, opts *global.DropFlags) error {
 	pass, err := stdio.Confirmf("Please confirm if you need to drop resource pool %s", name)
 	if err != nil {
-		return errors.New("ask for confirmation failed")
+		return errors.Wrap(err, "ask for confirmation failed")
 	}
 	if !pass {
 		return nil

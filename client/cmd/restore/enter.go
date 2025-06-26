@@ -19,9 +19,7 @@ package restore
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/global"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -37,17 +35,11 @@ func NewRestoreCmd() *cobra.Command {
 	taskCmd := command.NewCommand(&cobra.Command{
 		Use:   clientconst.CMD_RESTORE,
 		Short: "Display and manage the OceanBase tenant restore.",
-		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		PersistentPreRunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			defer stdio.StopLoading()
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			global.InitGlobalVariable()
-			if err := cluster.CheckAndStartDaemon(); err != nil {
-				stdio.StopLoading()
-				stdio.Error(err.Error())
-				return nil
-			}
-			return nil
-		},
+			return cluster.CheckAndStartDaemon()
+		}),
 	})
 	taskCmd.AddCommand(newShowCmd())
 	taskCmd.AddCommand(newCancelCmd())

@@ -22,9 +22,6 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oceanbase/obshell/client/global"
-	"github.com/oceanbase/obshell/client/lib/stdio"
-	"github.com/oceanbase/obshell/client/utils/api"
 	"github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/cmd/admin"
 	"github.com/oceanbase/obshell/agent/config"
@@ -34,6 +31,9 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/client/global"
+	"github.com/oceanbase/obshell/client/lib/stdio"
+	"github.com/oceanbase/obshell/client/utils/api"
 )
 
 var (
@@ -59,7 +59,7 @@ func CheckAndStartDaemon(needBeCluster ...bool) error {
 				return errors.Wrap(err, "get my agent status failed")
 			}
 			if status.Agent.IsUnidentified() {
-				return errors.New("Cluster not taken over. Run 'obshell cluster start -a' to start it.")
+				return errors.Occur(errors.ErrCliObClusterNotTakenOver)
 			}
 		}
 	}

@@ -19,12 +19,10 @@ package tenant
 import (
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/tenant/parameter"
 	"github.com/oceanbase/obshell/client/cmd/tenant/replica"
 	"github.com/oceanbase/obshell/client/command"
@@ -56,23 +54,13 @@ func newCreateCmd() *cobra.Command {
 	createCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_CREATE,
 		Short: "Create a tenant.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := tenantCreate(cmd, args[0], opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantCreate(cmd, args[0], opts)
+		}),
 		Example: `  obshell tenant create t1 -u s1
   obshell tenant create t1 -z zone1,zone2,zone3
     --zone1.unit=s1 --zone2.unit=s2  --zone3.unit=s3

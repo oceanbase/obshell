@@ -17,14 +17,14 @@
 package cluster
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -45,19 +45,11 @@ func newRemoveCmd() *cobra.Command {
 		Use:     CMD_REMOVE,
 		Short:   "Remove the specified the target node from cluster before cluster has been initialized.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
-			if err := agentRemove(opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return agentRemove(opts)
+		}),
 		Example: removeCmdExample(),
 	})
 
@@ -79,7 +71,7 @@ func agentRemove(flags *AgentRemoveFlags) error {
 
 	pass, err := stdio.Confirmf("Please confirm if you need to remove %s", targetAgent.String())
 	if err != nil {
-		return errors.New("ask for remove confirmation failed")
+		return errors.Wrap(err, "ask for remove confirmation failed")
 	}
 	if !pass {
 		return nil
@@ -110,11 +102,11 @@ func checkRemoveStatus() error {
 	}
 	stdio.Verbosef("My agent is %s", agentStatus.Agent.GetIdentity())
 	if !agentStatus.Agent.IsFollowerAgent() && !agentStatus.Agent.IsMasterAgent() {
-		return errors.Errorf("%s cannot remove agent from the cluster.", string(agentStatus.Agent.Identity))
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agentStatus.Agent.String(), agentStatus.Agent.GetIdentity(), strings.Join([]string{(string)(meta.MASTER), (string)(meta.FOLLOWER)}, " or "))
 	}
 	stdio.Verbosef("My agent is under maintenance %v", agentStatus.UnderMaintenance)
 	if agentStatus.UnderMaintenance {
-		return errors.New("The current node is under maintenance and cannot remove from the cluster.")
+		return errors.Occur(errors.ErrAgentUnderMaintenance, agentStatus.Agent.String())
 	}
 	return nil
 }

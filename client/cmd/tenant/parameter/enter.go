@@ -17,17 +17,14 @@
 package parameter
 
 import (
-	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -62,28 +59,16 @@ func newShowCmd() *cobra.Command {
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SHOW,
 		Short: "Show speciaic parameter(s).",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				stdio.Error("tenant is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant is required")
 			}
 			if len(args) < 2 {
-				stdio.Error("parameter is required")
-				cmd.SilenceUsage = false
-				return errors.New("parameter is required")
+				return errors.Occur(errors.ErrCliUsageError, "parameter is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := showParameter(cmd, args[0], args[1]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return showParameter(cmd, args[0], args[1])
+		}),
 		Example: `  obshell tenant parameter show t1 cpu_quota_concurrency`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> [parameter]"}
@@ -107,7 +92,7 @@ func showParameter(cmd *cobra.Command, tenant string, parameter string) error {
 	if len(data) != 0 {
 		stdio.PrintTable([]string{"Name", "Value"}, data)
 	} else {
-		return errors.New("No such parameter")
+		return errors.Occur(errors.ErrCliNotFound, parameter)
 	}
 	return nil
 }
@@ -121,7 +106,7 @@ func BuildVariableOrParameterMap(str string) (map[string]interface{}, error) {
 	for _, item := range items {
 		kv := strings.Split(item, "=")
 		if len(kv) != 2 || len(kv[0]) == 0 || len(kv[1]) == 0 {
-			return nil, fmt.Errorf("error format: %s, show be name=value", item)
+			return nil, errors.Occurf(errors.ErrCliUsageError, "error format: %s, show be name=value", item)
 		}
 		m[kv[0]] = kv[1]
 		if number, err := strconv.Atoi(kv[1]); err == nil {
@@ -142,28 +127,16 @@ func newSetCmd() *cobra.Command {
 	setCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SET,
 		Short: "Set speciaic parameters.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				stdio.Error("tenant is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant is required")
 			}
 			if len(args) < 2 {
-				stdio.Error("parameter is required")
-				cmd.SilenceUsage = false
-				return errors.New("parameter is required")
+				return errors.Occur(errors.ErrCliUsageError, "parameter is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := setParameter(cmd, args[0], args[1]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return setParameter(cmd, args[0], args[1])
+		}),
 		Example: `  obshell tenant parameter set t1 cpu_quota_concurrency=10,_rowsets_enabled=true`,
 	})
 	setCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <name=value>"}
@@ -174,7 +147,6 @@ func newSetCmd() *cobra.Command {
 func setParameter(cmd *cobra.Command, tenant string, str string) error {
 	parameters, err := BuildVariableOrParameterMap(str)
 	if err != nil {
-		cmd.SilenceUsage = false
 		return err
 	}
 	params := param.SetTenantParametersParam{

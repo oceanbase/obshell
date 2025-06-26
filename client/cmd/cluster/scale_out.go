@@ -22,7 +22,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -64,20 +63,12 @@ func NewScaleOutCmd() *cobra.Command {
 	scaleOutCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SCALE_OUT,
 		Short: "Add new observer to scale-out OceanBase cluster to improve performance.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			ocsagentlog.SetDBLoggerLevel(ocsagentlog.Silent)
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
-			if err := clusterScaleOut(cmd, opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterScaleOut(cmd, opts)
+		}),
 		Example: scaleOutCmdExample(),
 	})
 
@@ -112,10 +103,10 @@ func clusterScaleOut(cmd *cobra.Command, flags *ClusterScaleOutFlags) (err error
 
 	pass, err := stdio.Confirm(fmt.Sprintf("Please confirm if you need to scale out current node into the cluster via %s.", flags.agent))
 	if err != nil {
-		return errors.New("ask for scale-out confirmation failed")
+		return errors.Wrap(err, "ask for scale-out confirmation failed")
 	}
 	if !pass {
-		return errors.New("operation cancelled")
+		return errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	meta.SetOceanbasePwd(flags.password)
 	scaleOutReq, err := buildScaleOutParam(flags)
@@ -155,7 +146,7 @@ func buildScaleOutParam(flags *ClusterScaleOutFlags) (*param.ScaleOutParam, erro
 
 	stdio.Verbosef("My agent is %s", myAgent.GetIdentity())
 	if !myAgent.IsSingleAgent() {
-		return nil, errors.New("The current agent is not a single agent, please use the single agent to scale out")
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, myAgent.String(), myAgent.GetIdentity(), meta.SINGLE)
 	}
 
 	stdio.Printf("Start to scale out observer with agent: %v", myAgent.AgentInfo.String())

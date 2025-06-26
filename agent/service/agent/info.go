@@ -111,11 +111,12 @@ func (s *AgentService) updateAgentInfo(db *gorm.DB, agentInfo meta.AgentInfoInte
 
 func (s *AgentService) UpdateAgentIP(ip string) error {
 	if ocsAgent == nil {
-		return errors.New("agent is not initialized")
+		return errors.Occur(errors.ErrAgentNotInitialized)
 	}
 	if ocsAgent.GetIp() != ip {
 		if !ocsAgent.IsSingleAgent() && !ocsAgent.IsUnidentified() {
-			return errors.New("agent is not single, can not update agent ip")
+			// IP recorded in meta is inconsistent with IP recorded in ob config.bin
+			return errors.Occur(errors.ErrAgentIpInconsistentWithOBServer)
 		}
 		ocsAgent.Ip = ip
 	}

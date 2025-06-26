@@ -24,11 +24,9 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -55,25 +53,17 @@ func newUpgradeCmd() *cobra.Command {
 		Use:     CMD_UPGRADE,
 		Short:   "Upgrade the OceanBase cluster to the specified version.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			global.InitGlobalVariable()
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
 			if err := cluster.CheckAndStartDaemon(true); err != nil {
 				stdio.StopLoading()
-				stdio.Error(err.Error())
 				return err
 			}
-			if err := agentUpgrade(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return agentUpgrade(opts)
+		}),
 		Example: upgradeCmdExample(),
 	})
 
@@ -112,7 +102,7 @@ func agentUpgrade(opts *agentUpgradeFlags) (err error) {
 		return err
 	}
 	if !isRunning {
-		return errors.New("The cluster is under maintenance, unable to upgrade")
+		return errors.Occur(errors.ErrAgentCurrentUnderMaintenance)
 	}
 
 	// get all the rpm packages in the specified directory
@@ -204,7 +194,7 @@ func getTargetVersion(opts *agentUpgradeFlags, pkgs map[string]*rpm.Package) (ta
 		return "", errors.Wrap(err, "ask for upgrade confirmation failed")
 	}
 	if !res {
-		return "", errors.New("upgrade cancelled")
+		return "", errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return targetBuildVersion, nil
 }
@@ -220,7 +210,7 @@ func getAllObshellRpmsInDir(pkgDir string) (rpmPkgs map[string]*rpm.Package, err
 		return nil, err
 	}
 	if len(rpmPkgs) == 0 {
-		return nil, fmt.Errorf("no valid obshell package found in %s", pkgDir)
+		return nil, errors.Occur(errors.ErrCliUpgradePackageNotFoundInPath, constant.PKG_OBSHELL, pkgDir)
 	}
 	printer.PrintPkgsTable(rpmPkgs)
 	return rpmPkgs, nil

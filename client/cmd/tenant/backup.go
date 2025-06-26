@@ -22,9 +22,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/cmd/cluster"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -48,21 +46,14 @@ func newBackupCmd() *cobra.Command {
 		Use:     cluster.CMD_BACKUP,
 		Short:   "Backup the specified tenant.",
 		PreRunE: cmdlib.ValidateArgTenantName,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.Verbose)
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetSilenceMode(false)
 
 			opts.TenantName = args[0]
-			if err := tenantBackup(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantBackup(opts)
+		}),
 		Example: tenantBackupExample(),
 	})
 

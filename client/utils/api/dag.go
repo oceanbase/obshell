@@ -146,7 +146,7 @@ func CallApiWithMethod(method string, uri string, param interface{}, ret interfa
 		case http.DELETE:
 			return http.SendDeleteRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
 		}
-		return errors.Errorf("Unsupported method %s", method)
+		return errors.Occur(errors.ErrRequestMethodNotSupport, method)
 	}
 	return CallApiWithMethodHelper(sendRequest, method, uri, param, ret)
 }

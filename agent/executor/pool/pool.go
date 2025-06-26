@@ -30,7 +30,7 @@ func DropResourcePool(poolName string) error {
 	} else if pool == nil {
 		return nil
 	} else if pool.TenantId != 0 {
-		return errors.Occur(errors.ErrObTenantResourcePoolGranted, poolName)
+		return errors.Occur(errors.ErrObResourcePoolGranted, poolName)
 	}
 
 	if err := tenantService.DropResourcePool(poolName, false); err != nil {

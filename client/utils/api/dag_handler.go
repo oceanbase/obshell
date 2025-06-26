@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/lib/stdio"
 )
@@ -110,7 +111,7 @@ func (dh *DagHandler) waitDagFinished() error {
 		}
 		time.Sleep(100 * time.Millisecond)
 	}
-	return fmt.Errorf("Wait dag %s finished time out", dh.GenericID)
+	return errors.Occurf(errors.ErrCommonUnexpected, "Wait dag %s finished time out", dh.GenericID)
 }
 
 func (dh *DagHandler) PrintDagStage() (err error) {
@@ -177,7 +178,7 @@ func (dh *DagHandler) chaseToLatestStage(prevStage int) (finished bool, err erro
 		case task.ROLLBACK_STR:
 			stage = dh.Dag.Stage
 		default:
-			return false, fmt.Errorf("Invalid operator %s", dh.Dag.Operator)
+			return false, errors.Occur(errors.ErrTaskDagOperatorNotSupport, dh.Dag.Operator)
 		}
 		stdio.StartOrUpdateLoading(dh.getLoadMessage(stage))
 	}
@@ -220,7 +221,7 @@ func (dh *DagHandler) chaseToLatestStage(prevStage int) (finished bool, err erro
 		for _, log := range GetFailedDagLastLog(dh.Dag) {
 			stdio.Error(log)
 		}
-		return true, fmt.Errorf("Sorry, task '%s' failed", dh.Dag.Name)
+		return true, errors.Occurf(errors.ErrEmpty, "Sorry, task '%s' failed", dh.Dag.Name)
 	}
 	return true, nil
 }

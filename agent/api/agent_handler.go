@@ -70,7 +70,6 @@ func agentJoinHandler(c *gin.Context) {
 		var agentStatus meta.AgentStatus
 		if err = http.SendGetRequest(&param.AgentInfo, constant.URI_API_V1+constant.URI_INFO, nil, &agentStatus); err != nil {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrCommonUnexpected, fmt.Sprintf("get agent info failed: %s", err.Error())))
-			// TODO: 这里对于 4xx 和 5xx 不好区分，这里如果是不存在的 agent，http code 应该是4xx，但实际返回是5xx
 			return
 		} else if !agentStatus.AgentInstance.IsMasterAgent() {
 			common.SendResponse(c, nil, errors.Occur(

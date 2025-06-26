@@ -17,15 +17,12 @@
 package tenant
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -45,24 +42,14 @@ func newDropCmd() *cobra.Command {
 	dropCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_DROP,
 		Short: "Drop a tenant.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetSkipConfirmMode(opts.SkipConfirm)
 			stdio.SetVerboseMode(opts.Verbose)
-			if err := tenantDrop(args[0], opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantDrop(args[0], opts)
+		}),
 		Example: `  obshell tenant drop t1 --recycle`,
 	})
 	dropCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name>"}
@@ -76,7 +63,7 @@ func newDropCmd() *cobra.Command {
 func tenantDrop(name string, opts *tenantDropFlags) error {
 	pass, err := stdio.Confirmf("Please confirm if you need to drop tenant %s", name)
 	if err != nil {
-		return errors.New("ask for confirmation failed")
+		return errors.Wrap(err, "ask for confirmation failed")
 	}
 	if !pass {
 		return nil

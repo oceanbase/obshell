@@ -17,15 +17,13 @@
 package pool
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
@@ -40,17 +38,10 @@ func newShowCmd() *cobra.Command {
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_SHOW,
 		Short: "Show resource pool.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(verbose)
-			if err := rpShow(args...); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return rpShow(args...)
+		}),
 		Example: ` obshell rp show`,
 	})
 	showCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "[resource-pool-name]"}
@@ -79,7 +70,7 @@ func rpShow(name ...string) error {
 		}
 	}
 	if len(data) == 0 {
-		return errors.New("no resource pool found")
+		return errors.Occur(errors.ErrCliNotFound, "resource pool")
 	}
 	stdio.PrintTable(header, data)
 	return nil

@@ -17,7 +17,6 @@
 package daemon
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"time"
@@ -26,6 +25,7 @@ import (
 
 	"github.com/oceanbase/obshell/agent/cmd/server"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/process"
@@ -109,7 +109,7 @@ func (d *Daemon) startSocket(socketListener *net.UnixListener) {
 			err := d.localHttpServer.Serve(socketListener)
 			if err != nil && d.state.IsStarting() {
 				log.WithError(err).Error("daemon serve on socket listener failed")
-				process.ExitWithFailure(constant.EXIT_CODE_ERROR_SERVER_LISTEN, fmt.Sprintf("daemon serve on socket listener failed: %s\n", err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgenDaemonServeOnUnixSocketFailed, err))
 			} else {
 				d.setState(constant.STATE_RUNNING)
 			}

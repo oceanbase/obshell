@@ -20,11 +20,11 @@ import (
 	"strconv"
 
 	"github.com/mattn/go-sqlite3"
-	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
@@ -32,7 +32,7 @@ import (
 )
 
 var (
-	ErrOtherAgentUpgrading = errors.New("other agents are upgrading the binary")
+	ErrOtherAgentUpgrading = errors.Occur(errors.ErrCommonUnexpected, "other agents are upgrading the binary")
 )
 
 type AgentService struct{}
@@ -46,7 +46,7 @@ var ocsAgent *Agent
 
 func (s *AgentService) InitAgent() error {
 	if meta.OCS_AGENT != nil {
-		return errors.New("agent already initialized")
+		return errors.Occur(errors.ErrAgentAlreadyInitialized)
 	}
 
 	agentInstance, err := s.getAgentInfo()

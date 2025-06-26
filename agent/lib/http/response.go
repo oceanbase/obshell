@@ -66,7 +66,18 @@ func (a ApiError) String() string {
 }
 
 func (a ApiError) Error() string {
-	return a.String()
+	return a.Message
+}
+
+func GetApiError(err error) (bool, *ApiError) {
+	a, ok := err.(*ApiError)
+	if ok {
+		return true, a
+	}
+	if x, ok := err.(interface{ Unwrap() error }); ok {
+		return GetApiError(x.Unwrap())
+	}
+	return false, nil
 }
 
 func (a ApiError) ErrorMessage() string {

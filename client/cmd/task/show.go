@@ -21,8 +21,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -43,19 +42,11 @@ func newShowCmd() *cobra.Command {
 		Use:     CMD_SHOW,
 		Short:   "Show OceanBase task info.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
-			if err := taskShow(opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return taskShow(opts)
+		}),
 		Example: showCmdExample(),
 	})
 
@@ -70,15 +61,14 @@ func newShowCmd() *cobra.Command {
 func taskShow(flags *TaskShowFlags) (err error) {
 	id := strings.TrimSpace(flags.id)
 	if flags.detail && id == "" {
-		stdio.Error("Please specify the ID with '-i' to view detailed information.")
-		return nil
+		return errors.Occur(errors.ErrCliUsageError, "Please specify the ID with '-i' to view detailed information.")
 	}
 
 	if id != "" {
 		stdio.StartLoadingf("Get task %s detail", id)
 		dag, err := api.GetDagDetail(id)
 		if err != nil {
-			stdio.LoadErrorf("Failed to get task %s detail", id)
+			stdio.LoadFailedf("Failed to get task %s detail", id)
 			return err
 		}
 		stdio.StopLoading()

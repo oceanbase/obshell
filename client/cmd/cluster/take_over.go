@@ -86,7 +86,7 @@ func isInTakeoverProcess() (res bool, err error) {
 
 func getServersForEmecStart(flags *ClusterStartFlags) (servers []string, err error) {
 	if getScopeType(&flags.scopeFlags) == ob.SCOPE_ZONE {
-		return nil, errors.New("'-z' is not supported for emergency start, please use '-s' or '-a'")
+		return nil, errors.Occur(errors.ErrCliUsageError, "'-z' is not supported for emergency start, please use '-s' or '-a'")
 	}
 
 	serversWithRpcPort, err := ob.GetAllServerFromOBConf()
@@ -111,7 +111,7 @@ func getServersByInputAndConf(flags *ClusterStartFlags, serversWithRpcPort []met
 	for _, inputServer := range inputServers {
 		inputServerInfo, err := meta.ConvertAddressToAgentInfo(inputServer)
 		if err != nil {
-			return nil, errors.Errorf("invalid server '%s'", inputServerInfo)
+			return nil, errors.Occur(errors.ErrCommonInvalidAddress, inputServer)
 		}
 
 		// Check if the server with the default port is present in the configuration.
@@ -123,7 +123,7 @@ func getServersByInputAndConf(flags *ClusterStartFlags, serversWithRpcPort []met
 			}
 		}
 		if !found {
-			return nil, errors.Errorf("server %s is not in the ob conf", inputServerInfo.GetIp())
+			return nil, errors.Occur(errors.ErrCliTakeOverWithObserverNotInConf, inputServerInfo.GetIp())
 		}
 		servers = append(servers, inputServerInfo.GetIp())
 	}
@@ -166,7 +166,7 @@ func startRemoteAgent(servers []string, flags SSHFlags) (err error) {
 				exist = true
 				continue
 			}
-			return errors.New("multi-server on the same host")
+			return errors.Occur(errors.ErrCliTakeOverMultiServerOnSameHost)
 		}
 		agents = append(agents, server)
 	}
@@ -198,7 +198,7 @@ func startRemoteAgent(servers []string, flags SSHFlags) (err error) {
 		for _, err := range errs {
 			subIO.Failed(err.Error())
 		}
-		return errors.New("failed to start remote agent")
+		return errors.Occur(errors.ErrCliStartRemoteAgentFailed)
 	}
 
 	return nil

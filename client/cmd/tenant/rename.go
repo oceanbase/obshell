@@ -17,14 +17,11 @@
 package tenant
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -36,28 +33,16 @@ func newRenameCmd() *cobra.Command {
 	renameCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_RENAME,
 		Short: "Rename a tenant.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) < 1 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
 			if len(args) < 2 {
-				stdio.Error("new name is required")
-				cmd.SilenceUsage = false
-				return errors.New("new name is required")
+				return errors.Occur(errors.ErrCliUsageError, "new name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(verbose)
-			if err := tenantRename(args[0], args[1]); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantRename(args[0], args[1])
+		}),
 		Example: `  obshell tenant rename t1 t2`,
 	})
 	renameCmd.Annotations = map[string]string{clientconst.ANNOTATION_ARGS: "<tenant-name> <new-name>"}

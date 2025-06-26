@@ -24,13 +24,12 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/executor/ob"
 	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/lib/pkg"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
+	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	cmdlib "github.com/oceanbase/obshell/client/lib/cmd"
@@ -59,19 +58,12 @@ func newUpgradeCmd() *cobra.Command {
 		Use:     CMD_UPGRADE,
 		Short:   "Upgrade the OceanBase cluster to the specified version.",
 		PreRunE: cmdlib.ValidateArgs,
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceUsage = true
-			cmd.SilenceErrors = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSkipConfirmMode(opts.skipConfirm)
 			stdio.SetVerboseMode(opts.verbose)
 			stdio.SetSilenceMode(false)
-			if err := clusterUpgrade(opts); err != nil {
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return clusterUpgrade(opts)
+		}),
 		Example: upgradeCmdExample(),
 	})
 
@@ -95,7 +87,7 @@ func CheckIdentityForUpgrade() error {
 	}
 	stdio.Verbosef("My agent is %s", agentStatus.Agent.GetIdentity())
 	if !agentStatus.Agent.IsClusterAgent() {
-		return errors.New("There is no obcluster now. Unable to proceed with package upload.")
+		return errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agentStatus.Agent.String(), agentStatus.Agent.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 
 	return nil
@@ -115,7 +107,7 @@ func clusterUpgrade(opts *clusterUpgradeFlags) (err error) {
 		return err
 	}
 	if !isRunning {
-		return errors.New("The cluster is under maintenance, unable to upgrade")
+		return errors.Occur(errors.ErrObClusterUnderMaintenance)
 	}
 
 	if err := checkFlagsForUpgrade(opts); err != nil {
@@ -166,11 +158,11 @@ func checkFlagsForUpgrade(opts *clusterUpgradeFlags) (err error) {
 			return err
 		}
 		if len(obInfo.Config.ZoneConfig) < 3 {
-			return errors.New("The number of zones is less than 3, unable to perform rolling upgrade.")
+			return errors.Occur(errors.ErrObUpgradeUnableToRollingUpgrade)
 		}
 	case ob.PARAM_STOP_SERVICE_UPGRADE:
 	default:
-		return fmt.Errorf("Invalid upgrade mode: %s. %s", opts.mode, upgradeFlagUsage)
+		return errors.Occur(errors.ErrObUpgradeModeNotSupported, opts.mode)
 	}
 	return nil
 }
@@ -278,7 +270,7 @@ func getTargetVersion(opts *clusterUpgradeFlags, pkgs map[string]*rpm.Package) (
 		return "", errors.Wrap(err, "ask for upgrade confirmation failed")
 	}
 	if !res {
-		return "", errors.New("upgrade cancelled")
+		return "", errors.Occur(errors.ErrCliOperationCancelled)
 	}
 	return targetBuildVersion, nil
 }
@@ -296,7 +288,7 @@ func GetTargetBuildVersionByVersion(version string, pkgs map[string]*rpm.Package
 		}
 	}
 	if release == "" {
-		return "", fmt.Errorf("no valid target build version found by '%s'", version)
+		return "", errors.Occur(errors.ErrCliUpgradeNoValidTargetBuildVersionFound, version)
 	}
 	return fmt.Sprintf("%s-%s", version, release), nil
 }
@@ -313,7 +305,7 @@ func GetTargetBuildVersion(pkgs map[string]*rpm.Package) (targetBuildVersion str
 		stdio.Verbosef("%s version is %s", name, currentBV)
 	}
 	if targetBuildVersion == "" {
-		return "", errors.New("no valid version found")
+		return "", errors.Occur(errors.ErrCommonUnexpected, "no valid version found") // should not happen
 	}
 	return targetBuildVersion, nil
 }
@@ -327,7 +319,7 @@ func getAllOBRpmsInDir(pkgDir string) (rpmPkgs map[string]*rpm.Package, err erro
 		return nil, err
 	}
 	if len(rpmPkgs) == 0 {
-		return nil, fmt.Errorf("no valid OceanBase package found in %s", pkgDir)
+		return nil, errors.Occur(errors.ErrCliUpgradePackageNotFoundInPath, "oceanbase", pkgDir)
 	}
 	printer.PrintPkgsTable(rpmPkgs)
 	return rpmPkgs, nil

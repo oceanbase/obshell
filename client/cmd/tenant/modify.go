@@ -17,15 +17,12 @@
 package tenant
 
 import (
-	"errors"
-
 	"github.com/spf13/cobra"
 
-	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/http"
-	ocsagentlog "github.com/oceanbase/obshell/agent/log"
 	"github.com/oceanbase/obshell/client/command"
 	clientconst "github.com/oceanbase/obshell/client/constant"
 	"github.com/oceanbase/obshell/client/lib/stdio"
@@ -47,23 +44,13 @@ func newModifyCmd() *cobra.Command {
 	modifyCmd := command.NewCommand(&cobra.Command{
 		Use:   CMD_MODIFY,
 		Short: "Modify tenant's properties, include primary_zone, root password etc.",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.SilenceErrors = true
+		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			if len(args) <= 0 {
-				stdio.Error("tenant name is required")
-				cmd.SilenceUsage = false
-				return errors.New("tenant name is required")
+				return errors.Occur(errors.ErrCliUsageError, "tenant name is required")
 			}
-			cmd.SilenceUsage = true
-			ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 			stdio.SetVerboseMode(opts.verbose)
-			if err := tenantModify(cmd, args[0], opts); err != nil {
-				stdio.LoadFailedWithoutMsg()
-				stdio.Error(err.Error())
-				return err
-			}
-			return nil
-		},
+			return tenantModify(cmd, args[0], opts)
+		}),
 		Example: `  obshell tenant modify t1 --primary_zone RANDOM"`,
 	})
 
@@ -81,15 +68,13 @@ func newModifyCmd() *cobra.Command {
 
 func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags) (err error) {
 	if opts.interactivelyChangePassowrd && (cmd.Flags().Changed(FLAG_OLD_PASSWORD) || cmd.Flags().Changed(FLAG_NEW_PASSWORD)) {
-		cmd.SilenceUsage = false
-		return errors.New("could not specify both --password and --old-password/--new-password")
+		return errors.Occur(errors.ErrCliUsageError, "could not specify both --password and --old-password/--new-password")
 	}
 	if cmd.Flags().Changed(FLAG_OLD_PASSWORD) && !cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
-		cmd.SilenceUsage = false
-		return errors.New("need specify --new-password when --old-password is specified")
+		return errors.Occur(errors.ErrCliUsageError, "need specify --new-password when --old-password is specified")
 	}
 	if (cmd.Flags().Changed(FLAG_NEW_PASSWORD) || opts.interactivelyChangePassowrd || cmd.Flags().Changed(FLAG_OLD_PASSWORD)) && tenantName == constant.TENANT_SYS {
-		return errors.New("could not change password of sys tenant")
+		return errors.Occur(errors.ErrObTenantSysOperationNotAllowed)
 	}
 	if cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
 		stdio.StartLoadingf("set password of tenant %s", tenantName)
@@ -117,7 +102,7 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 			return err
 		}
 		if new_password != new_password_confirm {
-			return errors.New("The new password is not the same as the confirmation password")
+			return errors.Occur(errors.ErrCliUsageError, "The new password is not the same as the confirmation password")
 		}
 
 		stdio.StartLoadingf("set password of tenant %s", tenantName)
