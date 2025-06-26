@@ -209,7 +209,7 @@ var (
 	ErrObParameterRsListInvalid = NewErrorCode("OB.Parameter.RsList.Invalid", illegalArgument, "err.ob.parameter.rs.list.invalid")
 
 	// OB.Zone
-	ErrObZoneNotExist   = NewErrorCode("OB.Zone.NotExist", illegalArgument, "err.zone.not.exist")        // "zone '%s' is not exist"
+	ErrObZoneNotExist   = NewErrorCode("OB.Zone.NotExist", badRequest, "err.ob.zone.not.exist")          // "zone '%s' is not exist"
 	ErrObZoneNotEmpty   = NewErrorCode("OB.Zone.NotEmpty", illegalArgument, "err.ob.zone.not.empty")     // "The zone '%s' is not empty and can not be deleted"
 	ErrObZoneDeleteSelf = NewErrorCode("OB.Zone.DeleteSelf", illegalArgument, "err.ob.zone.delete.self") // "The current agent is in '%s', please initiate the request through another agent."
 	ErrObZoneNameEmpty  = NewErrorCode("OB.Zone.Name.Empty", illegalArgument, "err.ob.zone.name.empty")
@@ -237,6 +237,7 @@ var (
 	ErrAgentSynchronizerNotInitialized  = NewErrorCode("Agent.Synchronizer.NotInitialized", unexpected, "err.agent.synchronizer.not.initialized")
 	ErrAgentMaintainerNotActive         = NewErrorCode("Agent.Maintainer.NotActive", unexpected, "err.agent.maintainer.not.active")
 	ErrAgentMaintainerNotExist          = NewErrorCode("Agent.MaintainerNotExist", unexpected, "err.agent.maintainer.not.exist")
+	ErrAgentNotExist                    = NewErrorCode("Agent.NotExist", badRequest, "err.agent.not.exist") // "server '%s' not exist"
 	ErrAgentOceanbaseNotHold            = NewErrorCode("Agent.OceanBase.NotHold", unexpected, "err.agent.oceanbase.not.hold")
 	ErrAgentOceanbaseUesless            = NewErrorCode("Agent.OceanBase.Useless", unexpected, "err.agent.oceanbase.useless")
 	ErrAgentOceanbaseDBNotOcs           = NewErrorCode("Agent.OceanBase.DB.NotOcs", unexpected, "err.agent.oceanbase.db.not.ocs")

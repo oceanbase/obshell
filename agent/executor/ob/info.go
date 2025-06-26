@@ -18,7 +18,6 @@ package ob
 
 import (
 	"bufio"
-	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -208,7 +207,7 @@ func IsValidScope(s *param.Scope) (err error) {
 				return err
 			}
 			if !exist {
-				return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", fmt.Sprintf("zone '%s' not exist", zone))
+				return errors.Occur(errors.ErrObZoneNotExist, zone)
 			}
 		}
 		return nil
@@ -226,7 +225,7 @@ func IsValidScope(s *param.Scope) (err error) {
 				return err
 			}
 			if !exist {
-				return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "target", fmt.Sprintf("server '%s' not exist", server))
+				return errors.Occur(errors.ErrAgentNotExist, server)
 			}
 		}
 		return nil

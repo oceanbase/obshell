@@ -8,6 +8,7 @@
   "err.agent.identify.unknown": "Agent identify is unknown: %s",
   "err.agent.maintainer.not.active": "Maintainer is not active",
   "err.agent.maintainer.not.exist": "Maintainer is not exist",
+  "err.agent.not.exist": "Server '%s' does not exist",
   "err.agent.not.under.maintenance": "Agent is not under maintenance",
   "err.agent.no.active.server": "No agent with active server found",
   "err.agent.no.master": "Master agent is not found",
@@ -176,6 +177,7 @@
   "err.ob.zone.delete.self": "The current agent is in '%s', please initiate the request through another agent",
   "err.ob.zone.name.empty": "Zone name is empty",
   "err.ob.zone.not.empty": "The zone '%s' is not empty and cannot be deleted",
+  "err.ob.zone.not.exist": "Zone '%s' does not exist",
   "err.obproxy.already.managed": "Agent has already managed OBProxy",
   "err.obproxy.health.check.timeout": "OBProxy health check timeout",
   "err.obproxy.hot.restart.timeout": "Wait hot restart OBProxy finish timeout",
@@ -261,6 +263,5 @@
   "err.task.sub.dag.not.all.passed": "Not all sub DAGs passed, main DAG failed",
   "err.task.sub.dag.not.all.ready": "Sub DAG of agents: %v not ready, cannot advance main DAG",
   "err.task.sub.dag.not.all.succeed": "Sub DAG of agents: %v failed, main DAG failed",
-  "err.task.template.empty": "Task template is empty",
-  "err.zone.not.exist": "Zone '%s' does not exist"
+  "err.task.template.empty": "Task template is empty"
 }
