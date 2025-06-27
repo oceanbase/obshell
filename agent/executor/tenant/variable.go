@@ -115,7 +115,7 @@ func timeZoneErrorReporter(timeZone interface{}, err error) error {
 		re := regexp.MustCompile(pattern)
 		if re.MatchString(v) {
 			if empty, _ := tenantService.IsTimeZoneTableEmpty(); empty {
-				return errors.Occur(errors.ErrCommonUnexpected, errors.Wrapf(err, "Please check whether the sys tenant has been import time zone info").Error())
+				return errors.Occur(errors.ErrCommonUnexpected, errors.Wrap(err, "Please check whether the sys tenant has been import time zone info").Error())
 			}
 		}
 	}

@@ -329,7 +329,7 @@ func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd strin
 		}
 	}()
 	if err = tempDb.Exec(fmt.Sprintf(SQL_ALTER_TENANT_ROOT_PASSWORD, transfer(newPwd))).Error; err != nil {
-		return errors.Wrapf(err, "modify tenant root password failed")
+		return errors.Wrap(err, "modify tenant root password failed")
 	}
 	return nil
 }

@@ -106,13 +106,13 @@ func (c *OSSConfig) GetResourceType() string {
 func (c *OSSConfig) CheckWritePermission() error {
 	client, err := oss.New(c.Host, c.AccessID, c.AccessKey)
 	if err != nil {
-		return errors.Wrapf(err, "create oss client")
+		return errors.Wrap(err, "create oss client")
 	}
 	log.Info("OSS client created")
 
 	ossBucket, err := client.Bucket(c.BucketName)
 	if err != nil {
-		return errors.Wrapf(err, "get oss bucket")
+		return errors.Wrap(err, "get oss bucket")
 	}
 	log.Infof("OSS bucket %s created: %#+v", c.BucketName, ossBucket)
 
@@ -120,11 +120,11 @@ func (c *OSSConfig) CheckWritePermission() error {
 	testFile := path.Join(c.ObjectKey, meta.OCS_AGENT.GetIp(), fmt.Sprint(meta.OCS_AGENT.GetPort()))
 	log.Infof("test file: %s", testFile)
 	if err = ossBucket.PutObject(testFile, emptyContent); err != nil {
-		return errors.Wrapf(err, "put object")
+		return errors.Wrap(err, "put object")
 	}
 
 	if err = ossBucket.DeleteObject(testFile); err != nil {
-		return errors.Wrapf(err, "delete object")
+		return errors.Wrap(err, "delete object")
 	}
 
 	return nil
@@ -174,7 +174,7 @@ func (c *COSConfig) CheckWritePermission() error {
 	cosURL := fmt.Sprintf("https://%s.%s", c.BucketName, c.Host)
 	u, err := url.Parse(cosURL)
 	if err != nil {
-		return errors.Wrapf(err, "parse cos uri")
+		return errors.Wrap(err, "parse cos uri")
 	}
 
 	b := &cos.BaseURL{
@@ -192,12 +192,12 @@ func (c *COSConfig) CheckWritePermission() error {
 	testFile := path.Join(c.ObjectKey, meta.OCS_AGENT.GetIp(), fmt.Sprint(meta.OCS_AGENT.GetPort()))
 	_, err = client.Object.Put(context.Background(), testFile, emptyContent, nil)
 	if err != nil {
-		return errors.Wrapf(err, "put cos object")
+		return errors.Wrap(err, "put object")
 	}
 
 	_, err = client.Object.Delete(context.Background(), testFile)
 	if err != nil {
-		return errors.Wrapf(err, "delete cos object")
+		return errors.Wrap(err, "delete cos object")
 	}
 
 	return nil
@@ -258,7 +258,7 @@ func (c *S3Config) CheckWritePermission() (err error) {
 		})
 	}
 	if err != nil {
-		return errors.Wrapf(err, "create s3 session")
+		return errors.Wrap(err, "create s3 session")
 	}
 
 	svc := s3.New(sess)
@@ -274,7 +274,7 @@ func (c *S3Config) CheckWritePermission() (err error) {
 		},
 	)
 	if err != nil {
-		return errors.Wrapf(err, "put s3 object")
+		return errors.Wrap(err, "put s3 object")
 	}
 	log.Infof("put s3 object %s", testFile)
 
@@ -285,7 +285,7 @@ func (c *S3Config) CheckWritePermission() (err error) {
 		},
 	)
 	if err != nil {
-		return errors.Wrapf(err, "delete s3 object")
+		return errors.Wrap(err, "delete s3 object")
 	}
 
 	return nil
@@ -328,17 +328,17 @@ func (c *NFSConfig) CheckWritePermission() error {
 	}
 
 	if _, err := os.Open(c.Path); err != nil {
-		return errors.Wrapf(err, "open nfs path")
+		return errors.Wrap(err, "open nfs path")
 	}
 
 	testFile := path.Join(c.Path, meta.OCS_AGENT.String())
 	f, err := os.Create(testFile)
 	if err != nil {
-		return errors.Wrapf(err, "create test file")
+		return errors.Wrap(err, "create test file")
 	}
 	defer f.Close()
 	if err := os.Remove(testFile); err != nil {
-		return errors.Wrapf(err, "remove test file")
+		return errors.Wrap(err, "remove test file")
 	}
 	return nil
 }

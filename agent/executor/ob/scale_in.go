@@ -39,12 +39,12 @@ func isAllLsMultiPaxosAlive(svrInfo meta.ObserverSvrInfo, infoFunc func(string, 
 	// Get all log infos.
 	logInfos, err := obclusterService.GetLogInfosInServer(svrInfo)
 	if err != nil {
-		return false, errors.Wrapf(err, "get all log info failed")
+		return false, errors.Wrap(err, "get all log info failed")
 	}
 	for _, logStat := range logInfos {
 		infoFunc("check multi paxos member alive of tenant '%d', log stream '%d'", logStat.TenantId, logStat.LsId)
 		if alive, err := obclusterService.IsLsMultiPaxosAlive(logStat.LsId, logStat.TenantId, svrInfo); err != nil {
-			return false, errors.Wrapf(err, "check multi paxos member alive failed")
+			return false, errors.Wrap(err, "check multi paxos member alive failed")
 		} else if !alive {
 			infoFunc("the log stream %d of tenant %d has no majority alive.", logStat.LsId, logStat.TenantId)
 			return false, nil
@@ -57,7 +57,7 @@ func ClusterScaleIn(param param.ClusterScaleInParam) (*task.DagDetailDTO, error)
 	agentInfo := param.AgentInfo
 	server, err := obclusterService.GetOBServerByAgentInfo(agentInfo)
 	if err != nil {
-		return nil, errors.Wrapf(err, "check server exist failed")
+		return nil, errors.Wrap(err, "check server exist failed")
 	}
 	if server == nil {
 		return nil, nil

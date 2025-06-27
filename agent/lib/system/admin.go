@@ -132,13 +132,13 @@ func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
 	log.Info("Get archive log context")
 	archiveLogCtx, err := getOBAdminCtxByURI(logURI)
 	if err != nil {
-		return nil, errors.Wrapf(err, "execute archive log command failed")
+		return nil, errors.Wrap(err, "execute archive log command failed")
 	}
 
 	log.Info("Get data backup context")
 	dataCtx, err := getOBAdminCtxByURI(dataURI)
 	if err != nil {
-		return nil, errors.Wrapf(err, "execute data backup command failed")
+		return nil, errors.Wrap(err, "execute data backup command failed")
 	}
 
 	logPointSet, dataSet, err := getLogPointAndDataSet(archiveLogCtx, dataCtx)
@@ -218,7 +218,7 @@ func checkRestoreTime(dataURI, logURI string, scn int64) (bool, error) {
 func CheckRestoreTime(dataURI, logURI string, scn int64) (err error) {
 	canRestore, err := checkRestoreTime(dataURI, logURI, scn)
 	if err != nil {
-		return errors.Wrapf(err, "check restore time")
+		return errors.Wrap(err, "check restore time")
 	}
 	if !canRestore {
 		return errors.Occur(errors.ErrObRestoreTimeNotValid, scn)
@@ -229,7 +229,7 @@ func CheckRestoreTime(dataURI, logURI string, scn int64) (err error) {
 func getOBAdminCtxByURI(uri string) (string, error) {
 	storage, err := GetStorageInterfaceByURI(uri)
 	if err != nil {
-		return "", errors.Wrapf(err, "get storage interface failed")
+		return "", errors.Wrap(err, "get storage interface failed")
 	}
 	cmd := newOBAdminCommand(storage)
 	return ExecCommand(cmd)

@@ -252,7 +252,7 @@ func (t *CancelRestoreTask) Execute() (err error) {
 
 	job, err := tenantService.GetRunningRestoreTask(t.tenantName)
 	if err != nil {
-		return errors.Wrapf(err, "get running restore task")
+		return errors.Wrap(err, "get running restore task")
 	}
 	if job == nil {
 		t.ExecuteLog("There is no running restore task")

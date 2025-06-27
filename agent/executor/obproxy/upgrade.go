@@ -230,7 +230,7 @@ func (t *RecordObproxyInfoTask) Execute() error {
 	}
 	pid, err := process.FindPIDByPort(uint32(meta.OBPROXY_SQL_PORT))
 	if err != nil {
-		return errors.Wrapf(err, "find obproxy pid failed")
+		return errors.Wrap(err, "find obproxy pid failed")
 	}
 	t.GetContext().SetData(PARAM_OLD_OBPROXY_PID, pid)
 	t.GetContext().SetData(PARAM_HOT_UPGRADE_ROLLBACK_TIMEOUT, rollbackTimeout)
@@ -275,7 +275,7 @@ func (t *WaitHotRestartObproxyFinishTask) Execute() error {
 	// parse rollbackTimeout
 	rollbackTimeouot, err := parse.TimeParse(t.rollbackTimeout)
 	if err != nil {
-		return errors.Wrapf(err, "parse rollback timeout failed")
+		return errors.Wrap(err, "parse rollback timeout failed")
 	}
 
 	retryTimes := rollbackTimeouot / waitPeriod
@@ -300,7 +300,7 @@ func (t *WaitHotRestartObproxyFinishTask) Execute() error {
 	if err == nil {
 		// Modify the pid file.
 		if err := process.WritePidForce(path.ObproxyPidPath(), int(pid)); err != nil {
-			return errors.Wrapf(err, "write obproxy pid file failed")
+			return errors.Wrap(err, "write obproxy pid file failed")
 		}
 		return nil
 	}

@@ -78,7 +78,7 @@ func buildAgentUpgradeTemplate(param param.UpgradeCheckParam) *task.Template {
 func TakeOverUpdateAgentVersion() (*task.DagDetailDTO, error) {
 	targetVersion, err := needUpdateAgentBinary()
 	if err != nil {
-		return nil, errors.Wrapf(err, "get update agent binary failed")
+		return nil, errors.Wrap(err, "get update agent binary failed")
 	} else if targetVersion == "" {
 		return nil, nil
 	}
@@ -91,7 +91,7 @@ func TakeOverUpdateAgentVersion() (*task.DagDetailDTO, error) {
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template, ctx)
 	if err != nil {
 		if dag, err1 := localTaskService.FindLastMaintenanceDag(); err1 != nil {
-			return nil, errors.Wrapf(err1, "get last maintenance dag failed")
+			return nil, errors.Wrap(err1, "get last maintenance dag failed")
 		} else if dag == nil || dag.GetName() != DAG_TAKE_OVER_UPDATE_AGENT_VERSION {
 			return nil, err
 		} else {

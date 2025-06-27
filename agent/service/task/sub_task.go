@@ -469,7 +469,7 @@ func (s *taskService) IsRetryTask(localTaskId int64) (isRetry bool, err error) {
 	if !s.isLocal {
 		taskId, err = s.GetRemoteTaskIdByLocalTaskId(localTaskId)
 		if err != nil {
-			return false, errors.Wrapf(err, "get remote task id failed")
+			return false, errors.Wrap(err, "get remote task id failed")
 		}
 	}
 

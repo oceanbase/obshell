@@ -129,7 +129,6 @@
   "err.ob.package.missing.file": "These files are missing in package '%s': '%v'",
   "err.ob.package.name.not.support": "Unsupported name '%s', the supported names are [%s]",
   "err.ob.package.not.exist": "These packages are missing: '%v'",
-  "err.ob.parameter.name.empty": "Parameter name is empty.",
   "err.ob.parameter.rs.list.invalid": "rs_list '%s' is invalid: %s",
   "err.ob.parameter.scope.invalid": "Parameter scope '%s' is invalid",
   "err.ob.recyclebin.tenant.not.exist": "Tenant '%s' does not exist in recyclebin",

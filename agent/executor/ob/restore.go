@@ -150,7 +150,7 @@ func (t *PreRestoreCheckTask) Execute() (err error) {
 	}
 
 	if err = system.CheckRestoreTime(t.param.DataBackupUri, *t.param.ArchiveLogUri, t.scn); err != nil {
-		return errors.Wrapf(err, "check restore time")
+		return errors.Wrap(err, "check restore time")
 	}
 	return nil
 }
@@ -223,14 +223,14 @@ func (t *StartRestoreTask) Execute() (err error) {
 
 	restoreJob, err := tenantService.GetRunningRestoreTask(t.tenantName)
 	if err != nil {
-		return errors.Wrapf(err, "get running restore task")
+		return errors.Wrap(err, "get running restore task")
 	}
 
 	if restoreJob == nil {
 		// If there is no running restore task and the tenant does not exist, restore the tenant. Otherwise, skip the restore
 		tenant, err := tenantService.GetTenantByName(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get tenant")
+			return errors.Wrap(err, "get tenant")
 		}
 		if tenant != nil {
 			t.ExecuteLogf("Tenant '%s' already exists", t.tenantName)
@@ -243,7 +243,7 @@ func (t *StartRestoreTask) Execute() (err error) {
 
 		restoreJob, err = tenantService.GetRunningRestoreTask(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get running restore task")
+			return errors.Wrap(err, "get running restore task")
 		}
 	}
 	t.jobID = restoreJob.JobID
@@ -254,7 +254,7 @@ func (t *StartRestoreTask) Execute() (err error) {
 	for i := 0; i < waitForCreateTenant; i++ {
 		metaTenantNormal, err = tenantService.IsMetaTenantStatusNormal(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get tenant")
+			return errors.Wrap(err, "get tenant")
 		}
 		if metaTenantNormal {
 			break
@@ -297,7 +297,7 @@ func (t *StartRestoreTask) restoreTenant() (err error) {
 
 	t.ExecuteLogf("Restore tenant '%s'", t.tenantName)
 	if err = tenantService.Restore(t.param, locality, resourcePoolList, t.restoreScn); err != nil {
-		return errors.Wrapf(err, "restore tenant")
+		return errors.Wrap(err, "restore tenant")
 	}
 	return nil
 }
@@ -312,13 +312,13 @@ func (t *StartRestoreTask) Rollback() (err error) {
 		t.ExecuteLog("Cancel restore job failed, try to get tenant")
 		tenant, err := tenantService.GetTenantByName(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get tenant")
+			return errors.Wrap(err, "get tenant")
 		}
 
 		if tenant != nil {
 			t.ExecuteLog("Try to delete tenant")
 			if err = tenantService.DeleteTenant(t.tenantName); err != nil {
-				return errors.Wrapf(err, "delete tenant")
+				return errors.Wrap(err, "delete tenant")
 			}
 		}
 	}
@@ -327,7 +327,7 @@ func (t *StartRestoreTask) Rollback() (err error) {
 	for i := 0; i < waitForRestoreTaskFinish; i++ {
 		job, err := tenantService.GetRunningRestoreTask(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get running restore task")
+			return errors.Wrap(err, "get running restore task")
 		}
 		if job == nil {
 			t.ExecuteLog("Restore task has finished successfully")
@@ -373,7 +373,7 @@ func (t *WaitRestoreFinshTask) Execute() (err error) {
 	for i := 0; i < waitForRestoreTaskFinish; i++ {
 		restoreTask, err := tenantService.GetRunningRestoreTask(t.tenantName)
 		if err != nil {
-			return errors.Wrapf(err, "get running restore task")
+			return errors.Wrap(err, "get running restore task")
 		}
 		if restoreTask == nil {
 			t.ExecuteLog("Restore task has finished successfully")

@@ -28,7 +28,7 @@ func LoadSqliteInstance() error {
 	}
 	db, err := createGormDbByConfig(c)
 	if err != nil {
-		return errors.Wrapf(err, "load sqlite instance failed")
+		return errors.Wrap(err, "load sqlite instance failed")
 	}
 	ocs_db_sqlite = db
 	return nil

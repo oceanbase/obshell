@@ -29,7 +29,7 @@ import (
 func checkZoneCanBeDeleted(zoneName string) error {
 	exist, err := obclusterService.HasUnitInZone(zoneName)
 	if err != nil {
-		return errors.Wrapf(err, "get ob units on zone failed")
+		return errors.Wrap(err, "get ob units on zone failed")
 	}
 	if exist {
 		return errors.Occur(errors.ErrObZoneNotEmpty, zoneName)
@@ -37,7 +37,7 @@ func checkZoneCanBeDeleted(zoneName string) error {
 
 	// check if there is other zone stopped
 	if exist, err := obclusterService.HasOtherStopTask(zoneName); err != nil {
-		return errors.Wrapf(err, "check if has other stop task failed")
+		return errors.Wrap(err, "check if has other stop task failed")
 	} else if exist {
 		return errors.Occur(errors.ErrObServerStoppedInMultiZone)
 	}
@@ -47,7 +47,7 @@ func checkZoneCanBeDeleted(zoneName string) error {
 func DeleteZone(zoneName string) (*task.DagDetailDTO, error) {
 	zone, err := obclusterService.GetZone(zoneName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "check zone exist failed")
+		return nil, errors.Wrap(err, "check zone exist failed")
 	}
 	if zone == nil {
 		return nil, nil
@@ -62,7 +62,7 @@ func DeleteZone(zoneName string) (*task.DagDetailDTO, error) {
 	}
 	agentInfos, err := agentService.GetAgentInfoByZoneFromOB(zoneName)
 	if err != nil {
-		return nil, errors.Wrapf(err, "get agents by zone from ob failed")
+		return nil, errors.Wrap(err, "get agents by zone from ob failed")
 	}
 
 	for _, agent := range agentInfos {

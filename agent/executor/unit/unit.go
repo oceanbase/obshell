@@ -40,11 +40,11 @@ func validateCreateResourceUnitConfigParams(param param.CreateResourceUnitConfig
 		return errors.Occur(errors.ErrObResourceUnitConfigNameEmpty)
 	}
 	if _, pass := parse.CapacityParser(*param.MemorySize); !pass {
-		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "memory_size", "capacity is illegal")
+		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "memory_size", *param.MemorySize)
 	}
 	if param.LogDiskSize != nil {
 		if _, pass := parse.CapacityParser(*param.LogDiskSize); !pass {
-			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "log_disk_size", "capacity is illegal")
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "log_disk_size", *param.LogDiskSize)
 		}
 	}
 

@@ -43,7 +43,7 @@ func getRootPasswordFromBody(c *gin.Context) (*param.TenantRootPasswordParam, er
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 
 	if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
-		return nil, errors.Wrapf(err, "unmarshal request body failed")
+		return nil, errors.Wrap(err, "unmarshal request body failed")
 	}
 
 	var param param.TenantRootPasswordParam
@@ -65,7 +65,7 @@ func getBodyFromContext(c *gin.Context) (map[string]interface{}, error) {
 	}
 	bodyInterface := make(map[string]interface{})
 	if err := json.Unmarshal(bodyBytes, &bodyInterface); err != nil {
-		return nil, errors.Wrapf(err, "unmarshal request body failed")
+		return nil, errors.Wrap(err, "unmarshal request body failed")
 	}
 	return bodyInterface, nil
 }

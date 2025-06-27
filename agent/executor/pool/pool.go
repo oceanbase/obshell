@@ -81,7 +81,7 @@ func CreatePools(t task.Task, poolParam []param.CreateResourcePoolTaskParam) err
 		if err := tenantService.CreateResourcePool(p.PoolName, p.UnitConfigName, p.UnitNum, []string{p.ZoneName}); err != nil {
 			// drop all created resource pool
 			if err := DropFreeResourcePools(t, createdResourcePool); err != nil {
-				t.ExecuteWarnLog(errors.Wrapf(err, "Drop created resource pool failed"))
+				t.ExecuteWarnLog(errors.Wrap(err, "Drop created resource pool failed"))
 			}
 			return errors.Wrapf(err, "Create resource pool %s failed", p.PoolName)
 		}

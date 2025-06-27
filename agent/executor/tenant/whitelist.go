@@ -83,7 +83,7 @@ func (t *ModifyTenantWhitelistTask) Execute() error {
 		return err
 	}
 	if err := tenantService.ModifyTenantWhitelist(t.tenantName, mergeWhitelist(t.whitelist)); err != nil {
-		return errors.Wrapf(err, "modify tenant whitelist failed")
+		return errors.Wrap(err, "modify tenant whitelist failed")
 	}
 	return nil
 }

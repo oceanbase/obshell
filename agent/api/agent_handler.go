@@ -159,7 +159,7 @@ func agentRemoveHandler(c *gin.Context) {
 		dag, err = agent.CreaetFollowerRemoveSelfDag()
 	case meta.MASTER:
 		if isRunning, err := localTaskService.IsRunning(); err != nil {
-			common.SendResponse(c, nil, errors.Wrapf(err, "get local task status failed"))
+			common.SendResponse(c, nil, errors.Wrap(err, "get local task status failed"))
 			return
 		} else if !isRunning {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrAgentUnderMaintenance, meta.OCS_AGENT.String()))

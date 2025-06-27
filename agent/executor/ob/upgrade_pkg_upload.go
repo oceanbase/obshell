@@ -159,7 +159,7 @@ func (r *upgradeRpmPkgInfo) checkFiles() (err error) {
 	expected := append(defalutFilesForOB, defaultFilesForAgent...)
 	obBuildVersion, err := obclusterService.GetObBuildVersion()
 	if err != nil {
-		return errors.Wrapf(err, "get ob version failed")
+		return errors.Wrap(err, "get ob version failed")
 	}
 	obVerRel := strings.Split(obBuildVersion, "_")
 	obVer := obVerRel[0]
