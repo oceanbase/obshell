@@ -115,7 +115,7 @@ var (
 	ErrObTenantJobConflict                       = NewErrorCode("OB.Tenant.Job.Conflict", unexpected, "err.ob.tenant.job.conflict")                                                       // "There is already a in-progress '%s' job"
 	ErrObTenantJobNotExist                       = NewErrorCode("OB.Tenant.Job.NotExist", badRequest, "err.ob.tenant.job.not.exist")                                                      // "There is no job of '%s'"
 	ErrObTenantCompactionStatusNotIdle           = NewErrorCode("OB.Tenant.Compaction.Status.NotIdle", badRequest, "err.ob.tenant.compaction.status.not.idle")                            // "tenant '%s' is in '%s' status, operation not allowed"
-	ErrObTenantRootPassowrdIncorrect             = NewErrorCode("OB.Tenant.RootPassowrdIncorrect", badRequest, "err.ob.tenant.root.passowrd.incorrect")                                   // "The provided password is unable to connect to the tenant."
+	ErrObTenantRootPasswordIncorrect             = NewErrorCode("OB.Tenant.RootPasswordIncorrect", badRequest, "err.ob.tenant.root.password.incorrect")                                   // "The provided password is unable to connect to the tenant."
 	ErrObTenantSysOperationNotAllowed            = NewErrorCode("OB.Tenant.SysOperationNotAllowed", badRequest, "err.ob.tenant.sys.operation.not.allowed")                                // "sys tenant is not allowed to do this operation"
 	ErrObTenantScenarioNotSupported              = NewErrorCode("OB.Tenant.Scenario.NotSupported", illegalArgument, "err.ob.tenant.scenario.not.supported")                               // "current observer does not support scenario"
 	ErrObTenantSetScenarioNotSupported           = NewErrorCode("OB.Tenant.SetScenario.NotSupported", illegalArgument, "err.ob.tenant.set.scenario.not.supported")                        // "current observer does not support scenario"
@@ -323,8 +323,8 @@ var (
 	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unexpected, "err.security.authentication.header.decrypt.failed")
 	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch")
 	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", illegalArgument, "err.security.authentication.with.agent.password")
-	ErrSecurityAuthenticationIncorrectAgentPassowrd      = NewErrorCode("Security.Authentication.IncorrectAgentPassowrd", illegalArgument, "err.security.authentication.incorrect.agent.password")
-	ErrSecurityAuthenticationIncorrectOceanbasePassowrd  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassowrd", illegalArgument, "err.security.authentication.incorrect.oceanbase.password", 10008)
+	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", illegalArgument, "err.security.authentication.incorrect.agent.password")
+	ErrSecurityAuthenticationIncorrectOceanbasePassword  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassword", illegalArgument, "err.security.authentication.incorrect.oceanbase.password", 10008)
 	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", illegalArgument, "err.security.authentication.unknown.password.type")
 	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", illegalArgument, "err.security.authentication.expired")
 	ErrSecurityAuthenticationTimestampInvalid            = NewErrorCode("Security.Authentication.Timestamp.Invalid", illegalArgument, "err.security.authentication.timestamp.invalid")

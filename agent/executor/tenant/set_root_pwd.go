@@ -67,7 +67,7 @@ func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) 
 		return errors.Wrap(err, "Failed to check tenant connectable using password.")
 	}
 	if !result.IsConnectable {
-		return errors.Occur(errors.ErrObTenantRootPassowrdIncorrect)
+		return errors.Occur(errors.ErrObTenantRootPasswordIncorrect)
 	}
 	tenant.GetPasswordMap().Set(tenantName, rootPassword)
 	return nil

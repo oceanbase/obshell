@@ -62,7 +62,7 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 
 	if verifyType == AGENT_PASSWORD {
 		if pwd != meta.AGENT_PWD.GetPassword() {
-			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectAgentPassowrd)
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectAgentPassword)
 		}
 	} else if verifyType == OCEANBASE_PASSWORD {
 		if pwd != meta.OCEANBASE_PWD {
@@ -75,7 +75,7 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 					return errors.Wrap(err, "dump password failed")
 				}
 			} else {
-				return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
+				return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassword)
 			}
 		}
 	} else {
@@ -87,10 +87,10 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 func VerifyOceanbasePassword(password string) error {
 	if err := oceanbase.LoadOceanbaseInstanceForTest(config.NewObDataSourceConfig().SetPassword(password)); err != nil {
 		if strings.Contains(err.Error(), "Access denied") {
-			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassword)
 		}
 		if meta.OCEANBASE_PWD != password {
-			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassowrd)
+			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassword)
 		}
 		log.WithError(err).Error("unexpected db error")
 		return nil

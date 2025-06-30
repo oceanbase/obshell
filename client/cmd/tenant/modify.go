@@ -33,7 +33,7 @@ import (
 type tenantModifyFlags struct {
 	primaryZone                 string
 	whitelist                   string
-	interactivelyChangePassowrd bool
+	interactivelyChangePassword bool
 	oldPwd                      string
 	newPwd                      string
 	verbose                     bool
@@ -58,7 +58,7 @@ func newModifyCmd() *cobra.Command {
 	modifyCmd.Flags().SortFlags = false
 	modifyCmd.VarsPs(&opts.primaryZone, []string{FLAG_PRIMARY_ZONE}, "", "Set the primary zone of the tenant", false)
 	modifyCmd.VarsPs(&opts.whitelist, []string{FLAG_WHITELIST}, "", "Set the whitelist of the tenant", false)
-	modifyCmd.VarsPs(&opts.interactivelyChangePassowrd, []string{FLAG_PASSWORD}, false, "Change password in interactive mode.", false)
+	modifyCmd.VarsPs(&opts.interactivelyChangePassword, []string{FLAG_PASSWORD}, false, "Change password in interactive mode.", false)
 	modifyCmd.VarsPs(&opts.oldPwd, []string{FLAG_OLD_PASSWORD}, "", "The old root password of tenant, Default to empty.", false)
 	modifyCmd.VarsPs(&opts.newPwd, []string{FLAG_NEW_PASSWORD}, "", "The new root password of tenant", false)
 	modifyCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
@@ -67,13 +67,13 @@ func newModifyCmd() *cobra.Command {
 }
 
 func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags) (err error) {
-	if opts.interactivelyChangePassowrd && (cmd.Flags().Changed(FLAG_OLD_PASSWORD) || cmd.Flags().Changed(FLAG_NEW_PASSWORD)) {
+	if opts.interactivelyChangePassword && (cmd.Flags().Changed(FLAG_OLD_PASSWORD) || cmd.Flags().Changed(FLAG_NEW_PASSWORD)) {
 		return errors.Occur(errors.ErrCliUsageError, "could not specify both --password and --old-password/--new-password")
 	}
 	if cmd.Flags().Changed(FLAG_OLD_PASSWORD) && !cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
 		return errors.Occur(errors.ErrCliUsageError, "need specify --new-password when --old-password is specified")
 	}
-	if (cmd.Flags().Changed(FLAG_NEW_PASSWORD) || opts.interactivelyChangePassowrd || cmd.Flags().Changed(FLAG_OLD_PASSWORD)) && tenantName == constant.TENANT_SYS {
+	if (cmd.Flags().Changed(FLAG_NEW_PASSWORD) || opts.interactivelyChangePassword || cmd.Flags().Changed(FLAG_OLD_PASSWORD)) && tenantName == constant.TENANT_SYS {
 		return errors.Occur(errors.ErrObTenantSysOperationNotAllowed)
 	}
 	if cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
@@ -86,7 +86,7 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 		}
 		stdio.LoadSuccessf("set password of tenant %s", tenantName)
 	}
-	if opts.interactivelyChangePassowrd {
+	if opts.interactivelyChangePassword {
 		old_password, err := stdio.InputPassword("Enter the old password(enter means empty): ")
 		if err != nil {
 			return err
