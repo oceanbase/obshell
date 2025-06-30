@@ -379,7 +379,7 @@ func HeaderDecrypt(skipRoutes ...string) func(*gin.Context) {
 			if err != nil {
 				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
 				c.Abort()
-				SendResponse(c, nil, errors.Occur(errors.ErrSecurityHeaderDecryptFailed, err.Error()))
+				SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationHeaderDecryptFailed, err.Error()))
 				return
 			}
 			c.Set(constant.OCS_AGENT_HEADER, header)
@@ -388,7 +388,7 @@ func HeaderDecrypt(skipRoutes ...string) func(*gin.Context) {
 			if err != nil {
 				log.WithContext(NewContextWithTraceId(c)).Errorf("header decrypt failed, err: %v", err)
 				c.Abort()
-				SendResponse(c, nil, errors.Occur(errors.ErrSecurityHeaderDecryptFailed, err.Error()))
+				SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationHeaderDecryptFailed, err.Error()))
 				return
 			}
 			c.Set(constant.OCS_HEADER, header)

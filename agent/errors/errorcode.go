@@ -320,7 +320,7 @@ var (
 	ErrSecurityAuthenticationUnauthorized                = NewErrorCode("Security.Authentication.Unauthorized", unauthorized, "err.security.authentication.unauthorized")
 	ErrSecurityAuthenticationFileSha256Mismatch          = NewErrorCode("Security.Authentication.File.Sha256Mismatch", unauthorized, "err.security.authentication.file.sha256.mismatch")
 	ErrSecurityDecryptFailed                             = NewErrorCode("Security.DecryptFailed", unexpected, "err.security.decrypt.failed")
-	ErrSecurityHeaderDecryptFailed                       = NewErrorCode("Security.Header.DecryptFailed", unexpected, "err.security.header.decrypt.failed")
+	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unexpected, "err.security.authentication.header.decrypt.failed")
 	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch")
 	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", illegalArgument, "err.security.authentication.with.agent.password")
 	ErrSecurityAuthenticationIncorrectAgentPassowrd      = NewErrorCode("Security.Authentication.IncorrectAgentPassowrd", illegalArgument, "err.security.authentication.incorrect.agent.password")
