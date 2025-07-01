@@ -35,7 +35,7 @@ const (
 func NewPoolCommand() *cobra.Command {
 	poolCommand := command.NewCommand(&cobra.Command{
 		Use:   clientconst.CMD_POOL,
-		Short: "Manage the resource poll.",
+		Short: "Manage the resource pool.",
 		PersistentPreRunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			global.InitGlobalVariable()
 			return cluster.CheckAndStartDaemon()

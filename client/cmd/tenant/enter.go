@@ -123,7 +123,8 @@ const (
 
 func NewTenantCmd() *cobra.Command {
 	tenantCmd := command.NewCommand(&cobra.Command{
-		Use: clientconst.CMD_TENANT,
+		Use:   clientconst.CMD_TENANT,
+		Short: "Display and manage the OceanBase tenant.",
 		PersistentPreRunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			defer stdio.StopLoading()
 			global.InitGlobalVariable()
