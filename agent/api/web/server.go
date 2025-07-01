@@ -116,7 +116,7 @@ func NewServer(mode config.AgentMode, conf config.ServerConfig) *Server {
 }
 
 func writeIndexlHtml(c *gin.Context) {
-	staticFp, _ := fs.Sub(frontend.Dist, "frontend/dist")
+	staticFp, _ := fs.Sub(frontend.Dist, "dist")
 	content, err := staticFp.Open("index.html")
 	if err != nil {
 		log.Fatalf("Critical error: %s file not found in the static file system!", "index.html")
