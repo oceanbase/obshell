@@ -16,7 +16,6 @@
   "err.agent.maintainer.not.exist": "Maintainer is not exist",
   "err.agent.need.to.takeover": "obshell need to be cluster. Please do takeover first.",
   "err.agent.not.exist": "Server '%s' does not exist",
-  "err.agent.not.under.maintenance": "Agent is not under maintenance",
   "err.agent.no.active.server": "No agent with active server found",
   "err.agent.no.master": "Master agent is not found",
   "err.agent.not.initialized": "Agent not initialized",

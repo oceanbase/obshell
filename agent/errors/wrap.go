@@ -17,14 +17,10 @@
 package errors
 
 import (
+	"fmt"
+
 	"github.com/pkg/errors"
 )
-
-type OcsAgentErrorInterface interface {
-	ErrorCode() ErrorCode
-	Error() string
-	ErrorMessage() string
-}
 
 // New returns an error with the supplied message.
 func New(message string) error {
@@ -44,9 +40,10 @@ func Wrap(err error, message string) error {
 	if ocsAgentErr, ok := err.(OcsAgentErrorInterface); ok {
 		return OcsAgentErrorWrapper{
 			cause: err,
-			OcsAgentErrorExporter: OcsAgentErrorExporter{
-				errorCode: ocsAgentErr.ErrorCode(),
-				err:       errors.New(message),
+			code:  ocsAgentErr.ErrorCode(),
+			OcsAgentError: OcsAgentError{
+				errorCode: ErrEmpty,
+				args:      []interface{}{message},
 			},
 		}
 	} else {
@@ -62,9 +59,10 @@ func Wrapf(err error, format string, args ...interface{}) error {
 	if ocsAgentErr, ok := err.(OcsAgentErrorInterface); ok {
 		return OcsAgentErrorWrapper{
 			cause: err,
-			OcsAgentErrorExporter: OcsAgentErrorExporter{
-				errorCode: ocsAgentErr.ErrorCode(),
-				err:       errors.Errorf(format, args...),
+			code:  ocsAgentErr.ErrorCode(),
+			OcsAgentError: OcsAgentError{
+				errorCode: ErrEmpty,
+				args:      []interface{}{fmt.Sprintf(format, args...)},
 			},
 		}
 	} else {
@@ -80,16 +78,14 @@ func WrapRetain(errorCode ErrorCode, err error, args ...interface{}) *OcsAgentEr
 	}
 	newErr := &OcsAgentErrorWrapper{
 		cause: err,
-		OcsAgentErrorExporter: OcsAgentErrorExporter{
+		code:  errorCode,
+		OcsAgentError: OcsAgentError{
 			errorCode: errorCode,
-			err: ocsAgentError{
-				ErrorCode: errorCode,
-				Args:      args,
-			},
+			args:      args,
 		},
 	}
 	if originalErr, ok := err.(OcsAgentErrorInterface); ok && originalErr.ErrorCode().Code != ErrCommonUnexpected.Code {
-		newErr.OcsAgentErrorExporter.SetErrorCode(originalErr.ErrorCode())
+		newErr.code = originalErr.ErrorCode()
 	}
 	return newErr
 }
@@ -102,12 +98,10 @@ func WrapOverride(errorCode ErrorCode, err error, args ...interface{}) *OcsAgent
 	}
 	newErr := &OcsAgentErrorWrapper{
 		cause: err,
-		OcsAgentErrorExporter: OcsAgentErrorExporter{
+		code:  errorCode,
+		OcsAgentError: OcsAgentError{
 			errorCode: errorCode,
-			err: ocsAgentError{
-				ErrorCode: errorCode,
-				Args:      args,
-			},
+			args:      args,
 		},
 	}
 	return newErr

@@ -32,6 +32,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/text/language"
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
@@ -56,6 +57,8 @@ const (
 	apiRouteKey   = "apiRoute"
 
 	originalBody = "ORIGINAL_BODY"
+
+	ACCEPT_LANGUAGE = "Accept-Language"
 )
 
 var (
@@ -298,6 +301,17 @@ func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 
 		ctx := NewContextWithTraceId(c)
 		resp := getOcsResponseFromContext(c)
+		if resp.Error != nil {
+			if c.Request.Header.Get(ACCEPT_LANGUAGE) != "" {
+				if locale, err := language.Parse(c.Request.Header.Get(ACCEPT_LANGUAGE)); err == nil {
+					if resp.Error.OccurError != nil {
+						if ocsAgentError, ok := resp.Error.OccurError.(errors.OcsAgentErrorInterface); ok {
+							resp.Error.Message = ocsAgentError.LocaleMessage(locale)
+						}
+					}
+				}
+			}
+		}
 
 		resp.Duration = time.Since(startTime).Milliseconds()
 

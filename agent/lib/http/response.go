@@ -44,10 +44,11 @@ type OcsAgentResponse struct {
 
 // ApiError is the api error struct of ocsagent.
 type ApiError struct {
-	Code      int           `json:"code,omitempty"`      // Error code v1, deprecated
-	ErrCode   string        `json:"errCode"`             // Error code string
-	Message   string        `json:"message"`             // Error message
-	SubErrors []interface{} `json:"subErrors,omitempty"` // Sub errors
+	Code       int           `json:"code,omitempty"`      // Error code v1, deprecated
+	ErrCode    string        `json:"errCode"`             // Error code string
+	Message    string        `json:"message"`             // Error message
+	OccurError error         `json:"-"`                   // Error object
+	SubErrors  []interface{} `json:"subErrors,omitempty"` // Sub errors
 }
 
 // ApiFieldError is the api field error struct of ocsagent.
@@ -115,23 +116,28 @@ func buildErrorResponse(err error, response *OcsAgentResponse) *OcsAgentResponse
 		response.Successful = false
 		response.Status = agenterr.ErrorCode().Kind
 		response.Error = &ApiError{
-			Code:    agenterr.ErrorCode().OldCode,
-			ErrCode: agenterr.ErrorCode().Code,
-			Message: agenterr.Error()}
+			Code:       agenterr.ErrorCode().OldCode,
+			ErrCode:    agenterr.ErrorCode().Code,
+			Message:    agenterr.Error(),
+			OccurError: agenterr,
+		}
 	} else if errors.IsMysqlError(err) {
 		response.Successful = false
 		response.Status = errors.ErrMysqlError.Kind
 		response.Error = &ApiError{
-			Code:    errors.ErrObsoleteCode,
-			ErrCode: errors.ErrMysqlError.Code,
-			Message: err.Error()}
+			Code:       errors.ErrObsoleteCode,
+			ErrCode:    errors.ErrMysqlError.Code,
+			Message:    err.Error(),
+			OccurError: errors.Occur(errors.ErrMysqlError, err.Error()),
+		}
 	} else {
 		response.Successful = false
 		response.Status = errors.ErrCommonUnexpected.Kind
 		response.Error = &ApiError{
-			Code:    errors.ErrObsoleteCode,
-			ErrCode: errors.ErrCommonUnexpected.Code,
-			Message: err.Error(),
+			Code:       errors.ErrObsoleteCode,
+			ErrCode:    errors.ErrCommonUnexpected.Code,
+			Message:    err.Error(),
+			OccurError: errors.Occur(errors.ErrCommonUnexpected, err.Error()),
 		}
 	}
 

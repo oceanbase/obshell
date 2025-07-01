@@ -21,10 +21,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-resty/resty/v2"
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm/utils"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/coordinator"
@@ -41,6 +44,11 @@ const (
 	IsAutoForwardedFlag    = "IsAutoForward"          // IsAutoForwardedFlag marks whether the current request is auto forwarded
 	FollowerAgentOfForward = "FollowerAgentOfForward" // FollowerAgentOfForward is where the request is auto forwarded from
 )
+
+// OCS_CUSTOMIZE_HEADER is the customize header that will be delivered when forward request.
+var OCS_CUSTOMIZE_HEADER = []string{
+	ACCEPT_LANGUAGE,
+}
 
 // autoForward is used by middleware to forward the request to master agent.
 func autoForward(c *gin.Context) {
@@ -128,12 +136,22 @@ func ForwardRequest(c *gin.Context, agentInfo meta.AgentInfoInterface, param int
 	sendRequsetForForward(c, ctx, agentInfo, headers, body)
 }
 
+func fillCustomizeHeader(oldRequest *http.Request, newRequest *resty.Request) {
+	for k, v := range oldRequest.Header {
+		if utils.Contains(OCS_CUSTOMIZE_HEADER, k) && newRequest.Header.Get(k) == "" {
+			newRequest.Header.Set(k, v[0])
+		}
+	}
+}
+
 func sendRequsetForForward(c *gin.Context, ctx context.Context, agentInfo meta.AgentInfoInterface, headers map[string]string, body interface{}) {
 	startTime := time.Now()
 	request := libhttp.NewClient().R()
 	for k, v := range headers {
 		request.SetHeader(k, v)
 	}
+	fillCustomizeHeader(c.Request, request)
+
 	request.SetBody(body)
 
 	uri := fmt.Sprintf("%s://%s%s", global.Protocol, agentInfo.String(), c.Request.URL)

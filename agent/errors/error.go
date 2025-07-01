@@ -24,103 +24,112 @@ import (
 	"golang.org/x/text/language"
 )
 
-// OcsAgentError defines ocsagent error and implements error interface.
-type ocsAgentError struct {
-	ErrorCode ErrorCode     // error code
-	Args      []interface{} // args for error message formatting
+type OcsAgentErrorInterface interface {
+	ErrorCode() ErrorCode
+	Error() string
+	ErrorMessage() string
+	LocaleMessage(lang language.Tag) string
 }
 
-type OcsAgentErrorExporter struct {
-	errorCode ErrorCode
-	err       error
+// OcsAgentError defines ocsagent error and implements error interface.
+type OcsAgentError struct {
+	errorCode ErrorCode     // error code
+	args      []interface{} // args for error message formatting
 }
 
 type OcsAgentErrorWrapper struct {
 	cause error
-	OcsAgentErrorExporter
+	code  ErrorCode
+	OcsAgentError
 }
 
 // Message will return error message composed of errorcode and args.
-func (e ocsAgentError) message(lang language.Tag) string {
-	return GetMessage(lang, e.ErrorCode, e.Args)
+func (e OcsAgentError) message(lang language.Tag) string {
+	return GetMessage(lang, e.errorCode.key, e.args)
 }
 
 // DefaultMessage will return err default message.
-func (e ocsAgentError) Message() string {
+func (e OcsAgentError) Message() string {
 	return e.message(defaultLanguage)
 }
 
-func (e ocsAgentError) Error() string {
+func (e OcsAgentError) Error() string {
 	return e.Message()
 }
 
-func (e OcsAgentErrorExporter) Error() string {
-	return e.err.Error()
-}
-
-func (e *OcsAgentErrorExporter) ErrorCode() ErrorCode {
+func (e OcsAgentError) ErrorCode() ErrorCode {
 	return e.errorCode
 }
 
-func (e *OcsAgentErrorExporter) SetErrorCode(errorCode ErrorCode) {
-	e.errorCode = errorCode
+func (e OcsAgentError) Args() []interface{} {
+	return e.args
 }
 
-func (e *OcsAgentErrorExporter) SetError(err error) {
-	e.err = err
+func (e OcsAgentError) ErrorMessage() string {
+	return fmt.Sprintf("[%s]: %s", e.errorCode.Code, e.Error())
 }
 
-func (e OcsAgentErrorExporter) ErrorMessage() string {
-	return fmt.Sprintf("[%s]: %s", e.ErrorCode().Code, e.err.Error())
+func (e OcsAgentError) LocaleMessage(lang language.Tag) string {
+	return GetMessage(lang, e.errorCode.key, e.args)
 }
 
 func (e OcsAgentErrorWrapper) ErrorCode() ErrorCode {
-	return e.OcsAgentErrorExporter.ErrorCode()
+	return e.code
 }
 
 func (e OcsAgentErrorWrapper) Error() string {
 	if e.cause != nil {
-		return fmt.Sprintf("%s: %s", e.err.Error(), e.cause.Error())
+		return fmt.Sprintf("%s: %s", e.OcsAgentError.Error(), e.cause.Error())
 	}
-	return e.err.Error()
+	return e.OcsAgentError.Error()
 }
 
 func (e OcsAgentErrorWrapper) ErrorMessage() string {
-	return fmt.Sprintf("[%s]: %s", e.ErrorCode().Code, e.Error())
+	return fmt.Sprintf("[%s]: %s", e.code.Code, e.Error())
+}
+
+func (e OcsAgentErrorWrapper) Args() []interface{} {
+	return e.OcsAgentError.Args()
 }
 
 func (e OcsAgentErrorWrapper) Unwrap() error {
 	return e.cause
 }
 
+func (e OcsAgentErrorWrapper) LocaleMessage(lang language.Tag) string {
+	if e.cause != nil {
+		if ocsAgentError, ok := e.cause.(OcsAgentErrorInterface); ok {
+			return fmt.Sprintf("%s: %s", e.OcsAgentError.LocaleMessage(lang), ocsAgentError.LocaleMessage(lang))
+		} else {
+			return fmt.Sprintf("%s: %s", e.OcsAgentError.LocaleMessage(lang), e.cause.Error())
+		}
+	}
+	return e.OcsAgentError.LocaleMessage(lang)
+}
+
 // OccurWithError returns *OcsAgentError composed of errorcode and error message.
 func OccurWithMessage(message string, errorCode ErrorCode, args ...interface{}) *OcsAgentErrorWrapper {
 	return &OcsAgentErrorWrapper{
 		cause: errors.New(message),
-		OcsAgentErrorExporter: OcsAgentErrorExporter{
+		code:  errorCode,
+		OcsAgentError: OcsAgentError{
 			errorCode: errorCode,
-			err: &ocsAgentError{
-				ErrorCode: errorCode,
-				Args:      args,
-			},
+			args:      args,
 		},
 	}
 }
 
 // Occur returns *OcsAgentError composed of errorcode and args
-func Occur(errorCode ErrorCode, args ...interface{}) *OcsAgentErrorExporter {
-	return &OcsAgentErrorExporter{
-		err: &ocsAgentError{
-			ErrorCode: errorCode,
-			Args:      args,
-		},
+func Occur(errorCode ErrorCode, args ...interface{}) *OcsAgentError {
+	return &OcsAgentError{
 		errorCode: errorCode,
+		args:      args,
 	}
 }
 
 // Occurf formats according to a format specifier (The first one of the `args`)
 // and returns the resulting string as a value that satisfies `OcsAgentError.Args`.
-func Occurf(errorCode ErrorCode, format string, args ...interface{}) *OcsAgentErrorExporter {
+func Occurf(errorCode ErrorCode, format string, args ...interface{}) *OcsAgentError {
 	return Occur(errorCode, fmt.Sprintf(format, args...))
 }
 

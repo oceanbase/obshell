@@ -26,15 +26,21 @@ import (
 	"github.com/oceanbase/obshell/agent/bindata"
 )
 
-const errorsI18nEnResourceFile = "agent/assets/i18n/error/en.json"
+var i18nResourceFiles = map[string]string{
+	"en": "agent/assets/i18n/error/en.json",
+	"zh": "agent/assets/i18n/error/zh.json",
+}
 
 var defaultLanguage = language.English
+
 var bundle *i18n.Bundle
 
 func init() {
 	bundle = i18n.NewBundle(defaultLanguage)
 	bundle.RegisterUnmarshalFunc("json", json.Unmarshal)
-	loadBundleMessage(errorsI18nEnResourceFile)
+	for _, assetName := range i18nResourceFiles {
+		loadBundleMessage(assetName)
+	}
 }
 
 func loadBundleMessage(assetName string) {
@@ -42,14 +48,13 @@ func loadBundleMessage(assetName string) {
 	bundle.MustParseMessageFileBytes(asset, assetName)
 }
 
-// GetMessage will get message from i18n bundle and format it with args
-func GetMessage(lang language.Tag, errorCode ErrorCode, args []interface{}) string {
+func GetMessage(lang language.Tag, key string, args []interface{}) string {
 	localizer := i18n.NewLocalizer(bundle, lang.String())
 	message, err := localizer.Localize(&i18n.LocalizeConfig{
-		MessageID: errorCode.key,
+		MessageID: key,
 	})
 	if err != nil {
-		return errorCode.key
+		return key
 	}
 	return fmt.Sprintf(message, args...)
 }

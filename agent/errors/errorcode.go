@@ -249,7 +249,6 @@ var (
 	ErrAgentVersionInconsistent         = NewErrorCode("Agent.Version.Inconsistent", badRequest, "err.agent.version.inconsistent")
 	ErrAgentOBVersionInconsistent       = NewErrorCode("Agent.OB.Version.Inconsistent", badRequest, "err.agent.ob.version.inconsistent")
 	ErrAgentNoMaster                    = NewErrorCode("Agent.NoMaster", unexpected, "err.agent.no.master")
-	ErrAgentNotUnderMaintenance         = NewErrorCode("Agent.NotUnderMaintenance", illegalArgument, "err.agent.not.under.maintenance")
 	ErrAgentUnderMaintenance            = NewErrorCode("Agent.UnderMaintenance", known, "err.agent.under.maintenance")
 	ErrAgentCurrentUnderMaintenance     = NewErrorCode("Agent.Current.UnderMaintenance", known, "err.agent.current.under.maintenance")
 	ErrAgentUnderMaintenanceDag         = NewErrorCode("Agent.UnderMaintenanceDag", known, "err.agent.under.maintenance.dag")

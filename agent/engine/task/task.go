@@ -335,21 +335,15 @@ func (task *Task) ExecuteErrorLog(err error) {
 		return
 	}
 
-	var ocsAgentError errors.OcsAgentErrorInterface
+	var OcsAgentError errors.OcsAgentErrorInterface
 	if tmp, ok := err.(errors.OcsAgentErrorInterface); ok {
-		ocsAgentError = tmp
+		OcsAgentError = tmp
 	} else if errors.IsMysqlError(err) {
-		exportor := &errors.OcsAgentErrorExporter{}
-		exportor.SetErrorCode(errors.ErrMysqlError)
-		exportor.SetError(err)
-		ocsAgentError = exportor
+		OcsAgentError = errors.Occur(errors.ErrMysqlError, err.Error())
 	} else {
-		exportor := &errors.OcsAgentErrorExporter{}
-		exportor.SetErrorCode(errors.ErrCommonUnexpected)
-		exportor.SetError(err)
-		ocsAgentError = exportor
+		OcsAgentError = errors.Occur(errors.ErrCommonUnexpected, err.Error())
 	}
-	task.executeLog(log.ErrorLevel, fmt.Sprintf("ERROR: %s", ocsAgentError.ErrorMessage()))
+	task.executeLog(log.ErrorLevel, fmt.Sprintf("ERROR: %s", OcsAgentError.ErrorMessage()))
 }
 
 func isNotPrintErr(err error) bool {
