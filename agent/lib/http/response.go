@@ -110,8 +110,8 @@ func buildErrorResponse(err error, response *OcsAgentResponse) *OcsAgentResponse
 		return response
 	}
 
-	agenterr, _ := err.(errors.OcsAgentErrorInterface)
-	if agenterr != nil && !reflect.ValueOf(agenterr).IsNil() {
+	agenterr, ok := err.(errors.OcsAgentErrorInterface)
+	if ok && agenterr != nil {
 		response.Successful = false
 		response.Status = agenterr.ErrorCode().Kind
 		response.Error = &ApiError{

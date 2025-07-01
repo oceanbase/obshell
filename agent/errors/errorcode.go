@@ -323,7 +323,7 @@ var (
 	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unexpected, "err.security.authentication.header.decrypt.failed")
 	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch")
 	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", illegalArgument, "err.security.authentication.with.agent.password")
-	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", illegalArgument, "err.security.authentication.incorrect.agent.password")
+	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", illegalArgument, "err.security.authentication.incorrect.agent.password", 10008)
 	ErrSecurityAuthenticationIncorrectOceanbasePassword  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassword", illegalArgument, "err.security.authentication.incorrect.oceanbase.password", 10008)
 	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", illegalArgument, "err.security.authentication.unknown.password.type")
 	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", illegalArgument, "err.security.authentication.expired")
