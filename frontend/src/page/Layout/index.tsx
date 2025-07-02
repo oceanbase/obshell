@@ -137,7 +137,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   }, []);
 
   // 登录页不需要 publicKey loading
-  if (isPasswordFreeLogin && loading && location?.pathname !== '/login') {
+  if (loading && location?.pathname !== '/login') {
     // publicKey 获取之后再加载内容，空密码场景下只需要 publicKey 即可登录（实现免密登录），无须获取密码
     return <Spin style={{ marginTop: '20vh' }}></Spin>;
   }
