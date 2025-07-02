@@ -178,6 +178,9 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 
 	obVersion, isCommunityEdition, _ := binary.GetMyOBVersion() // ignore the error
 	if obVersion > constant.OB_VERSION_4_3_5_2 && isCommunityEdition {
+		if len(param.Parameters) == 0 {
+			param.Parameters = make(map[string]interface{})
+		}
 		if _, ok := param.Parameters[constant.PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY]; !ok {
 			param.Parameters[constant.PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY] = "ALL"
 		}
