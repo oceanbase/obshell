@@ -253,7 +253,6 @@ var (
 	ErrAgentCurrentUnderMaintenance     = NewErrorCode("Agent.Current.UnderMaintenance", known, "err.agent.current.under.maintenance")
 	ErrAgentUnderMaintenanceDag         = NewErrorCode("Agent.UnderMaintenanceDag", known, "err.agent.under.maintenance.dag")
 	ErrAgentUnavailable                 = NewErrorCode("Agent.Unavailable", unexpected, "err.agent.unavailable")
-	ErrAgentAddressInvalid              = NewErrorCode("Agent.Address.Invalid", illegalArgument, "err.agent.address.invalid")
 	ErrAgentOBVersionNotSupported       = NewErrorCode("Agent.OBVersionNotSupported", badRequest, "err.agent.ob.version.not.supported")
 	ErrAgentNoActiveServer              = NewErrorCode("Agent.NoActiveServer", unexpected, "err.agent.no.active.server")
 
@@ -315,21 +314,21 @@ var (
 	ErrOBProxyPackageMissingFile            = NewErrorCode("OBProxy.Package.NotFound", unexpected, "err.obproxy.package.missing.file")
 
 	// Security
+	ErrSecurityDecryptFailed                             = NewErrorCode("Security.DecryptFailed", unexpected, "err.security.decrypt.failed")
 	ErrSecurityUserPermissionDenied                      = NewErrorCode("Security.User.PermissionDenied", unauthorized, "err.security.user.permission.denied")
 	ErrSecurityAuthenticationUnauthorized                = NewErrorCode("Security.Authentication.Unauthorized", unauthorized, "err.security.authentication.unauthorized")
 	ErrSecurityAuthenticationFileSha256Mismatch          = NewErrorCode("Security.Authentication.File.Sha256Mismatch", unauthorized, "err.security.authentication.file.sha256.mismatch")
-	ErrSecurityDecryptFailed                             = NewErrorCode("Security.DecryptFailed", unexpected, "err.security.decrypt.failed")
-	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unexpected, "err.security.authentication.header.decrypt.failed")
+	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unauthorized, "err.security.authentication.header.decrypt.failed")
 	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch")
-	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", illegalArgument, "err.security.authentication.with.agent.password")
-	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", illegalArgument, "err.security.authentication.incorrect.agent.password", 10008)
-	ErrSecurityAuthenticationIncorrectOceanbasePassword  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassword", illegalArgument, "err.security.authentication.incorrect.oceanbase.password", 10008)
-	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", illegalArgument, "err.security.authentication.unknown.password.type")
-	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", illegalArgument, "err.security.authentication.expired")
-	ErrSecurityAuthenticationTimestampInvalid            = NewErrorCode("Security.Authentication.Timestamp.Invalid", illegalArgument, "err.security.authentication.timestamp.invalid")
-	ErrSecurityAuthenticationIncorrectToken              = NewErrorCode("Security.Authentication.IncorrectToken", illegalArgument, "err.security.authentication.incorrect.token")
-	ErrSecurityAuthenticationWithOceanBasePassword       = NewErrorCode("Security.Authentication.WithOceanBasePassword", illegalArgument, "err.security.authentication.with.oceanbase.password")
-	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", illegalArgument, "err.security.authentication.agent.password.not.initialized")
+	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", unauthorized, "err.security.authentication.with.agent.password")
+	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", unauthorized, "err.security.authentication.incorrect.agent.password", 10008)
+	ErrSecurityAuthenticationIncorrectOceanbasePassword  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassword", unauthorized, "err.security.authentication.incorrect.oceanbase.password", 10008)
+	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", unauthorized, "err.security.authentication.unknown.password.type")
+	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", unauthorized, "err.security.authentication.expired")
+	ErrSecurityAuthenticationTimestampInvalid            = NewErrorCode("Security.Authentication.Timestamp.Invalid", unauthorized, "err.security.authentication.timestamp.invalid")
+	ErrSecurityAuthenticationIncorrectToken              = NewErrorCode("Security.Authentication.IncorrectToken", unauthorized, "err.security.authentication.incorrect.token")
+	ErrSecurityAuthenticationWithOceanBasePassword       = NewErrorCode("Security.Authentication.WithOceanBasePassword", unauthorized, "err.security.authentication.with.oceanbase.password")
+	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", unauthorized, "err.security.authentication.agent.password.not.initialized")
 
 	// Task
 	ErrTaskExpired                         = NewErrorCode("Task.Expired", known, "err.task.expired")
@@ -374,7 +373,7 @@ var (
 
 	ErrGormNoRowAffected = NewErrorCode("Gorm.NoRowAffected", unexpected, "err.gorm.no.row.affected") // "%s: no row affected"
 
-	ErrMysqlError = NewErrorCode("Mysql.Error", badRequest, "err.mysql.error") // "%s"
+	ErrMysqlError = NewErrorCode("MySQL.Error", badRequest, "err.mysql.error") // "%s"
 
 	ErrPackageNameMismatch   = NewErrorCode("Package.NameMismatch", illegalArgument, "err.package.name.mismatch")     // "rpm package name %s not match %s"
 	ErrPackageReleaseInvalid = NewErrorCode("Package.ReleaseInvalid", illegalArgument, "err.package.release.invalid") // "rpm package release %s not match format"
@@ -407,7 +406,8 @@ var (
 	ErrAgentTakeOverFailed                 = NewErrorCode("Agent.TakeOverFailed", unexpected, "err.agent.take.over.failed")                                      // "take over or rebuild failed: %v"
 	ErrAgentServeOnUnixSocketFailed        = NewErrorCode("Agent.ServeOnUnixSocketFailed", unexpected, "err.agent.serve.on.unix.socket.failed")                  // "serve on unix listener failed: %v\n"
 	ErrAgentServeOnTcpSocketFailed         = NewErrorCode("Agent.ServeOnTcpSocketFailed", unexpected, "err.agent.serve.on.tcp.socket.failed")                    // "serve on tcp listener failed: %v\n"
-	ErrAgenDaemonServeOnUnixSocketFailed   = NewErrorCode("AgenDaemon.ServeOnUnixSocketFailed", unexpected, "err.agen.daemon.serve.on.unix.socket.failed")       // "daemon serve on socket listener failed: %s\n"
+	ErrAgentDaemonServeOnUnixSocketFailed  = NewErrorCode("Agent.Daemon.ServeOnUnixSocketFailed", unexpected, "err.agent.daemon.serve.on.unix.socket.failed")    // "daemon serve on socket listener failed\n"
 	ErrAgentOceanbasePasswordLoadFailed    = NewErrorCode("Agent.Oceanbase.Password.LoadFailed", unexpected, "err.agent.oceanbase.password.load.failed")         // "check password of root@sys in sqlite failed: not cluster agent"
 	ErrAgentUpgradeKillOldServerTimeout    = NewErrorCode("Agent.Upgrade.KillOldServerTimeout", unexpected, "err.agent.upgrade.kill.old.server.timeout")         // "wait obshell server killed timeout"
+	ErrAgentDaemonStartFailed              = NewErrorCode("Agent.Daemon.StartFailed", unexpected, "err.agent.daemon.start.failed")                               // "daemon start failed: %v\n"
 )

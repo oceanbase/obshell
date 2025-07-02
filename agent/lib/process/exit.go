@@ -40,7 +40,6 @@ func ExitWithError(code int, err error) {
 	if err == nil {
 		return
 	}
-	fmt.Printf("err: %+v\n", err)
 	var msg string
 	if ocsAgentErr, ok := err.(errors.OcsAgentErrorInterface); ok {
 		msg = fmt.Sprintf("%s[ERROR]%s %sCode%s: %s, %sMessage%s: %s", Red, Reset, Yellow, Reset, ocsAgentErr.ErrorCode().Code, Yellow, Reset, ocsAgentErr.Error())

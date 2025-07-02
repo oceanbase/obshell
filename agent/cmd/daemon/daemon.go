@@ -30,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/agent/cmd"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/global"
 	http2 "github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
@@ -52,7 +53,7 @@ func NewDaemonCmd() *cobra.Command {
 		global.InitGlobalVariable()
 		daemon := newDaemon(opts)
 		if err = daemon.Start(); err != nil {
-			process.ExitWithMsg(constant.EXIT_CODE_ERROR_DAEMON_START_FAILED, err.Error())
+			process.ExitWithError(constant.EXIT_CODE_ERROR_DAEMON_START_FAILED, errors.WrapRetain(errors.ErrAgentDaemonStartFailed, err))
 		}
 		daemon.ListenSignal()
 		return

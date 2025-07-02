@@ -1,6 +1,6 @@
 {
-  "err.agen.daemon.serve.on.unix.socket.failed": "Daemon serve on socket listener failed",
-  "err.agent.address.invalid": "Address '%s' is invalid: %s",
+  "err.agent.daemon.serve.on.unix.socket.failed": "Daemon serve on socket listener failed",
+  "err.agent.daemon.start.failed": "Daemon start failed",
   "err.agent.already.exists": "Agent %s already exists in cluster",
   "err.agent.already.initialized": "Agent already initialized",
   "err.agent.binary.not.found": "There is no available agent(version: %s, architecture: %s, distribution: %s) in OB",
@@ -70,7 +70,7 @@
   "err.common.invalid.address": "'%s' is not a valid address",
   "err.common.invalid.ip": "'%s' is not a valid IP address",
   "err.common.invalid.path": "Path '%s' is not valid: %s",
-  "err.common.invalid.port": "The port '%s' is invalid, must be in (1024, 65535]",
+  "err.common.invalid.port": "The port '%s' is invalid, must be in [1024, 65535]",
   "err.common.invalid.time.duration": "Time duration '%s' is invalid: %s",
   "err.common.not.found": "Element not found: %v",
   "err.common.path.not.dir": "'%s' is not a directory",

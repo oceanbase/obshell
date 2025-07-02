@@ -1,6 +1,4 @@
 {
-  "err.agen.daemon.serve.on.unix.socket.failed": "守护进程在 socket 监听器上服务失败",
-  "err.agent.address.invalid": "地址 '%s' 无效：%s",
   "err.agent.already.exists": "agent %s 已存在于集群中",
   "err.agent.already.initialized": "agent 已初始化",
   "err.agent.binary.not.found": "OB 中没有可用的 agent 二进制文件（版本：%s，架构：%s，发行版：%s）",
@@ -33,8 +31,6 @@
   "err.agent.response.data.format.invalid": "响应数据不是一个 map",
   "err.agent.rpc.request.error": "请求 [%s]%s 到 %s 出错：%v",
   "err.agent.rpc.request.failed": "请求 [%s]%s 到 %s 失败：%s",
-  "err.agent.serve.on.tcp.socket.failed": "在 TCP 监听器上服务失败",
-  "err.agent.serve.on.unix.socket.failed": "在 Unix 监听器上服务失败",
   "err.agent.sqlite.db.not.init": "SQLite 数据库未初始化",
   "err.agent.start.observer.failed": "带标记启动 observer 失败",
   "err.agent.start.with.invalid.info": "agent 启动失败：%v",

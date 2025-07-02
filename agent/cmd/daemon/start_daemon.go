@@ -109,7 +109,7 @@ func (d *Daemon) startSocket(socketListener *net.UnixListener) {
 			err := d.localHttpServer.Serve(socketListener)
 			if err != nil && d.state.IsStarting() {
 				log.WithError(err).Error("daemon serve on socket listener failed")
-				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgenDaemonServeOnUnixSocketFailed, err))
+				process.ExitWithError(constant.EXIT_CODE_ERROR_SERVER_LISTEN, errors.WrapRetain(errors.ErrAgentDaemonServeOnUnixSocketFailed, err))
 			} else {
 				d.setState(constant.STATE_RUNNING)
 			}
