@@ -26,7 +26,6 @@ const (
 	unauthorized    ErrorKind = http.StatusUnauthorized
 	notFound        ErrorKind = http.StatusNotFound
 	unexpected      ErrorKind = http.StatusInternalServerError
-	notfound        ErrorKind = http.StatusNotFound
 	known           ErrorKind = http.StatusInternalServerError
 )
 
@@ -72,7 +71,7 @@ var (
 	ErrCommonPathNotExist               = NewErrorCode("Common.PathNotExist", illegalArgument, "err.common.path.not.exist")                   // "'%s' is not exist"
 	ErrCommonPathNotDir                 = NewErrorCode("Common.PathNotDir", illegalArgument, "err.common.path.not.dir")                       // "'%s' is not a directory"
 	ErrCommonUnexpected                 = NewErrorCode("Common.Unexpected", unexpected, "err.common.unexpected")                              // "unexpected error: %s"
-	ErrCommonUnauthorized               = NewErrorCode("Common.Unauthorized", unauthorized, "err.common.unauthorized")                        // "unauthorized"
+	ErrCommonUnauthorized               = NewErrorCode("Common.Unauthorized", unauthorized, "err.common.unauthorized", 10008)                 // "unauthorized"
 	ErrCommonInvalidTimeDuration        = NewErrorCode("Common.InvalidTimeDuration", illegalArgument, "err.common.invalid.time.duration")     // "time duration '%s' is invalid: %s"
 	// Log
 	ErrLogWriteExceedMaxSize          = NewErrorCode("Log.WriteExceedMaxSize", unexpected, "err.log.write.exceed.max.size")                   // "write length %d exceeds maximum file size %d"
@@ -197,7 +196,7 @@ var (
 	ErrObServerDeleteSelf         = NewErrorCode("OB.Server.DeleteSelf", illegalArgument, "err.ob.server.delete.self")
 	ErrObServerProcessCheckFailed = NewErrorCode("OB.Server.Process.CheckFailed", unexpected, "err.ob.server.process.check.failed")      // "check observer process exist: %s."
 	ErrObServerProcessNotExist    = NewErrorCode("OB.Server.Process.NotExist", unexpected, "err.ob.server.process.not.exist")            // "observer process not exist"
-	ErrObServerNotExist           = NewErrorCode("OB.Server.NotExist", notFound, "err.ob.server.not.exist")                              // "observer '%s' is not exist"
+	ErrObServerNotExist           = NewErrorCode("OB.Server.NotExist", badRequest, "err.ob.server.not.exist")                            // "observer '%s' is not exist"
 	ErrObServerNotDeleting        = NewErrorCode("OB.Server.NotDeleting", unexpected, "err.ob.server.not.deleting")                      // "observer '%s' is not deleting, status: %s"
 	ErrObServerHasNotBeenStarted  = NewErrorCode("OB.Server.HasNotBeenStarted", unexpected, "err.ob.server.has.not.been.started")        // "observer has not started yet, please start it with normal way"
 	ErrObServerUnavailable        = NewErrorCode("OB.Server.Unavailable", unexpected, "err.ob.server.unavailable")                       // "observer '%s' is not available"
@@ -308,27 +307,27 @@ var (
 	ErrOBProxyStopDaemonTimeout             = NewErrorCode("OBProxy.StopDaemonTimeout", illegalArgument, "err.obproxy.stop.daemon.timeout")
 	ErrOBProxyHotRestartTimeout             = NewErrorCode("OBProxy.HotRestartTimeout", illegalArgument, "err.obproxy.hot.restart.timeout")
 	ErrOBProxyNotRunning                    = NewErrorCode("OBProxy.NotRunning", illegalArgument, "err.obproxy.not.running")
-	ErrOBProxyPackageNotFound               = NewErrorCode("OBProxy.Package.NotFound", illegalArgument, "err.obproxy.pkg.not.found")
+	ErrOBProxyPackageNotFound               = NewErrorCode("OBProxy.Package.NotFound", badRequest, "err.obproxy.pkg.not.found")
 	ErrOBProxyVersionOutputUnexpected       = NewErrorCode("OBProxy.VersionOutputUnexpected", unexpected, "err.obproxy.version.output.unexpected")
 	ErrOBProxyPackageNameInvalid            = NewErrorCode("OBProxy.Package.Name.Invalid", illegalArgument, "err.obproxy.package.name.invalid")
-	ErrOBProxyPackageMissingFile            = NewErrorCode("OBProxy.Package.NotFound", unexpected, "err.obproxy.package.missing.file")
+	ErrOBProxyPackageMissingFile            = NewErrorCode("OBProxy.Package.NotFound", illegalArgument, "err.obproxy.package.missing.file")
 
 	// Security
 	ErrSecurityDecryptFailed                             = NewErrorCode("Security.DecryptFailed", unexpected, "err.security.decrypt.failed")
 	ErrSecurityUserPermissionDenied                      = NewErrorCode("Security.User.PermissionDenied", unauthorized, "err.security.user.permission.denied")
-	ErrSecurityAuthenticationUnauthorized                = NewErrorCode("Security.Authentication.Unauthorized", unauthorized, "err.security.authentication.unauthorized")
+	ErrSecurityAuthenticationUnauthorized                = NewErrorCode("Security.Authentication.Unauthorized", unauthorized, "err.security.authentication.unauthorized", 10008)
 	ErrSecurityAuthenticationFileSha256Mismatch          = NewErrorCode("Security.Authentication.File.Sha256Mismatch", unauthorized, "err.security.authentication.file.sha256.mismatch")
 	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unauthorized, "err.security.authentication.header.decrypt.failed")
-	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch")
-	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", unauthorized, "err.security.authentication.with.agent.password")
+	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch", 10008)
+	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", unauthorized, "err.security.authentication.with.agent.password", 10008)
 	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", unauthorized, "err.security.authentication.incorrect.agent.password", 10008)
 	ErrSecurityAuthenticationIncorrectOceanbasePassword  = NewErrorCode("Security.Authentication.IncorrectOceanbasePassword", unauthorized, "err.security.authentication.incorrect.oceanbase.password", 10008)
-	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", unauthorized, "err.security.authentication.unknown.password.type")
-	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", unauthorized, "err.security.authentication.expired")
-	ErrSecurityAuthenticationTimestampInvalid            = NewErrorCode("Security.Authentication.Timestamp.Invalid", unauthorized, "err.security.authentication.timestamp.invalid")
-	ErrSecurityAuthenticationIncorrectToken              = NewErrorCode("Security.Authentication.IncorrectToken", unauthorized, "err.security.authentication.incorrect.token")
-	ErrSecurityAuthenticationWithOceanBasePassword       = NewErrorCode("Security.Authentication.WithOceanBasePassword", unauthorized, "err.security.authentication.with.oceanbase.password")
-	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", unauthorized, "err.security.authentication.agent.password.not.initialized")
+	ErrSecurityAuthenticationUnknownPasswordType         = NewErrorCode("Security.Authentication.UnknownPasswordType", unauthorized, "err.security.authentication.unknown.password.type", 10008)
+	ErrSecurityAuthenticationExpired                     = NewErrorCode("Security.Authentication.Expired", unauthorized, "err.security.authentication.expired", 10008)
+	ErrSecurityAuthenticationTimestampInvalid            = NewErrorCode("Security.Authentication.Timestamp.Invalid", unauthorized, "err.security.authentication.timestamp.invalid", 10008)
+	ErrSecurityAuthenticationIncorrectToken              = NewErrorCode("Security.Authentication.IncorrectToken", unauthorized, "err.security.authentication.incorrect.token", 10008)
+	ErrSecurityAuthenticationWithOceanBasePassword       = NewErrorCode("Security.Authentication.WithOceanBasePassword", unauthorized, "err.security.authentication.with.oceanbase.password", 10008)
+	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", unauthorized, "err.security.authentication.agent.password.not.initialized", 10008)
 
 	// Task
 	ErrTaskExpired                         = NewErrorCode("Task.Expired", known, "err.task.expired")
