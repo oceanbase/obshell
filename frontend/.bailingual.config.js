@@ -1,6 +1,6 @@
 module.exports = {
   extract: {
-    name: 'ocp-v2',
+    name: 'obshell',
     sourcePath: 'src',
     fileType: 'ts',
     prettier: true,

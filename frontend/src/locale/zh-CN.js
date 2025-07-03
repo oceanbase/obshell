@@ -7998,4 +7998,6 @@ export default {
   "ocp-v2.page.Package.SizeMb": "大小（MB）",
   "ocp-v2.page.Package.UploadTime": "上传时间",
   "ocp-v2.Tenant.Detail.TenantId": "租户 ID：",
+  "obshell.Detail.Component.ModifyTenantPasswordModal.PleaseEnterANewPassword": "请输入新密码",
+  "obshell.Detail.Component.ModifyTenantPasswordModal.ThePasswordSettingDoesNot": "密码设置不符合要求",
 };

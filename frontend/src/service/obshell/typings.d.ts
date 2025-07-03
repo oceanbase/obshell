@@ -52,23 +52,6 @@ declare namespace API {
   };
 
   type AgentStatus = {
-    agent?: AgentInfoWithIdentity;
-    obState?: number;
-    /** service pid */
-    pid?: number;
-    /** Ports process occupied ports */
-    port?: number;
-    sqlPort?: number;
-    /** timestamp when service started */
-    startAt?: number;
-    /** service state */
-    state?: number;
-    underMaintenance?: boolean;
-    /** service version */
-    version?: string;
-  };
-
-  type AgentStatus = {
     architecture?: string;
     homePath?: string;
     identity: AgentIdentity;
@@ -1301,38 +1284,6 @@ declare namespace API {
     release: string;
     upgrade_dir?: string;
     version: string;
-  };
-
-  type UpgradePkgInfo = {
-    architecture?: string;
-    chunk_count?: number;
-    distribution?: string;
-    gmt_modify?: string;
-    md5?: string;
-    name?: string;
-    payload_size?: number;
-    pkg_id?: number;
-    release?: string;
-    release_distribution?: string;
-    size?: number;
-    upgrade_dep_yaml?: string;
-    version?: string;
-  };
-
-  type UpgradePkgInfo = {
-    architecture?: string;
-    chunkCount?: number;
-    distribution?: string;
-    gmtModify?: string;
-    md5?: string;
-    name?: string;
-    payloadSize?: number;
-    pkgId?: number;
-    release?: string;
-    releaseDistribution?: string;
-    size?: number;
-    upgradeDepYaml?: string;
-    version?: string;
   };
 
   type UpgradePkgInfo = {

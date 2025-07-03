@@ -6140,4 +6140,6 @@ export default {
   "ocp-v2.page.Package.UploadTime": "Upload time",
   "ocp-v2.Tenant.Detail.TenantId": "Tenant ID:",
   "ocp-express.src.util.menu.SystemManagement": "System management",
+  "obshell.Detail.Component.ModifyTenantPasswordModal.PleaseEnterANewPassword": "Please enter a new password",
+  "obshell.Detail.Component.ModifyTenantPasswordModal.ThePasswordSettingDoesNot": "The password setting does not meet the requirements",
 };

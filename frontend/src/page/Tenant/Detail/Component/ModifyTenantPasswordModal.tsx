@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import { useSelector } from 'umi';
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Alert, Modal, message } from '@oceanbase/design';
 import { ExclamationCircleFilled } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
@@ -37,6 +37,8 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
   const { validateFields, getFieldsValue } = form;
 
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const [newPasswordPassed, setNewPasswordPassed] = useState(false);
+  const [confirmPasswordPassed, setConfirmPasswordPassed] = useState(false);
 
   const validateConfirmPassword = (rule, value, callback) => {
     const { newPassword } = getFieldsValue();
@@ -69,12 +71,9 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     },
   });
 
-  const { run: createOrReplacePassword, loading } = useRequest(
-    persistTenantRootPassword,
-    {
-      manual: true,
-    }
-  );
+  const { run: createOrReplacePassword, loading } = useRequest(persistTenantRootPassword, {
+    manual: true,
+  });
 
   const handleSubmit = () => {
     validateFields().then(values => {
@@ -127,6 +126,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           marginBottom: 24,
         }}
       />
+
       <Form
         form={form}
         layout="vertical"
@@ -152,8 +152,33 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
             defaultMessage: '密码',
           })}
           name="newPassword"
+          validateFirst={true}
+          rules={[
+            {
+              required: true,
+              message: formatMessage({
+                id: 'obshell.Detail.Component.ModifyTenantPasswordModal.PleaseEnterANewPassword',
+                defaultMessage: '请输入新密码',
+              }),
+            },
+
+            {
+              validator: (rule, value, callback) => {
+                if (value && !newPasswordPassed) {
+                  callback(
+                    formatMessage({
+                      id: 'obshell.Detail.Component.ModifyTenantPasswordModal.ThePasswordSettingDoesNot',
+                      defaultMessage: '密码设置不符合要求',
+                    })
+                  );
+                } else {
+                  callback();
+                }
+              },
+            },
+          ]}
         >
-          <Password />
+          <Password onValidate={setNewPasswordPassed} />
         </Form.Item>
         <Form.Item
           label={formatMessage({
@@ -162,6 +187,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
           })}
           name="confirmPassword"
           dependencies={['newPassword']}
+          validateFirst={true}
           rules={[
             {
               required: true,
@@ -172,12 +198,28 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
             },
 
             {
+              validator: (rule, value, callback) => {
+                if (value && !confirmPasswordPassed) {
+                  callback(
+                    formatMessage({
+                      id: 'obshell.Detail.Component.ModifyTenantPasswordModal.ThePasswordSettingDoesNot',
+                      defaultMessage: '密码设置不符合要求',
+                    })
+                  );
+                } else {
+                  callback();
+                }
+              },
+            },
+
+            {
               validator: validateConfirmPassword,
             },
           ]}
         >
-          <MyInput.Password
+          <Password
             autoComplete="new-password"
+            onValidate={setConfirmPasswordPassed}
             placeholder={formatMessage({
               id: 'ocp-express.Detail.Component.ModifyPasswordModal.EnterANewPasswordAgain',
               defaultMessage: '请再次输入新密码',
