@@ -490,12 +490,12 @@ func buildCreateTenantSql(param *param.CreateTenantParam, poolList []string) (st
 		input = append(input, transfer(param.Comment))
 	}
 
-	if param.ReadOnly {
-		sql += ", READ ONLY"
-	}
-
 	sql += " SET ob_tcp_invited_nodes = `%s`"
 	input = append(input, "") // set empty string for ob_tcp_invited_nodes, to avoid tenant be used before the dag is SUCCEED
+
+	if param.ReadOnly {
+		sql += ", read_only=1"
+	}
 
 	if param.Mode != "" {
 		sql += ", ob_compatibility_mode = `%s`"
