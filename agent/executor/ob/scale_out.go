@@ -71,7 +71,7 @@ func HandleClusterScaleOut(param param.ClusterScaleOutParam) (*task.DagDetailDTO
 		return nil, errors.Wrapf(err, "get %s status failed", param.AgentInfo.String())
 	}
 	if !agent.IsSingleAgent() {
-		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, param.AgentInfo.String(), agent.String(), meta.OCS_AGENT.GetIdentity())
+		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, agent.AgentInfo.String(), agent.Identity, meta.SINGLE)
 	}
 
 	// check ob version is consistent
