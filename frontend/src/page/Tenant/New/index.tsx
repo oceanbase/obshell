@@ -881,17 +881,22 @@ const New: React.FC<NewProps> = ({
                                         extra={
                                           cpuLowerLimit &&
                                           idleCpuCore &&
-                                          formatMessage(
-                                            {
-                                              id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                                              defaultMessage:
-                                                '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                                            },
-                                            {
-                                              cpuLowerLimit: cpuLowerLimit,
-                                              idleCpuCore: idleCpuCore,
-                                            }
-                                          )
+                                          cpuLowerLimit < idleCpuCore
+                                            ? formatMessage(
+                                                {
+                                                  id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
+                                                  defaultMessage:
+                                                    '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
+                                                },
+                                                {
+                                                  cpuLowerLimit: cpuLowerLimit,
+                                                  idleCpuCore: idleCpuCore,
+                                                }
+                                              )
+                                            : formatMessage({
+                                                id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                defaultMessage: '当前可配置资源不足',
+                                              })
                                         }
                                         initialValue={
                                           getResourcesLimit({
@@ -915,17 +920,23 @@ const New: React.FC<NewProps> = ({
                                             type: 'number',
                                             min: cpuLowerLimit,
                                             max: idleCpuCore,
-                                            message: formatMessage(
-                                              {
-                                                id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                                                defaultMessage:
-                                                  '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                                              },
-                                              {
-                                                cpuLowerLimit: cpuLowerLimit,
-                                                idleCpuCore: idleCpuCore,
-                                              }
-                                            ),
+                                            message:
+                                              cpuLowerLimit < idleCpuCore
+                                                ? formatMessage(
+                                                    {
+                                                      id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
+                                                      defaultMessage:
+                                                        '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
+                                                    },
+                                                    {
+                                                      cpuLowerLimit: cpuLowerLimit,
+                                                      idleCpuCore: idleCpuCore,
+                                                    }
+                                                  )
+                                                : formatMessage({
+                                                    id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                    defaultMessage: '当前可配置资源不足',
+                                                  }),
                                           },
                                         ]}
                                       >
@@ -949,17 +960,22 @@ const New: React.FC<NewProps> = ({
                                         extra={
                                           memoryLowerLimit &&
                                           idleMemoryInBytes &&
-                                          formatMessage(
-                                            {
-                                              id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                                              defaultMessage:
-                                                '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                                            },
-                                            {
-                                              memoryLowerLimit: memoryLowerLimit,
-                                              idleMemoryInBytes: idleMemoryInBytes,
-                                            }
-                                          )
+                                          memoryLowerLimit < idleMemoryInBytes
+                                            ? formatMessage(
+                                                {
+                                                  id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
+                                                  defaultMessage:
+                                                    '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
+                                                },
+                                                {
+                                                  memoryLowerLimit: memoryLowerLimit,
+                                                  idleMemoryInBytes: idleMemoryInBytes,
+                                                }
+                                              )
+                                            : formatMessage({
+                                                id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                defaultMessage: '当前可配置资源不足',
+                                              })
                                         }
                                         initialValue={
                                           getResourcesLimit({
@@ -982,17 +998,23 @@ const New: React.FC<NewProps> = ({
                                             type: 'number',
                                             min: memoryLowerLimit || 0,
                                             max: idleMemoryInBytes || 0,
-                                            message: formatMessage(
-                                              {
-                                                id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                                                defaultMessage:
-                                                  '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                                              },
-                                              {
-                                                memoryLowerLimit: memoryLowerLimit,
-                                                idleMemoryInBytes: idleMemoryInBytes,
-                                              }
-                                            ),
+                                            message:
+                                              memoryLowerLimit < idleMemoryInBytes
+                                                ? formatMessage(
+                                                    {
+                                                      id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
+                                                      defaultMessage:
+                                                        '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
+                                                    },
+                                                    {
+                                                      memoryLowerLimit: memoryLowerLimit,
+                                                      idleMemoryInBytes: idleMemoryInBytes,
+                                                    }
+                                                  )
+                                                : formatMessage({
+                                                    id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                    defaultMessage: '当前可配置资源不足',
+                                                  }),
                                           },
                                         ]}
                                       >

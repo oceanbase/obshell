@@ -242,15 +242,18 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
               name="cpuCore"
               initialValue={resourcePool?.cpuCore}
               extra={
-                cpuLowerLimit &&
-                idleCpuCore &&
-                formatMessage(
-                  {
-                    id: 'ocp-express.Detail.Component.AddReplicaModal.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                    defaultMessage: '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                  },
-                  { cpuLowerLimit: cpuLowerLimit, idleCpuCore: idleCpuCore }
-                )
+                cpuLowerLimit && idleCpuCore && cpuLowerLimit < idleCpuCore
+                  ? formatMessage(
+                      {
+                        id: 'ocp-express.Detail.Component.AddReplicaModal.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
+                        defaultMessage: '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
+                      },
+                      { cpuLowerLimit: cpuLowerLimit, idleCpuCore: idleCpuCore }
+                    )
+                  : formatMessage({
+                      id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                      defaultMessage: '当前可配置资源不足',
+                    })
               }
               rules={[
                 {
@@ -279,15 +282,18 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
               name="memorySize"
               initialValue={resourcePool?.memorySize}
               extra={
-                memoryLowerLimit &&
-                idleMemoryInBytes &&
-                formatMessage(
-                  {
-                    id: 'ocp-express.Detail.Component.AddReplicaModal.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                    defaultMessage: '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                  },
-                  { memoryLowerLimit: memoryLowerLimit, idleMemoryInBytes: idleMemoryInBytes }
-                )
+                memoryLowerLimit && idleMemoryInBytes && memoryLowerLimit < idleMemoryInBytes
+                  ? formatMessage(
+                      {
+                        id: 'ocp-express.Detail.Component.AddReplicaModal.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
+                        defaultMessage: '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
+                      },
+                      { memoryLowerLimit: memoryLowerLimit, idleMemoryInBytes: idleMemoryInBytes }
+                    )
+                  : formatMessage({
+                      id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                      defaultMessage: '当前可配置资源不足',
+                    })
               }
               rules={[
                 {

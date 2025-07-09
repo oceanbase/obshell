@@ -86,13 +86,18 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
 
         {cpuLowerLimit && currentMaxCpuCoreCount && (
           <div style={extraStyle}>
-            {formatMessage(
-              {
-                id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                defaultMessage: '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-              },
-              { cpuLowerLimit: cpuLowerLimit, idleCpuCore: currentMaxCpuCoreCount }
-            )}
+            {cpuLowerLimit < currentMaxCpuCoreCount
+              ? formatMessage(
+                  {
+                    id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
+                    defaultMessage: '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
+                  },
+                  { cpuLowerLimit: cpuLowerLimit, idleCpuCore: currentMaxCpuCoreCount }
+                )
+              : formatMessage({
+                  id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                  defaultMessage: '当前可配置资源不足',
+                })}
           </div>
         )}
       </Col>
