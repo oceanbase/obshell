@@ -217,6 +217,7 @@ func (config *ObDataSourceConfig) GetDSN() string {
 	if config.parseTime {
 		params = append(params, "parseTime=true")
 	}
+	params = append(params, "ob_query_timeout=60000000")
 	if len(params) > 0 {
 		dsn += "?" + strings.Join(params, "&")
 	}
