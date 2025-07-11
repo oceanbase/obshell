@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Descriptions, Modal, message, theme } from '@oceanbase/design';
 import type { ModalProps } from '@oceanbase/design/es/modal';
 import MyInput from '@/component/MyInput';
@@ -53,6 +53,11 @@ const DeleteTenantModal: React.FC<DeleteTenantModalProps> = ({
       }
     },
   });
+  useEffect(() => {
+    if (restProps.open === false || restProps.visible === false) {
+      setConfirmCode('');
+    }
+  }, [restProps.open, restProps.visible]);
 
   return (
     <Modal

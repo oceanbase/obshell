@@ -29,7 +29,7 @@ import {
   Menu,
   Modal,
 } from '@oceanbase/design';
-import { flatten, reduce } from 'lodash';
+import { flatten, isEmpty, reduce } from 'lodash';
 import { PageContainer } from '@oceanbase/ui';
 import scrollIntoView from 'scroll-into-view';
 import useReload from '@/hook/useReload';
@@ -558,6 +558,7 @@ const Detail: React.FC<DetailProps> = ({
 
   const isStandAloneCluster =
     clusterData?.zones?.length === 1 && clusterData?.zones?.[0]?.servers?.length === 1;
+
   return (
     <PageContainer
       loading={reloading}
@@ -736,7 +737,8 @@ const Detail: React.FC<DetailProps> = ({
       </Row>
 
       <UpgradeDrawer
-        isStandAloneCluster={isStandAloneCluster}
+        // 单机集群和空集群都只显示停服升级
+        isStandAloneCluster={isStandAloneCluster || isEmpty(clusterData)}
         visible={upgradeVisible}
         clusterData={clusterData}
         onCancel={() => setUpgradeVisible(false)}

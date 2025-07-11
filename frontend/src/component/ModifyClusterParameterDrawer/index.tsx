@@ -675,7 +675,7 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
                                   ]}
                                 >
                                   <MySelect
-                                    mode="tags"
+                                    mode="multiple"
                                     allowClear={true}
                                     labelInValue={true}
                                     placeholder={formatMessage({
