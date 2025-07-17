@@ -80,7 +80,7 @@ tidy:
 get:
 	$(GO) install github.com/go-bindata/go-bindata/...@v3.1.2+incompatible
 	$(GO) install github.com/golang/mock/mockgen@v1.6.0
-	$(GO) install github.com/swaggo/swag/cmd/swag@latest
+	$(GO) install github.com/swaggo/swag/cmd/swag@v1.16.4
 
 
 vet:
