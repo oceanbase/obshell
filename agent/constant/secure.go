@@ -26,6 +26,6 @@ const (
 	AGENT_PRIVATE_KEY             = "private_key"
 	AGENT_PUBLIC_KEY              = "public_key"
 	AGENT_AUTH_EXPIRED_DURATION   = "auth_expired_duration"
-	DEFAULT_AUTH_EXPIRED_DURATION = 1 * time.Second
+	DEFAULT_AUTH_EXPIRED_DURATION = 10 * time.Second
 	GET_PASSWORD_RPC_TIMEOUT      = 1 * time.Second
 )
