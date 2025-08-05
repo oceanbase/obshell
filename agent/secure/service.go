@@ -51,7 +51,7 @@ func getOCSConfig(key string, value interface{}) (err error) {
 	if err != nil {
 		return
 	}
-	if err = db.Model(ocsConfigModel).Where("name=?", key).First(&value).Error; err != nil {
+	if err = db.Model(ocsConfigModel).Select("value").Where("name=?", key).First(&value).Error; err != nil {
 		return
 	}
 	return
