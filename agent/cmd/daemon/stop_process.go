@@ -78,9 +78,10 @@ func (s *Server) cleanup() {
 
 		log.Info("the stopped obshell pid is ", obshellPid)
 
-		if _, err = proc.NewProcess(int32(obshellPid)); err != nil {
-			if system.IsFileExist(path.ObshellPidPath()) {
-				log.Infof("remove obshell pid file %s", path.ObshellPidPath())
+		if pidInfo, err := proc.NewProcess(int32(obshellPid)); err != nil {
+			os.Remove(path.ObshellPidPath())
+		} else {
+			if name, err := pidInfo.Name(); err == nil && name != constant.PROC_OBSHELL {
 				os.Remove(path.ObshellPidPath())
 			}
 		}
