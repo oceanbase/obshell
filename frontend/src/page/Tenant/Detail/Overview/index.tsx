@@ -33,6 +33,7 @@ import {
   Modal,
   message,
 } from '@oceanbase/design';
+import { QuestionCircleOutlined } from '@oceanbase/icons';
 import React, { memo, useEffect, useState } from 'react';
 import { uniqueId, find } from 'lodash';
 import { byte2GB, directTo, findByValue, jsonParse } from '@oceanbase/util';
@@ -75,7 +76,7 @@ import {
 } from '@/service/obshell/tenant';
 
 import { unitConfigCreate } from '@/service/obshell/unit';
-import { obclusterInfo, getUnitConfigLimit} from '@/service/obshell/obcluster';
+import { obclusterInfo, getUnitConfigLimit } from '@/service/obshell/obcluster';
 const { Text } = Typography;
 
 interface NewProps {
@@ -418,20 +419,21 @@ const Detail: React.FC<NewProps> = ({
     const maxMemorySizeGB = byte2GB(currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size);
 
     let unitName: string = currentModifyTenantZone?.resourcePool?.unitConfig?.name;
-    if (resourcePool &&
+    if (
+      resourcePool &&
       (resourcePool.unitConfig?.cpuCore !==
         currentModifyTenantZone?.resourcePool?.unitConfig?.max_cpu ||
         resourcePool.unitConfig?.memorySize !== maxMemorySizeGB)
     ) {
-        unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
-        const res = await unitConfigCreateFn({
-          name: unitName,
-          max_cpu: Number(resourcePool.unitConfig?.cpuCore),
-          memory_size: `${resourcePool.unitConfig?.memorySize}GB`,
-        });
-        if (!res.successful) {
-          return
-        }
+      unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
+      const res = await unitConfigCreateFn({
+        name: unitName,
+        max_cpu: Number(resourcePool.unitConfig?.cpuCore),
+        memory_size: `${resourcePool.unitConfig?.memorySize}GB`,
+      });
+      if (!res.successful) {
+        return;
+      }
     } else if (replicaType === currentModifyTenantZone?.replicaType) {
       return message.info(
         formatMessage({
@@ -449,8 +451,7 @@ const Detail: React.FC<NewProps> = ({
           {
             zone_name: name,
             replica_type: replicaType,
-            unit_num:
-              resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
+            unit_num: resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
             unit_config_name: unitName,
           },
         ],
@@ -596,6 +597,7 @@ const Detail: React.FC<NewProps> = ({
               })}
             >
               <Descriptions column={4}>
+                <Descriptions.Item label="租户名称">{tenantData?.tenant_name}</Descriptions.Item>
                 <Descriptions.Item
                   label={formatMessage({
                     id: 'ocp-express.Tenant.Detail.TenantMode',
@@ -611,6 +613,18 @@ const Detail: React.FC<NewProps> = ({
                   })}
                 >
                   {clusterData?.ob_version}
+                </Descriptions.Item>
+
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'ocp-express.Tenant.Detail.CharacterSet',
+                    defaultMessage: '字符集',
+                  })}
+                >
+                  {tenantData.charset || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="Collation">
+                  {tenantData.collation || '-'}
                 </Descriptions.Item>
                 <Descriptions.Item
                   span={2}
@@ -628,13 +642,39 @@ const Detail: React.FC<NewProps> = ({
                   />
                 </Descriptions.Item>
                 <Descriptions.Item
-                  label={formatMessage({
-                    id: 'ocp-express.Tenant.Detail.CharacterSet',
-                    defaultMessage: '字符集',
-                  })}
+                  label={
+                    <Space size={4}>
+                      表名大小写敏感
+                      <Tooltip
+                        title={
+                          <div>
+                            <div>
+                              · 0：使用 CREATE TABLE 或 CREATE DATABASE
+                              语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                            </div>
+                            <div>· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。</div>
+                            <div>
+                              · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
+                              语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
+                            </div>
+                          </div>
+                        }
+                        placement="topLeft"
+                      >
+                        <QuestionCircleOutlined
+                          style={{
+                            color: '#999',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        />
+                      </Tooltip>
+                    </Space>
+                  }
                 >
-                  {tenantData.charset || '-'}
+                  {tenantData.lower_case_table_names || '-'}
                 </Descriptions.Item>
+                <Descriptions.Item label="时区">{tenantData.time_zone || '-'}</Descriptions.Item>
 
                 <Descriptions.Item
                   label={formatMessage({

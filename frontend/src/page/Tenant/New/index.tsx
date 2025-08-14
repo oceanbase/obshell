@@ -30,19 +30,20 @@ import {
   Switch,
   Table,
   Tooltip,
+  Typography,
+  token,
 } from '@oceanbase/design';
+import { InfoCircleFilled } from '@oceanbase/icons';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
 import React, { useEffect, useState } from 'react';
 import { uniq, uniqueId, uniqWith } from 'lodash';
 import { findBy, isNullValue } from '@oceanbase/util';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import * as IamController from '@/service/ocp-express/IamController';
 import * as ObTenantController from '@/service/ocp-express/ObTenantController';
-import * as ObClusterController from '@/service/ocp-express/ObClusterController';
 import { NAME_RULE, PASSWORD_REGEX } from '@/constant';
 import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
-import { TENANT_MODE_LIST } from '@/constant/tenant';
+import { TENANT_MODE_LIST, LOAD_TYPE_LIST, LOWER_CASE_TABLE_NAMES } from '@/constant/tenant';
 import { getTextLengthRule, validatePassword } from '@/util';
 import { getUnitSpecLimit, getResourcesLimit } from '@/util/cluster';
 import encrypt from '@/util/encrypt';
@@ -65,11 +66,13 @@ import { unitConfigCreate } from '@/service/obshell/unit';
 import { getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
+import { TIMEZONE_LIST } from '@/constant/timezone';
 
 const { Option } = MySelect;
+const { Text } = Typography;
 
 interface collation {
-  isDefault: boolean;
+  is_default: boolean;
   name: string;
 }
 
@@ -97,6 +100,10 @@ const New: React.FC<NewProps> = ({
   const [passed, setPassed] = useState(true);
   const [currentMode, setCurrentMode] = useState('MYSQL');
   const [collations, setCollations] = useState<API.Collation[]>([]);
+
+  const [currentlowerCaseTableNames, setCurrentlowerCaseTableNames] = useState(1);
+
+  const [loadType, setLoadType] = useState(false);
 
   // const [initParameters, setInitParameters] = useState([]);
   // 参数设置开关
@@ -149,6 +156,9 @@ const New: React.FC<NewProps> = ({
       listCharsets({
         tenantMode: 'MYSQL',
       }).then(charsetRes => {
+        setFieldsValue({
+          charset: 'utf8mb4',
+        });
         handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
       });
       if (isClone) {
@@ -262,10 +272,11 @@ const New: React.FC<NewProps> = ({
         primaryZone,
         rootPassword,
         charset,
+        lowerCaseTableNames,
+        timeZone,
         parameters = [],
         ...restValues
       } = values;
-
       const realParameters = {};
       const zoneUnitMap = {};
       const checkZones = zones.filter(item => !!item.checked);
@@ -293,6 +304,11 @@ const New: React.FC<NewProps> = ({
         };
       });
 
+      const variables = new Map([
+        ['lower_case_table_names', lowerCaseTableNames],
+        ['time_zone', timeZone]
+      ]);
+
       Promise.all(
         Object.entries(zoneUnitMap).map(([key, item]) => {
           return unitConfigCreate({
@@ -308,8 +324,9 @@ const New: React.FC<NewProps> = ({
             zone_list: zoneList,
             root_password: rootPassword,
             primary_zone: primaryZone,
+            variables: Object.fromEntries(variables),
             parameters: realParameters,
-          });
+          })
         }
       });
 
@@ -339,7 +356,7 @@ const New: React.FC<NewProps> = ({
 
   const handleCharsetChange = (charset: string, newCharsetList: API.Charset[]) => {
     const newCollations = findBy(newCharsetList, 'name', charset)?.collations || [];
-    const defaultCollation = findBy(newCollations, 'isDefault', true);
+    const defaultCollation = findBy(newCollations, 'is_default', true);
     setCollations(newCollations);
     setFieldsValue({ collation: defaultCollation.name });
   };
@@ -647,8 +664,91 @@ const New: React.FC<NewProps> = ({
                   </Col>
                 )}
               </Row>
-              <Row>
-                <Col span={10}>
+              <Row gutter={24}>
+                {currentMode === 'MYSQL' && (
+                  <Col span={8}>
+                    <Form.Item
+                      label="表名大小写敏感"
+                      name="lowerCaseTableNames"
+                      initialValue={1}
+                      rules={[
+                        {
+                          required: true,
+                        },
+                      ]}
+                      tooltip={
+                        <div>
+                          <div>大小写敏感参数（lower_case_table_names）说明：</div>
+                          <div>
+                            · 0：使用 CREATE TABLE 或 CREATE DATABASE
+                            语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                          </div>
+                          <div>· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。</div>
+                          <div>
+                            · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
+                            语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
+                          </div>
+                        </div>
+                      }
+                      extra={
+                        LOWER_CASE_TABLE_NAMES?.find(
+                          item => item.value === currentlowerCaseTableNames
+                        )?.description
+                      }
+                    >
+                      <MySelect
+                        onChange={val => {
+                          setCurrentlowerCaseTableNames(val);
+                        }}
+                      >
+                        {LOWER_CASE_TABLE_NAMES?.map(item => (
+                          <Option key={item.value} value={item.value} label={item.label}>
+                            <span>{item.label}</span>
+                          </Option>
+                        ))}
+                      </MySelect>
+                    </Form.Item>
+                  </Col>
+                )}
+                <Col span={8}>
+                  <Form.Item
+                    label="时区"
+                    name="timeZone"
+                    initialValue="+08:00"
+                    rules={[
+                      {
+                        required: true,
+                      },
+                    ]}
+                  >
+                    <MySelect
+                      showSearch={true}
+                      optionLabelProp="label"
+                      placeholder={formatMessage({
+                        id: 'ocp-express.Tenant.New.SelectTimezone',
+                        defaultMessage: '请选择时区',
+                      })}
+                    >
+                      {TIMEZONE_LIST.map(item => (
+                        <Option
+                          key={item.value}
+                          value={item.value}
+                          label={`${item.gmt} ${item.label}`}
+                        >
+                          <div>
+                            <div>
+                              {item.gmt} {item.label}
+                            </div>
+                            <div style={{ fontSize: '12px', color: '#999' }}>
+                              {item.description}
+                            </div>
+                          </div>
+                        </Option>
+                      ))}
+                    </MySelect>
+                  </Form.Item>
+                </Col>
+                <Col span={8}>
                   <Form.Item
                     label={formatMessage({
                       id: 'ocp-express.Tenant.New.Remarks',
@@ -666,6 +766,71 @@ const New: React.FC<NewProps> = ({
                         defaultMessage: '请输入',
                       })}
                     />
+                  </Form.Item>
+                </Col>
+              </Row>
+              <Row>
+                <Col span={24}>
+                  <Form.Item noStyle shouldUpdate>
+                    {() => {
+                      const currentLoadType = form.getFieldValue('scenario');
+                      const description = LOAD_TYPE_LIST?.find(
+                        item => item.value === currentLoadType
+                      )?.description;
+
+                      return (
+                        <Form.Item
+                          label={
+                            <Space>
+                              <div style={{ width: 56 }}>负载类型</div>
+                              <InfoCircleFilled style={{ color: '#006aff' }} />
+                              <Text
+                                style={{
+                                  width: 'calc(100vw - 450px)',
+                                  fontSize: '14px',
+                                  fontWeight: 400,
+                                  color: token.colorTextTertiary,
+                                }}
+                                ellipsis={{
+                                  tooltip: {
+                                    overlayInnerStyle: {
+                                      background: '#fff',
+                                      width: 484,
+                                      color: token.colorTextTertiary,
+                                    },
+                                    color: '#fff',
+                                  },
+                                }}
+                              >
+                                负载类型主要影响 SQL
+                                类大查询判断时间（参数：large_query_threshold），对 OLTP 类型负载的
+                                RT 可能存在较大影响，请谨慎选择
+                              </Text>
+                            </Space>
+                          }
+                          name={'scenario'}
+                          extra={description}
+                          style={{ marginBottom: 0 }}
+                          rules={[
+                            {
+                              required: true,
+                            },
+                          ]}
+                        >
+                          <MySelect
+                            style={{
+                              width: '33%',
+                            }}
+                          >
+                            {LOAD_TYPE_LIST?.map(item => (
+                              <Option key={item.value} value={item.value}>
+                                {item.label}
+                              </Option>
+                            ))}
+                          </MySelect>
+                        </Form.Item>
+                      );
+                    }}
                   </Form.Item>
                 </Col>
               </Row>

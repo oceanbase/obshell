@@ -16,7 +16,7 @@ export async function recyclebinTenantPurge(
   });
 }
 
-/** flashback tenant from recyclebin flashback tenant from recyclebin POST /api/v1/recyclebin/flashback/${param0} */
+/** flashback tenant from recyclebin flashback tenant from recyclebin POST /api/v1/recyclebin/tenant/${param0} */
 export async function recyclebinFlashbackTenant(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.recyclebinFlashbackTenantParams,
@@ -24,7 +24,7 @@ export async function recyclebinFlashbackTenant(
   options?: { [key: string]: any }
 ) {
   const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/recyclebin/flashback/${param0}`, {
+  return request<API.OcsAgentResponse>(`/api/v1/recyclebin/tenant/${param0}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
