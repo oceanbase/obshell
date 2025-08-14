@@ -171,8 +171,9 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
       },
     }));
 
+    const pathElement = document.getElementById('ocp-subtask-path');
     useEffect(() => {
-      setTimeout(() => {
+      if (pathElement) {
         // 绘制 path
         const graphWidth = graphRef.current?.scrollWidth || 0;
         const graphHeight = graphRef.current?.scrollHeight || 0;
@@ -184,8 +185,8 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
 
         setCanvas(pathCanvas);
         renderPath(pathCanvas);
-      }, 0);
-    }, []);
+      }
+    }, [!!pathElement]);
 
     useEffect(() => {
       // 如果当前没有选中子任务节点，则自动定位到当前节点
@@ -511,9 +512,8 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         };
 
         const nextNodeStatusItem = findByValue(subtaskStatusList, nextNode?.state);
-
-        // 分叉
-        if (children.length > 0) {
+        // 分叉：children 长度大于 1 时，才会有子元素渲染，这时才需要绘制分叉的 path
+        if (children.length > 1) {
           // 由于 reverse 会修改原数组，因此不对 children 本身进行操作
           [...children]
             // 为了保证顺序靠后的子节点 path 覆盖顺序靠前的子节点 path，需要逆序绘制
