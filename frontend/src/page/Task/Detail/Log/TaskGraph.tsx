@@ -171,12 +171,11 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
       },
     }));
 
-    const pathElement = document.getElementById('ocp-subtask-path');
     useEffect(() => {
-      if (pathElement) {
-        // 绘制 path
-        const graphWidth = graphRef.current?.scrollWidth || 0;
-        const graphHeight = graphRef.current?.scrollHeight || 0;
+      // 绘制 path
+      const graphWidth = graphRef.current?.scrollWidth || 0;
+      const graphHeight = graphRef.current?.scrollHeight || 0;
+      if (document.getElementById('ocp-subtask-path')) {
         const pathCanvas = new Canvas({
           container: 'ocp-subtask-path',
           width: graphWidth,
@@ -186,7 +185,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
         setCanvas(pathCanvas);
         renderPath(pathCanvas);
       }
-    }, [!!pathElement]);
+    }, []);
 
     useEffect(() => {
       // 如果当前没有选中子任务节点，则自动定位到当前节点
