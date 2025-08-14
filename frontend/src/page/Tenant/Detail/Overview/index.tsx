@@ -665,7 +665,7 @@ const Detail: React.FC<NewProps> = ({
                           style={{
                             color: '#999',
                             cursor: 'pointer',
-                            fontSize: '12px'
+                            fontSize: '12px',
                           }}
                         />
                       </Tooltip>

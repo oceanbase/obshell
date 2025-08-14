@@ -295,7 +295,14 @@ export const FORBID_OPERATION_DBLIST = [
 ];
 
 // 内置角色
-export const ORACLE_BUILT_IN_ROLE_LIST = ['CONNECT', 'RESOURCE', 'DBA', 'SYS', 'PUBLIC'];
+export const ORACLE_BUILT_IN_ROLE_LIST = [
+  'CONNECT',
+  'RESOURCE',
+  'DBA',
+  'SYS',
+  'PUBLIC',
+  'STANDBY_REPLICATION',
+];
 // Oracle用户管理  系统权限
 export const ORACLE_SYS_PRIVS = [
   'CREATE_SESSION', // 创建连接
@@ -422,11 +429,10 @@ export const TENANT_MODE_LIST = [
     value: 'MYSQL',
     label: 'MySQL',
   },
-  // 暂不支持
-  // {
-  //   value: 'ORACLE',
-  //   label: 'Oracle',
-  // },
+  {
+    value: 'ORACLE',
+    label: 'Oracle',
+  },
 ];
 
 export const TENANT_STATUS_LIST = [
@@ -507,24 +513,26 @@ export const PLAN_TYPE_LIST = [
   },
 ];
 
-
 export const LOAD_TYPE_LIST = [
   {
     label: 'EXPRESS_OLTP 简单事务',
     value: 'express_oltp',
-    description: '适用在线订单交易、支付等核心系统，高并发点查为主的互联网业务，每次执行的 SQL 比较简单，要求快速响应'
+    description:
+      '适用在线订单交易、支付等核心系统，高并发点查为主的互联网业务，每次执行的 SQL 比较简单，要求快速响应',
   },
 
   {
     label: 'COMPLEX_OLTP 复杂事务',
     value: 'complex_oltp',
-    description: '适用有复杂事务的在线交易系统，比如有复杂连接计算、有子查询、使用 PL 编写的批处理作业的场景，存在长事务、大事务的情况。 如果这个集群实例专门用于 OLTP 负载事务场景，建议对集群参数大查询策略 large_query_threshold 做优化从默认 600s 调整为 5s。'
+    description:
+      '适用有复杂事务的在线交易系统，比如有复杂连接计算、有子查询、使用 PL 编写的批处理作业的场景，存在长事务、大事务的情况。 如果这个集群实例专门用于 OLTP 负载事务场景，建议对集群参数大查询策略 large_query_threshold 做优化从默认 600s 调整为 5s。',
   },
 
   {
     label: 'HTAP 混合负载',
     value: 'htap',
-    description: '同时运行事务和在线分析的混合负载情况，在提供 OLTP 能力的基础上，通过向量化能力提升在线分析场景的计算能力。'
+    description:
+      '同时运行事务和在线分析的混合负载情况，在提供 OLTP 能力的基础上，通过向量化能力提升在线分析场景的计算能力。',
   },
   // {
   //   label: 'OLAP 在线分析',
@@ -534,26 +542,29 @@ export const LOAD_TYPE_LIST = [
   {
     label: 'KV 默认参数模版',
     value: 'kv',
-    description: '用于键值工作负载和类似 hbase 的宽列工作负载，这些工作负载通常具有非常高的吞吐量并且对延迟敏感。 '
-    }
+    description:
+      '用于键值工作负载和类似 hbase 的宽列工作负载，这些工作负载通常具有非常高的吞吐量并且对延迟敏感。 ',
+  },
 ];
 
 export const LOWER_CASE_TABLE_NAMES = [
   {
     label: 0,
     value: 0,
-    description: '使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。'
+    description:
+      '使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。',
   },
 
   {
     label: 1,
     value: 1,
-    description: '表名在硬盘上以小写保存，名称比较对大小写不敏感。'
+    description: '表名在硬盘上以小写保存，名称比较对大小写不敏感。',
   },
 
   {
     label: 2,
     value: 2,
-    description: '表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母进行保存，但名称比较对大小写不敏感。'
+    description:
+      '表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母进行保存，但名称比较对大小写不敏感。',
   },
 ];

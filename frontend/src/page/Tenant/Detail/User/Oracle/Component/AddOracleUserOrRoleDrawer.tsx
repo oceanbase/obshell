@@ -16,9 +16,8 @@
 
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
-import { Form, message } from '@oceanbase/design';
+import { DrawerProps, Form, message } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
 import Password from '@/component/Password';
 import MyDrawer from '@/component/MyDrawer';
 import MyInput from '@/component/MyInput';
@@ -32,27 +31,31 @@ import {
 import { validatePassword } from '@/util';
 import { ORACLE_SYS_PRIVS } from '@/constant/tenant';
 import RoleSelect from './RoleSelect';
+import { createUser } from '@/service/obshell/tenant';
+import { createRole } from '@/service/obshell/tenant';
+import { useSelector } from 'umi';
 
 const { Option } = MySelect;
 
-interface AddOracleUserOrRoleDrawerProps {
-  tenantId?: number;
+interface AddOracleUserOrRoleDrawerProps extends DrawerProps {
+  visible: boolean;
   addIsUser: string; // user, role
   onSuccess: () => void;
 }
 
 const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
-  tenantId,
   addIsUser,
   onSuccess,
   ...restProps
 }) => {
-  const [passed, setPassed] = useState(true);
+  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const tenantName = tenantData.tenant_name;
 
+  const [passed, setPassed] = useState(true);
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue, getFieldsValue } = form;
 
-  const validateConfirmPassword = (rule, value, callback) => {
+  const validateConfirmPassword = (rule: any, value: any, callback: any) => {
     const { password } = getFieldsValue();
     if (value && value !== password) {
       callback(
@@ -65,45 +68,39 @@ const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
       callback();
     }
   };
-  const { run: createDbUser, loading: createDbUserLoading } = useRequest(
-    ObUserController.createDbUser,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            formatMessage({
-              id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.UserCreated',
-              defaultMessage: '用户新建成功',
-            })
-          );
-          if (onSuccess) {
-            onSuccess();
-          }
+  const { run: createDbUser, loading: createDbUserLoading } = useRequest(createUser, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        message.success(
+          formatMessage({
+            id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.UserCreated',
+            defaultMessage: '用户新建成功',
+          })
+        );
+        if (onSuccess) {
+          onSuccess();
         }
-      },
-    }
-  );
+      }
+    },
+  });
 
-  const { run: createDbRole, loading: createDbRoleLoading } = useRequest(
-    ObUserController.createDbRole,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            formatMessage({
-              id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.RoleCreated',
-              defaultMessage: '角色新建成功',
-            })
-          );
-          if (onSuccess) {
-            onSuccess();
-          }
+  const { run: createDbRole, loading: createDbRoleLoading } = useRequest(createRole, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        message.success(
+          formatMessage({
+            id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.RoleCreated',
+            defaultMessage: '角色新建成功',
+          })
+        );
+        if (onSuccess) {
+          onSuccess();
         }
-      },
-    }
-  );
+      }
+    },
+  });
 
   const handleSubmit = () => {
     validateFields().then(values => {
@@ -111,26 +108,26 @@ const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
       if (addIsUser === 'user') {
         createDbUser(
           {
-            tenantId,
+            name: tenantName,
           },
 
           {
-            username,
+            user_name: username,
             password,
-            globalPrivileges,
-            roles,
+            global_privileges: globalPrivileges,
+            roles: roles,
           }
         );
       } else {
         createDbRole(
           {
-            tenantId,
+            name: tenantName,
           },
 
           {
-            roleName,
-            globalPrivileges,
-            roles,
+            role_name: roleName,
+            global_privileges: globalPrivileges,
+            roles: roles,
           }
         );
       }
@@ -332,12 +329,11 @@ const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
           }}
         >
           <RoleSelect
-            tenantId={tenantId}
             style={{ width: 440 }}
             onAddSuccess={role => {
               if (role.length > 0) {
                 setFieldsValue({
-                  roles: role.map(item => item.name),
+                  roles: role.map(item => item.role),
                 });
               }
             }}

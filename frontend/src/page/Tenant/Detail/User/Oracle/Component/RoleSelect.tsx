@@ -26,40 +26,36 @@ import SelectAllAndClearRender from '@/component/SelectAllAndClearRender';
 import SelectDropdownRender from '@/component/SelectDropdownRender';
 import { ORACLE_DATABASE_USER_NAME_RULE, MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import { ORACLE_SYS_PRIVS } from '@/constant/tenant';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { createRole, listRoles } from '@/service/obshell/tenant';
+import { useSelector } from 'umi';
 
 const { Option } = MySelect;
 
 interface RoleSelectProps extends SelectProps<string> {
-  tenantId?: number;
-  onAddSuccess: (roles) => void;
-  onCancel: () => void;
+  onAddSuccess: (roles: API.ObRole[]) => void;
+  onCancel?: () => void;
 }
 
-const RoleSelect: React.FC<RoleSelectProps> = ({
-  tenantId,
-  onAddSuccess,
-  onCancel,
-  ...restProps
-}) => {
+const RoleSelect: React.FC<RoleSelectProps> = ({ onAddSuccess, onCancel, ...restProps }) => {
   const [visible, setVisible] = useState(false);
-
+  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const tenantName = tenantData.tenant_name || '';
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue } = form;
 
-  const { data, refresh } = useRequest(ObUserController.listDbRoles, {
+  const { data, refresh } = useRequest(listRoles, {
     defaultParams: [
       {
-        tenantId,
+        name: tenantName,
       },
     ],
 
-    refreshDeps: [tenantId],
+    refreshDeps: [tenantName],
   });
 
-  const dbRoleList = data?.data?.contents || [];
+  const dbRoleList: API.ObRole[] = data?.data?.contents || [];
 
-  const { run, loading } = useRequest(ObUserController.createDbRole, {
+  const { run, loading } = useRequest(createRole, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -77,13 +73,13 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
       const { roleName, globalPrivileges, roles } = values;
       run(
         {
-          tenantId,
+          name: tenantName,
         },
 
         {
-          roleName,
-          globalPrivileges,
-          roles,
+          role_name: roleName,
+          global_privileges: globalPrivileges,
+          roles: roles,
         }
       );
     });
@@ -114,8 +110,8 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
         {...restProps}
       >
         {dbRoleList.map(item => (
-          <Option key={item.name} value={item.name}>
-            {item.name}
+          <Option key={item.role} value={item.role}>
+            {item.role}
           </Option>
         ))}
       </MySelect>
@@ -130,6 +126,7 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
         destroyOnClose={true}
         onCancel={() => {
           setVisible(false);
+          onCancel?.();
         }}
         okText={formatMessage({
           id: 'ocp-express.Oracle.Component.RoleSelect.Submitted',
@@ -227,8 +224,8 @@ const RoleSelect: React.FC<RoleSelectProps> = ({
           >
             <MySelect mode="multiple" allowClear={true} showSearch={true}>
               {dbRoleList.map(item => (
-                <Option key={item.name} value={item.name}>
-                  {item.name}
+                <Option key={item.role} value={item.role}>
+                  {item.role}
                 </Option>
               ))}
             </MySelect>

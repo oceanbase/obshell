@@ -1,0 +1,147 @@
+---
+globs: *.less,*.style.ts,src/component/**/*,src/page/**/*
+description: 样式开发规范和主题系统
+---
+
+# 样式开发规范
+
+## 样式文件类型
+
+项目支持两种样式方案：
+
+### 1. CSS-in-JS (推荐)
+**文件**: `index.style.ts`
+
+**优势**:
+- TypeScript 类型检查
+- 动态样式计算
+- 主题变量访问
+- 作用域隔离
+
+**示例**:
+```typescript
+import { createStyles } from 'antd-style';
+
+export const useStyles = createStyles(({ token, css }) => ({
+  container: css`
+    padding: ${token.padding}px;
+    background: ${token.colorBgContainer};
+    border-radius: ${token.borderRadius}px;
+  `,
+
+  title: css`
+    font-size: ${token.fontSizeLG}px;
+    color: ${token.colorTextHeading};
+    margin-bottom: ${token.margin}px;
+  `,
+}));
+```
+
+### 2. Less (特殊场景)
+**文件**: `index.less`
+
+**使用场景**:
+- 复杂的选择器逻辑
+- 第三方组件样式覆盖
+- 全局样式定义
+
+## 设计令牌使用
+
+### 主要设计令牌
+```typescript
+// 颜色
+token.colorPrimary        // 主色
+token.colorSuccess        // 成功色
+token.colorWarning        // 警告色
+token.colorError          // 错误色
+token.colorTextBase       // 基础文本色
+token.colorBgContainer    // 容器背景色
+
+// 尺寸
+token.padding             // 基础内边距
+token.margin              // 基础外边距
+token.borderRadius        // 圆角
+token.fontSize            // 基础字号
+token.fontSizeLG          // 大字号
+
+// 阴影
+token.boxShadow           // 基础阴影
+```
+
+## 组件样式模式
+
+### 1. 容器组件
+```typescript
+const containerStyles = css`
+  padding: ${token.paddingLG}px;
+  background: ${token.colorBgContainer};
+  border-radius: ${token.borderRadiusLG}px;
+  box-shadow: ${token.boxShadowSecondary};
+`;
+```
+
+### 2. 卡片组件
+```typescript
+const cardStyles = css`
+  border: 1px solid ${token.colorBorderSecondary};
+  border-radius: ${token.borderRadius}px;
+  overflow: hidden;
+
+  .card-header {
+    padding: ${token.padding}px ${token.paddingLG}px;
+    background: ${token.colorFillAlter};
+    border-bottom: 1px solid ${token.colorBorder};
+  }
+
+  .card-body {
+    padding: ${token.paddingLG}px;
+  }
+`;
+```
+
+### 3. 表单组件
+```typescript
+const formStyles = css`
+  .ant-form-item {
+    margin-bottom: ${token.marginLG}px;
+  }
+
+  .form-actions {
+    text-align: center;
+    padding-top: ${token.paddingLG}px;
+    border-top: 1px solid ${token.colorBorder};
+  }
+`;
+```
+
+## 响应式设计
+
+使用 Ant Design 断点：
+```typescript
+const responsiveStyles = css`
+  @media (max-width: 768px) {
+    padding: ${token.paddingSM}px;
+  }
+
+  @media (min-width: 1200px) {
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+`;
+```
+
+## 最佳实践
+
+1. **优先使用设计令牌**，避免硬编码颜色和尺寸
+2. **保持样式简洁**，避免过度嵌套
+3. **使用语义化类名**，便于维护
+4. **支持主题切换**，适配深色模式
+5. **性能优化**，避免重复计算样式
+
+## 全局样式
+
+全局样式定义在 [global.less](mdc:src/global.less)，包含：
+- 重置样式
+- 基础排版
+- 工具类
+- Ant Design 主题定制

@@ -1188,10 +1188,10 @@ all_merged_version 的值和 last_merged_version 是一致的
     | 'DELETING'
     | 'OPERATING';
 
-  interface ObjectPrivilege {
-    object?: DbObject;
-    privileges?: Array<ObjectPrivilegeType>;
-  }
+  // interface ObjectPrivilege {
+  //   object?: DbObject;
+  //   privileges?: Array<ObjectPrivilegeType>;
+  // }
 
   type ObjectPrivilegeType =
     | 'SELECT'

@@ -16,10 +16,10 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Form, Modal, message } from '@oceanbase/design';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { Form, Modal, message, ModalProps } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import MySelect from '@/component/MySelect';
+import { listRoles, modifyRole, modifyUserRoles } from '@/service/obshell/tenant';
 
 const { Option } = MySelect;
 
@@ -29,8 +29,8 @@ const { Option } = MySelect;
  * roleName 角色名
  * username / roleName 二者只需传一个
  *  */
-interface ModifyRoleModalProps {
-  tenantId?: number;
+interface ModifyRoleModalProps extends ModalProps {
+  tenantName: string;
   username?: string;
   roleName?: string;
   grantedRoles?: string[];
@@ -38,7 +38,8 @@ interface ModifyRoleModalProps {
 }
 
 const ModifyRoleModal: React.FC<ModifyRoleModalProps> = ({
-  tenantId,
+  visible,
+  tenantName,
   username,
   roleName,
   grantedRoles,
@@ -48,82 +49,76 @@ const ModifyRoleModal: React.FC<ModifyRoleModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const { data } = useRequest(ObUserController.listDbRoles, {
+  const { data } = useRequest(listRoles, {
+    ready: visible,
     defaultParams: [
       {
-        tenantId,
+        name: tenantName,
       },
     ],
 
-    refreshDeps: [tenantId],
+    refreshDeps: [tenantName],
   });
 
-  const dbRoleList = data?.data?.contents || [];
+  const dbRoleList: API.ObRole[] = data?.data?.contents || [];
 
-  const { run: modifyRoleFromRole, loading: roleLoading } = useRequest(
-    ObUserController.modifyRoleFromRole,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            formatMessage(
-              {
-                id: 'ocp-express.Oracle.Component.ModifyRoleModal.RolenameRoleModified',
-                defaultMessage: '{roleName} 角色修改成功',
-              },
-              { roleName }
-            )
-          );
-          if (onSuccess) {
-            onSuccess();
-          }
+  const { run: modifyRoleRun, loading: roleLoading } = useRequest(modifyRole, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        message.success(
+          formatMessage(
+            {
+              id: 'ocp-express.Oracle.Component.ModifyRoleModal.RolenameRoleModified',
+              defaultMessage: '{roleName} 角色修改成功',
+            },
+            { roleName }
+          )
+        );
+        if (onSuccess) {
+          onSuccess();
         }
-      },
-    }
-  );
+      }
+    },
+  });
 
-  const { run: modifyRoleFromUser, loading: userLoading } = useRequest(
-    ObUserController.modifyRoleFromUser,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            formatMessage(
-              {
-                id: 'ocp-express.Oracle.Component.ModifyRoleModal.TheUsernameRoleHasBeen',
-                defaultMessage: '{username} 角色修改成功',
-              },
-              { username }
-            )
-          );
-          if (onSuccess) {
-            onSuccess();
-          }
+  const { run: modifyUserRoleRun, loading: userLoading } = useRequest(modifyUserRoles, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        message.success(
+          formatMessage(
+            {
+              id: 'ocp-express.Oracle.Component.ModifyRoleModal.TheUsernameRoleHasBeen',
+              defaultMessage: '{username} 角色修改成功',
+            },
+            { username }
+          )
+        );
+        if (onSuccess) {
+          onSuccess();
         }
-      },
-    }
-  );
+      }
+    },
+  });
 
   const submitFn = () => {
     validateFields().then(values => {
       const { roles } = values;
-
       if (roleName) {
-        modifyRoleFromRole(
+        modifyRoleRun(
           {
-            tenantId,
-            roleName,
+            name: tenantName,
+            role: roleName,
           },
 
           { roles }
         );
       } else {
-        modifyRoleFromUser(
+        modifyUserRoleRun(
           {
-            tenantId,
-            username,
+            name: tenantName,
+            user: username!,
           },
 
           { roles }
@@ -134,6 +129,7 @@ const ModifyRoleModal: React.FC<ModifyRoleModalProps> = ({
 
   return (
     <Modal
+      open={visible}
       title={formatMessage({
         id: 'ocp-express.Oracle.Component.ModifyRoleModal.ModifyARole',
         defaultMessage: '修改角色',
@@ -162,10 +158,10 @@ const ModifyRoleModal: React.FC<ModifyRoleModalProps> = ({
           <MySelect mode="multiple" maxTagCount={5} allowClear={true} showSearch={true}>
             {dbRoleList
               // 只能拥有其他角色，不能拥有自身，否则内核会出现死循环错误
-              .filter(role => role.name !== roleName)
-              .map((item: API.DbRole) => (
-                <Option key={item.name} value={item.name}>
-                  {item.name}
+              .filter(role => role.role !== roleName)
+              .map((item: API.ObRole) => (
+                <Option key={item.role} value={item.role}>
+                  {item.role}
                 </Option>
               ))}
           </MySelect>

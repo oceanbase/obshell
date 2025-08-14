@@ -68,23 +68,6 @@ declare namespace API {
     version?: string;
   };
 
-  type AgentStatus = {
-    architecture?: string;
-    homePath?: string;
-    identity: AgentIdentity;
-    ip: string;
-    isObproxyAgent?: boolean;
-    obVersion?: string;
-    pid?: number;
-    port: number;
-    security?: boolean;
-    startAt?: number;
-    state?: number;
-    supportedAuth?: string[];
-    version?: string;
-    zone: string;
-  };
-
   type ApiError = {
     /** Error code v1, deprecated */
     code?: number;
@@ -98,6 +81,18 @@ declare namespace API {
 
   type ArchiveLogStatusParam = {
     status?: string;
+  };
+
+  type ArchiveLogTask = {
+    checkpoint?: string;
+    /** seconds */
+    delay?: number;
+    path?: string;
+    round_id?: number;
+    start_time?: string;
+    status?: string;
+    tenant_id?: number;
+    tenant_name?: string;
   };
 
   type BackupDeletePolicy = {
@@ -469,6 +464,13 @@ declare namespace API {
     read_only?: boolean;
   };
 
+  type DbaObjectBo = {
+    full_name?: string;
+    name?: string;
+    owner?: string;
+    type?: string;
+  };
+
   type DbaObResourcePool = {
     createTime?: string;
     id?: number;
@@ -738,6 +740,25 @@ declare namespace API {
     shortCommitId?: string;
   };
 
+  type GrantObjectPrivilegeParam = {
+    object_privileges: ObjectPrivilegeParam[];
+    root_password?: string;
+  };
+
+  type grantRoleObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** role name */
+    role: string;
+  };
+
+  type grantUserObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** user name */
+    user: string;
+  };
+
   type GvObParameter = {
     data_type?: string;
     edit_level?: string;
@@ -767,6 +788,11 @@ declare namespace API {
   };
 
   type listDatabasesParams = {
+    /** tenant name */
+    name: string;
+  };
+
+  type listObjectsParams = {
     /** tenant name */
     name: string;
   };
@@ -1115,6 +1141,13 @@ declare namespace API {
     version?: string;
   };
 
+  type patchRoleObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** role name */
+    role: string;
+  };
+
   type patchTenantArchiveLogParams = {
     /** Tenant name */
     name: string;
@@ -1128,6 +1161,13 @@ declare namespace API {
   type patchTenantBackupParams = {
     /** Tenant name */
     name: string;
+  };
+
+  type patchUserObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** user name */
+    user: string;
   };
 
   type PersistTenantRootPasswordParam = {
@@ -1219,14 +1259,14 @@ declare namespace API {
     params: ObParameters[];
   };
 
-  type RestoreStorageTestParam = {
+  type RestoreStorageParam = {
     archive_log_uri?: string;
     data_backup_uri: string;
   };
 
   type RestoreTenantInfo = {
     cluster_name?: string;
-    restore_windows?: RestoreWindow[];
+    restore_windows?: RestoreWindows;
     tenant_name?: string;
   };
 
@@ -1235,9 +1275,32 @@ declare namespace API {
     start_time?: string;
   };
 
+  type RestoreWindows = {
+    restore_windows?: RestoreWindow[];
+  };
+
   type RestoreWindowsParam = {
     archive_log_uri?: string;
     data_backup_uri: string;
+  };
+
+  type RevokeObjectPrivilegeParam = {
+    object_privileges: ObjectPrivilegeParam[];
+    root_password?: string;
+  };
+
+  type revokeRoleObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** role name */
+    role: string;
+  };
+
+  type revokeUserObjectPrivilegeParams = {
+    /** tenant name */
+    name: string;
+    /** user name */
+    user: string;
   };
 
   type RootServer = {
@@ -1387,6 +1450,11 @@ declare namespace API {
     name: string;
   };
 
+  type tenantBackupTasksParams = {
+    /** Tenant name */
+    name: string;
+  };
+
   type tenantBackupStorigeTestParams = {
     /** Tenant name */
     name: string;
@@ -1496,6 +1564,10 @@ declare namespace API {
     tenant_name?: string;
   };
 
+  type TenantRootPasswordParam = {
+    root_password?: string;
+  };
+
   type tenantSetParametersParams = {
     /** tenant name */
     name: string;
@@ -1567,22 +1639,6 @@ declare namespace API {
 
   type UpgradePkgInfo = {
     architecture?: string;
-    chunk_count?: number;
-    distribution?: string;
-    gmt_modify?: string;
-    md5?: string;
-    name?: string;
-    payload_size?: number;
-    pkg_id?: number;
-    release?: string;
-    release_distribution?: string;
-    size?: number;
-    upgrade_dep_yaml?: string;
-    version?: string;
-  };
-
-  type UpgradePkgInfo = {
-    architecture?: string;
     chunkCount?: number;
     distribution?: string;
     gmtModify?: string;
@@ -1594,21 +1650,6 @@ declare namespace API {
     releaseDistribution?: string;
     size?: number;
     upgradeDepYaml?: string;
-    version?: string;
-  };
-
-  type UpgradePkgInfo = {
-    architecture?: string;
-    chunkCount?: number;
-    distribution?: string;
-    gmtModify?: string;
-    md5?: string;
-    name?: string;
-    payloadSize?: number;
-    pkgId?: number;
-    release?: string;
-    releaseDistribution?: string;
-    size?: number;
     version?: string;
   };
 

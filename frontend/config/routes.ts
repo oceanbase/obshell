@@ -27,19 +27,7 @@ export default [
         name: '登录页',
         spmb: 'b55540',
       },
-      {
-        path: 'tenant/result/:taskId',
-        component: 'Tenant/Result/Success',
-        name: '新建租户任务提交成功',
-        spmb: 'b55555',
-      },
-      {
-        // 避免与租户详情冲突
-        path: 'tenantCreate/new',
-        component: 'Tenant/New',
-        name: '新建租户',
-        spmb: 'b55554',
-      },
+
       {
         // 单个租户管理
         path: 'tenant/:tenantName',
@@ -130,6 +118,19 @@ export default [
             component: 'Cluster/Parameter',
             name: '参数管理',
             spmb: 'b55551',
+          },
+          {
+            path: 'tenant/result/:taskId',
+            component: 'Tenant/Result/Success',
+            name: '新建租户任务提交成功',
+            spmb: 'b55555',
+          },
+          {
+            // 避免与租户详情冲突
+            path: 'tenantCreate/new',
+            component: 'Tenant/New',
+            name: '新建租户',
+            spmb: 'b55554',
           },
           {
             path: 'tenant',

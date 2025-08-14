@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
-import { Form, Modal, message } from '@oceanbase/design';
+import { Form, Modal, message, ModalProps } from '@oceanbase/design';
 import { validatePassword } from '@/util';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
 import Password from '@/component/Password';
@@ -25,10 +25,9 @@ import { useRequest } from 'ahooks';
 import { changePassword, persistTenantRootPassword } from '@/service/obshell/tenant';
 import useStyles from './ModifyPasswordModal.style';
 
-export interface ModifyDbUserPasswordProps {
-  ClusterInfo: API.ClusterInfo;
-  tenantData: API.TenantInfo;
-  dbUser: API.DbUser;
+export interface ModifyDbUserPasswordProps extends ModalProps {
+  tenantData: API.DbaObTenant;
+  dbUser: API.ObUser | null;
   onSuccess: () => void;
 }
 
@@ -44,7 +43,7 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
   const [form] = Form.useForm();
   const { getFieldsValue, validateFields } = form;
 
-  const validateConfirmPassword = (rule, value, callback) => {
+  const validateConfirmPassword = (rule: any, value: any, callback: any) => {
     const { newPassword } = getFieldsValue();
     if (value && value !== newPassword) {
       callback(
@@ -70,7 +69,7 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
                 defaultMessage: '{dbUserUsername} 密码修改成功',
               },
 
-              { dbUserUsername: dbUser.username }
+              { dbUserUsername: dbUser?.user_name || '' }
             )
           );
 
@@ -80,29 +79,26 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
     },
   });
 
-  const { run: createOrReplacePassword} = useRequest(
-    persistTenantRootPassword,
-    {
-      manual: true,
-    }
-  );
+  const { run: createOrReplacePassword } = useRequest(persistTenantRootPassword, {
+    manual: true,
+  });
 
   const handleSubmit = () => {
     validateFields().then(values => {
       const { newPassword } = values;
       handleChangePassword(
         {
-          name: tenantData.tenant_name,
-          user: dbUser.username,
+          name: tenantData.tenant_name || '',
+          user: dbUser?.user_name || '',
         },
         {
           new_password: newPassword,
         }
       ).then(res => {
-        if (res.successful && dbUser.username === 'root') {
+        if (res.successful && dbUser?.user_name === 'root') {
           createOrReplacePassword(
             {
-              name: tenantData?.tenant_name,
+              name: tenantData?.tenant_name || '',
             },
             {
               password: newPassword,

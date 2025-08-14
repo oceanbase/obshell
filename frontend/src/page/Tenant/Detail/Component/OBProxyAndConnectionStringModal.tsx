@@ -39,10 +39,10 @@ const OBProxyAndConnectionStringModal: React.FC<OBProxyAndConnectionStringModalP
   const columns: ColumnProps<API.ObproxyAndConnectionString>[] = [
     {
       title: 'OBProxy',
-      dataIndex: 'OBProxy',
+      dataIndex: 'obproxy_address',
       width: 270,
-      render: (value: string, record) => {
-        const text = `${record?.obProxyAddress}:${record?.obProxyPort}`;
+      render: (value: string, record: API.ObproxyAndConnectionString) => {
+        const text = `${record?.obproxy_address}:${record?.obproxy_port}`;
         return (
           <Text style={{ width: 240 }} ellipsis={{ tooltip: text }} copyable={{ text }}>
             {text}
@@ -56,7 +56,7 @@ const OBProxyAndConnectionStringModal: React.FC<OBProxyAndConnectionStringModalP
         id: 'ocp-express.Detail.Component.OBProxyAndConnectionStringModal.ConnectionString',
         defaultMessage: '连接串',
       }),
-      dataIndex: 'connectionString',
+      dataIndex: 'connection_string',
       width: 570,
       render: (connectionString: string) => (
         <Text
@@ -117,7 +117,7 @@ const OBProxyAndConnectionStringModal: React.FC<OBProxyAndConnectionStringModalP
               ),
           }}
           dataSource={obproxyAndConnectionStrings}
-          rowKey={(record: API.ObproxyAndConnectionString) => record?.connectionString}
+          rowKey={(record: API.ObproxyAndConnectionString) => record?.connection_string || ''}
         />
       </Modal>
     </>

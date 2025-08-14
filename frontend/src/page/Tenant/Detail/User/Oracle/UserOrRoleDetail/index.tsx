@@ -17,8 +17,6 @@
 import { formatMessage } from '@/util/intl';
 import { history, useSelector } from 'umi';
 import React, { useState, useEffect } from 'react';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
-import * as ObTenantSessionController from '@/service/ocp-express/ObTenantSessionController';
 import {
   Col,
   Row,
@@ -31,6 +29,7 @@ import {
   Descriptions,
   Modal,
   message,
+  TableColumnType,
 } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
 import { PageContainer } from '@oceanbase/ui';
@@ -51,13 +50,21 @@ import ModifyObjectPrivilegeDrawer from '../Component/ModifyObjectPrivilegeDrawe
 import ModifyObjectPrivilegeModal from '../Component/ModifyObjectPrivilegeModal';
 import ModifyDbUserPassword from '../../../Component/ModifyDbUserPassword';
 import DeleteUserModal from '../../Component/DeleteUserModal';
+import {
+  getRole,
+  getUser,
+  lockUser,
+  revokeRoleObjectPrivilege,
+  revokeUserObjectPrivilege,
+  unlockUser,
+} from '@/service/obshell/tenant';
 
 const { confirm } = Modal;
 
 export interface UserOrRoleDetailProps {
   match: {
     params: {
-      tenantId: number;
+      tenantName: string;
       username?: string;
       roleName?: string;
     };
@@ -66,13 +73,13 @@ export interface UserOrRoleDetailProps {
 
 const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
   match: {
-    params: { tenantId, username, roleName },
+    params: { username, roleName },
   },
 }) => {
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const tenantName = tenantData.tenant_name;
   // 是否展示删除弹窗
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [userStats, setuserStats] = useState<any[]>([]);
   const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   const [globalPrivVisible, setGlobalPrivVisible] = useState(false);
   const [roleVisible, setRoleVisible] = useState(false);
@@ -88,55 +95,41 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     run: getDbUser,
     data: dbUserData,
     refresh: refreshgGetDbUser,
-  } = useRequest(ObUserController.getDbUser, {
+  } = useRequest(getUser, {
     manual: true,
   });
 
-  const userData = dbUserData?.data || {};
+  const userData: API.ObUser = dbUserData?.data || {};
 
   const {
     run: getDbRole,
     data: dbRoleData,
     refresh: refreshGetDbRole,
-  } = useRequest(ObUserController.getDbRole, {
+  } = useRequest(getRole, {
     manual: true,
   });
 
-  const roleData = dbRoleData?.data || [];
+  const roleData: API.ObRole = dbRoleData?.data || {};
   const userOrRoleDetail = username ? userData : roleData;
 
   // 初始化默认值
   useEffect(() => {
-    if (username) {
+    if (tenantName && username) {
       getDbUser({
-        tenantId,
-        username,
+        name: tenantName,
+        user: username,
       });
     }
-    if (roleName) {
+    if (tenantName && roleName) {
       getDbRole({
-        tenantId,
-        roleName,
+        name: tenantName,
+        role: roleName,
       });
     }
-  }, []);
+  }, [tenantName, username, roleName]);
 
-  const { data, run } = useRequest(ObTenantSessionController.getSessionStats, {
-    defaultParams: [
-      {
-        tenantId,
-      },
-    ],
-
-    onSuccess: res => {
-      if (res.successful) {
-        setuserStats(data?.data?.userStats || []);
-      }
-    },
-  });
-
-  const { run: revokeObjectPrivilegeFromUser, loading: deleteDbRoleLoading } = useRequest(
-    ObUserController.revokeObjectPrivilegeFromUser,
+  const { run: revokeUserObjectPrivilegeRun, loading: deleteDbRoleLoading } = useRequest(
+    revokeUserObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -161,8 +154,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     }
   );
 
-  const { run: revokeObjectPrivilegeFromRole, loading: deleteDbUserLoading } = useRequest(
-    ObUserController.revokeObjectPrivilegeFromRole,
+  const { run: revokeRoleObjectPrivilegeRun, loading: deleteDbUserLoading } = useRequest(
+    revokeRoleObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -189,14 +182,34 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
   const deleteObjectPrivilege = (objectPrivileges: API.ObjectPrivilege[]) => {
     if (username) {
-      revokeObjectPrivilegeFromUser({ tenantId, username }, { objectPrivileges });
+      revokeUserObjectPrivilegeRun(
+        { name: tenantName, user: username },
+        {
+          object_privileges: objectPrivileges.map(item => ({
+            object_name: item.object?.name,
+            object_type: item.object?.type,
+            owner: item.object?.owner,
+            privileges: item.privileges,
+          })),
+        }
+      );
     }
     if (roleName) {
-      revokeObjectPrivilegeFromRole({ tenantId, roleName }, { objectPrivileges });
+      revokeRoleObjectPrivilegeRun(
+        { name: tenantName, role: roleName },
+        {
+          object_privileges: objectPrivileges.map(item => ({
+            object_name: item.object?.name,
+            object_type: item.object?.type,
+            owner: item.object?.owner,
+            privileges: item.privileges,
+          })),
+        }
+      );
     }
   };
 
-  const { runAsync: unlockDbUser } = useRequest(ObUserController.unlockDbUser, {
+  const { runAsync: unlockUserRun } = useRequest(unlockUser, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -216,7 +229,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     },
   });
 
-  const { runAsync: lockDbUser } = useRequest(ObUserController.lockDbUser, {
+  const { runAsync: lockUserRun } = useRequest(lockUser, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -236,16 +249,16 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     },
   });
 
-  const changeLockedStatus = (record: API.DbUser) => {
+  const changeLockedStatus = (record: API.ObUser) => {
     let iconType: any = null;
-    if (!record.isLocked) {
+    if (!record.is_locked) {
       iconType = {
         title: formatMessage({
           id: 'ocp-express.Oracle.UserOrRoleDetail.LockedUsersAreNotAllowed',
           defaultMessage: '被锁定的用户将不允许登录，请谨慎操作',
         }),
 
-        apiType: lockDbUser,
+        apiType: lockUserRun,
       };
     } else {
       iconType = {
@@ -254,7 +267,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
           defaultMessage: '解锁用户将允许其登录',
         }),
 
-        apiType: unlockDbUser,
+        apiType: unlockUserRun,
       };
     }
 
@@ -280,7 +293,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                 defaultMessage: '租户：{tenantDataName}',
               },
 
-              { tenantDataName: tenantData.name }
+              { tenantDataName: tenantName }
             )}
           </div>
           <div>
@@ -290,19 +303,19 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                 defaultMessage: '用户名：{recordUsername}',
               },
 
-              { recordUsername: record.username }
+              { recordUsername: record.user_name }
             )}
           </div>
         </div>
       ),
 
       onOk() {
-        return iconType.apiType({ tenantId, username: record.username });
+        return iconType.apiType({ name: tenantName, user: record.user_name! });
       },
     });
   };
 
-  const columns = [
+  const columns: TableColumnType<API.ObjectPrivilege>[] = [
     {
       title: formatMessage({
         id: 'ocp-express.Oracle.UserOrRoleDetail.ObjectName',
@@ -310,7 +323,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
       }),
 
       dataIndex: 'object',
-      render: (text: API.DbObject) => text?.objectName || '-',
+      render: (text: API.DbaObjectBo) => text?.name || '-',
     },
 
     {
@@ -320,7 +333,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
       }),
 
       dataIndex: 'object',
-      render: (text: API.DbObject) => text?.schemaName || '-',
+      render: (text: API.DbaObjectBo) => text?.owner || '-',
     },
 
     {
@@ -335,8 +348,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
         value: item.value,
       })),
 
-      onFilter: (value: string, record: API.ObjectPrivilege) => record.object?.objectType === value,
-      render: (text: API.DbObject) => findByValue(ORACLE_OBJECT_TYPE_LIST, text?.objectType).label,
+      onFilter: (value: string, record: API.ObjectPrivilege) => record.object?.type === value,
+      render: (text: API.DbaObjectBo) => findByValue(ORACLE_OBJECT_TYPE_LIST, text?.type).label,
     },
 
     {
@@ -410,18 +423,18 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
   };
 
   const batchModifyBtn =
-    uniq(selectedRows?.map(item => item?.object?.objectType)).length > 1 ? (
+    uniq(selectedRows?.map(item => item?.object?.type)).length > 1 ? (
       <Tooltip
         placement="top"
         title={
-          uniq(selectedRows?.map(item => item?.object?.objectType)).length > 1 &&
+          uniq(selectedRows?.map(item => item?.object?.type)).length > 1 &&
           formatMessage({
             id: 'ocp-express.Oracle.UserOrRoleDetail.YouCannotModifyPermissionsAt',
             defaultMessage: '选择的对象类型不同，不支持批量修改权限',
           })
         }
       >
-        <Button disabled={uniq(selectedRows?.map(item => item?.object?.objectType)).length > 1}>
+        <Button disabled={uniq(selectedRows?.map(item => item?.object?.type)).length > 1}>
           {formatMessage({
             id: 'ocp-express.Oracle.UserOrRoleDetail.ModifyPermissions.2',
             defaultMessage: '批量修改权限',
@@ -439,7 +452,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
   const routes: Route[] = [
     {
-      path: `/tenant/${tenantId}/user`,
+      path: `/tenant/${tenantName}/user`,
       breadcrumbName: formatMessage({
         id: 'ocp-express.Oracle.UserOrRoleDetail.UserManagement',
         defaultMessage: '用户管理',
@@ -447,16 +460,16 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     },
 
     {
-      path: `/tenant/${tenantId}/user${roleName ? '/role' : ''}`,
+      path: `/tenant/${tenantName}/user${roleName ? '/role' : ''}`,
       breadcrumbName: roleName
         ? formatMessage({
-          id: 'ocp-express.Oracle.UserOrRoleDetail.RoleList',
-          defaultMessage: '角色列表',
-        })
+            id: 'ocp-express.Oracle.UserOrRoleDetail.RoleList',
+            defaultMessage: '角色列表',
+          })
         : formatMessage({
-          id: 'ocp-express.Oracle.UserOrRoleDetail.UserList',
-          defaultMessage: '用户列表',
-        }),
+            id: 'ocp-express.Oracle.UserOrRoleDetail.UserList',
+            defaultMessage: '用户列表',
+          }),
     },
 
     {
@@ -470,7 +483,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
       header={{
         title: `${username || roleName}`,
         extra:
-          userData.username !== 'SYS' && userData.username !== 'proxyro' ? (
+          userData?.user_name !== 'SYS' && userData?.user_name !== 'proxyro' ? (
             <Space>
               {roleName && ORACLE_BUILT_IN_ROLE_LIST.includes(roleName) ? (
                 ''
@@ -491,7 +504,6 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                 <Button
                   type="primary"
                   onClick={() => {
-                    run({ tenantId });
                     setModifyPasswordVisible(true);
                   }}
                 >
@@ -508,7 +520,6 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                 <Button
                   type="primary"
                   onClick={() => {
-                    run({ tenantId });
                     setModifyPasswordVisible(true);
                   }}
                 >
@@ -547,7 +558,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                   <Tooltip
                     placement="topLeft"
                     title={
-                      userData?.username === 'SYS' &&
+                      userData?.user_name === 'SYS' &&
                       formatMessage({
                         id: 'ocp-express.Oracle.UserOrRoleDetail.SysUsersDoNotSupport',
                         defaultMessage: 'SYS 用户不支持此操作',
@@ -555,8 +566,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     }
                   >
                     <Switch
-                      disabled={userData?.username === 'SYS'}
-                      checked={userData?.isLocked}
+                      disabled={userData?.user_name === 'SYS'}
+                      checked={userData?.is_locked}
                       size="small"
                       onChange={() => {
                         changeLockedStatus(userData);
@@ -570,7 +581,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     defaultMessage: '新建时间',
                   })}
                 >
-                  {formatTime(userData?.createTime)}
+                  {formatTime(userData?.create_time)}
                 </Descriptions.Item>
               </Descriptions>
             </MyCard>
@@ -584,7 +595,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
             })}
             bordered={false}
             extra={
-              userData?.username !== 'SYS' && (
+              userData?.user_name !== 'SYS' && (
                 <Button onClick={() => setGlobalPrivVisible(true)}>
                   {formatMessage({
                     id: 'ocp-express.Oracle.UserOrRoleDetail.ModifySystemPermissions',
@@ -594,8 +605,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
               )
             }
           >
-            {userOrRoleDetail?.globalPrivileges
-              ? userOrRoleDetail?.globalPrivileges?.map(item => item.replace(/_/g, ' ')).join('、')
+            {userOrRoleDetail?.global_privileges
+              ? userOrRoleDetail?.global_privileges?.map(item => item.replace(/_/g, ' ')).join('、')
               : '-'}
           </MyCard>
         </Col>
@@ -607,7 +618,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
             })}
             bordered={false}
             extra={
-              userData?.username !== 'SYS' && (
+              userData?.user_name !== 'SYS' && (
                 <Button onClick={() => setRoleVisible(true)}>
                   {formatMessage({
                     id: 'ocp-express.Oracle.UserOrRoleDetail.ModifyARole',
@@ -617,7 +628,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
               )
             }
           >
-            {userOrRoleDetail?.grantedRoles ? userOrRoleDetail?.grantedRoles.join('、') : '-'}
+            {userOrRoleDetail?.granted_roles ? userOrRoleDetail?.granted_roles.join('、') : '-'}
           </MyCard>
         </Col>
         <Col span={24}>
@@ -638,7 +649,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                   })}
                   className="search-input"
                 />
-                {userData?.username !== 'SYS' && (
+                {userData?.user_name !== 'SYS' && (
                   <Button
                     onClick={() => {
                       setAddObjectVisible(true);
@@ -667,7 +678,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     key="batch-delete"
                     placement="topRight"
                     title={
-                      userData?.username === 'SYS' &&
+                      userData?.user_name === 'SYS' &&
                       formatMessage({
                         id: 'ocp-express.Oracle.UserOrRoleDetail.SysUsersDoNotSupport',
                         defaultMessage: 'SYS 用户不支持此操作',
@@ -699,7 +710,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                       onConfirm={() => deleteObjectPrivilege(selectedRows)}
                       onCancel={() => setBatchPopconfirmVisible(false)}
                     >
-                      <Button disabled={userData?.username === 'SYS'}>
+                      <Button disabled={userData?.user_name === 'SYS'}>
                         {formatMessage({
                           id: 'ocp-express.Oracle.UserOrRoleDetail.BatchDelete',
                           defaultMessage: '批量删除',
@@ -714,15 +725,15 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
             <Table
               columns={columns}
-              rowKey={record => record.object?.fullName}
-              dataSource={userOrRoleDetail?.objectPrivileges?.filter(
+              rowKey={record => record.object?.full_name!}
+              dataSource={userOrRoleDetail?.object_privileges?.filter(
                 item =>
                   !keyword ||
-                  (item?.object?.objectName && item.object?.objectName.includes(keyword)) ||
-                  (item?.object?.schemaName && item.object?.schemaName.includes(keyword))
+                  (item?.object?.name && item.object?.name.includes(keyword)) ||
+                  (item?.object?.owner && item.object?.owner.includes(keyword))
               )}
               pagination={PAGINATION_OPTION_10}
-              rowSelection={userData?.username !== 'SYS' && rowSelection}
+              rowSelection={userData?.user_name !== 'SYS' && rowSelection}
             />
           </MyCard>
         </Col>
@@ -742,8 +753,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     defaultMessage: '角色',
                   })}
                 >
-                  {userOrRoleDetail?.roleGrantees?.length > 0
-                    ? userOrRoleDetail?.roleGrantees.join('、')
+                  {userOrRoleDetail?.role_grantees?.length > 0
+                    ? userOrRoleDetail?.role_grantees.join('、')
                     : '-'}
                 </Descriptions.Item>
                 <Descriptions.Item
@@ -752,8 +763,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     defaultMessage: '用户',
                   })}
                 >
-                  {userOrRoleDetail?.userGrantees?.length > 0
-                    ? userOrRoleDetail?.userGrantees.join('、')
+                  {userOrRoleDetail?.user_grantees?.length > 0
+                    ? userOrRoleDetail?.user_grantees.join('、')
                     : '-'}
                 </Descriptions.Item>
               </Descriptions>
@@ -778,7 +789,6 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
       <ModifyDbUserPassword
         visible={modifyPasswordVisible}
         dbUser={userOrRoleDetail}
-        userStats={userStats.filter(item => item.dbUser === userOrRoleDetail?.username)}
         tenantData={tenantData}
         onCancel={() => {
           setModifyPasswordVisible(false);
@@ -791,10 +801,10 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
       <ModifyGlobalPrivilegeModal
         visible={globalPrivVisible}
-        tenantId={tenantId}
+        tenantName={tenantName}
         username={username}
         roleName={roleName}
-        globalPrivileges={userOrRoleDetail?.globalPrivileges}
+        globalPrivileges={userOrRoleDetail?.global_privileges || []}
         onCancel={() => {
           setGlobalPrivVisible(false);
         }}
@@ -811,10 +821,10 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
       <ModifyRoleModal
         visible={roleVisible}
-        tenantId={tenantId}
+        tenantName={tenantName}
         username={username}
         roleName={roleName}
-        grantedRoles={userOrRoleDetail?.grantedRoles}
+        grantedRoles={userOrRoleDetail?.granted_roles}
         onCancel={() => {
           setRoleVisible(false);
         }}
@@ -831,7 +841,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
       <ModifyObjectPrivilegeModal
         visible={modifydObjectVisible}
-        tenantId={tenantId}
+        tenantName={tenantName}
         username={username}
         roleName={roleName}
         dbObject={selectedRows && selectedRows[0]}
@@ -855,10 +865,10 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
       <AddObjectPrivilegeDrawer
         visible={addObjectVisible}
-        tenantId={tenantId}
+        tenantName={tenantName}
         username={username}
         roleName={roleName}
-        addedDbObjects={userOrRoleDetail?.objectPrivileges}
+        addedDbObjects={userOrRoleDetail?.object_privileges}
         onCancel={() => {
           setAddObjectVisible(false);
           setSelectedRowKeys([]);
@@ -879,7 +889,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
       <ModifyObjectPrivilegeDrawer
         visible={modifyObjectVisible}
-        tenantId={tenantId}
+        tenantName={tenantName}
         username={username}
         roleName={roleName}
         dbObjects={selectedRows}

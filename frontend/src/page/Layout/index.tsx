@@ -127,7 +127,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
 
     // 子应用作为 iframe 嵌入其他应用，通过 message 需要获取 locale 进行同步切换语言
     window.addEventListener('message', event => {
-      console.log('obshell receive message', event);
+      // console.log('obshell receive message', event);
       if (event.data && event.data.locale) {
         setLocale(event.data.locale, true);
 

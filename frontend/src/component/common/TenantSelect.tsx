@@ -43,11 +43,7 @@ const TenantSelect: React.FC<TenantSelectProps> = ({
 }) => {
   const { data, loading } = useRequest(getTenantOverView, {
     // 需要设置 defaultParams，否则请求不发起
-    defaultParams: [
-      {
-        mode: 'MYSQL',
-      },
-    ],
+    defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
         if (onSuccess) {

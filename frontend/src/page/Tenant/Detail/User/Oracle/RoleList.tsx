@@ -17,38 +17,37 @@
 import { formatMessage } from '@/util/intl';
 import { history, connect } from 'umi';
 import React, { useState } from 'react';
-import { Table, Tooltip } from '@oceanbase/design';
+import { Table, Tooltip, TableColumnType } from '@oceanbase/design';
 import { uniq } from 'lodash';
 import { PAGINATION_OPTION_10 } from '@/constant';
 import { ORACLE_BUILT_IN_ROLE_LIST } from '@/constant/tenant';
 import DeleteUserModal from '../Component/DeleteUserModal';
 
 export interface RoleListProps {
-  tenantId: number;
   dbRoleLoading?: boolean;
   dbRoleList: [];
   refreshDbRole?: () => void;
-  tenantData: API.TenantInfo;
+  tenantData: API.DbaObTenant;
 }
 
 const RoleList: React.FC<RoleListProps> = ({
-  tenantId,
   dbRoleLoading,
   dbRoleList,
   refreshDbRole,
   tenantData,
 }) => {
-  const [current, setCurrent] = useState<API.DbRole | null>(null);
+  const tenantName = tenantData.tenant_name || '';
+  const [current, setCurrent] = useState<API.ObRole | null>(null);
   // 删除 Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
 
-  const columns = [
+  const columns: TableColumnType<API.ObRole>[] = [
     {
       title: formatMessage({
         id: 'ocp-express.User.Oracle.RolesList.Role',
         defaultMessage: '角色名',
       }),
-      dataIndex: 'name',
+      dataIndex: 'role',
       render: (text: string) => (
         <Tooltip placement="topLeft" title={text}>
           <a
@@ -56,7 +55,7 @@ const RoleList: React.FC<RoleListProps> = ({
             data-aspm-desc="Oracle 角色列表-跳转角色详情"
             data-aspm-param={``}
             data-aspm-expo
-            onClick={() => history.push(`/tenant/${tenantId}/user/role/${text}`)}
+            onClick={() => history.push(`/tenant/${tenantName}/user/role/${text}`)}
           >
             {text}
           </a>
@@ -69,7 +68,7 @@ const RoleList: React.FC<RoleListProps> = ({
         id: 'ocp-express.User.Oracle.RolesList.HaveSystemPermissions',
         defaultMessage: '拥有系统权限',
       }),
-      dataIndex: 'globalPrivileges',
+      dataIndex: 'global_privileges',
       render: (text: string[]) => {
         const textContent = text?.map(item => item.replace(/_/g, ' ')).join('、');
         return textContent ? (
@@ -94,7 +93,7 @@ const RoleList: React.FC<RoleListProps> = ({
         id: 'ocp-express.User.Oracle.RolesList.HaveARole',
         defaultMessage: '拥有角色',
       }),
-      dataIndex: 'grantedRoles',
+      dataIndex: 'granted_roles',
       render: (text: string[]) => {
         const textContent = text?.join('、');
         return textContent ? (
@@ -119,9 +118,9 @@ const RoleList: React.FC<RoleListProps> = ({
         id: 'ocp-express.User.Oracle.RolesList.AccessibleObjects',
         defaultMessage: '可访问对象',
       }),
-      dataIndex: 'objectPrivileges',
+      dataIndex: 'object_privileges',
       render: (text: API.ObjectPrivilege[]) => {
-        const objectPrivileges = uniq(text?.map(item => item?.object?.fullName));
+        const objectPrivileges = uniq(text?.map(item => item?.object?.full_name));
         const textContent = objectPrivileges?.join('、');
         return textContent ? (
           <Tooltip placement="topLeft" title={textContent}>
@@ -145,10 +144,10 @@ const RoleList: React.FC<RoleListProps> = ({
         id: 'ocp-express.User.Oracle.RolesList.ReferencedByTheFollowingRoles',
         defaultMessage: '被以下角色和用户引用',
       }),
-      dataIndex: 'roleGrantees',
-      render: (text, record: API.DbRole) => {
-        const roleGrantees = record.roleGrantees?.join('、');
-        const userGrantees = record.userGrantees?.join('、');
+      dataIndex: 'role_grantees',
+      render: (text, record: API.ObRole) => {
+        const roleGrantees = record.role_grantees?.join('、');
+        const userGrantees = record.user_grantees?.join('、');
         return (
           <>
             <div
@@ -192,9 +191,9 @@ const RoleList: React.FC<RoleListProps> = ({
         defaultMessage: '操作',
       }),
       dataIndex: 'operation',
-      render: (text: string, record: API.DbRole) => {
+      render: (text: string, record: API.ObRole) => {
         // 内置角色不支持删除操作
-        if (ORACLE_BUILT_IN_ROLE_LIST.includes(record?.name)) {
+        if (ORACLE_BUILT_IN_ROLE_LIST.includes(record?.role || '')) {
           return '';
         }
         return (
@@ -234,7 +233,7 @@ const RoleList: React.FC<RoleListProps> = ({
 
       <DeleteUserModal
         visible={deleteModalVisible}
-        roleName={current?.name}
+        roleName={current?.role}
         tenantData={tenantData}
         onCancel={() => {
           setDeleteModalVisible(false);
@@ -243,7 +242,7 @@ const RoleList: React.FC<RoleListProps> = ({
         onSuccess={() => {
           setDeleteModalVisible(false);
           setCurrent(null);
-          refreshDbRole();
+          refreshDbRole?.();
         }}
       />
     </>

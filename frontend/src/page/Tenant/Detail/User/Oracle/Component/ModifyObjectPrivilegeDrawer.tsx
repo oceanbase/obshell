@@ -17,8 +17,17 @@
 import { formatMessage } from '@/util/intl';
 import { useRequest } from 'ahooks';
 import React from 'react';
-import { Form, Checkbox, Tag, Space, Button, Row, Col, message } from '@oceanbase/design';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import {
+  Form,
+  Checkbox,
+  Tag,
+  Space,
+  Button,
+  Row,
+  Col,
+  message,
+  DrawerProps,
+} from '@oceanbase/design';
 import {
   ORACLE_OBJECT_TYPE_LIST,
   ORACLE_TABLE_PRIVILEGE_LIST,
@@ -26,6 +35,7 @@ import {
   ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST,
 } from '@/constant/tenant';
 import MyDrawer from '@/component/MyDrawer';
+import { patchUserObjectPrivilege, patchRoleObjectPrivilege } from '@/service/obshell/tenant';
 
 /**
  * 参数说明
@@ -33,8 +43,8 @@ import MyDrawer from '@/component/MyDrawer';
  * roleName 角色名
  * username / roleName 二者只需传一个
  *  */
-interface ModifyObjectPrivilegeDrawerProps {
-  tenantId?: number;
+interface ModifyObjectPrivilegeDrawerProps extends DrawerProps {
+  tenantName: string;
   username?: string;
   roleName?: string;
   dbObjects?: API.ObjectPrivilege[];
@@ -43,7 +53,7 @@ interface ModifyObjectPrivilegeDrawerProps {
 }
 
 const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = ({
-  tenantId,
+  tenantName,
   username,
   roleName,
   dbObjects,
@@ -51,13 +61,13 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
   onCancel,
   ...restProps
 }) => {
-  const objectType = dbObjects?.[0]?.object?.objectType;
+  const objectType = dbObjects?.[0]?.object?.type;
 
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const { run: modifyObjectPrivilegeFromUser, loading: userModifyObjectLoading } = useRequest(
-    ObUserController.modifyObjectPrivilegeFromUser,
+  const { run: patchUserObjectPrivilegeRun, loading: userModifyObjectLoading } = useRequest(
+    patchUserObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -76,8 +86,8 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
     }
   );
 
-  const { run: modifyObjectPrivilegeFromRole, loading: roleModifyObjectLoading } = useRequest(
-    ObUserController.modifyObjectPrivilegeFromRole,
+  const { run: patchRoleObjectPrivilegeRun, loading: roleModifyObjectLoading } = useRequest(
+    patchRoleObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -101,23 +111,25 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
       const { privileges } = values;
       // 整理参数 用户/角色 添加对象 || 用户/角色 修改对象权限
       let param = {
-        tenantId,
+        name: tenantName,
       };
 
       const objectPrivileges = dbObjects?.map(item => ({
-        object: item.object,
+        object_name: item.object?.name,
+        object_type: item.object?.type,
+        owner: item.object?.owner,
         privileges,
       }));
 
       // 用户
       if (username) {
-        param = { ...param, username };
-        modifyObjectPrivilegeFromUser(param, { objectPrivileges });
+        param = { ...param, user: username };
+        patchUserObjectPrivilegeRun(param, { object_privileges: objectPrivileges });
       }
       // 角色
       if (roleName) {
-        param = { ...param, roleName };
-        modifyObjectPrivilegeFromRole(param, { objectPrivileges });
+        param = { ...param, role: roleName };
+        patchRoleObjectPrivilegeRun(param, { object_privileges: objectPrivileges });
       }
     });
   };
@@ -179,8 +191,8 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
             style={{ padding: 12, maxHeight: 520, background: '#FAFAFA', overflow: 'auto' }}
           >
             {dbObjects?.map(item => (
-              <Col key={item?.object?.fullName} span={6}>
-                <Tag>{item?.object?.fullName}</Tag>
+              <Col key={item?.object?.full_name} span={6}>
+                <Tag>{item?.object?.full_name}</Tag>
               </Col>
             ))}
           </Row>

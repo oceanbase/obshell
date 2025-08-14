@@ -38,7 +38,7 @@ interface DbObjectTreeSelectProps {
   value: string[];
   treeData: TreeNodeType[];
   objectType: string;
-  dbObjectList: API.ObjectPrivilege[];
+  dbObjectList: API.DbaObjectBo[];
   addedDbObjects?: API.ObjectPrivilege[];
   onChange?: (value) => void;
 }
@@ -66,12 +66,12 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
     // 判断是否是否存在且正确  存在为赋权 标记为灰色
     if (
       findIndex(
-        dbObjectList.filter(dbObject => dbObject?.objectType === objectType),
-        item => item?.schemaName === val || item.fullName === val
+        dbObjectList.filter(dbObject => dbObject?.type === objectType),
+        item => item?.owner === val || item.full_name === val
       ) !== -1
     ) {
       //  已赋权 标记为黄色
-      if (findIndex(addedDbObjects, item => item.object?.fullName === val) !== -1) {
+      if (findIndex(addedDbObjects, item => item.object?.full_name === val) !== -1) {
         color = 'gold';
       }
     } else {
@@ -149,14 +149,14 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
         onPaste={e => onPaste(e)}
       >
         {treeData.map(item => {
-          const treeNodeList = item?.children?.filter(object => object?.objectType === objectType);
+          const treeNodeList = item?.children?.filter(object => object?.type === objectType);
           if (treeNodeList?.length > 0) {
             return (
               <TreeNode key={item.key} value={item.value} title={item.title}>
                 {item?.children
-                  ?.filter(object => object.objectType === objectType)
+                  ?.filter(object => object.type === objectType)
                   ?.map(treeItem => {
-                    if (treeItem?.objectType === 'TABLE') {
+                    if (treeItem?.type === 'TABLE') {
                       return (
                         <TreeNode
                           key={treeItem?.value}
@@ -170,7 +170,7 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
                         />
                       );
                     }
-                    if (treeItem?.objectType === 'VIEW') {
+                    if (treeItem?.type === 'VIEW') {
                       return (
                         <TreeNode
                           key={treeItem?.value}
@@ -184,7 +184,7 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
                         />
                       );
                     }
-                    if (treeItem?.objectType === 'STORED_PROCEDURE') {
+                    if (treeItem?.type === 'STORED_PROCEDURE') {
                       return (
                         <TreeNode
                           key={treeItem?.value}

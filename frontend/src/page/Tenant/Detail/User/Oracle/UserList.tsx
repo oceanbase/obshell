@@ -17,65 +17,63 @@
 import { formatMessage } from '@/util/intl';
 import { history, connect } from 'umi';
 import React, { useState } from 'react';
-import { Table, Tooltip, Space, Switch, Modal, message } from '@oceanbase/design';
+import { Table, Tooltip, Space, Switch, Modal, message, TableColumnType } from '@oceanbase/design';
 import { uniq } from 'lodash';
 import { sortByMoment } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
-import * as ObTenantSessionController from '@/service/ocp-express/ObTenantSessionController';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
 import { PAGINATION_OPTION_10 } from '@/constant';
 import { formatTime } from '@/util/datetime';
 import ModifyDbUserPassword from '../../Component/ModifyDbUserPassword';
 import DeleteUserModal from '../Component/DeleteUserModal';
 import OBProxyAndConnectionStringModal from '../../Component/OBProxyAndConnectionStringModal';
 import RenderConnectionString from '@/component/RenderConnectionString';
+import { getStats, lockUser, unlockUser } from '@/service/obshell/tenant';
 
 const { confirm } = Modal;
 
 export interface UserProps {
-  tenantId: number;
   dbUserLoading: boolean;
   dbUserList: [];
   refreshDbUser: () => void;
-  tenantData: API.TenantInfo;
+  tenantData: API.DbaObTenant;
+}
+
+export interface UserStats {
+  total?: number;
+  active?: number;
 }
 
 const UserList: React.FC<UserProps> = ({
-  tenantId,
   dbUserLoading,
   dbUserList,
   refreshDbUser,
   tenantData,
 }) => {
-  const [current, setCurrent] = useState<API.DbUser | null>(null);
-  const [userStats, setuserStats] = useState<any[]>([]);
+  const [current, setCurrent] = useState<API.ObUser | null>(null);
+  const [userStats, setUserStats] = useState<UserStats>({});
   // 修改密码
   const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   // 删除Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
 
-  const { data, run } = useRequest(ObTenantSessionController.getSessionStats, {
-    defaultParams: [
-      {
-        tenantId,
-      },
-    ],
+  const tenantName = tenantData.tenant_name || '';
 
+  const { run: getUserStats } = useRequest(getStats, {
+    manual: true,
     onSuccess: res => {
       if (res.successful) {
-        setuserStats(data?.data?.userStats || []);
+        setUserStats(res?.data?.session || {});
       }
     },
   });
 
-  const modifyPassword = (record: API.DbUser) => {
-    run({ tenantId });
+  const modifyPassword = (record: API.ObUser) => {
     setModifyPasswordVisible(true);
     setCurrent(record);
   };
 
-  const { runAsync: unlockDbUser } = useRequest(ObUserController.unlockDbUser, {
+  const { runAsync: unlockDbUser } = useRequest(unlockUser, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -90,7 +88,7 @@ const UserList: React.FC<UserProps> = ({
     },
   });
 
-  const { runAsync: lockDbUser } = useRequest(ObUserController.lockDbUser, {
+  const { runAsync: lockDbUser } = useRequest(lockUser, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -105,9 +103,9 @@ const UserList: React.FC<UserProps> = ({
     },
   });
 
-  const changeLockedStatus = (record: API.DbUser) => {
+  const changeLockedStatus = (record: API.ObUser) => {
     let iconType: any = null;
-    if (!record.isLocked) {
+    if (!record.is_locked) {
       iconType = {
         title: formatMessage({
           id: 'ocp-express.User.Oracle.UserList.LockedUsersAreNotAllowed',
@@ -143,7 +141,7 @@ const UserList: React.FC<UserProps> = ({
                 id: 'ocp-express.User.Oracle.UserList.TenantTenantdataname',
                 defaultMessage: '租户：{tenantDataName}',
               },
-              { tenantDataName: tenantData.name }
+              { tenantDataName: tenantName }
             )}
           </div>
           <div>
@@ -152,27 +150,29 @@ const UserList: React.FC<UserProps> = ({
                 id: 'ocp-express.User.Oracle.UserList.UsernameRecordusername',
                 defaultMessage: '用户名：{recordUsername}',
               },
-              { recordUsername: record.username }
+              { recordUsername: record.user_name }
             )}
           </div>
         </div>
       ),
       onOk() {
-        return iconType.apiType({ tenantId, username: record.username });
+        return iconType.apiType({ name: tenantName, user: record.user_name });
       },
     });
   };
 
-  const columns = [
+  const columns: TableColumnType<API.ObUser>[] = [
     {
       title: formatMessage({
         id: 'ocp-express.User.Oracle.UserList.UserName',
         defaultMessage: '用户名',
       }),
-      dataIndex: 'username',
-      render: (text: string, record: API.DbUser) => (
+      dataIndex: 'user_name',
+      render: (text: string, record: API.ObUser) => (
         <Tooltip placement="topLeft" title={text}>
-          <a onClick={() => history.push(`/tenant/${tenantId}/user/${record?.username}`)}>{text}</a>
+          <a onClick={() => history.push(`/tenant/${tenantName}/user/${record?.user_name}`)}>
+            {text}
+          </a>
         </Tooltip>
       ),
     },
@@ -182,7 +182,7 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.UserList.HaveSystemPermissions',
         defaultMessage: '拥有系统权限',
       }),
-      dataIndex: 'globalPrivileges',
+      dataIndex: 'global_privileges',
       render: (text: string[]) => {
         const textContent = text?.map(item => item?.replace(/_/g, ' ')).join('、');
         return textContent ? (
@@ -207,7 +207,7 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.UserList.HaveARole',
         defaultMessage: '拥有角色',
       }),
-      dataIndex: 'grantedRoles',
+      dataIndex: 'granted_roles',
       render: (text: string[]) => {
         const textContent = text?.join('、');
         return textContent ? (
@@ -232,9 +232,9 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.RolesList.AccessibleObjects',
         defaultMessage: '可访问对象',
       }),
-      dataIndex: 'objectPrivileges',
+      dataIndex: 'object_privileges',
       render: (text: API.ObjectPrivilege[]) => {
-        const objectPrivileges = uniq(text?.map(item => item?.object?.fullName));
+        const objectPrivileges = uniq(text?.map(item => item?.object?.full_name));
         const textContent = objectPrivileges?.join('、');
         return textContent ? (
           <Tooltip placement="topLeft" title={textContent}>
@@ -258,9 +258,9 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.UserList.CreationTime',
         defaultMessage: '新建时间',
       }),
-      dataIndex: 'createTime',
+      dataIndex: 'create_time',
       defaultSortOrder: 'descend',
-      sorter: (a: API.DbUser, b: API.DbUser) => sortByMoment(a, b, 'createTime'),
+      sorter: (a: API.ObUser, b: API.ObUser) => sortByMoment(a, b, 'createTime'),
       render: (text: string) => formatTime(text),
     },
 
@@ -269,8 +269,8 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.UserList.LogonConnectionString',
         defaultMessage: '登录连接串',
       }),
-      dataIndex: 'connectionStrings',
-      render: (connectionStrings: API.ObproxyAndConnectionString[], record: API.DbUser) => {
+      dataIndex: 'connection_strings',
+      render: (connectionStrings: API.ObproxyAndConnectionString[], record: API.ObUser) => {
         return (
           <RenderConnectionString
             callBack={() => {
@@ -288,9 +288,9 @@ const UserList: React.FC<UserProps> = ({
         id: 'ocp-express.User.Oracle.UserList.Locking',
         defaultMessage: '锁定',
       }),
-      dataIndex: 'isLocked',
-      render: (text: boolean, record: API.DbUser) =>
-        record.username === 'SYS' ? (
+      dataIndex: 'is_locked',
+      render: (text: boolean, record: API.ObUser) =>
+        record.user_name === 'SYS' ? (
           <Tooltip
             placement="topRight"
             title={formatMessage({
@@ -320,7 +320,7 @@ const UserList: React.FC<UserProps> = ({
         defaultMessage: '操作',
       }),
       dataIndex: 'operation',
-      render: (text: string, record: API.DbUser) => {
+      render: (text: string, record: API.ObUser) => {
         return (
           <Space size="middle">
             <a
@@ -337,13 +337,14 @@ const UserList: React.FC<UserProps> = ({
                 defaultMessage: '修改密码',
               })}
             </a>
-            {record.username !== 'SYS' && (
+            {record.user_name !== 'SYS' && (
               <a
                 data-aspm-click="c304262.d308775"
                 data-aspm-desc="Oracle 用户列表-删除用户"
                 data-aspm-param={``}
                 data-aspm-expo
                 onClick={() => {
+                  getUserStats({ name: tenantName, user: record.user_name! });
                   setCurrent(record);
                   setDeleteModalVisible(true);
                 }}
@@ -377,7 +378,6 @@ const UserList: React.FC<UserProps> = ({
       <ModifyDbUserPassword
         visible={modifyPasswordVisible}
         dbUser={current}
-        userStats={userStats.filter(item => item.dbUser === current?.username)}
         tenantData={tenantData}
         onCancel={() => {
           setModifyPasswordVisible(false);
@@ -392,9 +392,9 @@ const UserList: React.FC<UserProps> = ({
 
       <DeleteUserModal
         visible={deleteModalVisible}
-        username={current?.username}
+        username={current?.user_name}
         tenantData={tenantData}
-        userStats={userStats.filter(item => item.dbUser === current?.username)}
+        userStats={userStats}
         onCancel={() => {
           setDeleteModalVisible(false);
           setCurrent(null);
@@ -407,10 +407,10 @@ const UserList: React.FC<UserProps> = ({
       />
 
       <OBProxyAndConnectionStringModal
-        userName={current?.username}
+        userName={current?.user_name}
         width={900}
         visible={connectionStringModalVisible}
-        obproxyAndConnectionStrings={current?.connectionStrings || []}
+        obproxyAndConnectionStrings={current?.connection_strings || []}
         onCancel={() => {
           setConnectionStringModalVisible(false);
         }}

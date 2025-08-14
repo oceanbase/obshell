@@ -1,0 +1,250 @@
+---
+globs: test/**/*,*.test.ts,*.test.tsx,*.spec.ts,*.spec.tsx
+description: 测试开发规范和最佳实践
+---
+
+# 测试开发规范
+
+## 测试框架配置
+
+项目使用 **Jest** 作为测试框架，配置文件：[jest.config.js](mdc:jest.config.js)
+
+## 测试文件结构
+
+```
+test/
+├── constant/           # 常量测试
+├── util/              # 工具函数测试
+└── mock-util-intl.js  # 国际化Mock工具
+```
+
+## 测试文件命名
+
+1. **单元测试**: `*.test.ts` 或 `*.test.tsx`
+2. **集成测试**: `*.spec.ts` 或 `*.spec.tsx`
+3. **测试文件位置**:
+   - 组件测试：`src/component/ComponentName/__tests__/`
+   - 工具函数测试：`test/util/`
+   - 常量测试：`test/constant/`
+
+## 测试代码规范
+
+### 1. 测试结构
+```typescript
+import { ComponentName } from '../index';
+
+describe('ComponentName', () => {
+  // 测试准备
+  beforeEach(() => {
+    // setup
+  });
+
+  // 清理
+  afterEach(() => {
+    // cleanup
+  });
+
+  it('should render correctly', () => {
+    // Arrange
+    const props = { /* test props */ };
+
+    // Act
+    const result = render(<ComponentName {...props} />);
+
+    // Assert
+    expect(result).toMatchSnapshot();
+  });
+
+  it('should handle user interactions', () => {
+    // 测试用户交互
+  });
+});
+```
+
+### 2. 测试命名
+- 使用 `describe` 描述测试对象
+- 使用 `it` 或 `test` 描述具体行为
+- 命名格式：`should [expected behavior] when [condition]`
+
+### 3. 断言模式
+```typescript
+// 基础断言
+expect(value).toBe(expected);
+expect(value).toEqual(expected);
+expect(array).toContain(item);
+
+// DOM断言
+expect(element).toBeInTheDocument();
+expect(element).toHaveClass('className');
+expect(element).toHaveTextContent('text');
+
+// 异步断言
+await expect(promise).resolves.toBe(value);
+await expect(asyncFunction).rejects.toThrow();
+```
+
+## 组件测试
+
+### 1. React组件测试
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { ConfigProvider } from 'antd';
+import { IntlProvider } from 'react-intl';
+import { MyComponent } from '../index';
+
+// 测试工具包装器
+const renderWithProviders = (component: React.ReactElement) => {
+  return render(
+    <ConfigProvider>
+      <IntlProvider locale="zh-CN" messages={{}}>
+        {component}
+      </IntlProvider>
+    </ConfigProvider>
+  );
+};
+
+describe('MyComponent', () => {
+  it('should render with default props', () => {
+    renderWithProviders(<MyComponent />);
+    expect(screen.getByRole('button')).toBeInTheDocument();
+  });
+
+  it('should handle click events', () => {
+    const onClickMock = jest.fn();
+    renderWithProviders(<MyComponent onClick={onClickMock} />);
+
+    fireEvent.click(screen.getByRole('button'));
+    expect(onClickMock).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+### 2. 表单组件测试
+```typescript
+it('should validate form inputs', async () => {
+  renderWithProviders(<MyForm />);
+
+  const input = screen.getByRole('textbox');
+  const submitButton = screen.getByRole('button', { name: /submit/i });
+
+  // 测试无效输入
+  fireEvent.change(input, { target: { value: 'invalid' } });
+  fireEvent.click(submitButton);
+
+  expect(await screen.findByText(/error message/i)).toBeInTheDocument();
+});
+```
+
+## 工具函数测试
+
+### 1. 纯函数测试
+```typescript
+// test/util/format.test.js
+import { formatBytes, formatNumber } from '../../src/util/format';
+
+describe('formatBytes', () => {
+  it('should format bytes correctly', () => {
+    expect(formatBytes(1024)).toBe('1 KB');
+    expect(formatBytes(1048576)).toBe('1 MB');
+    expect(formatBytes(0)).toBe('0 Bytes');
+  });
+
+  it('should handle negative values', () => {
+    expect(formatBytes(-1024)).toBe('-1 KB');
+  });
+});
+```
+
+### 2. 异步函数测试
+```typescript
+import { apiCall } from '../../src/util/request';
+
+describe('apiCall', () => {
+  it('should return data on success', async () => {
+    const mockData = { id: 1, name: 'test' };
+    // Mock API response
+
+    const result = await apiCall('/api/test');
+    expect(result).toEqual(mockData);
+  });
+
+  it('should throw error on failure', async () => {
+    // Mock API error
+
+    await expect(apiCall('/api/error')).rejects.toThrow();
+  });
+});
+```
+
+## Mock和模拟
+
+### 1. API Mock
+```typescript
+// 模拟API请求
+jest.mock('../../src/service/api', () => ({
+  getUsers: jest.fn().mockResolvedValue([
+    { id: 1, name: 'User 1' },
+    { id: 2, name: 'User 2' },
+  ]),
+}));
+```
+
+### 2. 第三方库Mock
+```typescript
+// 模拟Ant Design组件
+jest.mock('antd', () => ({
+  ...jest.requireActual('antd'),
+  message: {
+    success: jest.fn(),
+    error: jest.fn(),
+  },
+}));
+```
+
+### 3. 国际化Mock
+参考现有的 [mock-util-intl.js](mdc:test/mock-util-intl.js)
+
+## 测试覆盖率
+
+### 目标覆盖率
+- **语句覆盖率**: ≥80%
+- **分支覆盖率**: ≥75%
+- **函数覆盖率**: ≥85%
+- **行覆盖率**: ≥80%
+
+### 运行覆盖率报告
+```bash
+npm run test:coverage
+```
+
+## 最佳实践
+
+### 1. 测试原则
+- **单一职责**: 每个测试只验证一个功能点
+- **独立性**: 测试间不应相互依赖
+- **可重复**: 测试结果应该稳定可重复
+- **快速**: 避免不必要的异步等待
+
+### 2. 测试内容
+- **核心业务逻辑**必须测试
+- **边界条件**和**异常情况**
+- **用户交互**流程
+- **API接口**调用
+
+### 3. 不需要测试的内容
+- 第三方库的内部实现
+- 简单的getter/setter
+- 纯配置代码
+
+### 4. 测试维护
+- 定期运行测试套件
+- 及时更新过时的测试
+- 保持测试代码的整洁
+- 为复杂测试添加注释说明
+
+## 常用测试工具
+
+- **@testing-library/react**: React组件测试
+- **@testing-library/jest-dom**: DOM断言扩展
+- **jest**: 测试框架和断言库
+- **@testing-library/user-event**: 用户交互模拟

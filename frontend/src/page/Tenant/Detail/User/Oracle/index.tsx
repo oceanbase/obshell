@@ -20,7 +20,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Space } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { listUsers, listRoles } from '@/service/obshell/tenant';
 import Empty from '@/component/Empty';
 import MyInput from '@/component/MyInput';
 import MyCard from '@/component/MyCard';
@@ -29,15 +29,16 @@ import UserList from './UserList';
 import RoleList from './RoleList';
 import AddOracleUserOrRoleDrawer from './Component/AddOracleUserOrRoleDrawer';
 import useStyles from './index.style';
+import ContentWithReload from '@/component/ContentWithReload';
 
 export interface IndexProps {
   pathname?: string;
-  tenantId: number;
+  tenantName: string;
 }
 
-const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
+const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
   const { styles } = useStyles();
-  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [keyword, setKeyword] = useState('');
   const pathnameList: string[] = pathname?.split('/') || [];
@@ -46,14 +47,18 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
   useEffect(() => {
     if (tab === 'user') {
       getDbUserList({
-        tenantId,
+        name: tenantName,
       });
     } else if (tab === 'role') {
       getDbRoleList({
-        tenantId,
+        name: tenantName,
       });
     }
   }, [tab]);
+
+  const ready =
+    tenantData?.tenant_name === 'sys' ||
+    (Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable);
 
   // 新增用户 / 角色
   const [addUserVisible, setAddUserVisible] = useState(false);
@@ -66,22 +71,36 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
     data: dbUserListData,
     refresh: refreshDbUser,
     loading: dbUserLoading,
-  } = useRequest(ObUserController.listDbUsers, {
+  } = useRequest(listUsers, {
     manual: true,
+    ready,
+    defaultParams: [
+      {
+        name: tenantName,
+      },
+    ],
+    refreshDeps: [ready],
   });
 
-  const dbUserList = dbUserListData?.data?.contents || [];
+  const dbUserList: API.ObUser[] = dbUserListData?.data?.contents || [];
   // 获取角色列表
   const {
     run: getDbRoleList,
     data: dbRoleListData,
     refresh: refreshDbRole,
     loading: dbRoleLoading,
-  } = useRequest(ObUserController.listDbRoles, {
+  } = useRequest(listRoles, {
     manual: true,
+    ready,
+    defaultParams: [
+      {
+        name: tenantName,
+      },
+    ],
+    refreshDeps: [ready],
   });
 
-  const dbRoleList = dbRoleListData?.data?.contents || [];
+  const dbRoleList: API.ObRole[] = dbRoleListData?.data?.contents || [];
 
   return tenantData.status === 'CREATING' ? (
     <Empty
@@ -94,7 +113,7 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
       <Button
         type="primary"
         onClick={() => {
-          history.push(`/tenant/${tenantId}`);
+          history.push(`/tenant/${tenantName}`);
         }}
       >
         {formatMessage({
@@ -110,10 +129,20 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
       header={{
         title: (
           <Space>
-            {formatMessage({
-              id: 'ocp-express.User.Oracle.UserManagement',
-              defaultMessage: '用户管理',
-            })}
+            <ContentWithReload
+              spin={dbUserLoading || dbRoleLoading}
+              content={formatMessage({
+                id: 'ocp-express.User.Oracle.UserManagement',
+                defaultMessage: '用户管理',
+              })}
+              onClick={() => {
+                if (tab === 'user') {
+                  refreshDbUser();
+                } else if (tab === 'role') {
+                  refreshDbRole();
+                }
+              }}
+            />
             <ContentWithInfo
               content={
                 <span
@@ -173,10 +202,10 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
         bordered={false}
         className={`card-without-padding ${styles.card}`}
         activeTabKey={tab}
-        onTabChange={(key) => {
+        onTabChange={key => {
           setTab(key);
           history.push({
-            pathname: `/tenant/${tenantId}/user${key === 'role' ? '/role' : ''}`,
+            pathname: `/tenant/${tenantName}/user${key === 'role' ? '/role' : ''}`,
           });
         }}
         tabList={[
@@ -200,7 +229,7 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
           <MyInput.Search
             allowClear={true}
             onSearch={(value: string) => setKeyword(value)}
-            onChange={(e) => setKeyword(e.target.value)}
+            onChange={e => setKeyword(e.target.value)}
             placeholder={formatMessage({
               id: 'ocp-express.User.Oracle.EnterAUsernameAndRole',
               defaultMessage: '请输入用户名、角色名',
@@ -214,34 +243,31 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId }) => {
             dbUserLoading={dbUserLoading}
             refreshDbUser={refreshDbUser}
             dbUserList={dbUserList?.filter(
-              (item) =>
+              item =>
                 !keyword ||
-                (item.username && item.username.includes(keyword)) ||
-                (item.grantedRoles &&
-                  item.grantedRoles.filter((o) => o.includes(keyword)).length > 0),
+                (item.user_name && item.user_name.includes(keyword)) ||
+                (item.granted_roles &&
+                  item.granted_roles.filter(o => o.includes(keyword)).length > 0)
             )}
-            tenantId={tenantId}
           />
         )}
 
         {tab === 'role' && (
           <RoleList
-            tenantId={tenantId}
             dbRoleLoading={dbRoleLoading}
             refreshDbRole={refreshDbRole}
             dbRoleList={dbRoleList?.filter(
-              (item) =>
+              item =>
                 !keyword ||
-                (item.name && item.name.includes(keyword)) ||
-                (item.grantedRoles &&
-                  item.grantedRoles.filter((o) => o.includes(keyword)).length > 0),
+                (item.role && item.role.includes(keyword)) ||
+                (item.granted_roles &&
+                  item.granted_roles.filter(o => o.includes(keyword)).length > 0)
             )}
           />
         )}
       </MyCard>
       <AddOracleUserOrRoleDrawer
         visible={addUserVisible}
-        tenantId={tenantId}
         addIsUser={addIsUser}
         onCancel={() => {
           setAddUserVisible(false);

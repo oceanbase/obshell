@@ -16,12 +16,12 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Form, Modal, message } from '@oceanbase/design';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { Form, Modal, message, ModalProps } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import MySelect from '@/component/MySelect';
 import SelectAllAndClearRender from '@/component/SelectAllAndClearRender';
 import { ORACLE_SYS_PRIVS } from '@/constant/tenant';
+import { modifyGlobalPrivilege, modifyRoleGlobalPrivilege } from '@/service/obshell/tenant';
 
 const { Option } = MySelect;
 
@@ -31,9 +31,8 @@ const { Option } = MySelect;
  * roleName 角色名
  * username / roleName 二者只需传一个
  *  */
-interface ModifyGlobalPrivilegeModalProps {
-  tenantId?: number;
-  dispatch: any;
+interface ModifyGlobalPrivilegeModalProps extends ModalProps {
+  tenantName: string;
   username?: string;
   roleName?: string;
   globalPrivileges: string[];
@@ -41,7 +40,7 @@ interface ModifyGlobalPrivilegeModalProps {
 }
 
 const ModifyGlobalPrivilegeModal: React.FC<ModifyGlobalPrivilegeModalProps> = ({
-  tenantId,
+  tenantName,
   username,
   roleName,
   globalPrivileges,
@@ -51,8 +50,8 @@ const ModifyGlobalPrivilegeModal: React.FC<ModifyGlobalPrivilegeModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue } = form;
 
-  const { run: modifyGlobalPrivilege, loading: userLoading } = useRequest(
-    ObUserController.modifyGlobalPrivilege,
+  const { run: modifyGlobalPrivilegeRun, loading: userLoading } = useRequest(
+    modifyGlobalPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -74,8 +73,8 @@ const ModifyGlobalPrivilegeModal: React.FC<ModifyGlobalPrivilegeModalProps> = ({
     }
   );
 
-  const { run: modifyGlobalPrivilegeFromRole, loading: roleLoading } = useRequest(
-    ObUserController.modifyGlobalPrivilegeFromRole,
+  const { run: modifyRoleGlobalPrivilegeRun, loading: roleLoading } = useRequest(
+    modifyRoleGlobalPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -100,22 +99,22 @@ const ModifyGlobalPrivilegeModal: React.FC<ModifyGlobalPrivilegeModalProps> = ({
   const submitFn = () => {
     validateFields().then(values => {
       if (username) {
-        modifyGlobalPrivilege(
+        modifyGlobalPrivilegeRun(
           {
-            tenantId,
-            username,
+            name: tenantName,
+            user: username,
           },
 
-          { globalPrivileges: values?.globalPrivileges }
+          { global_privileges: values?.globalPrivileges }
         );
       } else {
-        modifyGlobalPrivilegeFromRole(
+        modifyRoleGlobalPrivilegeRun(
           {
-            tenantId,
-            roleName,
+            name: tenantName,
+            role: roleName!,
           },
 
-          { globalPrivileges: values.globalPrivileges }
+          { global_privileges: values.globalPrivileges }
         );
       }
     });

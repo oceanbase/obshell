@@ -15,11 +15,11 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
-import { Input, Alert, Descriptions, Modal, message } from '@oceanbase/design';
+import React, { useEffect, useState } from 'react';
+import { Input, Alert, Descriptions, Modal, message, ModalProps } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
-import { dropUser } from '@/service/obshell/tenant';
+import { dropRole, dropUser } from '@/service/obshell/tenant';
+import { UserStats } from '../Oracle/UserList';
 
 /**
  * 参数说明
@@ -30,18 +30,16 @@ import { dropUser } from '@/service/obshell/tenant';
  * 删除角色 传 roleName
  *
  *  */
-interface DeleteUserModalProps {
+interface DeleteUserModalProps extends ModalProps {
   username?: string;
   roleName?: string;
-  userStats?: {
-    total: number;
-    active: number;
-  };
-  tenantData: API.TenantInfo;
+  userStats?: UserStats;
+  tenantData: API.DbaObTenant;
   onSuccess?: () => void;
 }
 
 const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
+  visible,
   username,
   roleName,
   userStats,
@@ -51,10 +49,10 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
 }) => {
   const [allowDelete, setAllowDelete] = useState(false);
 
-  let APIName = ObUserController.deleteDbRole;
+  let APIName = dropRole;
   const deleteDbRoleParams = {
-    tenantId: tenantData.tenant_name,
-    roleName,
+    name: tenantData.tenant_name,
+    role: roleName,
   };
 
   const deleteDbUserParams = {
@@ -65,7 +63,7 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
   if (username) {
     APIName = dropUser;
   } else if (roleName) {
-    APIName = ObUserController.deleteDbRole;
+    APIName = dropRole;
   }
   const { run, loading } = useRequest(APIName, {
     manual: true,
@@ -87,8 +85,13 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
     run(roleName ? deleteDbRoleParams : deleteDbUserParams);
   };
 
+  useEffect(() => {
+    if (!visible) setAllowDelete(false);
+  }, [visible]);
+
   return (
     <Modal
+      visible={visible}
       title={
         username
           ? formatMessage({

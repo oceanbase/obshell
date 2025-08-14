@@ -154,8 +154,7 @@ export const useTenantMenu = (
         id: 'ocp-express.src.util.menu.UserManagement',
         defaultMessage: '用户管理',
       }),
-      // MySQL 租户或者支持权限管理的 Oracle 租户才有用户管理
-      accessible: tenantMode === 'MYSQL' || oraclePrivilegeManagementSupported,
+      accessible: true,
     },
     {
       link: `/tenant/${tenantId}/parameter`,

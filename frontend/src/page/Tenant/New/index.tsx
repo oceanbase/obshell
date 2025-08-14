@@ -306,7 +306,7 @@ const New: React.FC<NewProps> = ({
 
       const variables = new Map([
         ['lower_case_table_names', lowerCaseTableNames],
-        ['time_zone', timeZone]
+        ['time_zone', timeZone],
       ]);
 
       Promise.all(
@@ -326,7 +326,7 @@ const New: React.FC<NewProps> = ({
             primary_zone: primaryZone,
             variables: Object.fromEntries(variables),
             parameters: realParameters,
-          })
+          });
         }
       });
 

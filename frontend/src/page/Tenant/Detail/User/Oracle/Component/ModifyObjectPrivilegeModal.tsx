@@ -16,8 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Form, Checkbox, Row, Col, Modal, message } from '@oceanbase/design';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
+import { Form, Checkbox, Row, Col, Modal, message, ModalProps } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import {
   ORACLE_TABLE_PRIVILEGE_LIST,
@@ -25,6 +24,7 @@ import {
   ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST,
 } from '@/constant/tenant';
 import { MAX_FORM_ITEM_LAYOUT } from '@/constant';
+import { patchRoleObjectPrivilege, patchUserObjectPrivilege } from '@/service/obshell/tenant';
 
 /**
  * 参数说明
@@ -32,8 +32,8 @@ import { MAX_FORM_ITEM_LAYOUT } from '@/constant';
  * roleName 角色名
  * username / roleName 二者只需传一个
  *  */
-interface ModifyObjectPrivilegeModalProps {
-  tenantId: number;
+interface ModifyObjectPrivilegeModalProps extends ModalProps {
+  tenantName: string;
   username?: string;
   roleName?: string;
   dbObject: API.ObjectPrivilege;
@@ -41,7 +41,8 @@ interface ModifyObjectPrivilegeModalProps {
 }
 
 const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
-  tenantId,
+  visible,
+  tenantName,
   username,
   roleName,
   dbObject,
@@ -51,13 +52,13 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const { run: modifyObjectPrivilegeFromUser, loading: userLoading } = useRequest(
-    ObUserController.modifyObjectPrivilegeFromUser,
+  const { run: patchUserObjectPrivilegeRun, loading: userLoading } = useRequest(
+    patchUserObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
         if (res.successful) {
-          const objectName = dbObject?.object?.objectName;
+          const objectName = dbObject?.object?.name;
           message.success(
             formatMessage(
               {
@@ -74,13 +75,13 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
     }
   );
 
-  const { run: modifyObjectPrivilegeFromRole, loading: roleLoading } = useRequest(
-    ObUserController.modifyObjectPrivilegeFromRole,
+  const { run: patchRoleObjectPrivilegeRun, loading: roleLoading } = useRequest(
+    patchRoleObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
         if (res.successful) {
-          const objectName = dbObject?.object?.objectName;
+          const objectName = dbObject?.object?.name;
           message.success(
             formatMessage(
               {
@@ -102,49 +103,52 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
       const { privileges } = values;
       const objectPrivileges = [
         {
-          object: dbObject.object,
+          object_name: dbObject?.object?.name || '',
+          object_type: dbObject?.object?.type || '',
+          owner: dbObject?.object?.owner || '',
           privileges,
         },
       ];
 
       if (username) {
-        modifyObjectPrivilegeFromUser(
+        patchUserObjectPrivilegeRun(
           {
-            tenantId,
-            username,
+            name: tenantName,
+            user: username,
           },
 
-          { objectPrivileges }
+          { object_privileges: objectPrivileges }
         );
       } else if (roleName) {
-        modifyObjectPrivilegeFromRole(
+        patchRoleObjectPrivilegeRun(
           {
-            tenantId,
-            roleName,
+            name: tenantName,
+            role: roleName,
           },
 
-          { objectPrivileges }
+          { object_privileges: objectPrivileges }
         );
       }
     });
   };
 
   let privilegeOptions: string[] = ORACLE_TABLE_PRIVILEGE_LIST || [];
-  if (dbObject?.object?.objectType === 'TABLE') {
+  if (dbObject?.object?.type === 'TABLE') {
     privilegeOptions = ORACLE_TABLE_PRIVILEGE_LIST;
     if (roleName) {
       privilegeOptions = ORACLE_TABLE_PRIVILEGE_LIST.filter(
         item => item !== 'INDEX' && item !== 'REFERENCES'
       );
     }
-  } else if (dbObject?.object?.objectType === 'VIEW') {
+  } else if (dbObject?.object?.type === 'VIEW') {
     privilegeOptions = ORACLE_VIEW_PRIVILEGE_LIST;
-  } else if (dbObject?.object?.objectType === 'STORED_PROCEDURE') {
+  } else if (dbObject?.object?.type === 'STORED_PROCEDURE') {
     privilegeOptions = ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST;
   }
 
   return (
     <Modal
+      open={visible}
       title={formatMessage({
         id: 'ocp-express.Oracle.Component.ModifyObjectPrivilegeModal.ModifyPermissions',
         defaultMessage: '修改权限',
@@ -172,7 +176,7 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
           })}
           name="object"
         >
-          {dbObject?.object?.schemaName}.{dbObject?.object?.objectName}
+          {dbObject?.object?.owner}.{dbObject?.object?.name}
         </Form.Item>
         <Form.Item
           label={formatMessage({

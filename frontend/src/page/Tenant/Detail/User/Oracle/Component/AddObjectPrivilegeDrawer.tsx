@@ -27,8 +27,8 @@ import {
   Row,
   Col,
   message,
+  DrawerProps,
 } from '@oceanbase/design';
-import * as ObUserController from '@/service/ocp-express/ObUserController';
 import { uniq, findIndex } from 'lodash';
 import {
   ORACLE_OBJECT_TYPE_LIST,
@@ -39,6 +39,12 @@ import {
 import { FORM_ITEM_LAYOUT } from '@/constant';
 import MyDrawer from '@/component/MyDrawer';
 import DbObjectTreeSelect from './DbObjectTreeSelect';
+import { useSelector } from 'umi';
+import {
+  grantRoleObjectPrivilege,
+  grantUserObjectPrivilege,
+  listObjects,
+} from '@/service/obshell/tenant';
 
 /**
  * 参数说明
@@ -46,8 +52,8 @@ import DbObjectTreeSelect from './DbObjectTreeSelect';
  * roleName 角色名
  * username / roleName 二者只需传一个
  *  */
-interface AddObjectPrivilegeDrawerProps {
-  tenantId?: number;
+interface AddObjectPrivilegeDrawerProps extends DrawerProps {
+  tenantName: string;
   username?: string;
   roleName?: string;
   addedDbObjects?: API.ObjectPrivilege[]; // 已经被添加的对象权限
@@ -56,7 +62,8 @@ interface AddObjectPrivilegeDrawerProps {
 }
 
 const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
-  tenantId,
+  visible,
+  tenantName,
   username,
   roleName,
   addedDbObjects,
@@ -65,7 +72,6 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
   ...restProps
 }) => {
   const [objectType, setObjectType] = useState('TABLE');
-
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue, getFieldValue } = form;
 
@@ -82,12 +88,12 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
       } else if (
         // 判断是否是否存在且正确
         findIndex(
-          dbObjectList?.filter(item => item?.objectType === objectType),
-          item => item?.fullName === object
+          dbObjectList?.filter(item => item?.type === objectType),
+          item => item?.full_name === object
         ) !== -1
       ) {
         //  已赋权
-        if (findIndex(addedDbObjects, item => item?.object?.fullName === object) !== -1) {
+        if (findIndex(addedDbObjects, item => item?.object?.full_name === object) !== -1) {
           checkedDbObjects.push(object);
         }
       } else {
@@ -145,52 +151,52 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
     callback();
   };
 
-  const { data } = useRequest(ObUserController.listDbObjects, {
+  const { data } = useRequest(listObjects, {
+    ready: visible,
     defaultParams: [
       {
-        tenantId,
+        name: tenantName,
       },
+      {},
     ],
 
-    refreshDeps: [tenantId],
+    refreshDeps: [tenantName],
   });
 
   // 过滤掉已经赋权的对象
-  let dbObjectList = data?.data?.contents || [];
+  let dbObjectList: API.DbaObjectBo[] = data?.data?.contents || [];
   if (addedDbObjects?.length > 0) {
-    const addedDbObjectsFullNameList = uniq(addedDbObjects?.map(item => item?.object?.fullName));
+    const addedDbObjectsFullNameList = uniq(addedDbObjects?.map(item => item?.object?.full_name));
     if (username) {
       dbObjectList = dbObjectList.filter(
-        item =>
-          item?.schemaName !== username && !addedDbObjectsFullNameList?.includes(item?.fullName)
+        item => item?.owner !== username && !addedDbObjectsFullNameList?.includes(item?.full_name)
       );
     } else {
       dbObjectList = dbObjectList.filter(
-        item => !addedDbObjectsFullNameList?.includes(item?.fullName)
+        item => !addedDbObjectsFullNameList?.includes(item?.full_name)
       );
     }
   }
 
   const schemaNameList = uniq(
-    dbObjectList?.map(item => item.schemaName).filter(item => item !== username)
+    dbObjectList?.map(item => item.owner).filter(item => item !== username)
   );
-
   const treeData = schemaNameList.map(item => ({
     key: item,
     value: item,
     title: item,
     children: dbObjectList
-      .filter(dbObject => dbObject.schemaName === item)
+      .filter(dbObject => dbObject.owner === item)
       .map(dbObject => ({
-        objectType: dbObject.objectType,
-        key: `${dbObject.schemaName}.${dbObject.objectName}`,
-        value: `${dbObject.schemaName}.${dbObject.objectName}`,
-        title: dbObject.objectName,
+        type: dbObject.type,
+        key: `${dbObject.owner}.${dbObject.name}`,
+        value: `${dbObject.owner}.${dbObject.name}`,
+        title: dbObject.name,
       })),
   }));
 
-  const { run: grantObjectPrivilegeToUser, loading: userAddObjectLoading } = useRequest(
-    ObUserController.grantObjectPrivilegeToUser,
+  const { run: grantUserObjectPrivilegeRun, loading: userAddObjectLoading } = useRequest(
+    grantUserObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -213,8 +219,8 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
     }
   );
 
-  const { run: grantObjectPrivilegeToRole, loading: roleAddObjectLoading } = useRequest(
-    ObUserController.grantObjectPrivilegeToRole,
+  const { run: grantRoleObjectPrivilegeRun, loading: roleAddObjectLoading } = useRequest(
+    grantRoleObjectPrivilege,
     {
       manual: true,
       onSuccess: res => {
@@ -242,27 +248,31 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
       const { objects, privileges } = values;
       // 整理参数 用户/角色 添加对象 || 用户/角色 修改对象权限
       const param = {
-        tenantId,
+        name: tenantName,
       };
 
       const objectPrivileges = objects.map(item => ({
-        object: {
-          objectType,
-          fullName: item,
-          objectName: item.split('.') && item.split('.')[1],
-          schemaName: item.split('.') && item.split('.')[0],
-        },
+        object_type: objectType,
+        full_name: item,
+        object_name: item.split('.') && item.split('.')[1],
+        owner: item.split('.') && item.split('.')[0],
 
         privileges,
       }));
 
       // 用户
       if (username) {
-        grantObjectPrivilegeToUser({ ...param, username }, { objectPrivileges });
+        grantUserObjectPrivilegeRun(
+          { ...param, user: username },
+          { object_privileges: objectPrivileges }
+        );
       }
       // 角色
       if (roleName) {
-        grantObjectPrivilegeToRole({ ...param, roleName }, { objectPrivileges });
+        grantRoleObjectPrivilegeRun(
+          { ...param, role: roleName },
+          { object_privileges: objectPrivileges }
+        );
       }
     });
   };
@@ -283,6 +293,7 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
 
   return (
     <MyDrawer
+      open={visible}
       width={728}
       title={formatMessage({
         id: 'ocp-express.Oracle.Component.AddObjectPrivilegeDrawer.AddObjects',

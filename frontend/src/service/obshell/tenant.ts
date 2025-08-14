@@ -225,6 +225,28 @@ export async function tenantUnlock(
   });
 }
 
+/** list objects list objects from a tenant GET /api/v1/tenant/${param0}/objects */
+export async function listObjects(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.listObjectsParams,
+  body: API.TenantRootPasswordParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.DbaObjectBo[] }>(
+    `/api/v1/tenant/${param0}/objects`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
 /** get tenant parameter get tenant parameter GET /api/v1/tenant/${param0}/parameter/${param1} */
 export async function getTenantParameter(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -478,26 +500,29 @@ export async function dropRole(
   });
 }
 
-/** modify role global privilege modify role global privilege PUT /api/v1/tenant/${param0}/role/${param1}/global-privilege */
-export async function modifyRoleGlobalPrivilege(
+/** modify role global privilege modify role global privilege PUT /api/v1/tenant/${param0}/role/${param1}/global-privileges */
+export async function modifyRoleGlobalPrivileges(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.modifyRoleGlobalPrivilegeParams,
+  params: API.modifyRoleGlobalPrivilegesParams,
   body: API.ModifyRoleGlobalPrivilegeParam,
   options?: { [key: string]: any }
 ) {
   const { name: param0, role: param1, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/role/${param1}/global-privilege`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    params: { ...queryParams },
-    data: body,
-    ...(options || {}),
-  });
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/role/${param1}/global-privileges`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
 }
 
-/** modify role object privilege modify role object privilege PUT /api/v1/tenant/${param0}/role/${param1}/object-privilege */
+/** modify role object privilege modify role object privilege PUT /api/v1/tenant/${param0}/role/${param1}/object-privileges */
 export async function modifyRoleObjectPrivilege(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.modifyRoleObjectPrivilegeParams,
@@ -505,18 +530,87 @@ export async function modifyRoleObjectPrivilege(
   options?: { [key: string]: any }
 ) {
   const { name: param0, role: param1, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/role/${param1}/object-privilege`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    params: { ...queryParams },
-    data: body,
-    ...(options || {}),
-  });
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/role/${param1}/object-privileges`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
 }
 
-/** modify role modify role PUT /api/v1/tenant/${param0}/role/${param1}/role */
+/** grant role object privilege grant role object privilege POST /api/v1/tenant/${param0}/role/${param1}/object-privileges */
+export async function grantRoleObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.grantRoleObjectPrivilegeParams,
+  body: API.GrantObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, role: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/role/${param1}/object-privileges`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** revoke role object privilege revoke role object privilege DELETE /api/v1/tenant/${param0}/role/${param1}/object-privileges */
+export async function revokeRoleObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.revokeRoleObjectPrivilegeParams,
+  body: API.RevokeObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, role: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/role/${param1}/object-privileges`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** patch role object privilege patch role object privilege PATCH /api/v1/tenant/${param0}/role/${param1}/object-privileges */
+export async function patchRoleObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.patchRoleObjectPrivilegeParams,
+  body: API.ModifyObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, role: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/role/${param1}/object-privileges`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** modify role modify role PUT /api/v1/tenant/${param0}/role/${param1}/roles */
 export async function modifyRole(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.modifyRoleParams,
@@ -524,7 +618,7 @@ export async function modifyRole(
   options?: { [key: string]: any }
 ) {
   const { name: param0, role: param1, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/role/${param1}/role`, {
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/role/${param1}/roles`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -684,7 +778,7 @@ export async function unlockUser(
   });
 }
 
-/** modify user object privilege modify user object privilege PUT /api/v1/tenant/${param0}/user/${param1}/object-privilege */
+/** modify user object privilege modify user object privilege PUT /api/v1/tenant/${param0}/user/${param1}/object-privileges */
 export async function modifyUserObjectPrivilege(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.modifyUserObjectPrivilegeParams,
@@ -692,15 +786,84 @@ export async function modifyUserObjectPrivilege(
   options?: { [key: string]: any }
 ) {
   const { name: param0, user: param1, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/user/${param1}/object-privilege`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    params: { ...queryParams },
-    data: body,
-    ...(options || {}),
-  });
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/user/${param1}/object-privileges`,
+    {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** grant user object privilege grant user object privilege POST /api/v1/tenant/${param0}/user/${param1}/object-privileges */
+export async function grantUserObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.grantUserObjectPrivilegeParams,
+  body: API.GrantObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, user: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/user/${param1}/object-privileges`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** revoke user object privilege revoke user object privilege DELETE /api/v1/tenant/${param0}/user/${param1}/object-privileges */
+export async function revokeUserObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.revokeUserObjectPrivilegeParams,
+  body: API.RevokeObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, user: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/user/${param1}/object-privileges`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** patch user object privilege patch user object privilege PATCH /api/v1/tenant/${param0}/user/${param1}/object-privileges */
+export async function patchUserObjectPrivilege(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.patchUserObjectPrivilegeParams,
+  body: API.ModifyObjectPrivilegeParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, user: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(
+    `/api/v1/tenant/${param0}/user/${param1}/object-privileges`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
 }
 
 /** change user password change user password PUT /api/v1/tenant/${param0}/user/${param1}/password */
@@ -722,15 +885,15 @@ export async function changePassword(
   });
 }
 
-/** modify user role modify user role PUT /api/v1/tenant/${param0}/user/${param1}/role */
-export async function modifyUserRole(
+/** modify user role modify user role PUT /api/v1/tenant/${param0}/user/${param1}/roles */
+export async function modifyUserRoles(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.modifyUserRoleParams,
+  params: API.modifyUserRolesParams,
   body: API.ModifyRoleParam,
   options?: { [key: string]: any }
 ) {
   const { name: param0, user: param1, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/user/${param1}/role`, {
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/user/${param1}/roles`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
