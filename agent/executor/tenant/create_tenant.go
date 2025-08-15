@@ -374,19 +374,20 @@ func buildCreateTenantDagTemplate(param *param.CreateTenantParam) (*task.Templat
 	if param.TimeZone != "" {
 		templateBuilder.AddNode(newSetTenantTimeZoneNode(param.TimeZone))
 	}
-	if param.Parameters != nil && len(param.Parameters) != 0 {
+	if len(param.Parameters) != 0 {
 		templateBuilder.AddNode(newSetTenantParameterNode(param.Parameters))
 	}
 	templateBuilder.AddNode(newModifyTenantWhitelistNode(*param.Whitelist))
 
 	// Delete the read-only variables
+	variables := make(map[string]interface{})
 	for k := range param.Variables {
-		if utils.ContainsString(constant.CREATE_TENANT_STATEMENT_VARIABLES, k) {
-			delete(param.Variables, k)
+		if !utils.ContainsString(constant.CREATE_TENANT_STATEMENT_VARIABLES, k) {
+			variables[k] = param.Variables[k]
 		}
 	}
-	if param.Variables != nil && len(param.Variables) != 0 {
-		node, err := newSetTenantVariableNode(param.Variables)
+	if len(variables) != 0 {
+		node, err := newSetTenantVariableNode(variables)
 		if err != nil {
 			return nil, err
 		}

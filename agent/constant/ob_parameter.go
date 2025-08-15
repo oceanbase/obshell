@@ -21,9 +21,10 @@ const (
 	PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY = "global_index_auto_split_policy"
 	PARAMETER_MIN_FULL_RESOURCE_POOL_MEMORY  = "__min_full_resource_pool_memory"
 
-	VARIABLE_TIME_ZONE            = "time_zone"
-	VARIABLE_OB_TCP_INVITED_NODES = "ob_tcp_invited_nodes"
-	VARIABLE_READ_ONLY            = "read_only"
+	VARIABLE_TIME_ZONE              = "time_zone"
+	VARIABLE_OB_TCP_INVITED_NODES   = "ob_tcp_invited_nodes"
+	VARIABLE_READ_ONLY              = "read_only"
+	VARIABLE_LOWER_CASE_TABLE_NAMES = "lower_case_table_names"
 )
 
 var (

@@ -95,6 +95,16 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		return nil, err
 	}
 
+	lowerCaseTableNames, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_LOWER_CASE_TABLE_NAMES)
+	if err != nil {
+		return nil, err
+	}
+
+	timeZone, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_TIME_ZONE)
+	if err != nil {
+		return nil, err
+	}
+
 	connectionStr := bo.ObproxyAndConnectionString{
 		Type: constant.OB_CONNECTION_TYPE_DIRECT,
 		// the host may be not in the tcp_invited_nodes
@@ -136,6 +146,12 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	}
 	if readOnly != nil {
 		tenantInfo.ReadOnly = (readOnly.Value == "1")
+	}
+	if timeZone != nil {
+		tenantInfo.TimeZone = timeZone.Value
+	}
+	if lowerCaseTableNames != nil {
+		tenantInfo.LowercaseTableNames = lowerCaseTableNames.Value
 	}
 	return tenantInfo, nil
 }
