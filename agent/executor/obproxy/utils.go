@@ -18,6 +18,7 @@ package obproxy
 
 import (
 	"fmt"
+	"os"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -26,7 +27,10 @@ import (
 )
 
 func getObproxyVersion(homepath string) (string, error) {
-	output, err := exec.Command(homepath+"/bin/obproxy", "-V").CombinedOutput()
+	if err := os.Chdir(homepath); err != nil {
+		return "", err
+	}
+	output, err := exec.Command("./bin/obproxy", "-V").CombinedOutput()
 	if err != nil {
 		return "", err
 	}
