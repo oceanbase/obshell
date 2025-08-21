@@ -142,7 +142,7 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
     }
   } else if (dbObject?.object?.type === 'VIEW') {
     privilegeOptions = ORACLE_VIEW_PRIVILEGE_LIST;
-  } else if (dbObject?.object?.type === 'STORED_PROCEDURE') {
+  } else if (dbObject?.object?.type === 'PROCEDURE') {
     privilegeOptions = ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST;
   }
 

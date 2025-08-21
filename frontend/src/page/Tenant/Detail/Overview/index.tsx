@@ -641,40 +641,46 @@ const Detail: React.FC<NewProps> = ({
                     }}
                   />
                 </Descriptions.Item>
-                <Descriptions.Item
-                  label={
-                    <Space size={4}>
-                      表名大小写敏感
-                      <Tooltip
-                        title={
-                          <div>
+                {tenantData.mode === 'MYSQL' && (
+                  <Descriptions.Item
+                    label={
+                      <Space size={4}>
+                        表名大小写敏感
+                        <Tooltip
+                          title={
                             <div>
-                              · 0：使用 CREATE TABLE 或 CREATE DATABASE
-                              语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                              <div>
+                                · 0：使用 CREATE TABLE 或 CREATE DATABASE
+                                语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                              </div>
+                              <div>
+                                · 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。
+                              </div>
+                              <div>
+                                · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
+                                语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
+                              </div>
                             </div>
-                            <div>· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。</div>
-                            <div>
-                              · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
-                              语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
-                            </div>
-                          </div>
-                        }
-                        placement="topLeft"
-                      >
-                        <QuestionCircleOutlined
-                          style={{
-                            color: '#999',
-                            cursor: 'pointer',
-                            fontSize: '12px',
-                          }}
-                        />
-                      </Tooltip>
-                    </Space>
-                  }
-                >
-                  {tenantData.lower_case_table_names || '-'}
+                          }
+                          placement="topLeft"
+                        >
+                          <QuestionCircleOutlined
+                            style={{
+                              color: '#999',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                            }}
+                          />
+                        </Tooltip>
+                      </Space>
+                    }
+                  >
+                    {tenantData.lower_case_table_names || '-'}
+                  </Descriptions.Item>
+                )}
+                <Descriptions.Item label="时区">
+                  {tenantData.time_zone || '-'}
                 </Descriptions.Item>
-                <Descriptions.Item label="时区">{tenantData.time_zone || '-'}</Descriptions.Item>
 
                 <Descriptions.Item
                   label={formatMessage({

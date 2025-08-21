@@ -44,21 +44,23 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
   const pathnameList: string[] = pathname?.split('/') || [];
   const [tab, setTab] = useState(pathnameList[pathnameList?.length - 1]);
 
-  useEffect(() => {
-    if (tab === 'user') {
-      getDbUserList({
-        name: tenantName,
-      });
-    } else if (tab === 'role') {
-      getDbRoleList({
-        name: tenantName,
-      });
-    }
-  }, [tab]);
-
   const ready =
     tenantData?.tenant_name === 'sys' ||
     (Object.keys(precheckResult)?.length > 0 && precheckResult?.is_connectable);
+
+  useEffect(() => {
+    if (ready) {
+      if (tab === 'user') {
+        getDbUserList({
+          name: tenantName,
+        });
+      } else if (tab === 'role') {
+        getDbRoleList({
+          name: tenantName,
+        });
+      }
+    }
+  }, [tab, ready, tenantName]);
 
   // 新增用户 / 角色
   const [addUserVisible, setAddUserVisible] = useState(false);

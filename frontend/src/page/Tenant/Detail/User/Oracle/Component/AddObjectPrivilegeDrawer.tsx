@@ -287,7 +287,7 @@ const AddObjectPrivilegeDrawer: React.FC<AddObjectPrivilegeDrawerProps> = ({
     }
   } else if (objectType === 'VIEW') {
     privilegeOptions = ORACLE_VIEW_PRIVILEGE_LIST;
-  } else if (objectType === 'STORED_PROCEDURE') {
+  } else if (objectType === 'PROCEDURE') {
     privilegeOptions = ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST;
   }
 

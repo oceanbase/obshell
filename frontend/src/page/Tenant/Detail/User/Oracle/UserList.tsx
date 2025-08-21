@@ -22,6 +22,7 @@ import { uniq } from 'lodash';
 import { sortByMoment } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
 import { PAGINATION_OPTION_10 } from '@/constant';
+import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import { formatTime } from '@/util/datetime';
 import ModifyDbUserPassword from '../../Component/ModifyDbUserPassword';
 import DeleteUserModal from '../Component/DeleteUserModal';
@@ -184,7 +185,11 @@ const UserList: React.FC<UserProps> = ({
       }),
       dataIndex: 'global_privileges',
       render: (text: string[]) => {
-        const textContent = text?.map(item => item?.replace(/_/g, ' ')).join('、');
+        const textContent = text?.map(item =>
+          item === 'PURGE_DBA_RECYCLEBIN'
+            ? 'PURGE DBA_RECYCLEBIN'
+            : item.replace(/_/g, ' ')
+        ).join('、');
         return textContent ? (
           <Tooltip placement="topLeft" title={textContent}>
             <span
@@ -261,7 +266,7 @@ const UserList: React.FC<UserProps> = ({
       dataIndex: 'create_time',
       defaultSortOrder: 'descend',
       sorter: (a: API.ObUser, b: API.ObUser) => sortByMoment(a, b, 'createTime'),
-      render: (text: string) => formatTime(text),
+      render: (text: string) => formatTime(text, DATE_FORMAT_DISPLAY),
     },
 
     {

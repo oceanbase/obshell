@@ -203,7 +203,11 @@ const RoleSelect: React.FC<RoleSelectProps> = ({ onAddSuccess, onCancel, ...rest
             >
               {ORACLE_SYS_PRIVS.map((item: string) => (
                 <Option key={item} value={item}>
-                  {item.replace(/_/g, ' ')}
+                  {
+                    item === 'PURGE_DBA_RECYCLEBIN'
+                      ? 'PURGE DBA_RECYCLEBIN'
+                      : item.replace(/_/g, ' ')
+                  }
                 </Option>
               ))}
             </MySelect>

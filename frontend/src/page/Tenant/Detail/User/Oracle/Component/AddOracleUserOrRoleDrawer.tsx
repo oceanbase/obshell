@@ -179,17 +179,6 @@ const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
             },
             { titleText }
           )}
-          extra={
-            addIsUser === 'user'
-              ? formatMessage({
-                  id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.LowercaseLettersInTheUsername',
-                  defaultMessage: '用户名中的小写字母将会默认转为大写',
-                })
-              : formatMessage({
-                  id: 'ocp-express.Oracle.Component.AddOracleUserOrRoleDrawer.LowercaseLettersInTheRole',
-                  defaultMessage: '角色名中的小写字母将会默认转为大写',
-                })
-          }
           name={addIsUser === 'user' ? 'username' : 'roleName'}
           rules={[
             {
@@ -309,7 +298,11 @@ const AddOracleUserOrRoleDrawer: React.FC<AddOracleUserOrRoleDrawerProps> = ({
           >
             {ORACLE_SYS_PRIVS.map((item: string) => (
               <Option key={item} value={item}>
-                {item.replace(/_/g, ' ')}
+                {
+                  item === 'PURGE_DBA_RECYCLEBIN'
+                    ? 'PURGE DBA_RECYCLEBIN'
+                    : item.replace(/_/g, ' ')
+                }
               </Option>
             ))}
           </MySelect>

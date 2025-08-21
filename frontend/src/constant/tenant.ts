@@ -402,7 +402,7 @@ export const ORACLE_OBJECT_TYPE_LIST = [
       defaultMessage: '存储过程',
     }),
 
-    value: 'STORED_PROCEDURE',
+    value: 'PROCEDURE',
   },
 ];
 

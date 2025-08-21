@@ -116,7 +116,7 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
       id: 'ocp-express.Oracle.Component.DbObjectTreeSelect.View',
       defaultMessage: '视图',
     }),
-    STORED_PROCEDURE: formatMessage({
+    PROCEDURE: formatMessage({
       id: 'ocp-express.Oracle.Component.DbObjectTreeSelect.StoredProcedure',
       defaultMessage: '存储过程',
     }),
@@ -184,7 +184,7 @@ const DbObjectTreeSelect: React.FC<DbObjectTreeSelectProps> = ({
                         />
                       );
                     }
-                    if (treeItem?.type === 'STORED_PROCEDURE') {
+                    if (treeItem?.type === 'PROCEDURE') {
                       return (
                         <TreeNode
                           key={treeItem?.value}

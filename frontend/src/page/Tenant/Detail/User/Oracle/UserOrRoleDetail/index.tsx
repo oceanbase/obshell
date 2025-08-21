@@ -50,6 +50,7 @@ import ModifyObjectPrivilegeDrawer from '../Component/ModifyObjectPrivilegeDrawe
 import ModifyObjectPrivilegeModal from '../Component/ModifyObjectPrivilegeModal';
 import ModifyDbUserPassword from '../../../Component/ModifyDbUserPassword';
 import DeleteUserModal from '../../Component/DeleteUserModal';
+import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import {
   getRole,
   getUser,
@@ -581,7 +582,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                     defaultMessage: '新建时间',
                   })}
                 >
-                  {formatTime(userData?.create_time)}
+                  {formatTime(userData?.create_time, DATE_FORMAT_DISPLAY)}
                 </Descriptions.Item>
               </Descriptions>
             </MyCard>
@@ -606,7 +607,11 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
             }
           >
             {userOrRoleDetail?.global_privileges
-              ? userOrRoleDetail?.global_privileges?.map(item => item.replace(/_/g, ' ')).join('、')
+              ? userOrRoleDetail?.global_privileges?.map(item =>
+                  item === 'PURGE_DBA_RECYCLEBIN'
+                    ? 'PURGE DBA_RECYCLEBIN'
+                    : item.replace(/_/g, ' ')
+              ).join('、')
               : '-'}
           </MyCard>
         </Col>
