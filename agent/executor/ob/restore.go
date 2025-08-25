@@ -29,6 +29,7 @@ import (
 	"github.com/oceanbase/obshell/agent/executor/zone"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/lib/system"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -297,6 +298,10 @@ func (t *StartRestoreTask) restoreTenant() (err error) {
 
 	t.ExecuteLogf("Restore tenant '%s'", t.tenantName)
 	if err = tenantService.Restore(t.param, locality, resourcePoolList, t.restoreScn); err != nil {
+		// drop all created resource pool
+		if err := pool.DropFreeResourcePools(t.Task, t.createResourcePoolParam); err != nil {
+			t.ExecuteWarnLog(errors.Wrap(err, "Drop created resource pool failed"))
+		}
 		return errors.Wrap(err, "restore tenant")
 	}
 	return nil
@@ -533,6 +538,67 @@ func GetRestoreOverview(tenantName string) (res *param.RestoreOverview, e error)
 	return res, nil
 }
 
+func GetAllRestoreTasks(p *param.QueryRestoreTasksParam) (res *bo.PaginatedRestoreTaskResponse, e error) {
+	res = &bo.PaginatedRestoreTaskResponse{
+		Contents: make([]bo.RestoreTask, 0),
+		Page:     bo.CustomPage{},
+	}
+	runningTasks, err := tenantService.ListRunningRestoreTasks(p)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, task := range runningTasks {
+		restoreOverview := bo.RestoreTask{
+			RestoreInfo:       task.RestoreInfo,
+			RecoverScn:        task.RecoverScn,
+			RecoverScnDisplay: task.RecoverScnDisplay,
+			RecoverProgress:   task.RecoverProgress,
+			RestoreProgress:   task.RestoreProgress,
+		}
+		res.Contents = append(res.Contents, restoreOverview)
+	}
+
+	history, err := tenantService.GetRestoreHistory(p)
+	if err != nil {
+		return nil, err
+	}
+	for _, task := range history {
+		restoreOverview := bo.RestoreTask{
+			RestoreInfo:          task.RestoreInfo,
+			BackupClusterVersion: task.BackupClusterVersion,
+			LsCount:              task.LsCount,
+			FinishLsCount:        task.FinishLsCount,
+			Comment:              task.Comment,
+			FinishTimestamp:      task.FinishTimestamp,
+		}
+		res.Contents = append(res.Contents, restoreOverview)
+	}
+
+	for i := range res.Contents {
+		dataStorageInterface, _ := system.GetStorageInterfaceByURI(res.Contents[i].RestoreInfo.BackupSetList)
+		if dataStorageInterface != nil {
+			res.Contents[i].BackupSetList = dataStorageInterface.GenerateURIWithoutSecret()
+		} else {
+			res.Contents[i].BackupSetList = ""
+		}
+		clogStorageInterface, _ := system.GetStorageInterfaceByURI(res.Contents[i].RestoreInfo.BackupPieceList)
+		if clogStorageInterface != nil {
+			res.Contents[i].BackupPieceList = clogStorageInterface.GenerateURIWithoutSecret()
+		} else {
+			res.Contents[i].BackupPieceList = ""
+		}
+	}
+
+	res.Page = bo.CustomPage{
+		Number:        p.Page,
+		Size:          p.Size,
+		TotalPages:    calculateTotalPages(uint64(len(res.Contents)), p.Size),
+		TotalElements: uint64(len(res.Contents)),
+	}
+	return res, nil
+}
+
 func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWindows, e error) {
 	if !system.IsFileExist(path.OBAdmin()) {
 		return nil, errors.Occur(errors.ErrEnvironmentWithoutObAdmin)
@@ -541,8 +607,23 @@ func GetRestoreWindows(param *param.RestoreWindowsParam) (res *system.RestoreWin
 	if param.ArchiveLogUri == nil || *param.ArchiveLogUri == "" {
 		*param.ArchiveLogUri = param.DataBackupUri
 	}
-
 	res, err := system.GetRestoreWindows(param.DataBackupUri, *param.ArchiveLogUri)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func GetRestoreSourceTenantInfo(param *param.RestoreStorageParam) (res *system.RestoreTenantInfo, e error) {
+	if !system.IsFileExist(path.OBAdmin()) {
+		return nil, errors.Occur(errors.ErrEnvironmentWithoutObAdmin)
+	}
+
+	if param.ArchiveLogUri == nil || *param.ArchiveLogUri == "" {
+		*param.ArchiveLogUri = param.DataBackupUri
+	}
+
+	res, err := system.GetRestoreSourceTenantInfo(param.DataBackupUri, *param.ArchiveLogUri)
 	if err != nil {
 		return nil, err
 	}

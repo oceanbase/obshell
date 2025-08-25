@@ -21,10 +21,12 @@ import (
 	"strings"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
+	"github.com/oceanbase/obshell/agent/lib/system"
 	oceanbasedb "github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
+	"gorm.io/gorm"
 )
 
 func (s *TenantService) GetRunningRestoreTask(tenantName string) (*bo.CdbObRestoreProgress, error) {
@@ -43,6 +45,46 @@ func (s *TenantService) GetRunningRestoreTask(tenantName string) (*bo.CdbObResto
 	return res.ToBO(), nil
 }
 
+func parseBackupDest(backupDest string) (dataUri, logUri string) {
+	paths := strings.Split(backupDest, ",")
+	if len(paths) > 0 {
+		dataStorageInterface, _ := system.GetStorageInterfaceByURI(paths[0])
+		if dataStorageInterface != nil {
+			dataUri = dataStorageInterface.GenerateURIWithoutSecret()
+		}
+	}
+	if len(paths) > 1 {
+		clogStorageInterface, _ := system.GetStorageInterfaceByURI(paths[1])
+		if clogStorageInterface != nil {
+			logUri = clogStorageInterface.GenerateURIWithoutSecret()
+		}
+	}
+	return dataUri, logUri
+}
+
+func (s *TenantService) ListRunningRestoreTasks(p *param.QueryRestoreTasksParam) ([]bo.CdbObRestoreProgress, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]oceanbase.CdbObRestoreProgress, 0)
+	query := oceanbaseDb.Table(CDB_OB_RESTORE_PROGRESS).Where("TENANT_ID = 1 AND RESTORE_TENANT_NAME != ''")
+	err = s.supplementRestoreHistoryQuery(query, p).
+		Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+
+	boRes := make([]bo.CdbObRestoreProgress, 0)
+	for _, v := range res {
+		boRes = append(boRes, *v.ToBO())
+		dataUri, logUri := parseBackupDest(v.BackupDest)
+		boRes[len(boRes)-1].BackupDataUri = dataUri
+		boRes[len(boRes)-1].BackupLogUri = logUri
+	}
+	return boRes, nil
+}
+
 func (s *TenantService) GetLastRestoreTask(tenantName string) (*bo.CdbObRestoreHistory, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -57,6 +99,41 @@ func (s *TenantService) GetLastRestoreTask(tenantName string) (*bo.CdbObRestoreH
 		return nil, nil
 	}
 	return res.ToBO(), nil
+}
+
+func (s *TenantService) GetRestoreHistory(p *param.QueryRestoreTasksParam) ([]bo.CdbObRestoreHistory, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	res := make([]oceanbase.CdbObRestoreHistory, 0)
+	query := oceanbaseDb.Table(CDB_OB_RESTORE_HISTORY).Where("TENANT_ID = 1 AND RESTORE_TENANT_NAME != ''")
+	err = s.supplementRestoreHistoryQuery(query, p).
+		Order("START_TIMESTAMP desc").Scan(&res).Error
+	if err != nil {
+		return nil, err
+	}
+	boRes := make([]bo.CdbObRestoreHistory, 0)
+	for _, v := range res {
+		boRes = append(boRes, *v.ToBO())
+		dataUri, logUri := parseBackupDest(v.BackupDest)
+		boRes[len(boRes)-1].BackupDataUri = dataUri
+		boRes[len(boRes)-1].BackupLogUri = logUri
+	}
+	return boRes, nil
+}
+
+func (s *TenantService) supplementRestoreHistoryQuery(query *gorm.DB, p *param.QueryRestoreTasksParam) *gorm.DB {
+	if p.StartTime != nil {
+		query = query.Where("START_TIMESTAMP >= ?", p.StartTime)
+	}
+	if p.EndTime != nil {
+		query = query.Where("START_TIMESTAMP <= ?", p.EndTime)
+	}
+	if len(p.ParsedStatus) > 0 {
+		query = query.Where("STATUS IN ?", p.ParsedStatus)
+	}
+	return query
 }
 
 func (s *TenantService) CancelRestore(tenantName string) (err error) {
@@ -90,7 +167,7 @@ func (s *TenantService) Restore(c *param.RestoreParam, locality, poolList string
 
 	restoreSql := fmt.Sprintf("ALTER SYSTEM RESTORE %s FROM \"%s, %s\"", c.TenantName, c.DataBackupUri, *c.ArchiveLogUri)
 	if c.Timestamp != nil {
-		restoreSql = fmt.Sprintf("%s UNTIL TIME= \"%s\"", restoreSql, c.Timestamp.Format("2006-01-02 15:04:05.00"))
+		restoreSql = fmt.Sprintf("%s UNTIL TIME= \"%s\"", restoreSql, c.Timestamp.Format("2006-01-02 15:04:05.000000"))
 	}
 	if scn != 0 {
 		restoreSql = fmt.Sprintf("%s UNTIL SCN=%d", restoreSql, scn)

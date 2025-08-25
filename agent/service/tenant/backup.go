@@ -18,9 +18,11 @@ package tenant
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
@@ -29,7 +31,7 @@ import (
 	"github.com/oceanbase/obshell/param"
 )
 
-func (s *TenantService) GetArchiveLogByID(tenantID int) (res *oceanbase.CdbOBArchivelog, err error) {
+func (s *TenantService) GetArchiveLogByID(tenantID int) (res *oceanbase.CdbOBArchivelogStatus, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return
@@ -47,6 +49,32 @@ func (s *TenantService) GetArchiveDestByID(tenantID int) (value string, err erro
 	return
 }
 
+func (s *TenantService) ListArchiveLogTasks(tenantID int) (summarys []oceanbase.CdbOBArchivelogSummary, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+
+	err = oceanbaseDb.Table(CDB_OB_ARCHIVELOG_SUMMARY).
+		Select("*, truncate((time_to_usec(now()) - checkpoint_scn / 1000) / 1000000, 4) AS DELAY").
+		Where("tenant_id = ? and status in ('BEGINNING', 'DOING', 'STOPPING', 'PREPARE', 'SUSPEND')", tenantID).Scan(&summarys).Error
+	return
+}
+
+func (s *TenantService) GetLatestArchiveLog(tenantID int) (summary *oceanbase.CdbOBArchivelogSummary, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+	err = oceanbaseDb.Table(CDB_OB_ARCHIVELOG_SUMMARY).
+		Select("*, truncate((time_to_usec(now()) - checkpoint_scn / 1000) / 1000000, 4) AS DELAY").
+		Where("tenant_id = ?", tenantID).
+		Order("ROUND_ID desc").
+		Limit(1).
+		Scan(&summary).
+		Error
+	return
+}
 func (s *TenantService) IsArchiveLogClosed(tenantName string) (bool, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -111,6 +139,15 @@ func (s *TenantService) EnableArchiveLogDest(tenantName string) (err error) {
 		return
 	}
 	sql := fmt.Sprintf("ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE='ENABLE' TENANT = %s;", tenantName)
+	return oceanbaseDb.Exec(sql).Error
+}
+
+func (s *TenantService) DeferArchiveLogDest(tenantName string) (err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+	sql := fmt.Sprintf("ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE='DEFER' TENANT = %s;", tenantName)
 	return oceanbaseDb.Exec(sql).Error
 }
 
@@ -277,4 +314,111 @@ func (s *TenantService) GetLastBackupTask(tenantID int) (task *oceanbase.CdbObBa
 	}
 	err = oceanbaseDb.Table(CDB_OB_BACKUP_TASK_HISTORY).Where("TENANT_ID = ?", tenantID).Order("START_TIMESTAMP desc").Limit(1).Scan(&task).Error
 	return
+}
+
+func (s *TenantService) buildBackupJobQuery(oceanbaseDb *gorm.DB, tenantID int, p *param.QueryBackupTasksParam) (historyQuery, runningQuery *gorm.DB) {
+	historyQuery = oceanbaseDb.Table(CDB_OB_BACKUP_JOB_HISTORY).Where("TENANT_ID = ?", tenantID)
+	runningQuery = oceanbaseDb.Table(CDB_OB_BACKUP_JOBS).Where("TENANT_ID = ?", tenantID)
+
+	if p.StartTime != nil {
+		historyQuery = historyQuery.Where("START_TIMESTAMP >= ?", p.StartTime)
+		runningQuery = runningQuery.Where("START_TIMESTAMP >= ?", p.StartTime)
+	}
+	if p.EndTime != nil {
+		historyQuery = historyQuery.Where("START_TIMESTAMP <= ?", p.EndTime)
+		runningQuery = runningQuery.Where("START_TIMESTAMP <= ?", p.EndTime)
+	}
+	if len(p.ParsedStatus) > 0 {
+		historyQuery = historyQuery.Where("STATUS IN ?", p.ParsedStatus)
+		runningQuery = runningQuery.Where("STATUS IN ?", p.ParsedStatus)
+	}
+
+	return historyQuery, runningQuery
+}
+
+func (s *TenantService) GetTenantBackupJobs(tenantID int, p *param.QueryBackupTasksParam) (tasks []oceanbase.CdbObBackupJob, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+
+	historyQuery, runningQuery := s.buildBackupJobQuery(oceanbaseDb, tenantID, p)
+
+	var historyJobs, runningJobs []oceanbase.CdbObBackupJob
+
+	err = historyQuery.Find(&historyJobs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = runningQuery.Find(&runningJobs).Error
+	if err != nil {
+		return nil, err
+	}
+
+	tasks = append(historyJobs, runningJobs...)
+
+	sort.Slice(tasks, func(i, j int) bool {
+		if p.SortBy == "start_timestamp" {
+			if tasks[i].StartTimestamp == nil {
+				return false
+			}
+			if tasks[j].StartTimestamp == nil {
+				return true
+			}
+			if p.SortOrder == "asc" {
+				return tasks[i].StartTimestamp.Before(*tasks[j].StartTimestamp)
+			} else {
+				return tasks[i].StartTimestamp.After(*tasks[j].StartTimestamp)
+			}
+		} else if p.SortBy == "end_timestamp" {
+			if tasks[i].EndTimestamp == nil {
+				return false
+			}
+			if tasks[j].EndTimestamp == nil {
+				return true
+			}
+			if p.SortOrder == "asc" {
+				return tasks[i].EndTimestamp.Before(*tasks[j].EndTimestamp)
+			} else {
+				return tasks[i].EndTimestamp.After(*tasks[j].EndTimestamp)
+			}
+		}
+		return false
+	})
+
+	start := int((p.Page - 1) * p.Size)
+	end := start + int(p.Size)
+	if start >= len(tasks) {
+		tasks = []oceanbase.CdbObBackupJob{}
+	} else if end > len(tasks) {
+		tasks = tasks[start:]
+	} else {
+		tasks = tasks[start:end]
+	}
+
+	return tasks, nil
+}
+
+func (s *TenantService) GetTenantBackupJobCount(tenantID int, p *param.QueryBackupTasksParam) (count uint64, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return 0, err
+	}
+
+	historyQuery, runningQuery := s.buildBackupJobQuery(oceanbaseDb, tenantID, p)
+
+	var historyCount, runningCount int64
+
+	err = historyQuery.Count(&historyCount).Error
+	if err != nil {
+		return 0, err
+	}
+
+	err = runningQuery.Count(&runningCount).Error
+	if err != nil {
+		return 0, err
+	}
+
+	return uint64(historyCount + runningCount), nil
 }

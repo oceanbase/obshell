@@ -39,6 +39,8 @@ type RestoreInfo struct {
 	BackupSetList   string `json:"backup_set_list" gorm:"column:BACKUP_SET_LIST"`
 	BackupPieceList string `json:"backup_piece_list" gorm:"column:BACKUP_PIECE_LIST"`
 
+	BackupDest string `json:"backup_dest" gorm:"column:BACKUP_DEST"` // NOTICE: this field contains ak, don't return it!!!
+
 	TabletCount        int64  `json:"tablet_count" gorm:"column:TABLET_COUNT"`
 	FinishTabletCount  int64  `json:"finish_tablet_count" gorm:"column:FINISH_TABLET_COUNT"`
 	TotalBytes         int64  `json:"total_bytes" gorm:"column:TOTAL_BYTES"`

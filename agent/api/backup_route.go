@@ -48,10 +48,14 @@ func InitBackupRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 
 	tenantGroup.POST(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG, tenantBackupConfigHandler)
 	tenantGroup.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG, patchTenantBackupConfigHandler)
+	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_CONFIG+constant.URI_STORAGE, getTenantBackupConfigHandler)
 	tenantGroup.POST(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP, tenantStartBackupHandler)
 	tenantGroup.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP, patchTenantBackupHandler)
 	tenantGroup.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_ARCHIVE, patchTenantArchiveLogHandler)
 	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_OVERVIEW, tenantBackupOverviewHandler)
+	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_TASKS, listTenantBackupTasksHandler)
+	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_INFO, getTenantBackupInfoHandler)
+	tenantGroup.GET(constant.URI_PATH_PARAM_NAME+constant.URI_BACKUP+constant.URI_ARCHIVE+constant.URI_TASKS, listTenantArchiveLogTasksHandler)
 
 	obclusterGroup.POST(constant.URI_BACKUP+constant.URI_CONFIG, obclusterBackupConfigHandler)
 	obclusterGroup.PATCH(constant.URI_BACKUP+constant.URI_CONFIG, patchObclusterBackupConfigHandler)
@@ -160,6 +164,7 @@ func tenantBackupConfigHandler(c *gin.Context) {
 // @Failure		400				object	http.OcsAgentResponse
 // @Failure		401				object	http.OcsAgentResponse
 // @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/config [patch]
 func patchTenantBackupConfigHandler(c *gin.Context) {
 	tenantName, err := checkTenantAndGetName(c)
 	if err != nil {
@@ -174,6 +179,30 @@ func patchTenantBackupConfigHandler(c *gin.Context) {
 	}
 	dag, err := ob.PatchTenantBackupConfig(tenantName, &param)
 	common.SendResponse(c, dag, err)
+}
+
+// @ID				getTenantBackupConfig
+// @Summary		Get backup config for tenant
+// @Description	Get backup config for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			name			path	string	true	"Tenant name"
+// @Success		200				object	http.OcsAgentResponse{}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/config/storage [get]
+func getTenantBackupConfigHandler(c *gin.Context) {
+	tenant, err := checkTenantAndGetName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	config, err := ob.GetTenantBackupConfig(tenant.TenantName)
+	common.SendResponse(c, config, err)
 }
 
 func checkTenantAndGetName(c *gin.Context) (*oceanbase.DbaObTenant, error) {
@@ -381,6 +410,30 @@ func patchTenantArchiveLogHandler(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
+// @ID				getTenantArchiveLogOverview
+// @Summary		Get archive log overview for tenant
+// @Description	Get archive log overview for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			name			path	string	true	"Tenant name"
+// @Success		200				object	http.OcsAgentResponse{data=[]bo.ArchiveLogTask}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/log/tasks [get]
+func listTenantArchiveLogTasksHandler(c *gin.Context) {
+	tenant, err := checkTenantAndGetName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	archiveLog, err := ob.ListTenantArchiveLogTasks(tenant.TenantName)
+	common.SendResponse(c, archiveLog, err)
+}
+
 // @ID				obclusterBackupOverview
 // @Summary		Get backup overview for all tenants
 // @Description	Get backup overview for all tenants
@@ -425,4 +478,59 @@ func tenantBackupOverviewHandler(c *gin.Context) {
 
 	overview, err := ob.GetTenantBackupOverview(tenant.TenantName)
 	common.SendResponse(c, overview, err)
+}
+
+// @ID				listTenantBackupTasks
+// @Summary		List backup tasks for tenant
+// @Description	List backup tasks for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			name			path	string	true	"Tenant name"
+// @Success		200				object	http.OcsAgentResponse{data=bo.PaginatedBackupJobResponse}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/tasks [get]
+func listTenantBackupTasksHandler(c *gin.Context) {
+	tenant, err := checkTenantAndGetName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	var p param.QueryBackupTasksParam
+	if err := c.BindQuery(&p); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	p.Format()
+
+	tasks, err := ob.GetTenantBackupTasks(tenant.TenantName, &p)
+	common.SendResponse(c, tasks, err)
+}
+
+// @ID				getTenantBackupInfo
+// @Summary		Get backup info for tenant
+// @Description	Get backup info for tenant
+// @Tags			Backup
+// @Accept			application/json
+// @Produce		application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Param			name			path	string	true	"Tenant name"
+// @Success		200				object	http.OcsAgentResponse{data=bo.TenantBackupInfo}
+// @Failure		400				object	http.OcsAgentResponse
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/tenant/{name}/backup/info [get]
+func getTenantBackupInfoHandler(c *gin.Context) {
+	tenant, err := checkTenantAndGetName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	info, err := ob.GetTenantBackupInfo(tenant.TenantName)
+	common.SendResponse(c, info, err)
 }

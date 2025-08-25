@@ -35,6 +35,9 @@ type RestoreInfo struct {
 	BackupSetList   string `json:"backup_set_list"`
 	BackupPieceList string `json:"backup_piece_list"`
 
+	BackupDataUri string `json:"backup_data_uri"`
+	BackupLogUri  string `json:"backup_log_uri"`
+
 	TabletCount        int64  `json:"tablet_count"`
 	FinishTabletCount  int64  `json:"finish_tablet_count"`
 	TotalBytes         int64  `json:"total_bytes"`
@@ -61,4 +64,24 @@ type CdbObRestoreHistory struct {
 	FinishLsCount        int    `json:"finish_ls_count"`
 	Comment              string `json:"comment"`
 	FinishTimestamp      string `json:"finish_timestamp"`
+}
+
+type RestoreTask struct {
+	RestoreInfo
+
+	RecoverScn        int64  `json:"recover_scn"`
+	RecoverScnDisplay string `json:"recover_scn_display"`
+	RecoverProgress   string `json:"recover_progress"`
+	RestoreProgress   string `json:"restore_progress"`
+
+	BackupClusterVersion int    `json:"backup_cluster_version"`
+	LsCount              int    `json:"ls_count"`
+	FinishLsCount        int    `json:"finish_ls_count"`
+	Comment              string `json:"comment"`
+	FinishTimestamp      string `json:"finish_timestamp"`
+}
+
+type PaginatedRestoreTaskResponse struct {
+	Contents []RestoreTask `json:"contents"`
+	Page     CustomPage    `json:"page"`
 }

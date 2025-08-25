@@ -17,13 +17,24 @@
 package ob
 
 import (
+	"math"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
+
+// calculateTotalPages calculates the total number of pages
+func calculateTotalPages(totalElements uint64, pageSize uint64) uint64 {
+	if pageSize == 0 {
+		return 0
+	}
+	return uint64(math.Ceil(float64(totalElements) / float64(pageSize)))
+}
 
 func PatchObclusterBackup(p *param.BackupStatusParam) error {
 	if err := p.Check(); err != nil {
@@ -98,6 +109,8 @@ func patchArchiveLogStatus(tenant *oceanbase.DbaObTenant, p *param.ArchiveLogSta
 		return startArchiveLog(tenant)
 	case constant.ARCHIVELOG_STATUS_STOP:
 		return stopArchiveLog(tenant)
+	case constant.ARCHIVELOG_STATUS_SUSPEND:
+		return deferArchiveLog(tenant)
 	default:
 		return errors.Occur(errors.ErrObBackupArchiveLogStatusInvalid, *p.Status, constant.ARCHIVELOG_STATUS_STOP, constant.ARCHIVELOG_STATUS_DOING)
 	}
@@ -155,6 +168,11 @@ func stopArchiveLog(tenant *oceanbase.DbaObTenant) error {
 	return nil
 }
 
+func deferArchiveLog(tenant *oceanbase.DbaObTenant) error {
+	log.Infof("defer archive log for %s", tenant.TenantName)
+	return tenantService.DeferArchiveLogDest(tenant.TenantName)
+}
+
 func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) error {
 	if err := p.Check(); err != nil {
 		return err
@@ -169,6 +187,25 @@ func PatchTenantArchiveLog(tenantName string, p *param.ArchiveLogStatusParam) er
 		return err
 	}
 	return nil
+}
+
+func ListTenantArchiveLogTasks(name string) ([]bo.ArchiveLogTask, error) {
+	tenant, err := tenantService.GetTenantByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks, err := tenantService.ListArchiveLogTasks(tenant.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	boTasks := make([]bo.ArchiveLogTask, 0)
+	for _, summary := range tasks {
+		boTasks = append(boTasks, *summary.ToBO())
+	}
+
+	return boTasks, nil
 }
 
 func GetObclusterBackupOverview() (*param.BackupOverview, error) {
@@ -234,4 +271,66 @@ func getTenantBackupTask(tenantID int) (*oceanbase.CdbObBackupTask, error) {
 	}
 
 	return task, nil
+}
+
+func GetTenantBackupTasks(name string, p *param.QueryBackupTasksParam) (*bo.PaginatedBackupJobResponse, error) {
+	tenant, err := tenantService.GetTenantByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	jobs := make([]bo.BackupJob, 0)
+
+	history, err := tenantService.GetTenantBackupJobs(tenant.TenantID, p)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, job := range history {
+		jobs = append(jobs, *job.ToBO())
+	}
+
+	count, err := tenantService.GetTenantBackupJobCount(tenant.TenantID, p)
+	if err != nil {
+		return nil, err
+	}
+
+	return &bo.PaginatedBackupJobResponse{
+		Contents: jobs,
+		Page: bo.CustomPage{
+			Number:        p.Page,
+			Size:          p.Size,
+			TotalPages:    calculateTotalPages(count, p.Size),
+			TotalElements: count,
+		},
+	}, nil
+}
+
+func GetTenantBackupInfo(name string) (*bo.TenantBackupInfo, error) {
+	tenant, err := tenantService.GetTenantByName(name)
+	if err != nil {
+		return nil, err
+	}
+
+	task, err := getTenantBackupTask(tenant.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	latestArchiveLog, err := tenantService.GetLatestArchiveLog(tenant.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	info := &bo.TenantBackupInfo{
+		TenantId: tenant.TenantID,
+	}
+	if task != nil {
+		info.LastestDataBackupTime = &task.StartTimestamp
+	}
+	if latestArchiveLog != nil {
+		info.LastestArchiveLogCheckpoint = &latestArchiveLog.CheckpointScnDisplay
+		info.ArchiveLogDelay = latestArchiveLog.Delay
+	}
+	return info, nil
 }

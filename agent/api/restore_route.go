@@ -40,6 +40,8 @@ func InitRestoreRoutes(r *gin.RouterGroup, isLocalRoute bool) {
 	}
 
 	restoreGroup.GET(constant.URI_WINDOWS, getRestoreWindowsHandler)
+	restoreGroup.POST(constant.URI_SOURCE_INFO, getRestoreTenantInfoHandler)
+	restoreGroup.GET(constant.URI_TASKS, listRestoreTasksHandler)
 
 	tenantGroup.POST(constant.URI_RESTORE, tenantRestoreHandler)
 	tenantGroup.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_RESTORE, cancelRestoreTaskHandler)
@@ -178,4 +180,54 @@ func getRestoreWindowsHandler(c *gin.Context) {
 	}
 	windows, err := ob.GetRestoreWindows(&p)
 	common.SendResponse(c, windows, err)
+}
+
+// @ID			listRestoreTasks
+// @Summary	List restore tasks
+// @Tags		Restore
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Header	header	string	true	"Authorization"
+// @Param		tenantName		path	string	true	"Tenant name"
+// @Success	200				object	http.OcsAgentResponse{data=bo.PaginatedRestoreTaskResponse}
+// @Failure	400				object	http.OcsAgentResponse
+// @Failure	401				object	http.OcsAgentResponse
+// @Failure	500				object	http.OcsAgentResponse
+// @Router		/api/v1/restore/tasks [get]
+func listRestoreTasksHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+
+	var p param.QueryRestoreTasksParam
+	if err := c.BindQuery(&p); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	p.Format()
+	tasks, err := ob.GetAllRestoreTasks(&p)
+	common.SendResponse(c, tasks, err)
+}
+
+// @ID			getRestoreSourceTenantInfo
+// @Summary	Get original restore tenant info by ob_admin
+// @Tags		Restore
+// @Accept		application/json
+// @Produce	application/json
+// @Param		X-OCS-Header	header	string	true	"Authorization"
+// @Param		body			body	param.RestoreStorageParam	true	"the storage uri of data backup and archive log"
+// @Success	200				object	http.OcsAgentResponse{data=system.RestoreTenantInfo}
+// @Failure	400				object	http.OcsAgentResponse
+// @Failure	401				object	http.OcsAgentResponse
+// @Failure	500				object	http.OcsAgentResponse
+// @Router		/api/v1/restore/source-tenant-info [post]
+func getRestoreTenantInfoHandler(c *gin.Context) {
+	var p param.RestoreStorageParam
+	if err := c.BindJSON(&p); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	info, err := ob.GetRestoreSourceTenantInfo(&p)
+	common.SendResponse(c, info, err)
 }

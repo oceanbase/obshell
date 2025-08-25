@@ -16,7 +16,11 @@
 
 package oceanbase
 
-import "time"
+import (
+	"time"
+
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
+)
 
 type CdbObBackupDeletePolicy struct {
 	TenantID       int64  `gorm:"column:TENANT_ID"`
@@ -24,10 +28,42 @@ type CdbObBackupDeletePolicy struct {
 	RecoveryWindow string `gorm:"column:RECOVERY_WINDOW"`
 }
 
-type CdbOBArchivelog struct {
-	tenantID int    `gorm:"column:TENANT_ID"`
+type CdbOBArchivelogStatus struct {
+	TenantID int    `gorm:"column:TENANT_ID"`
 	Status   string `gorm:"column:STATUS"`
 	Path     string `gorm:"column:PATH"`
+}
+
+type CdbOBArchivelogSummary struct {
+	TenantID             int       `gorm:"column:TENANT_ID"`
+	DestID               int       `gorm:"column:DEST_ID"`
+	RoundID              int       `gorm:"column:ROUND_ID"`
+	Incarnation          int       `gorm:"column:INCARNATION"`
+	DestNo               int       `gorm:"column:DEST_NO"`
+	Status               string    `gorm:"column:STATUS"`
+	StartScn             int64     `gorm:"column:START_SCN"`
+	StartScnDisplay      time.Time `gorm:"column:START_SCN_DISPLAY"`
+	CheckpointScn        int64     `gorm:"column:CHECKPOINT_SCN"`
+	CheckpointScnDisplay time.Time `gorm:"column:CHECKPOINT_SCN_DISPLAY"`
+	Compatible           int       `gorm:"column:COMPATIBLE"`
+	BasePieceID          int       `gorm:"column:BASE_PIECE_ID"`
+	UsedPieceID          int       `gorm:"column:USED_PIECE_ID"`
+	InputBytes           int64     `gorm:"column:INPUT_BYTES"`
+	OutputBytes          int64     `gorm:"column:OUTPUT_BYTES"`
+	Path                 string    `gorm:"column:PATH"`
+	Delay                float64   `gorm:"column:DELAY"`
+}
+
+func (t *CdbOBArchivelogSummary) ToBO() *bo.ArchiveLogTask {
+	return &bo.ArchiveLogTask{
+		TenantID:   t.TenantID,
+		Status:     t.Status,
+		RoundID:    t.RoundID,
+		Path:       t.Path,
+		Delay:      t.Delay,
+		Checkpoint: t.CheckpointScnDisplay,
+		StartTime:  t.StartScnDisplay,
+	}
 }
 
 type CdbObBackupTask struct {
@@ -57,4 +93,36 @@ type CdbObBackupTask struct {
 	Result                int64     `gorm:"column:RESULT" json:"result"`
 	Comment               string    `gorm:"column:COMMENT" json:"comment"`
 	Path                  string    `gorm:"column:PATH" json:"path"`
+}
+
+type CdbObBackupJob struct {
+	TenantID       int64      `gorm:"column:TENANT_ID"`
+	JobID          int64      `gorm:"column:JOB_ID"`
+	BackupSetID    int64      `gorm:"column:BACKUP_SET_ID"`
+	PlusArchivelog string     `gorm:"column:PLUS_ARCHIVELOG"`
+	BackupType     string     `gorm:"column:BACKUP_TYPE"`
+	StartTimestamp *time.Time `gorm:"column:START_TIMESTAMP"`
+	EndTimestamp   *time.Time `gorm:"column:END_TIMESTAMP"`
+	Status         string     `gorm:"column:STATUS"`
+	Result         int64      `gorm:"column:RESULT"`
+	Comment        string     `gorm:"column:COMMENT"`
+	Description    string     `gorm:"column:DESCRIPTION"`
+	Path           string     `gorm:"column:PATH"`
+}
+
+func (t *CdbObBackupJob) ToBO() *bo.BackupJob {
+	return &bo.BackupJob{
+		TenantID:       t.TenantID,
+		JobID:          t.JobID,
+		BackupSetID:    t.BackupSetID,
+		StartTimestamp: t.StartTimestamp,
+		EndTimestamp:   t.EndTimestamp,
+		Status:         t.Status,
+		PlusArchivelog: t.PlusArchivelog,
+		BackupType:     t.BackupType,
+		Result:         t.Result,
+		Comment:        t.Comment,
+		Description:    t.Description,
+		Path:           t.Path,
+	}
 }

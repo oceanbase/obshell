@@ -35,6 +35,10 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/path"
 )
 
+const (
+	BACKUP_FORMAT_PATH = "format.obbak"
+)
+
 type SCN struct {
 	Val int64 `json:"val"`
 }
@@ -50,6 +54,12 @@ type RestoreWindows struct {
 type RestoreWindow struct {
 	StartTime time.Time `json:"start_time"`
 	EndTime   time.Time `json:"end_time"`
+}
+
+type RestoreTenantInfo struct {
+	TenantName     string          `json:"tenant_name"`
+	ClusterName    string          `json:"cluster_name"`
+	RestoreWindows *RestoreWindows `json:"restore_windows"`
 }
 
 // ArchiveInfo contains the information of archive log, which only contains the key, start scn and checkpoint scn but not the display time of scn.
@@ -184,6 +194,9 @@ func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
 
 func mergeWindows(intervals [][2]int64) [][2]int64 {
 	ans := make([][2]int64, 0)
+	if len(intervals) == 0 {
+		return ans
+	}
 	slices.SortFunc(intervals, func(a, b [2]int64) int {
 		return int(a[0] - b[0])
 	})
@@ -258,4 +271,48 @@ func GetRestoreWindows(dataURI, logURI string) (*RestoreWindows, error) {
 	}
 
 	return res, err
+}
+
+func getTenantNameForLocalityInfo(res string) string {
+	matches := regexp.MustCompile(`\|\s*tenant_name\|(.*?)\n`).FindStringSubmatch(res)
+	if len(matches) < 2 {
+		return ""
+	}
+	return strings.TrimSpace(matches[1])
+}
+
+func getClusterNameForLocalityInfo(res string) string {
+	matches := regexp.MustCompile(`\|\s*cluster_name\|(.*?)\n`).FindStringSubmatch(res)
+	if len(matches) < 2 {
+		return ""
+	}
+	clusterName := matches[1]
+	return strings.TrimSpace(clusterName)
+}
+
+func GetRestoreSourceTenantInfo(dataURI, logURI string) (*RestoreTenantInfo, error) {
+	storage, err := GetStorageInterfaceByURI(strings.Join([]string{dataURI, BACKUP_FORMAT_PATH}, "/"))
+	if err != nil {
+		return nil, err
+	}
+	cmd := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s dump_backup -q -d '%s'", global.HomePath, path.OBAdmin(), storage.GenerateURI())
+	if storage.GenerateQueryParams() != "" {
+		cmd += fmt.Sprintf(" -s '%s'", storage.GenerateQueryParams())
+	}
+
+	res, err := ExecCommand(cmd)
+	if err != nil {
+		return nil, errors.Wrap(err, "execute dump_backup command failed")
+	}
+
+	restoreWindows, err := GetRestoreWindows(dataURI, logURI)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RestoreTenantInfo{
+		TenantName:     getTenantNameForLocalityInfo(res),
+		ClusterName:    getClusterNameForLocalityInfo(res),
+		RestoreWindows: restoreWindows,
+	}, nil
 }

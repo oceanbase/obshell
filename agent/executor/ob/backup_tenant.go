@@ -17,10 +17,14 @@
 package ob
 
 import (
+	"strings"
+
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/agent/engine/task"
 	"github.com/oceanbase/obshell/agent/errors"
+	"github.com/oceanbase/obshell/agent/lib/system"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
@@ -66,6 +70,47 @@ func tenantBackupConfig(tenantName string, tenantP *param.TenantBackupConfigPara
 		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
+}
+
+func GetTenantBackupConfig(tenantName string) (*bo.BackupDestInfo, error) {
+	tenant, err := tenantService.GetTenantByName(tenantName)
+	if err != nil {
+		return nil, err
+	}
+
+	var configs bo.BackupDestInfo
+	configs.TenantID = tenant.TenantID
+	archiveBaseUri, err := tenantService.GetArchiveDestByID(tenant.TenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	if archiveBaseUri != "" {
+		archiveStorage, err := system.GetStorageInterfaceByURI(archiveBaseUri)
+		if err != nil {
+			return nil, err
+		}
+		configs.ArchiveBaseUri = archiveStorage.GenerateURIWithoutSecret()
+	}
+
+	dataBaseUri, err := tenantService.GetDataBackupDestByID(tenant.TenantID)
+	if err != nil {
+		return nil, err
+	}
+	if dataBaseUri != "" {
+		dataStorage, err := system.GetStorageInterfaceByURI(dataBaseUri)
+		if err != nil {
+			return nil, err
+		}
+		configs.DataBaseUri = dataStorage.GenerateURIWithoutSecret()
+	}
+
+	if strings.Contains(configs.ArchiveBaseUri, "access_id") || strings.Contains(configs.ArchiveBaseUri, "access_key") ||
+		strings.Contains(configs.DataBaseUri, "access_id") || strings.Contains(configs.DataBaseUri, "access_key") {
+		return nil, nil
+	}
+
+	return &configs, nil
 }
 
 func TenantStartBackup(tenant *oceanbase.DbaObTenant, p *param.BackupParam) (*task.DagDetailDTO, error) {

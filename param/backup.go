@@ -18,6 +18,7 @@ package param
 
 import (
 	"strings"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -315,7 +316,8 @@ func (p *ArchiveLogStatusParam) Check() error {
 
 	switch *p.Status {
 	case constant.ARCHIVELOG_STATUS_STOP,
-		constant.ARCHIVELOG_STATUS_DOING:
+		constant.ARCHIVELOG_STATUS_DOING,
+		constant.ARCHIVELOG_STATUS_SUSPEND:
 		return nil
 	default:
 		return errors.Occur(errors.ErrObBackupArchiveLogStatusInvalid, *p.Status, constant.ARCHIVELOG_STATUS_STOP, constant.ARCHIVELOG_STATUS_DOING)
@@ -328,4 +330,51 @@ type BackupOverview struct {
 
 type TenantBackupOverview struct {
 	Status oceanbase.CdbObBackupTask `json:"status"`
+}
+
+type QueryBackupTasksParam struct {
+	StartTime *time.Time `form:"start_time"`
+	EndTime   *time.Time `form:"end_time"`
+	CustomPageQuery
+	Status       string   `form:"status"`
+	Sort         string   `form:"sort,default=start_timestamp,desc"`
+	ParsedStatus []string `form:"-"`
+	SortBy       string   `form:"-"`
+	SortOrder    string   `form:"-"`
+}
+
+type CustomPageQuery struct {
+	Page uint64 `form:"page,default=1"`
+	Size uint64 `form:"size,default=2147483647"`
+}
+
+func (p *CustomPageQuery) Format() {
+	if p.Page < 1 {
+		p.Page = 1
+	}
+	if p.Size < 1 {
+		p.Size = 2147483647
+	}
+}
+
+func (p *QueryBackupTasksParam) Format() {
+	if p.Status != "" {
+		p.ParsedStatus = strings.Split(strings.ToUpper(p.Status), ",")
+	}
+	p.CustomPageQuery.Format()
+	if p.Sort != "" {
+		parts := strings.Split(p.Sort, ",")
+		if len(parts) == 2 {
+			p.SortBy = parts[0]
+			p.SortOrder = parts[1]
+		} else {
+			p.SortBy = parts[0]
+		}
+	}
+	if p.SortBy != "start_timestamp" && p.SortBy != "end_timestamp" {
+		p.SortBy = "start_timestamp"
+	}
+	if p.SortOrder != "asc" && p.SortOrder != "desc" {
+		p.SortOrder = "desc"
+	}
 }

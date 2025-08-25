@@ -26,12 +26,16 @@ import (
 )
 
 type RestoreWindowsParam struct {
+	RestoreStorageParam
+}
+
+type RestoreStorageParam struct {
 	DataBackupUri string  `json:"data_backup_uri" binding:"required"`
 	ArchiveLogUri *string `json:"archive_log_uri"`
 }
 
 type RestoreParam struct {
-	RestoreWindowsParam
+	RestoreStorageParam
 
 	TenantName string `json:"restore_tenant_name" binding:"required"`
 
@@ -93,4 +97,19 @@ type RestoreOverview struct {
 	FinishLsCount        int    `json:"finish_ls_count"`
 	Comment              string `json:"comment"`
 	FinishTimestamp      string `json:"finish_timestamp"`
+}
+
+type QueryRestoreTasksParam struct {
+	StartTime *time.Time `form:"start_time"`
+	EndTime   *time.Time `form:"end_time"`
+	CustomPageQuery
+	Status       string   `form:"status"`
+	ParsedStatus []string `form:"-"`
+}
+
+func (p *QueryRestoreTasksParam) Format() {
+	if p.Status != "" {
+		p.ParsedStatus = strings.Split(strings.ToUpper(p.Status), ",")
+	}
+	p.CustomPageQuery.Format()
 }

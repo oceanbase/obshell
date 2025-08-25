@@ -136,7 +136,7 @@ func (f *TenantRestoreFlags) toRestoreParam(cmd *cobra.Command) (*param.RestoreP
 
 	restoreParam := &param.RestoreParam{
 		TenantName: f.TenantName,
-		RestoreWindowsParam: param.RestoreWindowsParam{
+		RestoreStorageParam: param.RestoreStorageParam{
 			DataBackupUri: f.DataBackupUri,
 		},
 		ZoneList: zoneList,
