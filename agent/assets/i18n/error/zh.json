@@ -171,7 +171,7 @@
   "err.ob.tenant.status.not.normal": "租户 '%s' 状态为 '%s'",
   "err.ob.tenant.sys.operation.not.allowed": "不允许对系统租户执行此操作",
   "err.ob.tenant.under.maintenance": "租户 '%s' 处于运维状态中",
-  "err.ob.tenant.unit.num.exceeds.limit": "租户 unit 数量 '%d' 超过 zone '%s' 中的 observer 数量 '%d'",
+  "err.ob.tenant.unit.num.exceeds.limit": "租户 unit 数量 '%d' 超过 observer 数量 '%d'(在 zone '%s' 中)",
   "err.ob.tenant.unit.num.inconsistent": "租户 unit 数量不一致，所有 zone 中应该相同",
   "err.ob.tenant.unit.num.invalid": "租户 unit 数量 '%d' 非法：%s",
   "err.ob.tenant.variable.empty": "存在租户变量名称或值为空",
