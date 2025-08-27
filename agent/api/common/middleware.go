@@ -25,6 +25,7 @@ import (
 	"net"
 	"net/http"
 	"regexp"
+	"runtime/debug"
 	"strconv"
 	"strings"
 	"syscall"
@@ -53,12 +54,12 @@ const UNIX_CONNECT UNIX_CONNECT_TYPE = "unix_conn"
 const (
 	statusURI = constant.URI_API_V1 + constant.URI_STATUS
 
-	localRouteKey = "localRoute"
-	apiRouteKey   = "apiRoute"
+	localRouteKey = constant.LOCAL_ROUTE_KEY
+	apiRouteKey   = constant.API_ROUTE_KEY
 
-	originalBody = "ORIGINAL_BODY"
+	originalBody = constant.ORIGINAL_BODY
 
-	ACCEPT_LANGUAGE = "Accept-Language"
+	ACCEPT_LANGUAGE = constant.ACCEPT_LANGUAGE
 )
 
 var (
@@ -352,7 +353,7 @@ func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 
 // Recovery is a utility function meant to be used with the Gin middleware for panic recovery.
 func Recovery(c *gin.Context, err interface{}) {
-	log.WithContext(NewContextWithTraceId(c)).Errorf("request context %+v, err:%+v", c, err)
+	log.WithContext(NewContextWithTraceId(c)).Errorf("request context %+v, err:%+v, stack:%s", c, err, debug.Stack())
 	c.JSON(recoveryResponse.Status, recoveryResponse)
 }
 

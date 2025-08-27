@@ -51,6 +51,7 @@ var tableList = []interface{}{
 	oceanbase.PartialMaintenance{},
 	oceanbase.AgentBinaryInfo{},
 	oceanbase.AgentBinaryChunk{},
+	oceanbase.OcsConfig{},
 }
 
 // createGormDbByConfig will create an ob db instance according to the configuration and

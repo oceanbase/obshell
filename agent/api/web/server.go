@@ -29,7 +29,7 @@ import (
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
-	api "github.com/oceanbase/obshell/agent/api"
+	"github.com/oceanbase/obshell/agent/api"
 	"github.com/oceanbase/obshell/agent/api/common"
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"

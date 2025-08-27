@@ -35,6 +35,11 @@ const (
 	URI_POOLS_GROUP      = "/resource-pools"
 	URI_RECYCLEBIN_GROUP = "/recyclebin"
 	URI_OBPROXY_GROUP    = "/obproxy"
+	URI_METRIC_GROUP     = "/metrics"
+	URI_SYSTEM_GROUP     = "/system"
+	URI_EXTERNAL_GROUP   = "/external"
+	URI_PROMETHEUS       = "/prometheus"
+	URI_ALERTMANAGER     = "/alertmanager"
 
 	URI_INFO      = "/info"
 	URI_TIME      = "/time"
@@ -158,4 +163,16 @@ const (
 	URI_AGENT_RPC_PREFIX    = URI_RPC_V1 + URI_AGENT_GROUP
 	URI_OBSERVER_RPC_PREFIX = URI_RPC_V1 + URI_OBSERVER_GROUP
 	URI_OB_RPC_PREFIX       = URI_RPC_V1 + URI_OB_GROUP
+
+	// Used for alarm
+	URI_ALARM_GROUP = "/alarm"
+	URI_ALERT       = "/alert"
+	URI_ALERTS      = "/alerts"
+	URI_SILENCER    = "/silencer"
+	URI_SILENCERS   = "/silencers"
+	URI_RULE        = "/rule"
+	URI_RULES       = "/rules"
+
+	URI_PARAM_ID      = "id"
+	URI_PATH_PARAM_ID = "/:" + URI_PARAM_ID
 )

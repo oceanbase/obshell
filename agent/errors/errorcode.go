@@ -73,6 +73,8 @@ var (
 	ErrCommonUnexpected                 = NewErrorCode("Common.Unexpected", unexpected, "err.common.unexpected")                              // "unexpected error: %s"
 	ErrCommonUnauthorized               = NewErrorCode("Common.Unauthorized", unauthorized, "err.common.unauthorized", 10008)                 // "unauthorized"
 	ErrCommonInvalidTimeDuration        = NewErrorCode("Common.InvalidTimeDuration", illegalArgument, "err.common.invalid.time.duration")     // "time duration '%s' is invalid: %s"
+	ErrJsonMarshal                      = NewErrorCode("Common.JsonMarshal", unexpected, "err.common.json.marshal")                           // "json marshal failed: %s"
+	ErrJsonUnmarshal                    = NewErrorCode("Common.JsonUnmarshal", unexpected, "err.common.json.unmarshal")                       // "json unmarshal failed: %s"
 	// Log
 	ErrLogWriteExceedMaxSize          = NewErrorCode("Log.WriteExceedMaxSize", unexpected, "err.log.write.exceed.max.size")                   // "write length %d exceeds maximum file size %d"
 	ErrLogFileNamePrefixMismatched    = NewErrorCode("Log.FileNamePrefixMismatched", unexpected, "err.log.file.name.prefix.mismatched")       // "file name '%s' prefix mismatched"
@@ -416,5 +418,29 @@ var (
 	ErrAgentDaemonServeOnUnixSocketFailed  = NewErrorCode("Agent.Daemon.ServeOnUnixSocketFailed", unexpected, "err.agent.daemon.serve.on.unix.socket.failed")    // "daemon serve on socket listener failed\n"
 	ErrAgentOceanbasePasswordLoadFailed    = NewErrorCode("Agent.Oceanbase.Password.LoadFailed", unexpected, "err.agent.oceanbase.password.load.failed")         // "check password of root@sys in sqlite failed: not cluster agent"
 	ErrAgentUpgradeKillOldServerTimeout    = NewErrorCode("Agent.Upgrade.KillOldServerTimeout", unexpected, "err.agent.upgrade.kill.old.server.timeout")         // "wait obshell server killed timeout"
-	ErrAgentDaemonStartFailed              = NewErrorCode("Agent.Daemon.StartFailed", unexpected, "err.agent.daemon.start.failed")                               // "daemon start failed: %v\n"
+	ErrAgentDaemonStartFailed              = NewErrorCode("Agent.Daemon.StartFailed", unexpected, "err.agent.daemon.start.failed")                               // "daemon start failed: %v
+
+	// config
+	ErrConfigGetFailed = NewErrorCode("Config.GetFailed", unexpected, "err.config.get.failed")
+	ErrConfigNotFound  = NewErrorCode("Config.NotFound", unexpected, "err.config.not.found")
+
+	// external
+	ErrExternalComponentNotReady = NewErrorCode("External.Component.Not.Ready", unexpected, "err.external.component.not.ready")
+
+	// alarm related
+	ErrAlarmClientFailed                 = NewErrorCode("Alarm.ClientFailed", unexpected, "err.alarm.client.failed")
+	ErrAlarmQueryFailed                  = NewErrorCode("Alarm.QueryFailed", unexpected, "err.alarm.query.failed")
+	ErrAlarmUnexpectedStatus             = NewErrorCode("Alarm.UnexpectedStatus", unexpected, "err.alarm.unexpected.status")
+	ErrAlarmRuleNotFound                 = NewErrorCode("Alarm.RuleNotFound", notFound, "err.alarm.rule.not.found")
+	ErrAlarmSilencerInstanceTypeMismatch = NewErrorCode("Alarm.Silencer.InstanceTypeMismatch", illegalArgument, "err.alarm.silencer.instance.type.mismatch")
+	ErrAlarmSilencerOBClusterMismatch    = NewErrorCode("Alarm.Silencer.OBClusterMismatch", illegalArgument, "err.alarm.silencer.obcluster.mismatch")
+	ErrAlarmSilencerUnknownInstanceType  = NewErrorCode("Alarm.Silencer.UnknownInstanceType", illegalArgument, "err.alarm.silencer.unknown.instance.type")
+
+	// metric related
+	ErrMetricConfigNotFound           = NewErrorCode("Metric.ConfigNotFound", unexpected, "err.metric.config.not.found")
+	ErrMetricExprNotFound             = NewErrorCode("Metric.ExprNotFound", unexpected, "err.metric.expr.not.found")
+	ErrMetricPrometheusConfigNotFound = NewErrorCode("Metric.PrometheusConfigNotFound", unexpected, "err.metric.prometheus.config.not.found")
+	ErrMetricQueryFailed              = NewErrorCode("Metric.QueryFailed", unexpected, "err.metric.query.failed")
+	ErrMetricUnexpectedStatus         = NewErrorCode("Metric.UnexpectedStatus", unexpected, "err.metric.unexpected.status")
+	ErrMetricParseValueFailed         = NewErrorCode("Metric.ParseValueFailed", unexpected, "err.metric.parse.value.failed")
 )

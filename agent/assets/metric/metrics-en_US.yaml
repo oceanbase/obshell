@@ -1,0 +1,1015 @@
+OBCLUSTER:
+- description: Database performance
+  name: Database Performance
+  metricGroups:
+  - description: Average number of SQL statements processed per second
+    metrics:
+    - description: Number of SQL statements processed per second
+      key: sql_all_count
+      name: all
+      unit: times/s
+    - description: Number of Select statements processed per second
+      key: sql_select_count
+      name: select
+      unit: times/s
+    - description: Number of Insert statements processed per second
+      key: sql_insert_count
+      name: insert
+      unit: times/s
+    - description: Number of Update statements processed per second
+      key: sql_update_count
+      name: update
+      unit: times/s
+    - description: Number of Replace statements processed per second
+      key: sql_replace_count
+      name: replace
+      unit: times/s
+    - description: Number of Delete statements processed per second
+      key: sql_delete_count
+      name: delete
+      unit: times/s
+    - description: Number of DDL, DCL, DTL statements processed per second
+      key: sql_other_count
+      name: other
+      unit: times/s
+    name: QPS
+  - description: The average time it takes to process each SQL statement on the server
+    metrics:
+    - description: The average processing time of each SQL statement
+      key: sql_all_rt
+      name: all
+      unit: "\u03BCs"
+    - description: The average processing time for each Select statement
+      key: sql_select_rt
+      name: select
+      unit: "\u03BCs"
+    - description: The average processing time of each Insert statement
+      key: sql_insert_rt
+      name: insert
+      unit: "\u03BCs"
+    - description: The average processing time of each Update statement
+      key: sql_update_rt
+      name: update
+      unit: "\u03BCs"
+    - description: The average processing time for each Replace statement
+      key: sql_replace_rt
+      name: replace
+      unit: "\u03BCs"
+    - description: The average processing time of each Delete statement
+      key: sql_delete_rt
+      name: delete
+      unit: "\u03BCs"
+    - description: The average processing time of each DDL, DCL, DTL statements
+      key: sql_other_rt
+      name: other
+      unit: "\u03BCs"
+    name: Query response time
+  - description: Average number of transactions processed per second
+    metrics:
+    - description: Transactions per second
+      key: tps
+      name: all
+      unit: times/s
+    - description: Transactions committed per second
+      key: transaction_commit_count
+      name: trans_commit_count
+      unit: times/s
+    - description: Transactions rollback per second
+      key: transaction_rollback_count
+      name: trans_rollback_count
+      unit: times/s
+    - description: Transactions timeout per second
+      key: transaction_timeout_count
+      name: trans_timeout_count
+      unit: times/s
+    name: TPS
+  - description: Average processing time of each transaction on the server side
+    metrics:
+    - description: Average processing time per transaction
+      key: tps_rt
+      name: all
+      unit: "\u03BCs"
+    - description: Average commit time per transaction
+      key: transaction_commit_rt
+      name: trans_commit_rt
+      unit: "\u03BCs"
+    - description: Average rollback time per transaction
+      key: transaction_rollback_rt
+      name: trans_rollback_rt
+      unit: "\u03BCs"
+    name: Transaction response time
+  - description: Number of sessions
+    metrics:
+    - description: Number of current active sessions
+      key: active_session
+      name: active_session
+      unit: ''
+    - description: Number of current sessions
+      key: all_session
+      name: all_session
+      unit: ''
+    name: Number of sessions
+  - description: SQL request waiting time in the waiting queue
+    metrics:
+    - description: SQL waiting time in the waiting queue
+      key: request_queue_time
+      name: queue_time
+      unit: "\u03BCs"
+    name: Request waiting queue time-consuming
+  - description: Number of transaction logs committed per second
+    metrics:
+    - description: Number of transaction logs submitted per second
+      key: trans_commit_log_count
+      name: log_count
+      unit: times/s
+    name: Number of transaction logs
+  - description: Transaction log size committed per second
+    metrics:
+    - description: Transaction log size submitted per second
+      key: clog_trans_log_total_size
+      name: log_size
+      unit: byte
+    name: Transaction log volume
+  - description: Average time-consuming server processing transaction log
+    metrics:
+    - description: Average time to write each transaction log to disk
+      key: clog_write_disk_rt
+      name: write_disk
+      unit: "\u03BCs"
+    - description: Average time for each transaction log network synchronization
+      key: trans_commit_log_sync_rt
+      name: sync_time
+      unit: "\u03BCs"
+    name: Transaction log time-consuming
+  - description: Average number of IOs per second
+    metrics:
+    - description: SSStore reads per second
+      key: io_read_count
+      name: read
+      unit: times/s
+    - description: SSStore writes per second
+      key: io_write_count
+      name: write
+      unit: times/s
+    name: IOPS
+  - description: Average IO time-consuming
+    metrics:
+    - description: SSStore average time per read
+      key: io_read_rt
+      name: read
+      unit: "\u03BCs"
+    - description: SSStore average time per write
+      key: io_write_rt
+      name: write
+      unit: "\u03BCs"
+    name: IO time-consuming
+  - description: Average size of I/O data per second
+    metrics:
+    - description: SSStore read data volume per second
+      key: io_read_size
+      name: read
+      unit: byte
+    - description: SSStore write data volume per second
+      key: io_write_size
+      name: write
+      unit: byte
+    name: I/O Throughput
+  - description: Average number of specified transactions per second
+    metrics:
+    - description: Normal transactions per second
+      key: transaction_single_partition_count
+      name: trans_single_partition_count
+      unit: times/s
+    - description: Distributed transactions per second
+      key: transaction_multi_partition_count
+      name: trans_multi_partition_count
+      unit: times/s
+    name: Transaction count
+- description: Host performance
+  name: Host performance
+  metricGroups:
+  - description: Linux system load
+    name: Linux system load
+    metrics:
+    - description: The average system load in the last 1 minute.
+      key: load1
+      name: load1
+      unit: ""
+    - description: The average system load in the last 5 minutes.
+      key: load5
+      name: load5
+      unit: ""
+    - description: The average system load in the last 15 minutes.
+      key: load15
+      name: load15
+      unit: ""
+    - description: Average system load in the last 1 minute/Number of CPU cores
+      key: load1_per_cpu
+      name: load1_per_cpu
+      unit: ""
+  - description: CPU utilization
+    name: CPU Usage
+    metrics:
+    - description: CPU utilization
+      key: cpu_percent
+      name: cpu_percent
+      unit: "%"
+  - description: Memory usage usage
+    name: Memory
+    metrics:
+    - description: The size of used physical memory.
+      key: memory_used
+      name: used
+      unit: byte
+    - description: The size of the kernel buffer cache.
+      key: memory_buffers
+      name: buffers
+      unit: byte
+    - description: The size of available physical memory.
+      key: memory_free
+      name: free
+      unit: byte
+    - description: Memory usage usage used by the cache
+      key: memory_cached
+      name: cached
+      unit: byte
+  - description: The memory usage of the host.
+    name: Memory usage
+    metrics:
+    - description: host Memory usage usage
+      key: memory_percent
+      name: memory_percent
+      unit: "%"
+  - description: IOPS
+    name: IOPS
+    metrics:
+    - description: The number of reads per second.
+      key: io_read
+      name: read
+      unit: times/s
+    - description: The number of writes per second.
+      key: io_write
+      name: write
+      unit: times/s
+  - description: Average time per I/O operation
+    name: IO time-consuming
+    metrics:
+    - description: The average time spent on each I/O read.
+      key: io_read_time
+      name: read
+      unit: "μs"
+    - description: The average time spent on each I/O write.
+      key: io_write_time
+      name: write
+      unit: "μs"
+  - description: Average amount of I/O data processed per second
+    name: I/O Throughput
+    metrics:
+    - description: The amount of data read each time.
+      key: io_read_byte
+      name: read
+      unit: byte
+    - description: The amount of data written each time.
+      key: io_write_byte
+      name: write
+      unit: byte
+  - description: Network throughput
+    name: Network Throughput Rate
+    metrics:
+    - description: The amount of data received per second.
+      key: net_recv
+      name: receive
+      unit: byte
+    - description: The amount of data sent per second.
+      key: net_send
+      name: send
+      unit: byte
+OBTENANT:
+- description: Performance and SQL
+  metricGroups:
+  - description: Average number of SQL statements processed per second
+    metrics:
+    - description: Number of SQL statements processed per second
+      key: sql_all_count
+      name: all
+      unit: times/s
+    - description: Number of Select statements processed per second
+      key: sql_select_count
+      name: select
+      unit: times/s
+    - description: Number of Insert statements processed per second
+      key: sql_insert_count
+      name: insert
+      unit: times/s
+    - description: Number of Update statements processed per second
+      key: sql_update_count
+      name: update
+      unit: times/s
+    - description: Number of Replace statements processed per second
+      key: sql_replace_count
+      name: replace
+      unit: times/s
+    - description: Number of Delete statements processed per second
+      key: sql_delete_count
+      name: delete
+      unit: times/s
+    - description: Number of DDL, DCL, DTL statements processed per second
+      key: sql_other_count
+      name: other
+      unit: times/s
+    name: QPS
+  - description: Response time
+    metrics:
+    - description: The average processing time of each SQL statement
+      key: sql_all_rt
+      name: all
+      unit: us
+    - description: The average processing time for each Select statement
+      key: sql_select_rt
+      name: select
+      unit: us
+    - description: The average processing time of each Insert statement
+      key: sql_insert_rt
+      name: insert
+      unit: us
+    - description: The average processing time of each Update statement
+      key: sql_update_rt
+      name: update
+      unit: us
+    - description: The average processing time for each Replace statement
+      key: sql_replace_rt
+      name: replace
+      unit: us
+    - description: The average processing time of each Delete statement
+      key: sql_delete_rt
+      name: delete
+      unit: us
+    - description: The average processing time of each DDL, DCL, DTL statements
+      key: sql_other_rt
+      name: other
+      unit: us
+    name: Response time
+  - description: Number of sessions
+    metrics:
+    - description: Number of current active sessions
+      key: active_session
+      name: active_session
+      unit: ''
+    - description: Number of current sessions
+      key: all_session
+      name: all_session
+      unit: ''
+    name: Number of sessions
+  - description: SQL execution plan category
+    metrics:
+    - description: Number of Processing local executions per second
+      key: sql_local_count
+      name: local
+      unit: times/s
+    - description: Number of remote execution plans processed per second
+      key: sql_remote_count
+      name: remote
+      unit: times/s
+    - description: Number of distributed execution plans processed per second
+      key: sql_distributed_count
+      name: distributed
+      unit: times/s
+    name: SQL execution plan category
+  - description: Number of waiting events per second
+    metrics:
+    - description: Number of waiting events per second
+      key: wait_event_count
+      name: all
+      unit: times/s
+    - description: Internal wait events per second
+      key: system_event_internal_total_waits
+      name: internal_wait
+      unit: times/s
+    - description: Sync rpc wait event
+      key: system_event_sync_rpc_total_waits
+      name: sync_rpc_wait
+      unit: times/s
+    - description: Row lock wait event
+      key: system_event_row_lock_wait_total_waits
+      name: row_lock_wait
+      unit: times/s
+    - description: IO wait event
+      key: system_event_io_total_waits
+      name: io_wait
+      unit: times/s
+    - description: Latch wait event
+      key: system_event_latch_total_waits
+      name: latch_wait
+      unit: times/s
+    - description: Other wait event
+      key: system_event_other_total_waits
+      name: other_wait
+      unit: times/s
+    name: Waiting for events
+  - description: Waiting for event average time
+    metrics:
+    - description: Average time spent waiting for events
+      key: wait_event_rt
+      name: all
+      unit: us
+    - description: Average time spent for internal wait event
+      key: system_event_internal_time_waited
+      name: internal_wait
+      unit: us
+    - description: Average time spent for sync rpc wait event
+      key: system_event_sync_rpc_time_waited
+      name: sync_rpc_wait
+      unit: us
+    - description: Average time spent for row lock wait event
+      key: system_event_row_lock_wait_time_waited
+      name: row_lock_wait
+      unit: us
+    - description: Average time spent for IO wait event
+      key: system_event_io_time_waited
+      name: io_wait
+      unit: us
+    - description: Average time spent for latch wait event
+      key: system_event_latch_time_waited
+      name: latch_wait
+      unit: us
+    - description: Average time spent for other wait event
+      key: system_event_other_time_waited
+      name: other_wait
+      unit: us
+    name: Waiting for event time
+  - description: Number of SQL entering waiting queue per second
+    metrics:
+    - description: The number of requests that entered the queue
+      key: request_enqueue_count
+      name: request_enqueue_count
+      unit: times/s
+    - description: Number of requests dequeued from the queue
+      key: request_dequeue_count
+      name: request_dequeue_count
+      unit: times/s
+    name: Request waiting queue
+  - description: SQL request waiting time in waiting queue
+    metrics:
+    - description: SQL waiting time in the waiting queue
+      key: request_queue_time
+      name: queue_time
+      unit: us
+    name: Request waiting queue time consuming
+  - description: CPU Utilization
+    metrics:
+    - description: CPU usage rate
+      key: ob_cpu_percent
+      name: cpu_rate
+      unit: '%'
+    name: CPU Utilization
+  - description: Tenant memory usage percent
+    metrics:
+    - description: Tenant memory usage percent
+      key: ob_memory_percent
+      name: memory_usage
+      unit: '%'
+    name: memory usage percent
+  - description: MEMStore usage percent
+    metrics:
+    - description: MEMStore usage percent
+      key: memstore_percent
+      name: MEMStore_percent
+      unit: '%'
+    name: MEMStore usage percent
+  - description: The average response time of rpc package in/out
+    metrics:
+    - description: The average response time of rpc package in
+      key: rpc_packet_in_rt
+      name: in
+      unit: us
+    - description: The average response time of rpc package out
+      key: rpc_packet_out_rt
+      name: out
+      unit: us
+    name: Rpc package rt
+  - description: Rpc package in/out byte throughput in one unit of time
+    metrics:
+    - description: Rpc package in throughput
+      key: rpc_packet_in
+      name: in
+      unit: byte
+    - description: Rpc package out throughput
+      key: rpc_packet_out
+      name: out
+      unit: byte
+    name: Rpc package throughput
+  - description: Cursors
+    metrics:
+    - description: Opened cursors count
+      key: opened_cursors_count
+      name: open_cursors
+      unit: ''
+    name: Cursors
+  name: Performance and SQL
+- description: Transaction
+  metricGroups:
+  - description: Average number of transactions processed per second
+    metrics:
+    - description: Transactions per second
+      key: tps
+      name: all
+      unit: times/s
+    - description: Transactions committed per second
+      key: transaction_commit_count
+      name: trans_commit_count
+      unit: times/s
+    - description: Transactions rollback per second
+      key: transaction_rollback_count
+      name: trans_rollback_count
+      unit: times/s
+    - description: Transactions timeout per second
+      key: transaction_timeout_count
+      name: trans_timeout_count
+      unit: times/s
+    name: TPS
+  - description: Average processing time per transaction on the server side
+    metrics:
+    - description: Average processing time per transaction
+      key: tps_rt
+      name: all
+      unit: us
+    - description: Average commit time per transaction
+      key: transaction_commit_rt
+      name: trans_commit_rt
+      unit: us
+    - description: Average rollback time per transaction
+      key: transaction_rollback_rt
+      name: trans_rollback_rt
+      unit: us
+    name: Transaction response time
+  - description: Number of transaction logs committed per second
+    metrics:
+    - description: Number of transaction logs submitted per second
+      key: trans_commit_log_count
+      name: log_count
+      unit: times/s
+    name: Number of transaction logs
+  - description: Transaction log size committed per second
+    metrics:
+    - description: Transaction log size submitted per second
+      key: clog_trans_log_total_size
+      name: log_size
+      unit: byte
+    name: Transaction log volume
+  - description: Average time-consuming server processing transaction log
+    metrics:
+    - description: Average time for each transaction log network synchronization
+      key: trans_commit_log_sync_rt
+      name: sync_time
+      unit: us
+    - description: Average time to write each transaction log to disk
+      key: clog_write_disk_rt
+      name: write_disk
+      unit: us
+    name: Transaction log time-consuming
+  - description: Number of transaction lock waits per second
+    metrics:
+    - description: Number of successful write lock waits
+      key: memstore_write_lock_succ_count
+      name: success
+      unit: times/s
+    - description: Number of failed write lock waits
+      key: memstore_write_lock_fail_count
+      name: fail
+      unit: times/s
+    name: Number of transaction lock waits
+  - description: Average time to wait for each transaction lock
+    metrics:
+    - description: Average waiting time for write lock
+      key: memstore_write_lock_wait_time
+      name: wait_time
+      unit: us
+    name: Average time to wait for transaction lock
+  - description: Average number of specified transactions per second
+    metrics:
+    - description: Normal transactions per second
+      key: transaction_single_partition_count
+      name: trans_single_partition_count
+      unit: times/s
+    - description: Distributed transactions per second
+      key: transaction_multi_partition_count
+      name: trans_multi_partition_count
+      unit: times/s
+    name: Transaction count
+  name: Transaction
+- description: Storage and Cache
+  metricGroups:
+  - description: OB writable data memory
+    metrics:
+    - description: MEMStore total size
+      key: total_memstore_used
+      name: total
+      unit: MB
+    - description: Active MEMStore size
+      key: active_memstore_used
+      name: active
+      unit: MB
+    - description: Trigger merge threshold
+      key: major_freeze_trigger
+      name: trigger
+      unit: MB
+    - description: MEMStore limit
+      key: memstore_limit
+      name: limit
+      unit: MB
+    name: MEMStore
+  - description: Average number of IOs per second
+    metrics:
+    - description: SSStore reads per second
+      key: io_read_count
+      name: read
+      unit: times/s
+    - description: SSStore write times per second
+      key: io_write_count
+      name: write
+      unit: times/s
+    name: IOPS
+  - description: Average IO time-consuming
+    metrics:
+    - description: SSStore average time per read
+      key: io_read_rt
+      name: read
+      unit: us
+    - description: SSStore average time per write
+      key: io_write_rt
+      name: write
+      unit: us
+    name: IO time-consuming
+  - description: Average size of I/O data per second
+    metrics:
+    - description: SSStore read data volume per second
+      key: io_read_size
+      name: read
+      unit: byte
+    - description: SSStore write data volume per second
+      key: io_write_size
+      name: write
+      unit: byte
+    name: I/O Throughput
+  - description: Cache size
+    metrics:
+    - description: Block cache size
+      key: block_cache_size_mb
+      name: block_cache
+      unit: MB
+    - description: Row cache size
+      key: row_cache_size_mb
+      name: row_cache
+      unit: MB
+    - description: Execute plan cache size
+      key: plan_cache_size_mb
+      name: plan_cache
+      unit: MB
+    - description: Clog cache size
+      key: clog_cache_size_mb
+      name: clog_cache
+      unit: MB
+    - description: Bloom filter cache size
+      key: bloom_filter_cache_size_mb
+      name: bloom_filter_cache
+      unit: MB
+    - description: Location cache size
+      key: location_cache_size_mb
+      name: location_cache
+      unit: MB
+    name: Cache size
+  - description: Cache hit rate
+    metrics:
+    - description: Block cache hit rate
+      key: block_cache_hit_ratio
+      name: block_cache
+      unit: '%'
+    - description: Row cache hit rate
+      key: row_cache_hit_ratio
+      name: row_cache
+      unit: '%'
+    - description: Execution plan cache hit rate
+      key: plan_cache_hit_ratio
+      name: plan_cache
+      unit: '%'
+    - description: Clog cache hit rate
+      key: clog_cache_hit_ratio
+      name: clog_cache
+      unit: '%'
+    - description: Bloom filter cache hit rate
+      key: bloom_filter_cache_hit_ratio
+      name: bloom_filter_cache
+      unit: '%'
+    - description: Location cache hit rate
+      key: location_cache_hit_ratio
+      name: location_cache
+      unit: '%'
+    name: Cache hit rate
+  - description: Cache request total count
+    metrics:
+    - description: Block cache total request count
+      key: block_cache_req_total
+      name: block_cache
+      unit: ''
+    - description: Row cache total request count
+      key: row_cache_req_total
+      name: row_cache
+      unit: ''
+    - description: Clog cache total request count
+      key: clog_cache_req_total
+      name: clog_cache
+      unit: ''
+    - description: Bloom filter cache total request count
+      key: bloom_filter_cache_req_total
+      name: bloom_filter_cache
+      unit: ''
+    - description: Location cache total request count
+      key: location_cache_req_total
+      name: location_cache
+      unit: ''
+    name: Cache request total count
+  name: Storage and Cache
+OBTENANT_OVERVIEW:
+- description: OBTenant Overview
+  name: OBTenant Overview
+  metricGroups:
+  - description: Average number of SQL statements processed per second
+    metrics:
+    - description: Number of SQL statements processed per second
+      key: sql_all_count
+      name: query_count
+      unit: times/s
+    name: QPS
+  - description: Response time
+    metrics:
+    - description: The average processing time of each SQL statement
+      key: sql_all_rt
+      name: query_time
+      unit: us
+    name: Response time
+  - description: Average number of transactions processed per second
+    metrics:
+    - description: Transactions per second
+      key: tps
+      name: trans_count
+      unit: times/s
+    name: TPS
+  - description: Average processing time per transaction on the server side
+    metrics:
+    - description: Average processing time per transaction
+      key: tps_rt
+      name: trans_time
+      unit: us
+    name: Transaction response time
+  - description: Number of sessions
+    metrics:
+    - description: Number of current sessions
+      key: active_session
+      name: active_session
+      unit: ''
+    name: Number of sessions
+  - description: Waiting for event average time
+    metrics:
+    - description: Average time spent waiting for events
+      key: wait_event_rt
+      name: wait_time
+      unit: us
+    name: Waiting for event time
+OBCLUSTER_OVERVIEW:
+- description: OBCluster Overview
+  name: OBCluster Overview
+  metricGroups:
+  - description: Average number of SQL statements processed per second
+    metrics:
+    - description: Number of SQL statements processed per second
+      key: sql_all_count
+      name: query_count
+      unit: times/s
+    name: QPS
+  - description: Response time
+    metrics:
+    - description: The average processing time of each SQL statement
+      key: sql_all_rt
+      name: query_time
+      unit: us
+    name: Response time
+  - description: Average number of transactions processed per second
+    metrics:
+    - description: Transactions per second
+      key: tps
+      name: trans_count
+      unit: times/s
+    name: TPS
+  - description: Average processing time per transaction on the server side
+    metrics:
+    - description: Average processing time per transaction
+      key: tps_rt
+      name: trans_time
+      unit: us
+    name: Transaction response time
+  - description: Number of sessions
+    metrics:
+    - description: Number of current sessions
+      key: active_session
+      name: active_session
+      unit: ''
+    name: Number of sessions
+  - description: Waiting for event average time
+    metrics:
+    - description: Average time spent waiting for events
+      key: wait_event_rt
+      name: wait_time
+      unit: us
+    name: Waiting for event time
+OBPROXY:
+- name: OBProxy service monitoring
+  description: Obproxy service monitoring
+  metricGroups:
+  - name: TPS
+    description: transaction count per second
+    metrics:
+    - name: total
+      description: transaction count per second
+      key: transaction_total
+      unit:
+  - name: QPS
+    description: request count per second
+    metrics:
+    - name: commit
+      description: commit request count per second
+      key: request_total_commit
+      unit:
+    - name: delete
+      description: delete request count per second
+      key: request_total_delete
+      unit:
+    - name: insert
+      description: insert request count per second
+      key: request_total_insert
+      unit:
+    - name: large
+      description: large request count per second
+      key: request_total_large
+      unit:
+    - name: select
+      description: select request count per second
+      key: request_total_select
+      unit:
+    - name: sequence
+      description: sequence request count per second
+      key: request_total_sequence
+      unit:
+    - name: slow
+      description: slow request count per second
+      key: request_total_slow
+      unit:
+    - name: update
+      description: update request count per second
+      key: request_total_update
+      unit:
+    - name: others
+      description: other request count per second
+      key: request_total_others
+      unit:
+  - name: Client connections
+    description: connections from client
+    metrics:
+    - name: client
+      description: connections from client
+      key: current_session_client
+      unit:
+    - name: client_connections_usage
+      description: OBProxy client connections / client_max_connections
+      key: client_connection_used_percent
+      unit: "%"
+  - name: Server connections
+    description: Server connections
+    metrics:
+    - name: server
+      description: connections to server
+      key: current_session_server
+      unit:
+    - name: server_connection_usage
+      description: OBProxy server connections / max_connections
+      key: server_connection_used_percent
+      unit: "%"
+  - name: SQL response time
+    description: average response time per SQL query
+    metrics:
+    - name: commit
+      description: average elapsed time for commit request
+      key: request_cost_commit
+      unit: "μs"
+    - name: delete
+      description: average elapsed time for delete request
+      key: request_cost_delete
+      unit: "μs"
+    - name: insert
+      description: average elapsed time for insert request
+      key: request_cost_insert
+      unit: "μs"
+    - name: prepare_send_request
+      description: average elapsed time for request to prepare for send
+      key: request_cost_prepare_send_request_time
+      unit: "μs"
+    - name: server_process_request
+      description: average elapsed time for server to process request
+      key: request_cost_server_process_request_time
+      unit: "μs"
+    - name: select
+      description: average elapsed time for select request
+      key: request_cost_select
+      unit: "μs"
+    - name: sequence
+      description: average elapsed time for sequence request
+      key: request_cost_sequence
+      unit: "μs"
+    - name: update
+      description: average elapsed time for update request
+      key: request_cost_update
+      unit: "μs"
+    - name: others
+      description: average elapsed time for other request
+      key: request_cost_others
+      unit: "μs"
+  - name: OBProxy memory
+    description: OBProxy memory
+    metrics:
+    - name: obproxy_rss
+      description: Resident Memory Size for OBProxy Process
+      key: obproxy_rss_memory
+      unit: "byte"
+    - name: obproxy_rss_usage
+      description: OBProxy process resident memory / proxy_mem_limited
+      key: obproxy_rss_mem_used_percent
+      unit: "%"
+  - name: OBProxy CPU usage
+    description: OBProxy CPU usage
+    metrics:
+    - name: obproxy_cpu_usage
+      description: CPU Utilization of OBProxy Process
+      key: obproxy_process_cpu_percent
+      unit: "%"
+  - name: OBProxy fd
+    description: OBProxy fd
+    metrics:
+    - name: obproxy_fd
+      description: The open fd count of OBProxy
+      key: obproxy_fd_count
+      unit:
+  - name: OBProxy Threads
+    description: OBProxy Threads
+    metrics:
+    - name: obproxy_threads
+      description: OBProxy Threads
+      key: obproxy_thread_count
+      unit:
+  - name: Log error
+    description: Log error count
+    metrics:
+    - name: obproxy
+      description: Count of the OBProxy ERROR log
+      key: obproxy_log_error_count
+      unit:
+  - name: Route table queries
+    description: route table queries per second (disabled by default, set obproxy parameter enable_extra_prometheus_metric=true to enable)
+    metrics:
+    - name: hit
+      description: hit count per second
+      key: entry_total_hit
+      unit:
+    - name: partition
+      description: partition entry query count per second
+      key: entry_total_partition
+      unit:
+    - name: route
+      description: route entry query count per second
+      key: entry_total_route
+      unit:
+    - name: success
+      description: success query count per second
+      key: entry_total_success
+      unit:
+    - name: table
+      description: table entry query count per second
+      key: entry_total_table
+      unit:
+  - name: Net bytes
+    description: average bytes per request or response (disabled by default, set obproxy parameter enable_extra_prometheus_metric=true to enable)
+    metrics:
+    - name: client_request
+      description: average bytes per client request
+      key: request_byte_client_request
+      unit: "byte"
+    - name: client_response
+      description: Client Response Volume in Bytes
+      key: request_byte_client_response
+      unit: "byte"
+    - name: server_request
+      description: average bytes per server request
+      key: request_byte_server_request
+      unit: "byte"
+    - name: server_response
+      description: average bytes per server response
+      key: request_byte_server_response
+      unit: "byte"
