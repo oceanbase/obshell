@@ -195,10 +195,6 @@ func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 		return errors.Occur(errors.ErrObTenantZoneListEmpty)
 	}
 
-	if param.Mode != constant.MYSQL_MODE {
-		return errors.Occur(errors.ErrObTenantModeNotSupported, param.Mode)
-	}
-
 	if err = zone.CheckZoneParams(param.ZoneList); err != nil {
 		return
 	}
@@ -371,14 +367,14 @@ func buildCreateTenantDagTemplate(param *param.CreateTenantParam) (*task.Templat
 	templateBuilder := task.NewTemplateBuilder(fmt.Sprintf(DAG_CREATE_TENANT, *param.Name)).
 		SetMaintenance(task.TenantMaintenance(*param.Name)).
 		AddNode(newCreateTenantNode(param))
-	if param.TimeZone != "" {
-		templateBuilder.AddNode(newSetTenantTimeZoneNode(param.TimeZone))
-	}
 	if len(param.Parameters) != 0 {
 		templateBuilder.AddNode(newSetTenantParameterNode(param.Parameters))
 	}
 	templateBuilder.AddNode(newModifyTenantWhitelistNode(*param.Whitelist))
 
+	if param.TimeZone != "" {
+		templateBuilder.AddNode(newSetTenantTimeZoneNode(param.TimeZone))
+	}
 	// Delete the read-only variables
 	variables := make(map[string]interface{})
 	for k := range param.Variables {
@@ -616,7 +612,8 @@ func (t *SetTenantTimeZoneTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_TIME_ZONE, &t.timeZone); err != nil {
 		return err
 	}
-	err := tenantService.SetTenantVariables(t.tenantName, map[string]interface{}{constant.VARIABLE_TIME_ZONE: t.timeZone})
+	t.ExecuteLogf("Set tenant '%s' time zone to '%s'", t.tenantName, t.timeZone)
+	err := tenantService.SetTenantVariablesWithTenant(t.tenantName, "", map[string]interface{}{constant.VARIABLE_TIME_ZONE: t.timeZone})
 	if err != nil {
 		t.ExecuteWarnLogf("Set tenant %s time zone failed: %s", t.tenantName, err.Error())
 	}

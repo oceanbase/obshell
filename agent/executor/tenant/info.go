@@ -28,7 +28,7 @@ import (
 )
 
 func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, error) {
-	if mode != "" && mode != constant.MYSQL_MODE && mode != constant.ORACAL_MODE {
+	if mode != "" && mode != constant.MYSQL_MODE && mode != constant.ORACLE_MODE {
 		return nil, errors.Occur(errors.ErrObTenantModeNotSupported, mode)
 	}
 	tenants, err := tenantService.GetTenantsOverViewByMode(mode)
@@ -38,8 +38,12 @@ func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, error) {
 	tenantOverviews := make([]oceanbase.TenantOverview, 0)
 	for i := range tenants {
 		connectionStr := bo.ObproxyAndConnectionString{
-			Type:             constant.OB_CONNECTION_TYPE_DIRECT,
-			ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenants[i].TenantName),
+			Type: constant.OB_CONNECTION_TYPE_DIRECT,
+		}
+		if tenants[i].Mode == constant.ORACLE_MODE {
+			connectionStr.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uSYS@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenants[i].TenantName)
+		} else {
+			connectionStr.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenants[i].TenantName)
 		}
 		connectionStrs := make([]bo.ObproxyAndConnectionString, 0)
 		connectionStrs = append(connectionStrs, connectionStr)
@@ -108,7 +112,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	connectionStr := bo.ObproxyAndConnectionString{
 		Type: constant.OB_CONNECTION_TYPE_DIRECT,
 		// the host may be not in the tcp_invited_nodes
-		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName),
+	}
+	if tenant.Mode == constant.ORACLE_MODE {
+		connectionStr.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uSYS@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName)
+	} else {
+		connectionStr.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uroot@%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, tenantName)
 	}
 
 	tenantInfo := &bo.TenantInfo{

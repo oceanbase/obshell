@@ -19,6 +19,7 @@ package constant
 const (
 	// source config default value
 	DB_USERNAME          = "root"
+	DB_ORACLE_USERNAME   = "SYS"
 	DB_PROXYSYS_USERNAME = "root@proxysys"
 	LOCAL_IP             = "127.0.0.1"
 	LOCAL_IP_V6          = "::1"

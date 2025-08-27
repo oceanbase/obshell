@@ -46,7 +46,7 @@ func (t *ModifyPwdTask) Execute() error {
 	if err := t.setRootPWD(); err != nil {
 		return err
 	}
-	dsConfig := config.NewObDataSourceConfig().SetPassword(t.password)
+	dsConfig := config.NewObMysqlDataSourceConfig().SetPassword(t.password)
 	if err := loadOceanbaseInstanceWithoutDBName(t); err != nil {
 		t.ExecuteLog("Failed to connect to OceanBase. Try connecting with a new password.")
 		if err := oceanbase.LoadOceanbaseInstance(dsConfig); err != nil {

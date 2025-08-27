@@ -500,14 +500,14 @@ func listTenantBackupTasksHandler(c *gin.Context) {
 		return
 	}
 
-	var p param.QueryBackupTasksParam
-	if err := c.BindQuery(&p); err != nil {
+	p := &param.QueryBackupTasksParam{}
+	if err := c.BindQuery(p); err != nil {
 		common.SendResponse(c, nil, err)
 		return
 	}
 	p.Format()
 
-	tasks, err := ob.GetTenantBackupTasks(tenant.TenantName, &p)
+	tasks, err := ob.GetTenantBackupTasks(tenant.TenantName, p)
 	common.SendResponse(c, tasks, err)
 }
 

@@ -82,6 +82,8 @@ func (t *ModifyTenantWhitelistTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_WHITELIST, &t.whitelist); err != nil {
 		return err
 	}
+
+	t.ExecuteLogf("modify tenant '%s' whitelist to '%s'", t.tenantName, t.whitelist)
 	if err := tenantService.ModifyTenantWhitelist(t.tenantName, mergeWhitelist(t.whitelist)); err != nil {
 		return errors.Wrap(err, "modify tenant whitelist failed")
 	}

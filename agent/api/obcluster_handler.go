@@ -697,6 +697,7 @@ func obAgentsHandler(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
+// @Param tenant_mode query string false "tenant mode"
 // @Success 200 object http.OcsAgentResponse{data=[]bo.CharsetInfo}
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
@@ -706,7 +707,8 @@ func getObclusterCharsets(c *gin.Context) {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
-	charsets, err := ob.GetObclusterCharsets()
+	tenantMode := c.Query("tenant_mode")
+	charsets, err := ob.GetObclusterCharsets(strings.ToUpper(tenantMode))
 	common.SendResponse(c, charsets, err)
 }
 

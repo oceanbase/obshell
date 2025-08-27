@@ -58,21 +58,46 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, getTenantVariable)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
+
+	// for user
 	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(createUserHandler))
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(dropUserHandler))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(listUsers))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USERS, tenantHandlerWrapper(listUsers))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_OBJECTS, tenantHandlerWrapper(listObjects))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(getUser))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_DB_PRIVILEGE, tenantHandlerWrapper(modifyDbPrivilege))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_DB_PRIVILEGES, tenantHandlerWrapper(modifyDbPrivilege))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_GLOBAL_PRIVILEGE, tenantHandlerWrapper(modifyGlobalPrivilege))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_GLOBAL_PRIVILEGES, tenantHandlerWrapper(modifyGlobalPrivilege))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(modifyUserObjectPrivilege, constant.ORACLE_MODE))
+	tenant.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(patchUserObjectPrivilege, constant.ORACLE_MODE))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(revokeUserObjectPrivilege, constant.ORACLE_MODE))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(grantUserObjectPrivilege, constant.ORACLE_MODE))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_ROLES, tenantHandlerWrapper(modifyUserRoles, constant.ORACLE_MODE))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_PASSWORD, tenantHandlerWrapper(changePassword))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(lockUser))
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_STATS, tenantHandlerWrapper(getUserStats))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_STATS, getUserStats)
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(unlockUser))
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(createDatabase))
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(listDatabases))
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(updateDatabase))
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(getDatabase))
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(deleteDatabase))
+
+	// for database
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(createDatabase, constant.MYSQL_MODE))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES, tenantHandlerWrapper(listDatabases, constant.MYSQL_MODE))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(updateDatabase, constant.MYSQL_MODE))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(getDatabase, constant.MYSQL_MODE))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_DATABASES+constant.URI_PATH_PARAM_DATABASE, tenantHandlerWrapper(deleteDatabase, constant.MYSQL_MODE))
+
+	// for role
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE, tenantHandlerWrapper(createRole, constant.ORACLE_MODE))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE, tenantHandlerWrapper(dropRole, constant.ORACLE_MODE))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE, tenantHandlerWrapper(getRole, constant.ORACLE_MODE))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_ROLES, tenantHandlerWrapper(listRoles, constant.ORACLE_MODE))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_ROLES, tenantHandlerWrapper(modifyRole, constant.ORACLE_MODE))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_GLOBAL_PRIVILEGES, tenantHandlerWrapper(modifyRoleGlobalPrivilege, constant.ORACLE_MODE))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(modifyRoleObjectPrivilege, constant.ORACLE_MODE))
+	tenant.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(patchRoleObjectPrivilege, constant.ORACLE_MODE))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(revokeRoleObjectPrivilege, constant.ORACLE_MODE))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(grantRoleObjectPrivilege, constant.ORACLE_MODE))
 
 	// for compaction
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION, getTenantCompactionHandler)
@@ -730,13 +755,21 @@ func dropUserHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user [GET]
 func listUsers(c *gin.Context) {
-	var param param.TenantRootPasswordParam
-	if err := c.BindJSON(&param); err != nil {
+	var p param.TenantRootPasswordParam
+	if err := c.BindJSON(&p); err != nil {
 		common.SendResponse(c, nil, err)
 		return
 	}
+
+	queryParam := &param.ListUsersQueryParam{}
+	if err := c.BindQuery(queryParam); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	queryParam.Format()
+
 	name := c.Param(constant.URI_PARAM_NAME)
-	obusers, err := tenant.ListUsers(name, param.RootPassword)
+	obusers, err := tenant.ListUsers(name, p.RootPassword, queryParam)
 	common.SendResponse(c, obusers, err)
 }
 
@@ -794,6 +827,171 @@ func modifyDbPrivilege(c *gin.Context) {
 	common.SendResponse(c, nil, err)
 }
 
+// @ID modifyUserObjectPrivilege
+// @Summary modify user object privilege
+// @Description modify user object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Param body body param.ModifyObjectPrivilegeParam true "modify user object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/object-privileges [PUT]
+func modifyUserObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	modifyUserObjectPrivilegeParam := param.ModifyObjectPrivilegeParam{}
+	err := c.BindJSON(&modifyUserObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.ModifyUserObjectPrivilege(name, user, &modifyUserObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID patchUserObjectPrivilege
+// @Summary patch user object privilege
+// @Description patch user object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Param body body param.ModifyObjectPrivilegeParam true "patch user object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/object-privileges [PATCH]
+func patchUserObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	patchUserObjectPrivilegeParam := param.ModifyObjectPrivilegeParam{}
+	err := c.BindJSON(&patchUserObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.PatchUserObjectPrivilege(name, user, &patchUserObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID listObjects
+// @Summary list objects
+// @Description list objects from a tenant
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param body body param.TenantRootPasswordParam true "tenant root password"
+// @Success 200 object http.OcsAgentResponse{data=[]bo.DbaObjectBo}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/objects [GET]
+func listObjects(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	objects, err := tenant.ListObjects(name, param.RootPassword)
+	common.SendResponse(c, objects, err)
+}
+
+// @ID revokeUserObjectPrivilege
+// @Summary revoke user object privilege
+// @Description revoke user object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Param body body param.RevokeObjectPrivilegeParam true "revoke user object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/object-privileges [DELETE]
+func revokeUserObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	revokeUserObjectPrivilegeParam := param.RevokeObjectPrivilegeParam{}
+	err := c.BindJSON(&revokeUserObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.RevokeUserObjectPrivilege(name, user, &revokeUserObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID grantUserObjectPrivilege
+// @Summary grant user object privilege
+// @Description grant user object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Param body body param.GrantObjectPrivilegeParam true "grant user object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/object-privileges [POST]
+func grantUserObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	grantUserObjectPrivilegeParam := param.GrantObjectPrivilegeParam{}
+	err := c.BindJSON(&grantUserObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.GrantUserObjectPrivilege(name, user, &grantUserObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID modifyUserRoles
+// @Summary modify user role
+// @Description modify user role
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param user path string true "user name"
+// @Param body body param.ModifyRoleParam true "modify user role param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/user/{user}/roles [PUT]
+func modifyUserRoles(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	user := c.Param(constant.URI_PARAM_USER)
+	modifyUserRoleParam := param.ModifyRoleParam{}
+	err := c.BindJSON(&modifyUserRoleParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.ModifyUserRole(name, user, &modifyUserRoleParam)
+	common.SendResponse(c, nil, err)
+}
+
 // @ID getStats
 // @Summary get user stats
 // @Description get user stats
@@ -809,14 +1007,18 @@ func modifyDbPrivilege(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/stats [GET]
 func getUserStats(c *gin.Context) {
+	name, err := tenantCheckWithName(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	var param param.TenantRootPasswordParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
-	userStats, err := tenant.GetUserStats(name, user, param.RootPassword)
+	userStats, err := tenant.GetUserStats(name, user)
 	common.SendResponse(c, userStats, err)
 }
 
@@ -1083,6 +1285,277 @@ func createDatabase(c *gin.Context) {
 		return
 	}
 	err = tenant.CreateDatabase(name, &createDatabaseParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID listRoles
+// @Summary list roles
+// @Description list roles only for oracle tenant
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Success 200 object http.OcsAgentResponse{data=[]bo.ObRole}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/roles [GET]
+func listRoles(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	roles, err := tenant.ListRoles(name, param.RootPassword)
+	common.SendResponse(c, roles, err)
+}
+
+// @ID getRole
+// @Summary get role
+// @Description get role
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Success 200 object http.OcsAgentResponse{data=bo.ObRole}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role} [GET]
+func getRole(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	var param param.TenantRootPasswordParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	roleInfo, err := tenant.GetRole(name, role, param.RootPassword)
+	common.SendResponse(c, roleInfo, err)
+}
+
+// @ID dropRole
+// @Summary drop role
+// @Description drop role
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.DropRoleParam true "drop role param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role} [DELETE]
+func dropRole(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	var param param.DropRoleParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err := tenant.DropRole(name, role, &param)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID createRole
+// @Summary create role
+// @Description create role
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param body body param.CreateRoleParam true "create role param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role [POST]
+func createRole(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	createRoleParam := param.CreateRoleParam{}
+	err := c.BindJSON(&createRoleParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.CreateRole(name, &createRoleParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID modifyRole
+// @Summary modify role
+// @Description modify role
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.ModifyRoleParam true "modify role param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/roles [PUT]
+func modifyRole(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	modifyRoleParam := param.ModifyRoleParam{}
+	err := c.BindJSON(&modifyRoleParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.ModifyRole(name, role, &modifyRoleParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID modifyRoleGlobalPrivilege
+// @Summary modify role global privilege
+// @Description modify role global privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.ModifyRoleGlobalPrivilegeParam true "modify role global privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/global-privileges [PUT]
+func modifyRoleGlobalPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	modifyRoleGlobalPrivilegeParam := param.ModifyRoleGlobalPrivilegeParam{}
+	err := c.BindJSON(&modifyRoleGlobalPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.ModifyRoleGlobalPrivilege(name, role, &modifyRoleGlobalPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID modifyRoleObjectPrivilege
+// @Summary modify role object privilege
+// @Description modify role object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.ModifyObjectPrivilegeParam true "modify role object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/object-privileges [PUT]
+func modifyRoleObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	modifyRoleObjectPrivilegeParam := param.ModifyObjectPrivilegeParam{}
+	err := c.BindJSON(&modifyRoleObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.ModifyRoleObjectPrivilege(name, role, &modifyRoleObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID patchRoleObjectPrivilege
+// @Summary patch role object privilege
+// @Description patch role object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.ModifyObjectPrivilegeParam true "patch role object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/object-privileges [PATCH]
+func patchRoleObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	modifyRoleObjectPrivilegeParam := param.ModifyObjectPrivilegeParam{}
+	err := c.BindJSON(&modifyRoleObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.PatchRoleObjectPrivilege(name, role, &modifyRoleObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID revokeRoleObjectPrivilege
+// @Summary revoke role object privilege
+// @Description revoke role object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.RevokeObjectPrivilegeParam true "revoke role object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/object-privileges [DELETE]
+func revokeRoleObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	revokeRoleObjectPrivilegeParam := param.RevokeObjectPrivilegeParam{}
+	err := c.BindJSON(&revokeRoleObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.RevokeRoleObjectPrivilege(name, role, &revokeRoleObjectPrivilegeParam)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID grantRoleObjectPrivilege
+// @Summary grant role object privilege
+// @Description grant role object privilege
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param role path string true "role name"
+// @Param body body param.GrantObjectPrivilegeParam true "grant role object privilege param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/role/{role}/object-privileges [POST]
+func grantRoleObjectPrivilege(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	role := c.Param(constant.URI_PARAM_ROLE)
+	grantRoleObjectPrivilegeParam := param.GrantObjectPrivilegeParam{}
+	err := c.BindJSON(&grantRoleObjectPrivilegeParam)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.GrantRoleObjectPrivilege(name, role, &grantRoleObjectPrivilegeParam)
 	common.SendResponse(c, nil, err)
 }
 

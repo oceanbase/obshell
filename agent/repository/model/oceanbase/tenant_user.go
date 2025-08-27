@@ -16,9 +16,22 @@
 
 package oceanbase
 
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
+)
+
 type SessionStats struct {
 	Count int64  `gorm:"column:COUNT"`
 	State string `gorm:"column:STATE"`
+}
+
+type ObUser interface {
+	ToUserBo() bo.ObUser
+	Name() string
 }
 
 type MysqlUser struct {
@@ -70,4 +83,82 @@ type MysqlUser struct {
 	CreateDatabaseLinkPriv string `gorm:"column:create_database_link_priv"`
 	CreateRolePriv         string `gorm:"column:create_role_priv"`
 	DropRolePriv           string `gorm:"column:drop_role_priv"`
+}
+
+func (t MysqlUser) ToUserBo() bo.ObUser {
+	return bo.ObUser{
+		UserName: t.User,
+		IsLocked: strings.HasPrefix(strings.ToUpper(t.AccountLocked), "Y"),
+	}
+}
+
+func (t MysqlUser) Name() string {
+	return t.User
+}
+
+type OracleUser struct {
+	UserName      string `gorm:"column:USERNAME"`
+	Created       string `gorm:"column:CREATED"`
+	AccountStatus string `gorm:"column:ACCOUNT_STATUS"` // OPEN means unlocked, else means locked
+}
+
+func (t OracleUser) ToUserBo() bo.ObUser {
+	createTime, err := time.Parse("02-Jan-06", t.Created)
+	if err != nil {
+		createTime = time.Time{}
+	}
+	return bo.ObUser{
+		UserName:   t.UserName,
+		IsLocked:   t.AccountStatus != "OPEN",
+		CreateTime: createTime,
+	}
+}
+
+func (t OracleUser) Name() string {
+	return t.UserName
+}
+
+type Role struct {
+	Role string `gorm:"column:ROLE"`
+}
+
+func (t Role) ToRoleBo() bo.ObRole {
+	return bo.ObRole{
+		Role: t.Role,
+	}
+}
+
+type RolePrivilege struct {
+	Grantee     string `gorm:"column:GRANTEE"`
+	GrantedRole string `gorm:"column:GRANTED_ROLE"`
+	AdminOption string `gorm:"column:ADMIN_OPTION"`
+	DefaultRole string `gorm:"column:DEFAULT_ROLE"`
+}
+
+type GlobalPrivilege struct {
+	Grantee   string `gorm:"column:GRANTEE"`
+	Privilege string `gorm:"column:PRIVILEGE"`
+}
+
+type ObjectPrivilege struct {
+	Grantee   string `gorm:"column:GRANTEE"`
+	Owner     string `gorm:"column:OWNER"`
+	Type      string `gorm:"column:OBJECT_TYPE"`
+	Name      string `gorm:"column:OBJECT_NAME"`
+	Privilege string `gorm:"column:PRIVILEGE"`
+}
+
+type DbaObject struct {
+	Type  string `gorm:"column:OBJECT_TYPE"`
+	Name  string `gorm:"column:OBJECT_NAME"`
+	Owner string `gorm:"column:OWNER"`
+}
+
+func (t DbaObject) ToDbObjectBo() bo.DbaObjectBo {
+	return bo.DbaObjectBo{
+		Type:     t.Type,
+		Name:     t.Name,
+		Owner:    t.Owner,
+		FullName: fmt.Sprintf("%s.%s", t.Owner, t.Name),
+	}
 }

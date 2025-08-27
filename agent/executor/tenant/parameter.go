@@ -103,6 +103,6 @@ func (t *SetTenantParamterTask) Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "Get tenant name failed")
 	}
-	t.ExecuteLogf("Set tenant parameter for tenant '%s'", tenantName)
+	t.ExecuteLogf("Set tenant parameter '%v' for tenant '%s'", t.parameters, tenantName)
 	return tenantService.SetTenantParameters(tenantName, t.parameters)
 }

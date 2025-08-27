@@ -36,9 +36,6 @@ func DropTenant(param *param.DropTenantParam) (*task.DagDetailDTO, error) {
 	if tenant == nil {
 		return nil, nil
 	}
-	if tenant.Status != NORMAL_TENANT {
-		return nil, errors.Occur(errors.ErrObTenantStatusNotNormal, param.Name, tenant.Status)
-	}
 
 	// Create 'Drop Tenant' dag instance.
 	template := buildDropTenantDagTemplate(param)

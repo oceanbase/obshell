@@ -16,6 +16,8 @@
 
 package param
 
+import "strings"
+
 type ModifyUserGlobalPrivilegeParam struct {
 	TenantRootPasswordParam
 	GlobalPrivileges []string `json:"global_privileges"`
@@ -29,4 +31,30 @@ type ModifyUserDbPrivilegeParam struct {
 type ChangeUserPasswordParam struct {
 	TenantRootPasswordParam
 	NewPassword string `json:"new_password"`
+}
+
+type ListUsersQueryParam struct {
+	Sort string `form:"sort"`
+	CustomPageQuery
+	SortBy    string `form:"-"`
+	SortOrder string `form:"-"`
+}
+
+func (p *ListUsersQueryParam) Format() {
+	if p.Sort != "" {
+		parts := strings.Split(p.Sort, ",")
+		if len(parts) == 2 {
+			p.SortBy = parts[0]
+			p.SortOrder = parts[1]
+		} else {
+			p.SortBy = parts[0]
+		}
+	}
+	if p.SortBy != "create_time" {
+		p.SortBy = "create_time"
+	}
+	if p.SortOrder != "asc" && p.SortOrder != "desc" {
+		p.SortOrder = "asc"
+	}
+	p.CustomPageQuery.Format()
 }

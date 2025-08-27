@@ -86,6 +86,7 @@ func newCreateCmd() *cobra.Command {
 	createCmd.VarsPs(&opts.pwd, []string{FLAG_ROOT_PASSWORD}, "", "Tenant password.", false)
 	createCmd.VarsPs(&opts.importScript, []string{FLAG_IMPORT_SCRIPT}, false, "Import the observer's scripts for tenant.", false)
 	createCmd.VarsPs(&opts.verbose, []string{clientconst.FLAG_VERBOSE, clientconst.FLAG_VERBOSE_SH}, false, "Activate verbose output", false)
+	createCmd.VarsPs(&opts.mode, []string{FLAG_MODE}, "", "Tenant mode. Default to 'MYSQL'.", false)
 
 	createCmd.SetFlagErrorFunc(func(cmd *cobra.Command, err error) error {
 		return replica.FlagErrorFunc(cmd, err, &opts.ZoneParamsFlags)

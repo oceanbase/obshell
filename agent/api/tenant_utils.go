@@ -70,7 +70,7 @@ func getBodyFromContext(c *gin.Context) (map[string]interface{}, error) {
 	return bodyInterface, nil
 }
 
-func tenantHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
+func tenantHandlerWrapper(f func(*gin.Context), mode ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// prev check
 		err := checkClusterAgent()
@@ -83,22 +83,31 @@ func tenantHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
 			return
 		}
-		if exist, err := tenantService.IsTenantExist(tenantName); err != nil {
-			common.SendResponse(c, nil, errors.Wrapf(err, "check tenant '%s' exist failed", tenantName))
+
+		tenantInfo, err := tenantService.GetTenantByName(tenantName)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Wrapf(err, "get tenant '%s' info failed", tenantName))
 			return
-		} else if !exist {
+		}
+		if tenantInfo == nil {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNotExist, tenantName))
 			return
 		}
-
-		isLocked, err := tenantService.IsTenantLocked(tenantName)
-		if err != nil {
-			common.SendResponse(c, nil, errors.Wrapf(err, "check tenant '%s' lock status failed", tenantName))
-			return
-		}
-		if isLocked {
+		if tenantInfo.Locked == "YES" {
 			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantLocked, tenantName))
 			return
+		}
+
+		if len(mode) > 0 {
+			if tenantInfo.Mode != mode[0] {
+				if tenantInfo.Mode == constant.MYSQL_MODE {
+					common.SendResponse(c, nil, errors.Occur(errors.ErrObUserMySQLModeNotSupport, mode[0]))
+					return
+				} else if tenantInfo.Mode == constant.ORACLE_MODE {
+					common.SendResponse(c, nil, errors.Occur(errors.ErrObUserOracleModeNotSupport, mode[0]))
+					return
+				}
+			}
 		}
 
 		if tenantName == constant.TENANT_SYS {

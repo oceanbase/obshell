@@ -607,7 +607,7 @@ func (t *ScalingAgentUpdateBinaryTask) Execute() error {
 	for i := 0; i < SYNC_FROM_OB_RETRY_TIME; i++ {
 		if _, err := oceanbase.GetOcsInstance(); err != nil {
 			t.ExecuteLogf("get ocs instance failed: %s, try to connect", err.Error())
-			if err := oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetPassword(password).SetTryTimes(10).SetSkipPwdCheck(true)); err != nil {
+			if err := oceanbase.LoadOceanbaseInstance(config.NewObMysqlDataSourceConfig().SetPassword(password).SetTryTimes(10).SetSkipPwdCheck(true)); err != nil {
 				time.Sleep(1 * time.Second)
 				continue
 			}
@@ -655,7 +655,7 @@ func (t *SyncFromOB) Execute() error {
 	for i := 0; i < SYNC_FROM_OB_RETRY_TIME; i++ {
 		if _, err := oceanbase.GetOcsInstance(); err != nil {
 			t.ExecuteLogf("get ocs instance failed: %s, try to connect", err.Error())
-			if err := oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetPassword(password).SetTryTimes(10).SetSkipPwdCheck(true)); err != nil {
+			if err := oceanbase.LoadOceanbaseInstance(config.NewObMysqlDataSourceConfig().SetPassword(password).SetTryTimes(10).SetSkipPwdCheck(true)); err != nil {
 				time.Sleep(1 * time.Second)
 				continue
 			}

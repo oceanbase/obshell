@@ -16,6 +16,8 @@
 
 package bo
 
+import "time"
+
 type ObproxyAndConnectionString struct {
 	Type             string `json:"type"`
 	ObProxyAddress   string `json:"obproxy_address"`
@@ -25,11 +27,6 @@ type ObproxyAndConnectionString struct {
 
 type DbPrivilege struct {
 	DbName     string   `json:"db_name"`
-	Privileges []string `json:"privileges"`
-}
-
-type ObjectPrivilege struct {
-	Object     string   `json:"object"`
 	Privileges []string `json:"privileges"`
 }
 
@@ -45,10 +42,35 @@ type ObUserStats struct {
 type ObUser struct {
 	UserName            string                       `json:"user_name"`
 	IsLocked            bool                         `json:"is_locked"`
+	CreateTime          time.Time                    `json:"create_time"`
 	ConnectionStrings   []ObproxyAndConnectionString `json:"connection_strings"`
 	AccessibleDatabases []string                     `json:"accessible_databases"`
 	GrantedRoles        []string                     `json:"granted_roles"`
 	GlobalPrivileges    []string                     `json:"global_privileges"`
 	DbPrivileges        []DbPrivilege                `json:"db_privileges"`
-	ObjectPrivileges    []ObjectPrivilege            `json:"object_privileges"`
+	ObjectPrivileges    []ObjectPrivilege            `json:"object_privileges"` // only for oracle tenant
+}
+
+type ObRole struct {
+	Role        string    `json:"role"`
+	GmtCreate   time.Time `json:"gmt_create"`
+	GmtModified time.Time `json:"gmt_modified"`
+
+	GlobalPrivileges []string          `json:"global_privileges"`
+	ObjectPrivileges []ObjectPrivilege `json:"object_privileges"`
+	GrantedRoles     []string          `json:"granted_roles"`
+	UserGrantees     []string          `json:"user_grantees"`
+	RoleGrantees     []string          `json:"role_grantees"`
+}
+
+type DbaObjectBo struct {
+	Type     string `json:"type"`
+	Name     string `json:"name"`
+	Owner    string `json:"owner"`
+	FullName string `json:"full_name"`
+}
+
+type ObjectPrivilege struct {
+	Object     DbaObjectBo `json:"object"`
+	Privileges []string    `json:"privileges"`
 }

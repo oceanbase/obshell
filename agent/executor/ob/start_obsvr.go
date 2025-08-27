@@ -113,7 +113,7 @@ func (t *StartObserverTask) Execute() error {
 }
 
 func (t *StartObserverTask) observerHealthCheck(mysqlPort int) error {
-	dsConfig := config.NewObDataSourceConfig().
+	dsConfig := config.NewObMysqlDataSourceConfig().
 		SetTryTimes(1).
 		SetDBName("").
 		SetTimeout(10).

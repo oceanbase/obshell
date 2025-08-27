@@ -38,7 +38,7 @@ func newUpdateAllAgentsTask() *UpdateAllAgentsTask {
 func (t *UpdateAllAgentsTask) Execute() error {
 	if _, err := oceanbase.GetOcsInstance(); err != nil {
 		t.ExecuteLog("connect to oceanbase")
-		if err := oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetPassword(meta.OCEANBASE_PWD)); err != nil {
+		if err := oceanbase.LoadOceanbaseInstance(config.NewObMysqlDataSourceConfig().SetPassword(meta.OCEANBASE_PWD)); err != nil {
 			return err
 		}
 	}

@@ -104,7 +104,7 @@ func loadOceanbaseInstanceWithoutDBName(t task.ExecutableTask) error {
 			return nil
 		}
 	}
-	return oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetDBName(""))
+	return oceanbase.LoadOceanbaseInstance(config.NewObMysqlDataSourceConfig().SetDBName(""))
 }
 
 func (t *ClusterBoostrapTask) execBootstrap(cmd string) error {

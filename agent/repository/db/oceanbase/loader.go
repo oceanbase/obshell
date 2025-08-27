@@ -17,6 +17,7 @@
 package oceanbase
 
 import (
+	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -27,7 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
-	"github.com/oceanbase/obshell/agent/repository/driver"
+	"github.com/oceanbase/obshell/agent/repository/driver/mysql"
 )
 
 var (
@@ -113,12 +114,20 @@ func loadOceanbaseUntilSucc() {
 	}
 }
 
-// LoadTmpInstanceWithTenant creates a db instance according to the configuration.
-func LoadGormWithTenant(tenant string, password string) (*gorm.DB, error) {
-	dsConfig := config.NewObDataSourceConfig().
+func LoadGormWithTenant(tenant string, password string, mode string) (*gorm.DB, error) {
+	return loadGormWithTenant(tenant, strings.ToUpper(mode) == constant.ORACLE_MODE, password)
+}
+
+func loadGormWithTenant(tenant string, isOracle bool, password string) (*gorm.DB, error) {
+	var dsConfig *config.ObDataSourceConfig
+	if !isOracle {
+		dsConfig = config.NewObMysqlDataSourceConfig().SetUsername("root@" + tenant)
+	} else {
+		dsConfig = config.NewObOracleDataSourceConfig().SetUsername("SYS@" + tenant)
+	}
+	dsConfig.
 		SetPassword(password).
 		SetParseTime(true).
-		SetUsername("root@" + tenant).
 		SetDBName("").
 		SetTryTimes(10)
 	dsConfig.SetLoggerLevel(logger.Silent)
@@ -131,28 +140,6 @@ func LoadGormWithTenant(tenant string, password string) (*gorm.DB, error) {
 	}
 	log.Infof("load oceanbase instance for tenant '%s' successfully", tenant)
 	return db, nil
-}
-
-// LoadTmpInstanceWithTenant creates a db instance according to the configuration.
-func LoadGormWithTenantForTest(tenant string, password string) error {
-	dsConfig := config.NewObDataSourceConfig().
-		SetPassword(password).
-		SetParseTime(true).
-		SetUsername("root@" + tenant).
-		SetDBName("").
-		SetTryTimes(10)
-	dsConfig.SetLoggerLevel(logger.Silent)
-	if err := fillConfigPort(dsConfig); err != nil {
-		return errors.Wrap(err, "get port failed")
-	}
-	db, err := createGormDbByConfig(dsConfig)
-	defer func() {
-		if db != nil {
-			oceanbaseDB, _ := db.DB()
-			oceanbaseDB.Close()
-		}
-	}()
-	return err
 }
 
 // LoadOceanbaseInstance creates a db instance according to the configuration.
@@ -270,7 +257,7 @@ func fillConfigPort(dsConfig *config.ObDataSourceConfig) error {
 
 // getDataSourceConfig will generate default connection configuration.
 func getDataSourceConfig() *config.ObDataSourceConfig {
-	dsConfig := config.NewObDataSourceConfig().SetPassword(meta.GetOceanbasePwd()).SetParseTime(true)
+	dsConfig := config.NewObMysqlDataSourceConfig().SetPassword(meta.GetOceanbasePwd()).SetParseTime(true)
 	return dsConfig
 }
 
@@ -290,7 +277,7 @@ func LoadOceanbaseInstanceForTest(dsConfig *config.ObDataSourceConfig) error {
 
 // loadObGormForTest will try to connect to the db according to the configuration and close it.
 func loadObGormForTest(dsConfig *config.ObDataSourceConfig) error {
-	db, err := gorm.Open(driver.Open(dsConfig.GetDSN()))
+	db, err := gorm.Open(mysql.Open(dsConfig.GetDSN()))
 	defer func() {
 		if db != nil {
 			oceanbaseDB, _ := db.DB()
@@ -305,7 +292,7 @@ func loadObGormForTest(dsConfig *config.ObDataSourceConfig) error {
 }
 
 func LoadTempOceanbaseInstance(dsConfig *config.ObDataSourceConfig) (*gorm.DB, error) {
-	db, err := gorm.Open(driver.Open(dsConfig.GetDSN()))
+	db, err := gorm.Open(mysql.Open(dsConfig.GetDSN()))
 	if err != nil {
 		log.WithError(err).Error("open ob db failed")
 		return nil, err

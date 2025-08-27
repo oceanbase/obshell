@@ -120,6 +120,7 @@ type CreateUserParam struct {
 	TenantRootPasswordParam
 	GlobalPrivileges []string           `json:"global_privileges"`
 	DbPrivileges     []DbPrivilegeParam `json:"db_privileges"`
+	Roles            []string           `json:"roles"`
 	HostName         string             `json:"host_name"`
 }
 

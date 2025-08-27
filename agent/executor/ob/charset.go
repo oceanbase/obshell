@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
@@ -25,8 +26,12 @@ func supportMysql(charset *oceanbase.ObCharset) bool {
 	return charset.Charset != "utf16"
 }
 
+func supportOracle(charset *oceanbase.ObCharset) bool {
+	return charset.Charset != "utf16" && charset.Charset != "utf16le" && charset.Charset != "binary"
+}
+
 // GetObclusterCharsets retrieves all character sets supporting MYSQL and their collations from the OceanBase cluster.
-func GetObclusterCharsets() ([]bo.CharsetInfo, error) {
+func GetObclusterCharsets(tenantMode string) ([]bo.CharsetInfo, error) {
 	charsets, err := obclusterService.GetAllCharsets()
 	if err != nil {
 		return nil, err
@@ -37,7 +42,10 @@ func GetObclusterCharsets() ([]bo.CharsetInfo, error) {
 	}
 	charsetInfoMap := make(map[string]*bo.CharsetInfo, len(charsets))
 	for i := range charsets {
-		if !supportMysql(&charsets[i]) {
+		if tenantMode == constant.MYSQL_MODE && !supportMysql(&charsets[i]) {
+			continue
+		}
+		if tenantMode == constant.ORACLE_MODE && !supportOracle(&charsets[i]) {
 			continue
 		}
 		charsetInfoMap[charsets[i].Charset] = &bo.CharsetInfo{

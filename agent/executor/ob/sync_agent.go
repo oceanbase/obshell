@@ -67,7 +67,7 @@ func (t *AgentSyncTask) Execute() error {
 	}
 
 	t.ExecuteLog("try to connect")
-	if err := oceanbase.LoadOceanbaseInstance(config.NewObDataSourceConfig().SetPassword(t.password)); err != nil {
+	if err := oceanbase.LoadOceanbaseInstance(config.NewObMysqlDataSourceConfig().SetPassword(t.password)); err != nil {
 		t.ExecuteLog("connect failed. try to get connection from pool")
 		if _, err := oceanbase.GetOcsInstance(); err != nil {
 			return err

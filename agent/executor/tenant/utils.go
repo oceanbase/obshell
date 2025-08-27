@@ -24,12 +24,13 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
-	"github.com/oceanbase/obshell/agent/service/tenant"
+	obmodel "github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 
 	"gorm.io/gorm"
 )
 
 func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckResult, error) {
+	// TODO: password must be not nil...
 	isPasswordExists := password == nil
 	isConnectable := false
 	db, err := GetConnectionWithPassword(tenantName, password)
@@ -47,40 +48,67 @@ func TenantPreCheck(tenantName string, password *string) (*bo.ObTenantPreCheckRe
 	}, nil
 }
 
-func GetConnection(tenantName string) (*gorm.DB, error) {
-	if tenantName == constant.TENANT_SYS {
-		return oceanbase.GetInstance()
-	} else {
-		passwordMap := tenant.GetPasswordMap()
-		password, _ := passwordMap.Get(tenantName)
-		return oceanbase.LoadGormWithTenant(tenantName, password)
-	}
-}
-
 func IsEmptyRootPassword(tenantName string) (bool, error) {
 	if tenantName == constant.TENANT_SYS {
 		return meta.OCEANBASE_PWD == "", nil
 	} else {
-		if err := oceanbase.LoadGormWithTenantForTest(tenantName, ""); err != nil {
+		mode, err := tenantService.GetTenantMode(tenantName)
+		if err != nil {
+			return true, err
+		}
+		if db, err := oceanbase.LoadGormWithTenant(tenantName, "", mode); err != nil {
 			if strings.Contains(err.Error(), "Access denied") {
 				return false, nil
 			} else {
 				return true, err
+			}
+		} else if db != nil {
+			oceanbaseDB, _ := db.DB()
+			if oceanbaseDB != nil {
+				oceanbaseDB.Close()
 			}
 		}
 	}
 	return true, nil
 }
 
-func GetConnectionWithPassword(tenantName string, password *string) (*gorm.DB, error) {
+func GetConnectionWithPasswordAndMode(tenantName string, password *string, mode string) (*gorm.DB, error) {
 	if tenantName == constant.TENANT_SYS {
 		return oceanbase.GetInstance()
 	} else {
 		if password != nil {
-			return oceanbase.LoadGormWithTenant(tenantName, *password)
+			return oceanbase.LoadGormWithTenant(tenantName, *password, mode)
 		} else {
-			return oceanbase.LoadGormWithTenant(tenantName, "")
+			return oceanbase.LoadGormWithTenant(tenantName, "", mode)
 		}
+	}
+}
+
+func GetConnectionWithPassword(tenantName string, password *string) (*gorm.DB, error) {
+	if tenantName == constant.TENANT_SYS {
+		return oceanbase.GetInstance()
+	} else {
+		// get the tenant type
+		mode, err := tenantService.GetTenantMode(tenantName)
+		if err != nil {
+			return nil, errors.Wrapf(err, "get tenant '%s' mode failed", tenantName)
+		}
+		if password != nil {
+			return oceanbase.LoadGormWithTenant(tenantName, *password, mode)
+		} else {
+			return oceanbase.LoadGormWithTenant(tenantName, "", mode)
+		}
+	}
+}
+
+func GetConnectionWithTenantInfo(tenantInfo *obmodel.DbaObTenant, password *string) (*gorm.DB, error) {
+	if tenantInfo.TenantName == constant.TENANT_SYS {
+		return oceanbase.GetInstance()
+	}
+	if password != nil {
+		return oceanbase.LoadGormWithTenant(tenantInfo.TenantName, *password, tenantInfo.Mode)
+	} else {
+		return oceanbase.LoadGormWithTenant(tenantInfo.TenantName, "", tenantInfo.Mode)
 	}
 }
 

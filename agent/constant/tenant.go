@@ -20,7 +20,7 @@ import "time"
 
 const (
 	MYSQL_MODE  = "MYSQL"
-	ORACAL_MODE = "ORACLE"
+	ORACLE_MODE = "ORACLE"
 
 	TENANT_STATUS_NORMAL = "NORMAL"
 

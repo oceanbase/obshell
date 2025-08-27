@@ -24,11 +24,25 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 )
 
-func NewObDataSourceConfig() *ObDataSourceConfig {
+func NewObMysqlDataSourceConfig() *ObDataSourceConfig {
 	return &ObDataSourceConfig{
 		username:        constant.DB_USERNAME,
 		ip:              meta.OCS_AGENT.GetLocalIp(),
 		dBName:          constant.DB_OCS,
+		charset:         constant.DB_DEFAULT_CHARSET,
+		parseTime:       true,
+		location:        constant.DB_DEFAULT_LOCATION,
+		maxIdleConns:    constant.DB_DEFAULT_MAX_IDLE_CONNS,
+		maxOpenConns:    constant.DB_DEFAULT_MAX_OPEN_CONNS,
+		connMaxLifetime: constant.DB_DEFAULT_CONN_MAX_LIFETIME,
+	}
+}
+
+func NewObOracleDataSourceConfig() *ObDataSourceConfig {
+	return &ObDataSourceConfig{
+		username:        constant.DB_ORACLE_USERNAME,
+		ip:              meta.OCS_AGENT.GetLocalIp(),
+		isOracle:        true,
 		charset:         constant.DB_DEFAULT_CHARSET,
 		parseTime:       true,
 		location:        constant.DB_DEFAULT_LOCATION,
@@ -62,6 +76,7 @@ type ObDataSourceConfig struct {
 	parseTime         bool
 	location          string
 	interpolateParams bool
+	isOracle          bool
 
 	// pool config
 	maxIdleConns    int
@@ -152,6 +167,11 @@ func (config *ObDataSourceConfig) SetConnMaxLifetime(connMaxLifetime int) *ObDat
 	return config
 }
 
+func (config *ObDataSourceConfig) SetIsOracle(isOracle bool) *ObDataSourceConfig {
+	config.isOracle = isOracle
+	return config
+}
+
 func (config *ObDataSourceConfig) GetUsername() string {
 	return config.username
 }
@@ -193,6 +213,10 @@ func (config *ObDataSourceConfig) GetConnMaxLifetime() int {
 
 func (config *ObDataSourceConfig) GetSkipPwdCheck() bool {
 	return config.skipPwdCheck
+}
+
+func (config *ObDataSourceConfig) IsOracle() bool {
+	return config.isOracle
 }
 
 func (config *ObDataSourceConfig) GetDSN() string {

@@ -204,7 +204,7 @@ func checkAndFillObproxyVersion(param *param.AddObproxyParam, options *addObprox
 
 func checkProxyroPasswordAndGetClusterName(rsListStr string, password string) (clusterName string, err error) {
 	rsList := strings.Split(rsListStr, ";")
-	dsConfig := config.NewObDataSourceConfig().
+	dsConfig := config.NewObMysqlDataSourceConfig().
 		SetTryTimes(1).
 		SetDBName(constant.DB_OCEANBASE).
 		SetTimeout(10).

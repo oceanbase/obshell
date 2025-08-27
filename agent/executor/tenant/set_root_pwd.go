@@ -27,6 +27,7 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/agent/service/tenant"
+	"github.com/oceanbase/obshell/agent/service/user"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -86,7 +87,14 @@ func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.
 	}
 
 	if meta.OCS_AGENT.Equal(executeAgent) {
-		if err := tenantService.ModifyTenantRootPassword(tenantName, pwdParam.OldPwd, *pwdParam.NewPwd); err != nil {
+		db, err := GetConnectionWithPassword(tenantName, &pwdParam.OldPwd)
+		if err != nil {
+			return err, false
+		}
+		defer CloseDbConnection(db)
+		userService := user.GetUserService(db)
+
+		if err := userService.ModifyTenantRootPassword(*pwdParam.NewPwd); err != nil {
 			return err, false
 		}
 	} else {

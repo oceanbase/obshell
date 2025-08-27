@@ -85,7 +85,7 @@ func VerifyAuth(pwd string, ts string, curTs int64, verifyType VerifyType) error
 }
 
 func VerifyOceanbasePassword(password string) error {
-	if err := oceanbase.LoadOceanbaseInstanceForTest(config.NewObDataSourceConfig().SetPassword(password)); err != nil {
+	if err := oceanbase.LoadOceanbaseInstanceForTest(config.NewObMysqlDataSourceConfig().SetPassword(password)); err != nil {
 		if strings.Contains(err.Error(), "Access denied") {
 			return errors.Occur(errors.ErrSecurityAuthenticationIncorrectOceanbasePassword)
 		}

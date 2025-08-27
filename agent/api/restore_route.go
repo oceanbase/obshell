@@ -200,13 +200,13 @@ func listRestoreTasksHandler(c *gin.Context) {
 		return
 	}
 
-	var p param.QueryRestoreTasksParam
-	if err := c.BindQuery(&p); err != nil {
+	p := &param.QueryRestoreTasksParam{}
+	if err := c.BindQuery(p); err != nil {
 		common.SendResponse(c, nil, err)
 		return
 	}
 	p.Format()
-	tasks, err := ob.GetAllRestoreTasks(&p)
+	tasks, err := ob.GetAllRestoreTasks(p)
 	common.SendResponse(c, tasks, err)
 }
 

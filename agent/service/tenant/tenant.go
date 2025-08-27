@@ -317,25 +317,15 @@ func (t *TenantService) ModifyTenantWhitelist(tenantName string, whitelist strin
 	return db.Exec(fmt.Sprintf(SQL_ALTER_TENANT_WHITELIST, tenantName, whitelist)).Error
 }
 
-func (t *TenantService) ModifyTenantRootPassword(tenantName string, oldPwd string, newPwd string) error {
-	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, oldPwd)
+func (t *TenantService) SetTenantVariablesWithTenant(tenantName, password string, variables map[string]interface{}) error {
+	if len(variables) == 0 {
+		return nil
+	}
+	mode, err := t.GetTenantMode(tenantName)
 	if err != nil {
 		return err
 	}
-	defer func() {
-		db, _ := tempDb.DB()
-		if db != nil {
-			db.Close()
-		}
-	}()
-	if err = tempDb.Exec(fmt.Sprintf(SQL_ALTER_TENANT_ROOT_PASSWORD, transfer(newPwd))).Error; err != nil {
-		return errors.Wrap(err, "modify tenant root password failed")
-	}
-	return nil
-}
-
-func (t *TenantService) SetTenantVariablesWithTenant(tenantName, password string, variables map[string]interface{}) error {
-	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, password)
+	tempDb, err := oceanbasedb.LoadGormWithTenant(tenantName, password, mode)
 	if err != nil {
 		return err
 	}
@@ -348,7 +338,11 @@ func (t *TenantService) SetTenantVariablesWithTenant(tenantName, password string
 	variablesSql := ""
 	for k, v := range variables {
 		if val, ok := v.(string); ok {
-			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= `%v`", val)
+			if mode == constant.ORACLE_MODE {
+				variablesSql += fmt.Sprintf(", GLOBAL "+k+"= '%v'", val)
+			} else {
+				variablesSql += fmt.Sprintf(", GLOBAL "+k+"= `%v`", val)
+			}
 		} else {
 			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= %v", v)
 		}
@@ -803,4 +797,14 @@ func (s *TenantService) GetTenantDataDiskUsageMap() (dataDiskUsageMap map[int]in
 		dataDiskUsageMap[result.TenantId] = result.DataDiskInUse
 	}
 	return dataDiskUsageMap, nil
+}
+
+func (s *TenantService) GetTenantMode(tenantName string) (string, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return "", err
+	}
+	var mode string
+	err = oceanbaseDb.Table(DBA_OB_TENANTS).Select("COMPATIBILITY_MODE").Where("tenant_name = ?", tenantName).Scan(&mode).Error
+	return mode, err
 }

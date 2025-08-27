@@ -125,7 +125,7 @@ var (
 	ErrObTenantEmptyVariable                     = NewErrorCode("OB.Tenant.Variable.Empty", illegalArgument, "err.ob.tenant.variable.empty")                                              // "tenant variable name or value is empty"
 	ErrObTenantEmptyParameter                    = NewErrorCode("OB.Tenant.Parameter.Empty", illegalArgument, "err.ob.tenant.parameter.empty")                                            // "tenant parameter name or value is empty"
 	ErrObTenantParameterNameEmpty                = NewErrorCode("OB.Tenant.Parameter.Name.Empty", illegalArgument, "err.ob.tenant.parameter.name.empty")                                  // "tenant parameter name is empty"
-	ErrObTenantParameterNotExist                 = NewErrorCode("OB.Tenant.Parameter.NotExist", notFound, "err.ob.tenant.parameter.not.exist")                                            // "tenant parameter '%s' is not exist"
+	ErrObTenantParameterNotExist                 = NewErrorCode("OB.Tenant.Parameter.NotExist", badRequest, "err.ob.tenant.parameter.not.exist")                                          // "tenant parameter '%s' is not exist"
 	ErrObTenantVariableInvalid                   = NewErrorCode("OB.Tenant.Variable.Invalid", illegalArgument, "err.ob.tenant.variable.invalid")                                          // "tenant variable '%s' is invalid: %s"
 	ErrObTenantVariableNotExist                  = NewErrorCode("OB.Tenant.Variable.NotExist", notFound, "err.ob.tenant.variable.not.exist")                                              // "tenant variable '%s' is not exist"
 	ErrObTenantVariableNameEmpty                 = NewErrorCode("OB.Tenant.Variable.Name.Empty", illegalArgument, "err.ob.tenant.variable.name.empty")                                    // "tenant variable name is empty"
@@ -277,7 +277,14 @@ var (
 
 	// Ob.User
 	ErrObUserPrivilegeNotSupported = NewErrorCode("OB.User.Privilege.NotSupported", illegalArgument, "err.ob.user.privilege.not.supported")
+	ErrObUserMySQLModeNotSupport   = NewErrorCode("OB.User.MysqlModeNotSupport", illegalArgument, "err.ob.user.mysql.mode.not.support")
 	ErrObUserNameEmpty             = NewErrorCode("OB.User.Name.Empty", illegalArgument, "err.ob.user.name.empty")
+	ErrObUserNameInvalid           = NewErrorCode("OB.User.Name.Invalid", illegalArgument, "err.ob.user.name.invalid")
+	ErrObUserOracleModeNotSupport  = NewErrorCode("OB.User.OracleModeNotSupport", illegalArgument, "err.ob.user.oracle.mode.not.support")
+	ErrObUserNotExists             = NewErrorCode("OB.User.NotExists", notFound, "err.ob.user.not.exist")
+	ErrObRoleNotExists             = NewErrorCode("OB.Role.NotExists", notFound, "err.ob.role.not.exist")
+	ErrObUserPasswordError         = NewErrorCode("OB.User.Password.Error", illegalArgument, "err.ob.user.password.error")
+	ErrObRoleNameInvalid           = NewErrorCode("OB.Role.Name.Invalid", illegalArgument, "err.ob.role.name.invalid")
 
 	// Request
 	ErrRequestFileMissing                        = NewErrorCode("Request.File.Missing", unexpected, "err.request.file.missing")
@@ -372,7 +379,8 @@ var (
 
 	ErrGormNoRowAffected = NewErrorCode("Gorm.NoRowAffected", unexpected, "err.gorm.no.row.affected") // "%s: no row affected"
 
-	ErrMysqlError = NewErrorCode("MySQL.Error", badRequest, "err.mysql.error") // "%s"
+	ErrMysqlError  = NewErrorCode("MySQL.Error", badRequest, "err.mysql.error")   // "%s"
+	ErrOracleError = NewErrorCode("Oracle.Error", badRequest, "err.oracle.error") // "%s"
 
 	ErrPackageNameMismatch   = NewErrorCode("Package.NameMismatch", illegalArgument, "err.package.name.mismatch")     // "rpm package name %s not match %s"
 	ErrPackageReleaseInvalid = NewErrorCode("Package.ReleaseInvalid", illegalArgument, "err.package.release.invalid") // "rpm package release %s not match format"

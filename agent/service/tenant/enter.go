@@ -59,7 +59,7 @@ const (
 const (
 	// tenant sql
 	SQL_CREATE_TENANT_BASIC = "CREATE TENANT `%s` resource_pool_list=(%s)"
-	SQL_DROP_TENANT         = "DROP TENANT IF EXISTS `%s` PURGE"
+	SQL_DROP_TENANT         = "DROP TENANT IF EXISTS `%s` FORCE"
 	SQL_RECYCLE_TENANT      = "set session recyclebin=1; DROP TENANT `%s`"
 	SQL_RENAME_TENANT       = "ALTER TENANT `%s` RENAME GLOBAL_NAME TO `%s`"
 	SQL_FLASHBACK_TENANT    = "FLASHBACK TENANT `%s` TO BEFORE DROP RENAME TO `%s`"
