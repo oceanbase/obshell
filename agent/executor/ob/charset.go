@@ -22,12 +22,21 @@ import (
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
 
+var oracleSupportCharset = []string{
+	"utf8mb4", "gbk", "gb18030", "latin1", "gb18030_2022", "ascii", "tis620", "hkscs", "hkscs31",
+}
+
 func supportMysql(charset *oceanbase.ObCharset) bool {
 	return charset.Charset != "utf16"
 }
 
 func supportOracle(charset *oceanbase.ObCharset) bool {
-	return charset.Charset != "utf16" && charset.Charset != "utf16le" && charset.Charset != "binary"
+	for _, c := range oracleSupportCharset {
+		if charset.Charset == c {
+			return true
+		}
+	}
+	return false
 }
 
 // GetObclusterCharsets retrieves all character sets supporting MYSQL and their collations from the OceanBase cluster.
