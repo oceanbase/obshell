@@ -24,15 +24,18 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	configservice "github.com/oceanbase/obshell/agent/service/config"
 	"github.com/oceanbase/obshell/model/external"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
-	PROMETHEUS                       = "prometheus"
-	ALERTMANAGER                     = "alertmanager"
-	PROMETHEUS_CONFIG_KEY            = "prometheus_config"
-	ALERTMANAGER_CONFIG_KEY          = "alertmanager_config"
-	PROMETHEUS_READINESS_CHECK_URL   = "/-/ready"
-	ALERTMANAGER_READINESS_CHECK_URL = "/-/ready"
+	PROMETHEUS                            = "prometheus"
+	ALERTMANAGER                          = "alertmanager"
+	PROMETHEUS_CONFIG_KEY                 = "prometheus_config"
+	ALERTMANAGER_CONFIG_KEY               = "alertmanager_config"
+	PROMETHEUS_READINESS_CHECK_URL        = "/-/ready"
+	ALERTMANAGER_READINESS_CHECK_URL      = "/-/ready"
+	PROMETHEUS_READINESS_CHECK_RESPONSE   = "Prometheus Server is Ready.\n"
+	ALERTMANAGER_READINESS_CHECK_RESPONSE = "OK"
 )
 
 func SavePrometheusConfig(ctx context.Context, cfg *external.PrometheusConfig) error {
@@ -40,7 +43,8 @@ func SavePrometheusConfig(ctx context.Context, cfg *external.PrometheusConfig) e
 	resp, err := client.R().SetContext(ctx).Get(PROMETHEUS_READINESS_CHECK_URL)
 	if err != nil {
 		return errors.WrapRetain(errors.ErrExternalComponentNotReady, err, PROMETHEUS)
-	} else if resp.StatusCode() != http.StatusOK {
+	} else if resp.StatusCode() != http.StatusOK || string(resp.Body()) != PROMETHEUS_READINESS_CHECK_RESPONSE {
+		log.Warnf("check prometheus readiness failed response %s", string(resp.Body()))
 		return errors.Occur(errors.ErrExternalComponentNotReady, PROMETHEUS)
 	}
 	data, err := json.Marshal(cfg)
@@ -67,7 +71,8 @@ func GetPrometheusConfig(ctx context.Context) (*external.PrometheusConfig, error
 	resp, err := client.R().SetContext(ctx).Get(PROMETHEUS_READINESS_CHECK_URL)
 	if err != nil {
 		return nil, errors.WrapRetain(errors.ErrExternalComponentNotReady, err, PROMETHEUS)
-	} else if resp.StatusCode() != http.StatusOK {
+	} else if resp.StatusCode() != http.StatusOK || string(resp.Body()) != PROMETHEUS_READINESS_CHECK_RESPONSE {
+		log.Warnf("check prometheus readiness failed response %s", string(resp.Body()))
 		return nil, errors.Occur(errors.ErrExternalComponentNotReady, PROMETHEUS)
 	}
 	return &cfg, nil
@@ -78,7 +83,8 @@ func SaveAlertmanagerConfig(ctx context.Context, cfg *external.AlertmanagerConfi
 	resp, err := client.R().SetContext(ctx).Get(ALERTMANAGER_READINESS_CHECK_URL)
 	if err != nil {
 		return errors.WrapRetain(errors.ErrExternalComponentNotReady, err, ALERTMANAGER)
-	} else if resp.StatusCode() != http.StatusOK {
+	} else if resp.StatusCode() != http.StatusOK || string(resp.Body()) != ALERTMANAGER_READINESS_CHECK_RESPONSE {
+		log.Warnf("check alertmanager readiness failed response %s", string(resp.Body()))
 		return errors.Occur(errors.ErrExternalComponentNotReady, ALERTMANAGER)
 	}
 	data, err := json.Marshal(cfg)
@@ -105,7 +111,8 @@ func GetAlertmanagerConfig(ctx context.Context) (*external.AlertmanagerConfig, e
 	resp, err := client.R().SetContext(ctx).Get(ALERTMANAGER_READINESS_CHECK_URL)
 	if err != nil {
 		return nil, errors.WrapRetain(errors.ErrExternalComponentNotReady, err, ALERTMANAGER)
-	} else if resp.StatusCode() != http.StatusOK {
+	} else if resp.StatusCode() != http.StatusOK || string(resp.Body()) != ALERTMANAGER_READINESS_CHECK_RESPONSE {
+		log.Warnf("check alertmanager readiness failed response %s", string(resp.Body()))
 		return nil, errors.Occur(errors.ErrExternalComponentNotReady, ALERTMANAGER)
 	}
 	return &cfg, nil
