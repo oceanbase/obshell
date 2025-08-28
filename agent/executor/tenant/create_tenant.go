@@ -109,11 +109,16 @@ func checkAndLoadScenario(param *param.CreateTenantParam, scenario string) error
 		return nil
 	}
 
-	scenarios := getAllSupportedScenarios()
-	if len(scenarios) == 0 {
+	supportedScenarios := GetAllSupportedScenarios(constant.LANGUAGE_EN_US)
+	if len(supportedScenarios) == 0 {
 		return errors.Occur(errors.ErrObTenantSetScenarioNotSupported)
 	}
-	if !utils.ContainsString(scenarios, strings.ToLower(scenario)) {
+
+	scenarios := make([]string, 0)
+	for _, supportedScenario := range supportedScenarios {
+		scenarios = append(scenarios, supportedScenario.Scenario)
+	}
+	if !utils.ContainsString(scenarios, strings.ToUpper(scenario)) {
 		return errors.Occur(errors.ErrObTenantScenarioNotSupported, scenario, strings.Join(scenarios, ", "))
 	}
 

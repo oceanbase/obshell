@@ -126,6 +126,7 @@ const (
 	URI_STATS             = "/stats"
 	URI_PRECHECK          = "/precheck"
 	URI_ROLES             = "/roles"
+	URI_SUPPORT_TEMPLATES = "/support-templates"
 
 	URI_UNIT_CONFIG_LIMIT = "/unit-config-limit"
 

@@ -59,6 +59,8 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
 
+	tenant.GET(constant.URI_SUPPORT_TEMPLATES, listParameterTemplatesHandler)
+
 	// for user
 	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_USER, tenantHandlerWrapper(createUserHandler))
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER, tenantHandlerWrapper(dropUserHandler))
@@ -1708,4 +1710,22 @@ func getTenantTopSlowSqlRankHandler(c *gin.Context) {
 
 	res, err := tenantService.GetSlowSqlRank(param.Top, param.StartTime.UnixMicro(), param.EndTime.UnixMicro())
 	common.SendResponse(c, res, err)
+}
+
+// @ID listSupportParameterTemplates
+// @Summary list support parameter templates
+// @Description list support parameter templates
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=[]tenant.ParameterTemplate}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/support-templates [get]
+func listParameterTemplatesHandler(c *gin.Context) {
+	language := c.GetHeader(constant.ACCEPT_LANGUAGE)
+	templates := tenant.GetAllSupportedScenarios(language)
+	common.SendResponse(c, templates, nil)
 }
