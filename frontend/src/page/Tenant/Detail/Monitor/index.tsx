@@ -1,164 +1,138 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
-import { connect, history } from 'umi';
-import React, { useEffect } from 'react';
-import { Card, Col, Row } from '@oceanbase/design';
-import { flatten } from 'lodash';
-import { PageContainer } from '@oceanbase/ui';
-import { findBy } from '@oceanbase/util';
+import MonitorDetail from '@/component/MonitorDetail';
+import { useDeepCompareEffect } from 'ahooks';
+import React, { useState } from 'react';
+
+import { useSelector } from 'umi';
+import { MonitorScope } from '@/page/Monitor';
+import { isEmpty } from 'lodash';
+import { getSystemExternalPrometheus } from '@/service/obshell/system';
 import { useRequest } from 'ahooks';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import ContentWithReload from '@/component/ContentWithReload';
-import MonitorSearch from '@/component/MonitorSearch';
-import MetricChart from '@/component/MetricChart';
+import { PageContainer } from '@ant-design/pro-components';
+import useReload from '@/hook/useReload';
+import MonitorConfig from '@/page/Monitor/MonitorConfig';
+import { getFilterData } from '@/component/MonitorDetail/helper';
 
-interface MonitorProps {
-  location: {
-    query: {
-      tab: string;
-    };
-  };
-
-  match: {
-    params: {
-      tenantId: number;
-    };
-  };
-
-  dispatch: any;
-  loading: boolean;
-  metricGroupList: API.MetricClass[];
+export interface MonitorProps {
+  monitorScope?: MonitorScope; // 租户详情页的 monitorScope 为空, 一级菜单性能监控页面 monitorScope 为 tenant
 }
 
-const Monitor: React.FC<MonitorProps> = ({
-  location,
-  match: {
-    params: { tenantId },
-  },
-  dispatch,
-  loading,
-  metricGroupList,
-}) => {
-  const { query } = location || {};
-  const { tab } = query || {};
-  const activeKey = tab || metricGroupList[0]?.key;
-  const queryData = MonitorSearch.getQueryData(query);
+const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
+  const [reloading, reload] = useReload(false);
+  const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
+  const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
+    {
+      key: 'tenant_name',
+      value: tenantData?.tenant_name || '',
+    },
+  ]);
 
-  const { data, loading: listTenantsLoading } = useRequest(ObTenantController.listTenants, {
-    defaultParams: [{}],
+  const {
+    data: prometheusData,
+    loading: prometheusLoading,
+    refresh: refreshPrometheusData,
+  } = useRequest(getSystemExternalPrometheus, {
+    ready: !monitorScope, // 如果租户详情页，则请求 Prometheus 数据
+    defaultParams: [{ HIDE_ERROR_MESSAGE: true }],
   });
 
-  const tenants = data?.data?.contents || [];
+  // 如果是一级菜单性能监控页面，则不请求 Prometheus 数据
+  const isPrometheusConfigured =
+    !!monitorScope ||
+    (prometheusData?.successful && prometheusData.status === 200 && !!prometheusData?.data);
 
-  const tenantData = tenants.find(item => item.obTenantId === Number(tenantId)) || {};
+  // 当 tenantData.tenant_name 变化时，更新 filterLabel（针对租户详情页）
+  useDeepCompareEffect(() => {
+    if (tenantData?.tenant_name && !monitorScope) {
+      setFilterLabel([
+        {
+          key: 'tenant_name',
+          value: tenantData.tenant_name,
+        },
+      ]);
+    }
+  }, [tenantData?.tenant_name, monitorScope]);
+  const [filterData, setFilterData] = useState<Monitor.FilterDataType>({
+    tenantList: monitorScope ? [] : undefined,
+    date: '',
+  });
 
-  const zoneNameList = tenantData.zones?.map(item => item.name);
-  const serverList = flatten(
-    tenantData.zones?.map(
-      item =>
-        // 根据租户的 unit 分布获取 server 列表
-        item.units?.map(unit => ({
-          // 需要 ip 加 port 来区分 server
-          ip: `${unit.serverIp}:${unit.serverPort}`,
-          zoneName: unit.zoneName,
-          // TODO: 待接口扩展 hostId 信息
-          hostId: unit.hostId,
-        })) || []
-    ) || []
-  );
-
-  useEffect(() => {
-    getMetricGroupList();
-  }, []);
-
-  function getMetricGroupList() {
-    dispatch({
-      type: 'monitor/getMetricGroupListData',
-      payload: {
-        scope: 'TENANT',
-      },
+  useDeepCompareEffect(() => {
+    if (isEmpty(clusterData.tenants)) return;
+    const tenantOptions = clusterData?.tenants?.map((item: API.DbaObTenant) => {
+      return {
+        label: item.tenant_name!,
+        value: item.tenant_name!,
+      };
     });
-  }
 
-  return (
+    setFilterData({
+      tenantList: monitorScope ? tenantOptions : undefined,
+      ...getFilterData(clusterData as API.ClusterInfo),
+    });
+
+    if (!monitorScope) return;
+
+    // 当存在 monitorScope 且 tenantList 有数据时，默认选中第一条租户
+    if (tenantOptions && tenantOptions.length > 0) {
+      const firstTenant = tenantOptions[0];
+      setFilterLabel([
+        {
+          key: 'tenant_name',
+          value: firstTenant.value,
+        },
+      ]);
+    }
+  }, [clusterData, monitorScope]);
+
+  const renderMonitor = () => {
+    return !isPrometheusConfigured && !prometheusLoading ? (
+      <MonitorConfig
+        targetPath={`/tenant/${tenantData?.tenant_name}/monitor`}
+        onConfigSuccess={() => {
+          // 配置成功后刷新 Prometheus 状态
+          refreshPrometheusData();
+        }}
+      />
+    ) : (
+      <MonitorDetail
+        filterData={filterData}
+        setFilterData={setFilterData}
+        filterLabel={filterLabel}
+        setFilterLabel={setFilterLabel}
+        queryScope="OBTENANT"
+        groupLabels={['tenant_name']}
+        useFor="tenant"
+      />
+    );
+  };
+
+  return monitorScope ? (
+    renderMonitor()
+  ) : (
     <PageContainer
+      loading={reloading || prometheusLoading}
       ghost={true}
-      loading={listTenantsLoading}
       header={{
         title: (
           <ContentWithReload
             content={formatMessage({
-              id: 'ocp-express.Detail.Monitor.PerformanceMonitoring',
+              id: 'OBShell.Detail.Monitor.PerformanceMonitoring',
               defaultMessage: '性能监控',
             })}
-            spin={loading}
+            spin={reloading || prometheusLoading}
             onClick={() => {
-              getMetricGroupList();
+              reload();
             }}
           />
         ),
       }}
     >
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <MonitorSearch location={location} zoneNameList={zoneNameList} serverList={serverList} />
-        </Col>
-        <Col span={24}>
-          <Card
-            className="card-without-padding card-with-grid-card"
-            bordered={false}
-            activeTabKey={activeKey}
-            onTabChange={key => {
-              history.push({
-                pathname: `/tenant/${tenantId}/monitor`,
-                query: {
-                  ...query,
-                  tab: key,
-                },
-              });
-            }}
-            tabList={metricGroupList.map(item => ({
-              key: item.key,
-              tab: item.name,
-            }))}
-          >
-            <MetricChart
-              metricGroupList={findBy(metricGroupList, 'key', activeKey).metricGroups || []}
-              app="OB"
-              tenantName={tenantData.name}
-              clusterName={tenantData.clusterName}
-              obClusterId={tenantData.obClusterId}
-              zoneNameList={zoneNameList}
-              serverList={serverList}
-              {...queryData}
-            />
-          </Card>
-        </Col>
-      </Row>
+      {renderMonitor()}
     </PageContainer>
   );
 };
 
-function mapStateToProps({ loading, monitor }) {
-  return {
-    loading: loading.effects['monitor/getMetricGroupListData'],
-    metricGroupList: (monitor.metricGroupListData && monitor.metricGroupListData.contents) || [],
-  };
-}
-
-export default connect(mapStateToProps)(Monitor);
+export default Monitor;

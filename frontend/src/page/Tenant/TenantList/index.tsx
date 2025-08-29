@@ -33,7 +33,7 @@ import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
 import { getBooleanLabel, getTableData } from '@/util';
 import { formatTime } from '@/util/datetime';
-import { useRequest } from 'ahooks';
+import { useInterval, useRequest } from 'ahooks';
 import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import tracert from '@/util/tracert';
 import RenderConnectionString from '@/component/RenderConnectionString';
@@ -81,7 +81,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
           defaultMessage: '确定要锁定租户 {recordName} 吗？',
         },
 
-        { recordName: record.name },
+        { recordName: record.name }
       ),
 
       content: formatMessage({
@@ -120,7 +120,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
           defaultMessage: '确定要解锁租户 {recordName} 吗？',
         },
 
-        { recordName: record.name },
+        { recordName: record.name }
       ),
 
       content: formatMessage({
@@ -162,6 +162,19 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
         if (record.status === 'CREATING') {
           return record.name;
         }
+        if (record.status === 'RESTORE') {
+          return (
+            <Tooltip
+              title={formatMessage({
+                id: 'OBShell.Tenant.TenantList.TheTenantIsBeingRestored',
+                defaultMessage: '租户正在恢复中，不支持查看详情',
+              })}
+              placement="topRight"
+            >
+              {record.name}
+            </Tooltip>
+          );
+        }
         const pathname = `/tenant/${record.obTenantId}`;
         return (
           <a
@@ -186,7 +199,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
       }),
 
       dataIndex: 'mode',
-      filters: TENANT_MODE_LIST.map((item) => ({
+      filters: TENANT_MODE_LIST.map(item => ({
         text: item.label,
         value: item.value,
       })),
@@ -239,7 +252,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
         defaultMessage: '状态',
       }),
       dataIndex: 'status',
-      filters: TENANT_STATUS_LIST.map((item) => ({
+      filters: TENANT_STATUS_LIST.map(item => ({
         text: item.label,
         value: item.value,
       })),
@@ -368,7 +381,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
                     data-aspm-desc="租户列表-锁定租户"
                     data-aspm-param={``}
                     data-aspm-expo
-                    type="link"
+                    type="default"
                     disabled={record.name === 'sys'}
                     onClick={() => handleLock(record)}
                   >
@@ -403,6 +416,21 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
       },
     },
   ];
+
+  // 如果存在进行中的任务
+  const polling = tableProps?.dataSource?.some(
+    item =>
+      item.status === 'CREATING' ||
+      item.status === 'MODIFYING' ||
+      item.status === 'RESTORE' ||
+      item.status === 'DROPPING'
+  );
+  useInterval(
+    () => {
+      refresh();
+    },
+    polling ? 1000 : undefined
+  );
 
   return (
     <Card

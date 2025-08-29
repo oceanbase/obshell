@@ -27,7 +27,25 @@ export default [
         name: '登录页',
         spmb: 'b55540',
       },
-
+      {
+        path: 'tenant/result/:taskId',
+        component: 'Tenant/Result/Success',
+        name: '新建租户任务提交成功',
+        spmb: 'b55555',
+      },
+      {
+        // 避免与租户详情冲突
+        path: 'tenantCreate/new',
+        component: 'Tenant/New',
+        name: '新建租户',
+        spmb: 'b55554',
+      },
+      {
+        path: 'tenant/backup/restoreNow',
+        component: 'Tenant/Detail/Backup/RestoreNow',
+        name: '租户发起恢复',
+        spmBPos: 'b50372',
+      },
       {
         // 单个租户管理
         path: 'tenant/:tenantName',
@@ -85,8 +103,41 @@ export default [
             name: '租户参数',
             spmb: 'b55547',
           },
+
+          {
+            path: 'backup',
+            component: 'Tenant/Detail/Backup',
+            name: '租户备份恢复',
+            spmBPos: 'b50371',
+          },
+          // {
+          //   path: 'backup/addBackupStrategy',
+          //   component: 'Tenant/Detail/Backup/BackupStrategy/New',
+          // },
+          // {
+          //   path: 'backup/editBackupStrategy',
+          //   component: 'Tenant/Detail/Backup/BackupStrategy/Edit',
+          // },
+          {
+            path: 'backup/restoreNow',
+            component: 'Tenant/Detail/Backup/RestoreNow',
+            name: '租户发起恢复',
+            spmBPos: 'b50372',
+          },
+          {
+            path: 'backup/backup/nowBackupTenant',
+            component: 'Backup/Backup/NowBackupTenant',
+            name: '立即备份', // 租户
+            spmBPos: '',
+          },
+          // {
+          //   path: 'backup/copy',
+          //   component: 'Backup/Restore/Copy',
+          //   name: '复制恢复任务',
+          // },
         ],
       },
+
       {
         path: '/',
         component: 'Layout/BasicLayout',
@@ -138,14 +189,14 @@ export default [
             name: '租户列表',
             spmb: 'b55552',
           },
-          {
-            path: 'monitor',
-            component: 'Monitor',
-            name: '集群监控',
-            spmb: 'b55553',
-            ignoreMergeRoute: true,
-            queryTitle: 'scope',
-          },
+          // {
+          //   path: 'monitor',
+          //   component: 'Monitor',
+          //   name: '集群监控',
+          //   spmb: 'b55553',
+          //   ignoreMergeRoute: true,
+          //   queryTitle: 'scope',
+          // },
           // 创建租户改为异步任务 结果页
           {
             path: 'diagnosis/session',
@@ -191,6 +242,54 @@ export default [
             component: 'Log',
             name: '日志服务',
             spmb: 'b55559',
+          },
+          // 性能监控
+          {
+            path: 'monitor',
+            component: 'Monitor',
+            routes: [
+              {
+                path: '/monitor',
+                redirect: '/monitor/cluster',
+              },
+              {
+                path: 'cluster',
+                component: 'Monitor/ClusterMonitor',
+                name: 'OceanBase 集群监控',
+              },
+              {
+                path: 'tenant',
+                component: 'Monitor/TenantMonitor',
+                name: 'OceanBase 租户监控',
+              },
+            ],
+          },
+          // 告警
+          {
+            path: 'alert',
+            component: 'Alert',
+            name: '告警',
+            routes: [
+              {
+                path: '/alert',
+                redirect: '/alert/event',
+              },
+              {
+                path: 'event',
+                component: 'Alert/Event',
+                name: '告警事件',
+              },
+              {
+                path: 'shield',
+                component: 'Alert/Shield',
+                name: '告警屏蔽',
+              },
+              {
+                path: 'rules',
+                component: 'Alert/Rules',
+                name: '告警规则',
+              },
+            ],
           },
           {
             path: 'error',

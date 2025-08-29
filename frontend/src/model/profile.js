@@ -34,26 +34,7 @@ const model = {
   },
 
   effects: {
-    *getUserData(_, { call, put }) {
-      // const res = yield call(ProfileService.userInfo);
-      // if (res.successful) {
-      //   const userData = res.data || {};
-      //   // 获取当前登录用户详情后，设置 tracert 的用户标识
-      //   tracert.set({
-      //     roleId: `${window.location.host}_${userData.id}`,
-      //   });
-      //   yield put({
-      //     type: 'update',
-      //     payload: {
-      //       userData,
-      //     },
-      //   });
-      //   yield put({
-      //     type: 'auth/setAuthData',
-      //   });
-      // }
-      // return res;
-    },
+    *getUserData(_, { call, put }) {},
     *modifyUserPassword({ payload }, { call }) {
       const res = yield call(ProfileService.changePassword, payload);
       if (res.successful) {

@@ -1,0 +1,19 @@
+.selectRangeTimeContainer {
+  :global {
+    .ant-select-selector {
+      border-radius: 6px 0px 0px 6px !important;
+      border-right: none !important;
+    }
+    .ant-picker {
+      border-radius: 0px 6px 6px 0px !important;
+    }
+  }
+  display: flex;
+  align-items: center;
+  flex-direction: row;
+}
+.autoRefreshText::after {
+  content: ':';
+  margin-inline-start: 2px;
+  margin-inline-end: 8px;
+}

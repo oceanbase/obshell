@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import * as MonitorService from '@/service/ocp-express/MonitorController';
+import { listAllMetrics } from '@/service/obshell/metric';
 import { DEFAULT_LIST_DATA } from '@/constant';
 
 const model = {
@@ -24,7 +24,7 @@ const model = {
   },
   effects: {
     *getMetricGroupListData({ payload }, { call, put }) {
-      const res = yield call(MonitorService.listMetricClasses, payload);
+      const res = yield call(listAllMetrics, payload);
       if (res.successful) {
         yield put({
           type: 'update',

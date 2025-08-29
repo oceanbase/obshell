@@ -62,9 +62,10 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
           message.success(
             formatMessage(
               {
-                id: 'ocp-express.Oracle.Component.ModifyObjectPrivilegeModal.TheObjectPermissionOfObjectname',
+                id: 'OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully',
+                defaultMessage: '{objectName} 的对象权限修改成功',
               },
-              { objectName }
+              { objectName: objectName }
             )
           );
           if (onSuccess) {

@@ -41,9 +41,9 @@ class FormZoneReplicaTable<T> extends FormEditTable<FormZoneReplicaTableProps<T>
     if (
       value &&
       // 仅校验勾选行
-      (some(value, item => item.checked && !item?.replicaType) ||
-        some(value, item => item.checked && !item?.resourcePool?.unitSpecName) ||
-        some(value, item => item.checked && !item?.resourcePool?.unitCount))
+      (some(value, item => item.checked && !item?.replica_type) ||
+        some(value, item => item.checked && !item?.unit_config_name) ||
+        some(value, item => item.checked && !item?.unit_num))
     ) {
       callback(
         formatMessage({
@@ -97,7 +97,7 @@ class FormZoneReplicaTable<T> extends FormEditTable<FormZoneReplicaTableProps<T>
           defaultMessage: '副本类型',
         }),
 
-        dataIndex: 'replicaType',
+        dataIndex: 'replica_type',
         width: columnWidth,
         editable: true,
         fieldProps: (text, record) => {
@@ -134,7 +134,7 @@ class FormZoneReplicaTable<T> extends FormEditTable<FormZoneReplicaTableProps<T>
         }),
 
         // 嵌套的数据格式
-        dataIndex: 'resourcePool.unitSpecName',
+        dataIndex: 'unit_config_name',
         width: columnWidth,
         editable: true,
         fieldProps: (text, record) => {
@@ -153,7 +153,7 @@ class FormZoneReplicaTable<T> extends FormEditTable<FormZoneReplicaTableProps<T>
           };
         },
 
-        fieldComponent: () => <UnitSpecSelect obVersion={clusterData?.obVersion} />,
+        fieldComponent: () => <UnitSpecSelect obVersion={clusterData?.ob_version} />,
       },
       {
         title: formatMessage({
@@ -162,7 +162,7 @@ class FormZoneReplicaTable<T> extends FormEditTable<FormZoneReplicaTableProps<T>
         }),
 
         // 嵌套的数据格式
-        dataIndex: 'resourcePool.unitCount',
+        dataIndex: 'unit_num',
         editable: true,
         fieldProps: (text, record) => {
           const zoneData = findBy(clusterData.zones || [], 'name', record.name);

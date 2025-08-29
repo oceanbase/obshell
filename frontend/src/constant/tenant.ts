@@ -303,6 +303,7 @@ export const ORACLE_BUILT_IN_ROLE_LIST = [
   'PUBLIC',
   'STANDBY_REPLICATION',
 ];
+
 // Oracle用户管理  系统权限
 export const ORACLE_SYS_PRIVS = [
   'CREATE_SESSION', // 创建连接
@@ -466,6 +467,13 @@ export const TENANT_STATUS_LIST = [
   },
 
   {
+    label: formatMessage({ id: 'OBShell.src.constant.tenant.Restoring', defaultMessage: '恢复中' }),
+
+    value: 'RESTORE',
+    badgeStatus: 'processing',
+  },
+
+  {
     label: formatMessage({
       id: 'ocp-express.src.constant.oceanbase.Deleting',
       defaultMessage: '删除中',
@@ -513,58 +521,34 @@ export const PLAN_TYPE_LIST = [
   },
 ];
 
-export const LOAD_TYPE_LIST = [
-  {
-    label: 'EXPRESS_OLTP 简单事务',
-    value: 'express_oltp',
-    description:
-      '适用在线订单交易、支付等核心系统，高并发点查为主的互联网业务，每次执行的 SQL 比较简单，要求快速响应',
-  },
-
-  {
-    label: 'COMPLEX_OLTP 复杂事务',
-    value: 'complex_oltp',
-    description:
-      '适用有复杂事务的在线交易系统，比如有复杂连接计算、有子查询、使用 PL 编写的批处理作业的场景，存在长事务、大事务的情况。 如果这个集群实例专门用于 OLTP 负载事务场景，建议对集群参数大查询策略 large_query_threshold 做优化从默认 600s 调整为 5s。',
-  },
-
-  {
-    label: 'HTAP 混合负载',
-    value: 'htap',
-    description:
-      '同时运行事务和在线分析的混合负载情况，在提供 OLTP 能力的基础上，通过向量化能力提升在线分析场景的计算能力。',
-  },
-  // {
-  //   label: 'OLAP 在线分析',
-  //   value: 'olap',
-  //   description: '在线分析 OLAP 的实时数仓场景，默认创建的表会使用列格式存储，以及更加优化的向量化引擎，提升复杂分析场景的计算能力。如果这个集群实例专门用于 OLAP 分析场景使用，建议对系统变量和集群参数做对应的优化调整，比如开启自适应并行计算、SQL 排序内存空间优化、SQL 和事务超时设置、大查询策略等配置，同时租户字符集建议使用 utf8mb4_bin.'
-  // },
-  {
-    label: 'KV 默认参数模版',
-    value: 'kv',
-    description:
-      '用于键值工作负载和类似 hbase 的宽列工作负载，这些工作负载通常具有非常高的吞吐量并且对延迟敏感。 ',
-  },
-];
 
 export const LOWER_CASE_TABLE_NAMES = [
   {
     label: 0,
     value: 0,
-    description:
-      '使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。',
+    description: formatMessage({
+      id: 'OBShell.src.constant.tenant.UseTheUpperAndLower',
+      defaultMessage:
+        '使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。',
+    }),
   },
 
   {
     label: 1,
     value: 1,
-    description: '表名在硬盘上以小写保存，名称比较对大小写不敏感。',
+    description: formatMessage({
+      id: 'OBShell.src.constant.tenant.TableNamesAreSavedIn',
+      defaultMessage: '表名在硬盘上以小写保存，名称比较对大小写不敏感。',
+    }),
   },
 
   {
     label: 2,
     value: 2,
-    description:
-      '表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母进行保存，但名称比较对大小写不敏感。',
+    description: formatMessage({
+      id: 'OBShell.src.constant.tenant.TableAndDatabaseNamesAre',
+      defaultMessage:
+        '表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE 语句指定的大小写字母进行保存，但名称比较对大小写不敏感。',
+    }),
   },
 ];

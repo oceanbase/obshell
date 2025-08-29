@@ -1,6 +1,6 @@
 module.exports = {
   extract: {
-    name: 'obshell',
+    name: 'OBShell',
     sourcePath: 'src',
     fileType: 'ts',
     prettier: true,
@@ -17,7 +17,7 @@ module.exports = {
       });
     },
     macro: {
-      path: 'src/i18n',
+      path: 'src/locale',
       method: 'formatMessage({id:"$key$", defaultMessage:"$defaultMessage$"})',
       import: "import { formatMessage } from '@/util/intl'",
       keySplitter: '.',
@@ -51,14 +51,14 @@ module.exports = {
     sourceLang: 'zh-CN',
     sdkVersion: 'normal',
     bailingual: {
-      appName: 'ocp-v2',
+      appName: 'OBShell',
     },
   },
   import: {
     type: 'json',
     path: 'src/locale',
     bailingual: {
-      appName: 'obshell',
+      appName: 'OBShell',
       tag: '',
     },
   },

@@ -166,7 +166,7 @@ export const defaultAsyncFnOfGetTableData = () => {
 };
 
 interface OCPListData<T> {
-  data?: { contents?: T[]; page?: { totalElements?: number } };
+  data?: { contents?: T[]; page?: { total_elements?: number } };
 }
 
 export function getTableData<P, Item>({
@@ -218,9 +218,10 @@ export function getTableData<P, Item>({
         const format = (res: OCPListData<Item>) => {
           const { data } = res || {};
           // 接口请求出错时，后端返回的 res.data 为 undefined。避免前端解析错误导致页面崩溃，这里需要做健壮性处理
-          const { page: { totalElements = 0 } = {}, contents = [] } = data || DEFAULT_LIST_DATA;
+          const { page: { total_elements = 0, totalElements = 0 } = {}, contents = [] } = data || DEFAULT_LIST_DATA;
+
           return {
-            total: totalElements,
+            total: total_elements || totalElements,
             list: contents,
           };
         };

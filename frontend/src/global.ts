@@ -23,6 +23,28 @@ import { setLocale, getLocale } from 'umi';
 import moment from 'moment';
 import tracert from '@/util/tracert';
 
+// 引入并配置 dayjs 插件，解决 DateRanger 组件中 weekday 方法缺失的问题
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+import weekday from 'dayjs/plugin/weekday';
+import localeData from 'dayjs/plugin/localeData';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import weekYear from 'dayjs/plugin/weekYear';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear';
+import 'dayjs/locale/zh-cn';
+
+// 扩展 dayjs 插件
+dayjs.extend(customParseFormat);
+dayjs.extend(advancedFormat);
+dayjs.extend(weekday);
+dayjs.extend(localeData);
+dayjs.extend(weekOfYear);
+dayjs.extend(weekYear);
+dayjs.extend(isoWeek);
+dayjs.extend(isoWeeksInYear);
+
 const validLocalMap = {
   // 英文
   'en-US': 'en-US',
@@ -78,6 +100,9 @@ const momentLocaleMap = {
 };
 
 moment.locale(momentLocaleMap[locale] || 'en');
+
+// 配置 dayjs 的 locale，与 moment 保持一致
+dayjs.locale(momentLocaleMap[locale] || 'en');
 
 tracert.set({
   // 埋点 a 位

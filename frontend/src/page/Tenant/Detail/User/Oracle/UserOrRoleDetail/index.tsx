@@ -58,7 +58,9 @@ import {
   revokeRoleObjectPrivilege,
   revokeUserObjectPrivilege,
   unlockUser,
+  getStats,
 } from '@/service/obshell/tenant';
+import { UserStats } from '../UserList';
 
 const { confirm } = Modal;
 
@@ -91,6 +93,8 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [selectedRows, setSelectedRows] = useState<API.ObjectPrivilege[]>([]);
   const [batchPopconfirmVisible, setBatchPopconfirmVisible] = useState(false);
+
+  const [userStats, setUserStats] = useState<UserStats>({});
 
   const {
     run: getDbUser,
@@ -128,6 +132,15 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
       });
     }
   }, [tenantName, username, roleName]);
+
+  const { run: getUserStats } = useRequest(getStats, {
+    manual: true,
+    onSuccess: res => {
+      if (res.successful) {
+        setUserStats(res?.data?.session || {});
+      }
+    },
+  });
 
   const { run: revokeUserObjectPrivilegeRun, loading: deleteDbRoleLoading } = useRequest(
     revokeUserObjectPrivilege,
@@ -491,6 +504,9 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
               ) : (
                 <Button
                   onClick={() => {
+                    if (username) {
+                      getUserStats({ name: tenantName, user: username });
+                    }
                     setDeleteModalVisible(true);
                   }}
                 >
@@ -607,11 +623,13 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
             }
           >
             {userOrRoleDetail?.global_privileges
-              ? userOrRoleDetail?.global_privileges?.map(item =>
-                  item === 'PURGE_DBA_RECYCLEBIN'
-                    ? 'PURGE DBA_RECYCLEBIN'
-                    : item.replace(/_/g, ' ')
-              ).join('、')
+              ? userOrRoleDetail?.global_privileges
+                  ?.map(item =>
+                    item === 'PURGE_DBA_RECYCLEBIN'
+                      ? 'PURGE DBA_RECYCLEBIN'
+                      : item.replace(/_/g, ' ')
+                  )
+                  .join('、')
               : '-'}
           </MyCard>
         </Col>
@@ -782,6 +800,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
         roleName={roleName}
         username={username}
         tenantData={tenantData}
+        userStats={userStats}
         onCancel={() => {
           setDeleteModalVisible(false);
         }}
@@ -799,6 +818,12 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
           setModifyPasswordVisible(false);
         }}
         onSuccess={() => {
+          message.success(
+            formatMessage({
+              id: 'ocp-express.Oracle.UserOrRoleDetail.ModifyPasswordSuccess',
+              defaultMessage: '修改密码成功',
+            })
+          );
           setModifyPasswordVisible(false);
           refreshGetDbRole();
         }}

@@ -185,11 +185,11 @@ const UserList: React.FC<UserProps> = ({
       }),
       dataIndex: 'global_privileges',
       render: (text: string[]) => {
-        const textContent = text?.map(item =>
-          item === 'PURGE_DBA_RECYCLEBIN'
-            ? 'PURGE DBA_RECYCLEBIN'
-            : item.replace(/_/g, ' ')
-        ).join('、');
+        const textContent = text
+          ?.map(item =>
+            item === 'PURGE_DBA_RECYCLEBIN' ? 'PURGE DBA_RECYCLEBIN' : item.replace(/_/g, ' ')
+          )
+          .join('、');
         return textContent ? (
           <Tooltip placement="topLeft" title={textContent}>
             <span
@@ -265,7 +265,7 @@ const UserList: React.FC<UserProps> = ({
       }),
       dataIndex: 'create_time',
       defaultSortOrder: 'descend',
-      sorter: (a: API.ObUser, b: API.ObUser) => sortByMoment(a, b, 'createTime'),
+      sorter: (a: API.ObUser, b: API.ObUser) => sortByMoment(a, b, 'create_time'),
       render: (text: string) => formatTime(text, DATE_FORMAT_DISPLAY),
     },
 
@@ -390,7 +390,6 @@ const UserList: React.FC<UserProps> = ({
         }}
         onSuccess={() => {
           setModifyPasswordVisible(false);
-          refreshDbUser();
           setCurrent(null);
         }}
       />

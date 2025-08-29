@@ -1,0 +1,46 @@
+.monitorHeader {
+  .headerText {
+    font-size: 16px;
+    font-weight: 500;
+  }
+  h2 {
+    margin-bottom: 0;
+  }
+}
+
+.monitorContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 0 24px 24px;
+  .monitorItem {
+    width: calc(1 / 2 * 100% - 8px);
+    border-radius: 8px;
+    .graphHeader {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      .graphHeaderText {
+        font-size: 16px;
+        font-weight: 500;
+      }
+    }
+  }
+
+  // 当存在MonitorUnitSelect时，调整为左右布局
+  &.hasUnitSelect {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+
+    .monitorRightContent {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+
+      .monitorItem {
+        width: calc(50% - 8px);
+      }
+    }
+  }
+}

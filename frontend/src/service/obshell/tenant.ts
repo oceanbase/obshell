@@ -501,9 +501,9 @@ export async function dropRole(
 }
 
 /** modify role global privilege modify role global privilege PUT /api/v1/tenant/${param0}/role/${param1}/global-privileges */
-export async function modifyRoleGlobalPrivileges(
+export async function modifyRoleGlobalPrivilege(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.modifyRoleGlobalPrivilegesParams,
+  params: API.modifyRoleGlobalPrivilegeParams,
   body: API.ModifyRoleGlobalPrivilegeParam,
   options?: { [key: string]: any }
 ) {
@@ -993,6 +993,17 @@ export async function tenantModifyWhitelist(
     data: body,
     ...(options || {}),
   });
+}
+
+/** list support parameter templates list support parameter templates GET /api/v1/tenant/support-templates */
+export async function listSupportParameterTemplates(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ParameterTemplate[] }>(
+    '/api/v1/tenant/support-templates',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
 }
 
 /** query tenant information ranked by the cost of major compaction. query tenant information ranked by the cost of major compaction, limited to the top n. GET /api/v1/tenant/top-compactions */

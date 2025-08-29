@@ -70,11 +70,18 @@ export async function obStop(body: API.ObStopParam, options?: { [key: string]: a
 }
 
 /** get obcluster charsets get obcluster charsets GET /api/v1/obcluster/charsets */
-export async function getObclusterCharsets(options?: { [key: string]: any }) {
+export async function getObclusterCharsets(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getObclusterCharsetsParams,
+  options?: { [key: string]: any }
+) {
   return request<API.OcsAgentResponse & { data?: API.CharsetInfo[] }>(
     '/api/v1/obcluster/charsets',
     {
       method: 'GET',
+      params: {
+        ...params,
+      },
       ...(options || {}),
     }
   );

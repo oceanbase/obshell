@@ -71,8 +71,14 @@ const DeleteUserModal: React.FC<DeleteUserModalProps> = ({
       if (res.successful) {
         message.success(
           username
-            ? formatMessage({ id: 'ocp-express.User.Component.DeleteUserModal.UserDeleted' })
-            : formatMessage({ id: 'ocp-express.User.Component.DeleteUserModal.RoleDeleted' })
+            ? formatMessage({
+                id: 'OBShell.User.Component.DeleteUserModal.UserDeletedSuccessfully',
+                defaultMessage: '用户删除成功',
+              })
+            : formatMessage({
+                id: 'OBShell.User.Component.DeleteUserModal.RoleDeletedSuccessfully',
+                defaultMessage: '角色删除成功',
+              })
         );
         if (onSuccess) {
           onSuccess();

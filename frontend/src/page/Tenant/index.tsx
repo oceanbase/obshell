@@ -20,14 +20,14 @@ import { history } from 'umi';
 import React from 'react';
 import { PageContainer } from '@oceanbase/ui';
 import { Badge, Button, Card, Col, Modal, Row, Space, Table, Tooltip } from '@oceanbase/design';
-import { useRequest } from 'ahooks';
+import { useInterval, useRequest } from 'ahooks';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import ContentWithReload from '@/component/ContentWithReload';
 import Empty from '@/component/Empty';
 import { getTenantOverView, tenantLock, tenantUnlock } from '@/service/obshell/tenant';
 import { directTo, findByValue, formatTime, sortByMoment } from '@oceanbase/util';
 import RenderConnectionString from '@/component/RenderConnectionString';
-import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
+import { getDateFormatDisplay } from '@/constant/datetime';
 import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
 import { getBooleanLabel, getYESorNOLabel } from '@/util';
 import useStyles from './index.style';
@@ -66,6 +66,22 @@ const Tenant: React.FC<TenantProps> = ({
   });
 
   const tenantList = tenantListData?.data?.contents || [];
+  // const tenantList = [];
+
+  // 如果存在进行中的任务
+  const polling = tenantList?.some(
+    item =>
+      item.status === 'CREATING' ||
+      item.status === 'MODIFYING' ||
+      item.status === 'RESTORE' ||
+      item.status === 'DROPPING'
+  );
+  useInterval(
+    () => {
+      listTenantsRefresh();
+    },
+    polling ? 2000 : undefined
+  );
 
   const { runAsync: tenantLockFn } = useRequest(tenantLock, {
     manual: true,
@@ -182,6 +198,19 @@ const Tenant: React.FC<TenantProps> = ({
         if (record.status === 'CREATING') {
           return record.tenant_name;
         }
+        if (record.status === 'RESTORE') {
+          return (
+            <Tooltip
+              title={formatMessage({
+                id: 'OBShell.page.Tenant.TheTenantIsBeingRestored',
+                defaultMessage: '租户正在恢复中，不支持查看详情',
+              })}
+              placement="right"
+            >
+              {record.tenant_name}
+            </Tooltip>
+          );
+        }
         const pathname = `/tenant/${record.tenant_name}`;
         return (
           <a
@@ -274,7 +303,7 @@ const Tenant: React.FC<TenantProps> = ({
 
       dataIndex: 'created_time',
       sorter: (a, b) => sortByMoment(a, b, 'created_time'),
-      render: (text: string) => <span>{formatTime(text, DATE_FORMAT_DISPLAY)}</span>,
+      render: (text: string) => <span>{formatTime(text, getDateFormatDisplay())}</span>,
     },
 
     {
@@ -386,7 +415,7 @@ const Tenant: React.FC<TenantProps> = ({
                     data-aspm-param={``}
                     data-aspm-expo
                     type="link"
-                    disabled={record.tenant_name === 'sys'}
+                    disabled={record.tenant_name === 'sys' || record.status === 'RESTORE'}
                     onClick={() => handleLock(record)}
                   >
                     {formatMessage({
@@ -398,18 +427,18 @@ const Tenant: React.FC<TenantProps> = ({
               )}
 
               {/* <a
-               data-aspm-click="c304184.d308813"
-               data-aspm-desc="租户列表-复制租户"
-               data-aspm-param={``}
-               data-aspm-expo
-               onClick={() => {
-                 directTo(`/tenant/new?tenantId=${record.obTenantId}`);
-               }}
+              data-aspm-click="c304184.d308813"
+              data-aspm-desc="租户列表-复制租户"
+              data-aspm-param={``}
+              data-aspm-expo
+              onClick={() => {
+                directTo(`/tenant/new?tenantId=${record.obTenantId}`);
+              }}
               >
-               {formatMessage({
-                 id: 'ocp-express.component.TenantList.Copy',
-                 defaultMessage: '复制',
-               })}
+              {formatMessage({
+                id: 'ocp-express.component.TenantList.Copy',
+                defaultMessage: '复制',
+              })}
               </a> */}
             </Space>
           );
@@ -427,26 +456,26 @@ const Tenant: React.FC<TenantProps> = ({
       })}
     >
       {/* <Button
-       style={{ marginRight: 12 }}
-       onClick={() => {
-         history.push('/tenant/unitSpec');
-       }}
+      style={{ marginRight: 12 }}
+      onClick={() => {
+        history.push('/tenant/unitSpec');
+      }}
       >
-       {formatMessage({
-         id: 'ocp-express.page.Tenant.UnitSpecificationManagement',
-         defaultMessage: 'Unit 规格管理',
-       })}
+      {formatMessage({
+        id: 'ocp-express.page.Tenant.UnitSpecificationManagement',
+        defaultMessage: 'Unit 规格管理',
+      })}
       </Button> */}
       {/* <Button
-       style={{ marginRight: 12 }}
-       onClick={() => {
-         history.push('/tenant/parameterTemplate');
-       }}
+      style={{ marginRight: 12 }}
+      onClick={() => {
+        history.push('/tenant/parameterTemplate');
+      }}
       >
-       {formatMessage({
-         id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-         defaultMessage: '租户参数模板管理',
-       })}
+      {formatMessage({
+        id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
+        defaultMessage: '租户参数模板管理',
+      })}
       </Button> */}
       <Button
         data-aspm-click="c318544.d343271"
@@ -498,31 +527,41 @@ const Tenant: React.FC<TenantProps> = ({
                 defaultMessage: '新建租户',
               })}
             </Button>
+            <Button
+              onClick={() => {
+                history.push(`/tenant/backup/restoreNow`);
+              }}
+            >
+              {formatMessage({
+                id: 'ocp-v2.Detail.Backup.InitiateRecovery',
+                defaultMessage: '发起恢复',
+              })}
+            </Button>
             {/* 二期 */}
             {/* <Dropdown
-           overlay={
-             <Menu
-               onClick={({ key }) => {
-                 handleMenuClick(key);
-               }}
-             >
-               <Menu.Item key="parameterTemplate">
-                 <a>
-                   {formatMessage({
-                     id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-                     defaultMessage: '租户参数模板管理',
-                   })}
-                 </a>
-               </Menu.Item>
-               <Menu.Item key="unitSpec">
-                 <a>Unit 规格管理</a>
-               </Menu.Item>
-             </Menu>
-           }
+          overlay={
+          <Menu
+            onClick={({ key }) => {
+              handleMenuClick(key);
+            }}
           >
-           <Button>
-             <EllipsisOutlined />
-           </Button>
+            <Menu.Item key="parameterTemplate">
+              <a>
+                {formatMessage({
+                  id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
+                  defaultMessage: '租户参数模板管理',
+                })}
+              </a>
+            </Menu.Item>
+            <Menu.Item key="unitSpec">
+              <a>Unit 规格管理</a>
+            </Menu.Item>
+          </Menu>
+          }
+          >
+          <Button>
+          <EllipsisOutlined />
+          </Button>
           </Dropdown> */}
           </>
         ),
@@ -540,6 +579,7 @@ const Tenant: React.FC<TenantProps> = ({
           >
             <div>
               <Table
+                loading={tenantListLoading}
                 dataSource={tenantList}
                 columns={columns}
                 rowKey={(record: API.Tenant) => record.id}

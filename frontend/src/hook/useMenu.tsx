@@ -22,6 +22,8 @@ import Icon from '@oceanbase/icons';
 import IconFont from '@/component/IconFont';
 import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
 import { ReactComponent as DiagnosisSvg } from '@/asset/diagnosis.svg';
+import { ReactComponent as AlarmSvg } from '@/asset/alarm.svg';
+import { ReactComponent as AlarmCheSvg } from '@/asset/alarm_che.svg';
 
 export const useBasicMenu = (): MenuItem[] => {
   return [
@@ -45,15 +47,25 @@ export const useBasicMenu = (): MenuItem[] => {
       selectedIcon: <Lottie path="/lottie/tenant.json" mode="icon" speed={3} loop={false} />,
     },
 
-    // {
-    //   link: '/monitor',
-    //   title: formatMessage({
-    //     id: 'ocp-express.src.hook.useMenu.ClusterMonitoring',
-    //     defaultMessage: '集群监控',
-    //   }),
-    //   icon: <Icon component={MonitorSvg} />,
-    //   selectedIcon: <Lottie path="/lottie/monitor.json" mode="icon" speed={3} loop={false} />,
-    // },
+    {
+      link: '/monitor',
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.PerformanceMonitoring',
+        defaultMessage: '性能监控',
+      }),
+      icon: <Icon component={MonitorSvg} />,
+      selectedIcon: <Lottie path="/lottie/monitor.json" mode="icon" speed={3} loop={false} />,
+    },
+
+    {
+      link: '/alert',
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.AlarmCenter',
+        defaultMessage: '告警中心',
+      }),
+      icon: <Icon component={AlarmSvg} />,
+      selectedIcon: <Icon component={AlarmCheSvg} />,
+    },
 
     // {
     //   link: '/diagnosis',
@@ -121,25 +133,17 @@ export const useBasicMenu = (): MenuItem[] => {
 };
 
 export const useTenantMenu = (
-  tenantId: number,
+  tenantName: string,
   tenantMode: API.TenantMode,
   oraclePrivilegeManagementSupported: boolean
 ): MenuItem[] => {
   const menus = [
     {
-      link: `/tenant/${tenantId}`,
+      link: `/tenant/${tenantName}`,
       title: formatMessage({ id: 'ocp-express.src.util.menu.Overview', defaultMessage: '总览' }),
     },
-    // {
-    //   link: `/tenant/${tenantId}/monitor`,
-    //   title: formatMessage({
-    //     id: 'ocp-express.src.hook.useMenu.PerformanceMonitoring',
-    //     defaultMessage: '性能监控',
-    //   }),
-    // },
-
     {
-      link: `/tenant/${tenantId}/database`,
+      link: `/tenant/${tenantName}/database`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.DatabaseManagement',
         defaultMessage: '数据库管理',
@@ -149,7 +153,7 @@ export const useTenantMenu = (
     },
 
     {
-      link: `/tenant/${tenantId}/user`,
+      link: `/tenant/${tenantName}/user`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.UserManagement',
         defaultMessage: '用户管理',
@@ -157,7 +161,22 @@ export const useTenantMenu = (
       accessible: true,
     },
     {
-      link: `/tenant/${tenantId}/parameter`,
+      link: `/tenant/${tenantName}/monitor`,
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.PerformanceMonitoring',
+        defaultMessage: '性能监控',
+      }),
+    },
+    {
+      link: `/tenant/${tenantName}/backup`,
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.BackupRecovery',
+        defaultMessage: '备份恢复',
+      }),
+      hidden: tenantName === 'sys',
+    },
+    {
+      link: `/tenant/${tenantName}/parameter`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.ParameterManagement',
         defaultMessage: '参数管理',
@@ -165,7 +184,7 @@ export const useTenantMenu = (
     },
   ];
 
-  return menus;
+  return (menus || []).filter(item => !item.hidden);
 };
 
 export const useDiagnosisMenu = (clusterId: number): MenuItem[] => {

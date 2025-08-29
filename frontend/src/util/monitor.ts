@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 /*
  * Copyright (c) 2024 OceanBase.
  *
@@ -141,10 +142,8 @@ export function getTopChartData({
   othersMetricKeys = [],
 }: {
   dataList: TopDataItem[];
-  groupBy: string;
-  // 指标 key 的列表
-  metricKeys: string[];
-  // target 中是否展示指标，常用于包括多个细分指标的 Top 监控
+  groupBy: string; // 指标 key 的列表
+  metricKeys: string[]; // target 中是否展示指标，常用于包括多个细分指标的 Top 监控
   targetWithMetric?: boolean;
   clusterName?: string;
   othersMetricKeys?: string[];
@@ -236,8 +235,7 @@ export function getTopTargetList({
   limit,
 }: {
   dataList: TopDataItem[];
-  groupBy: string;
-  // 指标 key 的列表
+  groupBy: string; // 指标 key 的列表
   metricKeys: string[];
   limit?: number;
 }) {
@@ -273,3 +271,54 @@ export function getTopTargetList({
       .map(item => item.target)
   );
 }
+
+export const monitorDimensions = {
+  CLUSTER: {
+    value: 'CLUSTER',
+    key: 'CLUSTER',
+    label: formatMessage({
+      id: 'OBShell.src.util.monitor.ClusterDimension',
+      defaultMessage: '集群维度',
+    }),
+  },
+  TENANT: {
+    value: 'TENANT',
+    key: 'TENANT',
+    label: formatMessage({
+      id: 'OBShell.src.util.monitor.TenantDimension',
+      defaultMessage: '租户维度',
+    }),
+    extraGroupby: ['tenant_name'],
+    scope: 'tenant_name',
+  },
+  OBSERVER: {
+    value: 'OBSERVER',
+    key: 'OBSERVER',
+    label: formatMessage({
+      id: 'OBShell.src.util.monitor.ObserverDimension',
+      defaultMessage: 'OBServer 维度',
+    }),
+    extraGroupby: ['svr_ip'],
+    scope: 'svr_ip',
+  },
+  UNIT: {
+    value: 'UNIT',
+    key: 'UNIT',
+    label: formatMessage({
+      id: 'OBShell.src.util.monitor.UnitDimension',
+      defaultMessage: 'Unit 维度',
+    }),
+    extraGroupby: ['tenant_name', 'svr_ip'],
+    scope: 'svr_ip',
+  },
+  HOST: {
+    value: 'HOST',
+    key: 'HOST',
+    label: formatMessage({
+      id: 'OBShell.src.util.monitor.HostDimension',
+      defaultMessage: '主机维度',
+    }),
+    extraGroupby: ['svr_ip'],
+    scope: 'svr_ip',
+  },
+};

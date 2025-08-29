@@ -1,0 +1,40 @@
+.search {
+  flex: 0 0 140px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  .searchInput {
+    border-right: 1px solid #e2e8f3;
+    border-bottom: 1px solid #e2e8f3;
+    flex-shrink: 0;
+  }
+
+  :global {
+    .ant-input-affix-wrapper {
+      width: calc(100% - 8px);
+      margin: 8px 4px;
+    }
+
+    .ant-menu {
+      flex: 1;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    .ant-menu-vertical > .ant-menu-item {
+      width: 140px;
+      height: 32px;
+      line-height: 32px;
+      text-align: center;
+
+      span {
+        display: block;
+      }
+    }
+
+    .ant-menu-light .ant-menu-item-selected {
+      font-weight: 600;
+    }
+  }
+}

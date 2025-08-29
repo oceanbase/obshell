@@ -1,61 +1,50 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
-import { history, useSelector } from 'umi';
-import React, { useEffect } from 'react';
-import { Form, Col, Row, Switch } from '@oceanbase/design';
-import { Ranger } from '@oceanbase/ui';
-import { isEqual, omitBy } from 'lodash';
-import moment from 'moment';
-import { isNullValue, toBoolean } from '@oceanbase/util';
-import { useInterval, useUpdate } from 'ahooks';
-import { DATE_TIME_FORMAT_DISPLAY, RFC3339_DATE_TIME_FORMAT } from '@/constant/datetime';
-import { FORM_ITEM_LAYOUT, FREQUENCY } from '@/constant';
+import TenantSelect from '@/component/common/TenantSelect';
 import MySelect from '@/component/MySelect';
-import MyCard from '@/component/MyCard';
-import useStyles from './index.style';
-import { getSelects } from '@/constant/log';
-
+import { DATE_TIME_FORMAT } from '@/constant/datetime';
+import type { MonitorScope } from '@/page/Monitor';
+import { history } from 'umi';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { groupBy, isEqual, omitBy, toNumber } from 'lodash';
+import moment from 'moment';
+import { Card, Form } from '@oceanbase/design';
+import { isNullValue, toBoolean } from '@oceanbase/util';
+import { useGetState, useUpdate } from 'ahooks';
+import AutoFresh, { FREQUENCY_TYPE } from './AutoFresh';
+import styles from './index.less';
 const FormItem = Form.Item;
 const { Option } = MySelect;
 
 export interface MonitorSearchQuery {
   tab?: string;
   isRealtime?: string | boolean;
+  frequency?: string | 'off';
   startTime?: string;
   endTime?: string;
+  clusterId?: string;
+  tenantId?: string;
   zoneName?: string;
   serverIp?: string;
-  serverPort?: string;
+  dimention?: string;
 }
 
 export interface MonitorSearchQueryData {
   tab?: string;
   isRealtime?: boolean;
+  frequency?: FREQUENCY_TYPE;
   startTime?: string;
   endTime?: string;
+  clusterId?: number;
+  tenantId?: number;
   zoneName?: string;
   serverIp?: string;
-  serverPort?: string;
+  dimention?: string;
 }
 
 export interface MonitorServer {
   ip: string;
   zoneName: string;
+  hostId: number;
 }
 
 interface MonitorSearchProps {
@@ -66,19 +55,33 @@ interface MonitorSearchProps {
   zoneNameList?: string[];
   serverList?: MonitorServer[];
   onSearch?: (queryData: MonitorSearchQueryData) => void;
+  monitorScope?: MonitorScope;
 }
 
 function getQueryData(query: MonitorSearchQuery): MonitorSearchQueryData {
-  const { tab, isRealtime, startTime, endTime, zoneName, serverIp, serverPort } = query;
-
+  const {
+    tab,
+    isRealtime,
+    frequency,
+    startTime,
+    endTime,
+    clusterId,
+    tenantId,
+    zoneName,
+    serverIp,
+    dimention,
+  } = query;
   const queryData = {
     tab,
     isRealtime: toBoolean(isRealtime),
+    frequency: frequency === 'off' ? frequency : frequency && toNumber(frequency),
     startTime,
     endTime,
+    clusterId: clusterId ? toNumber(clusterId) : undefined,
+    tenantId: tenantId ? toNumber(tenantId) : undefined,
     zoneName,
     serverIp,
-    serverPort,
+    dimention,
   };
   return queryData;
 }
@@ -88,54 +91,76 @@ const MonitorSearch: React.FC<MonitorSearchProps> = ({
   zoneNameList,
   serverList,
   onSearch,
+  monitorScope,
 }) => {
-  const { styles } = useStyles();
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue, getFieldsValue } = form;
   const update = useUpdate();
-  const { systemInfo } = useSelector((state: DefaultRootState) => state.global);
-  const collectInterval = systemInfo?.monitorInfo?.collectInterval || FREQUENCY;
+  const currentMoment = useRef(moment());
+  const queryData = useMemo(() => {
+    return getQueryData(query);
+  }, [query]);
 
-  const queryData = getQueryData(query);
+  const defaultFrequency = queryData.frequency || 'off';
 
-  const defaultRange =
-    queryData.startTime && queryData.endTime
+  // 关于 React hooks 获取不到最新值的问题: https://segmentfault.com/a/1190000039054862
+  // 为了保证 handleSearch 中获取的 tenantList 是最新的，使用 ahooks 的 useGetState
+  // ref: https://ahooks.js.org/zh-CN/hooks/use-get-state
+  const [_, setTenantList, getTenantList] = useGetState<API.Tenant[]>([]);
+
+  const queryRange = useMemo(() => {
+    return queryData.startTime && queryData.endTime
       ? [moment(queryData.startTime), moment(queryData.endTime)]
-      : // 默认查看一小时的区间
-        [moment().subtract(1, 'hours'), moment()];
+      : undefined;
+  }, [queryData.startTime, queryData.endTime]);
+
+  // 默认查看一小时的区间
+  const defaultRange = queryRange || [moment().subtract(1, 'hours'), moment()];
   const defaultIsRealtime = queryData.isRealtime || false;
 
+  useEffect(() => {
+    // 实时模式下才设置range的值
+    if (defaultIsRealtime) {
+      setFieldsValue({
+        range: defaultRange,
+      });
+    }
+  }, [defaultIsRealtime, defaultRange]);
+
   const handleSearch = (mergeDefault?: boolean) => {
-    validateFields().then((values) => {
+    validateFields().then(values => {
       const {
         range = defaultRange,
         isRealtime = defaultIsRealtime,
+        frequency = defaultFrequency,
+        clusterId = queryData.clusterId,
+        tenantId = queryData.tenantId,
         zoneName = mergeDefault ? queryData.zoneName : undefined,
         serverIp = mergeDefault ? queryData.serverIp : undefined,
-        serverPort = mergeDefault ? queryData.serverPort : undefined,
-        serverIpWithPort,
         ...restValues
       } = values;
 
-      // 需要 ip 加 port 来区分 server
-      const [ip, port] = serverIpWithPort?.split(':') || [];
+      const tenant = getTenantList()?.find(item => item?.id === tenantId);
+
       const newQueryData = omitBy(
         {
           ...restValues,
-          isRealtime,
-          zoneName,
-          serverIp: serverIp || ip,
-          serverPort: serverPort || port,
           tab: queryData.tab,
-          // 实时模式下起止时间设置为近 10 分钟
+          frequency,
+          isRealtime,
+          clusterId: isNullValue(tenant?.clusterId) ? clusterId : tenant?.clusterId,
+          tenantId,
+          zoneName,
+          serverIp,
+          // 实时模式下起止时间设置为近 1 小时
           startTime: isRealtime
-            ? moment().subtract(10, 'minutes').format(RFC3339_DATE_TIME_FORMAT)
-            : range && range[0] && range[0].format(RFC3339_DATE_TIME_FORMAT),
+            ? moment().subtract(1, 'hour').format(DATE_TIME_FORMAT)
+            : range[0]?.format(DATE_TIME_FORMAT),
           endTime: isRealtime
-            ? moment().format(RFC3339_DATE_TIME_FORMAT)
-            : range && range[1] && range[1].format(RFC3339_DATE_TIME_FORMAT),
+            ? moment().format(DATE_TIME_FORMAT)
+            : range[1]?.format(DATE_TIME_FORMAT),
         },
-        (value) => isNullValue(value),
+        value => isNullValue(value)
       );
 
       // pathname 可能为空，此时查询条件不会与 URL 进行同步
@@ -161,6 +186,7 @@ const MonitorSearch: React.FC<MonitorSearchProps> = ({
 
   useEffect(() => {
     // 如果 query 为 {} 时，触发查询，避免 query={} 时图表数据为空
+    // issue: https://aone.alipay.com/issue/38184175
     // TODO: 长期方案需要将图表中的 getData 改造为 useRequest，这样不满足请求条件时，不会用空数组兜底返回
     if (isEqual(query, {})) {
       setTimeout(() => {
@@ -171,182 +197,130 @@ const MonitorSearch: React.FC<MonitorSearchProps> = ({
 
   const { isRealtime = defaultIsRealtime, zoneName } = getFieldsValue();
 
-  useInterval(
-    () => {
-      handleSearch();
-    },
-    isRealtime ? collectInterval * 1000 : undefined,
-  );
-
   const realServerList = serverList?.filter(
     // 根据选中的 zone 对 server 进行筛选
-    (item) => !zoneName || item.zoneName === zoneName,
+    item => !zoneName || item.zoneName === zoneName
   );
 
-  const formItemLayout = {
-    labelCol: {
-      span: 8,
-    },
-
-    wrapperCol: {
-      span: 16,
-    },
-  };
-
   return (
-    <MyCard
-      className={styles.container}
-      bodyStyle={{ paddingBottom: 0 }}
-      title={formatMessage({
-        id: 'ocp-express.component.MonitorSearch.DataFiltering',
-        defaultMessage: '数据筛选',
-      })}
-      bordered={false}
-      extra={
-        <Form layout="inline" form={form}>
-          {isRealtime && (
-            <FormItem
-              label={formatMessage({
-                id: 'ocp-express.component.MonitorSearch.UpdateTime',
-                defaultMessage: '更新时间',
-              })}
-              className={styles.updateTime}
-            >
-              {moment().format(DATE_TIME_FORMAT_DISPLAY)}
-            </FormItem>
-          )}
-
-          <FormItem
-            name="isRealtime"
-            initialValue={defaultIsRealtime}
-            valuePropName="checked"
-            label={formatMessage({
-              id: 'ocp-express.component.MonitorSearch.AutoRefresh',
-              defaultMessage: '自动刷新',
-            })}
-            htmlFor="none"
-            style={{ marginRight: 0 }}
-          >
-            <Switch
-              onChange={() => {
-                // 为了保证获取切换实时后的最新表单值，切换后需要重新 render 表单，并异步触发查询操作
-                update();
-                setTimeout(handleSearch, 0);
-              }}
-            />
-          </FormItem>
-        </Form>
-      }
-    >
+    <Card className={styles.container} bodyStyle={{ padding: '16px 24px 0 24px' }} bordered={false}>
       <Form
-        layout="horizontal"
+        layout="inline"
         form={form}
         onValuesChange={() => {
           handleSearch();
         }}
-        {...FORM_ITEM_LAYOUT}
       >
-        <Row>
-          {isRealtime ? (
-            <Col span={3}>
-              <FormItem
-                label={formatMessage({
-                  id: 'ocp-express.component.MonitorSearch.RefreshFrequency',
-                  defaultMessage: '刷新频率',
-                })}
-                labelCol={{ span: 16 }}
-                wrapperCol={{ span: 8 }}
-              >
-                {formatMessage(
-                  {
-                    id: 'ocp-express.component.MonitorSearch.FrequencySeconds',
-                    defaultMessage: '{FREQUENCY} 秒',
-                  },
-                  { FREQUENCY: collectInterval },
-                )}
-              </FormItem>
-            </Col>
-          ) : (
-            <>
-              <Col span={13}>
-                <FormItem
-                  name="range"
-                  // initialValue={defaultRange}
-                  label={formatMessage({
-                    id: 'ocp-express.component.MonitorSearch.SelectTime',
-                    defaultMessage: '选择时间',
-                  })}
-                >
-                  <Ranger
-                    style={{ width: '100%' }}
-                    allowClear={false}
-                    format={DATE_TIME_FORMAT_DISPLAY}
-                    defaultQuickValue={formatMessage({
-                      id: 'ocp-express.src.constant.log.NearlyHour',
-                      defaultMessage: '近 1 小时',
-                    })}
-                    selects={getSelects()}
-                  />
-                </FormItem>
-              </Col>
-            </>
-          )}
+        <div className={styles.searchForm}>
+          <AutoFresh
+            onRefresh={handleSearch}
+            isRealtime={isRealtime}
+            queryRange={queryRange}
+            frequency={defaultFrequency}
+            currentMoment={currentMoment.current}
+            style={{ marginRight: 25 }}
+            onMenuClick={key => {
+              setFieldsValue?.({
+                frequency: key,
+                isRealtime: key !== 'off',
+              });
+            }}
+            onRefreshClick={() => {
+              setFieldsValue?.({
+                range: [moment().subtract(1, 'hours'), moment()],
+              });
+            }}
+          />
 
-          <Col span={5}>
-            <FormItem
-              name="zoneName"
-              label="Zone"
-              initialValue={queryData.zoneName}
-              {...formItemLayout}
-            >
+          <div className={styles.lastForm}>
+            {monitorScope === 'tenant' && (
+              <FormItem
+                name="tenantId"
+                label={formatMessage({
+                  id: 'OBShell.component.MonitorSearch.Tenant',
+                  defaultMessage: '租户',
+                })}
+                initialValue={queryData.tenantId}
+              >
+                <TenantSelect
+                  variant="borderless"
+                  onChange={() => {
+                    setFieldsValue({
+                      zoneName: undefined,
+                      serverIp: undefined,
+                    });
+                  }}
+                  onSuccess={newTenantList => {
+                    setTenantList(newTenantList);
+                    // 当前未选中租户，则默认选中第一个租户，并重新触发查询
+                    if (!queryData.clusterId && !queryData.tenantId) {
+                      // 根据集群 ID 分组后的租户数据
+                      const groupData = groupBy(newTenantList, item => item.clusterId);
+                      const firstKey = Object.keys(groupData)?.[0];
+                      const firstTenant = groupData[firstKey]?.[0];
+                      setFieldsValue({
+                        tenantId: firstTenant?.id,
+                      });
+                      setTimeout(() => {
+                        handleSearch();
+                      }, 0);
+                    }
+                  }}
+                />
+              </FormItem>
+            )}
+
+            <FormItem name="zoneName" label="Zone" initialValue={queryData.zoneName}>
               <MySelect
+                variant="borderless"
                 allowClear={true}
                 showSearch={true}
                 onChange={() => {
                   setFieldsValue({
-                    serverIpWithPort: undefined,
+                    serverIp: undefined,
                   });
                 }}
+                popupMatchSelectWidth={false}
                 placeholder={formatMessage({
-                  id: 'ocp-express.component.MonitorSearch.All',
+                  id: 'OBShell.component.MonitorSearch.All',
                   defaultMessage: '全部',
                 })}
               >
-                {zoneNameList?.map((item) => (
+                {zoneNameList?.map(item => (
                   <Option key={item} value={item}>
                     {item}
                   </Option>
                 ))}
               </MySelect>
             </FormItem>
-          </Col>
-          <Col span={6}>
-            <FormItem
-              name="serverIpWithPort"
-              initialValue={queryData.serverIp && `${queryData.serverIp}:${queryData.serverPort}`}
-              label="OBServer"
-              {...formItemLayout}
-            >
+            <FormItem name="serverIp" initialValue={queryData.serverIp} label="OBServer">
               <MySelect
                 allowClear={true}
                 showSearch={true}
+                variant="borderless"
+                optionLabelProp="optionLabel"
+                dropdownMatchSelectWidth={false}
                 placeholder={formatMessage({
-                  id: 'ocp-express.component.MonitorSearch.All',
+                  id: 'OBShell.component.MonitorSearch.All',
                   defaultMessage: '全部',
                 })}
                 style={{ width: '100%' }}
+                dropdownClassName="select-dropdown-with-description"
               >
-                {realServerList?.map((item) => (
-                  <Option key={item.ip} value={item.ip}>
-                    {item.ip}
+                {realServerList?.map(item => (
+                  <Option key={item.ip} value={item.ip} optionLabel={item.ip}>
+                    <span>{item.ip}</span>
+                    <span>{item.zoneName}</span>
                   </Option>
                 ))}
               </MySelect>
             </FormItem>
-          </Col>
-        </Row>
+          </div>
+        </div>
+        <Form.Item name="isRealtime" className={styles.hiddenForm}></Form.Item>
+        <Form.Item name="frequency" className={styles.hiddenForm}></Form.Item>
       </Form>
-    </MyCard>
+    </Card>
   );
 };
 

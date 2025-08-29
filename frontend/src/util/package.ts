@@ -113,3 +113,19 @@ export function buildVersionCompare(
     ? comparerFn(buildVersion1, buildVersion2, comparer)
     : versionCompare(version1, version2, comparer);
 }
+
+/**
+ * 判断版本是否 >=2.2.50 并且 < 4.0.0
+ */
+export function supportStandbyCluster(version?: string): boolean {
+  return (
+    buildVersionCompare(version, '2.2.50', 'gte') && buildVersionCompare(version, '4.0.0', 'lt')
+  );
+}
+
+/**
+ * 判断版本是否 >= 4.0
+ */
+export function isGte4(version?: string): boolean {
+  return buildVersionCompare(version, '4.0', 'gte');
+}

@@ -426,12 +426,9 @@ export const MONTH_OPTIONS = range(1, 32).map(item => ({
 export const DATA_BACKUP_MODE_LIST = [
   {
     label: formatMessage({ id: 'ocp-express.src.constant.backup.Total', defaultMessage: '全量' }),
-    fullLabel: formatMessage({
-      id: 'ocp-express.src.constant.backup.FullBackup',
-      defaultMessage: '全量备份',
-    }),
+    fullLabel: formatMessage({ id: 'OBShell.src.constant.backup.Total', defaultMessage: '全量' }),
 
-    value: 'FULL_BACKUP',
+    value: 'full',
   },
 
   {
@@ -444,7 +441,29 @@ export const DATA_BACKUP_MODE_LIST = [
       defaultMessage: '增量备份',
     }),
 
-    value: 'INCREMENTAL_BACKUP',
+    value: 'incremental',
+  },
+];
+
+export const DATA_BACKUP_TYPE_LIST = [
+  {
+    label: formatMessage({ id: 'ocp-express.src.constant.backup.Total', defaultMessage: '全量' }),
+    fullLabel: formatMessage({ id: 'OBShell.src.constant.backup.Total', defaultMessage: '全量' }),
+
+    value: 'FULL',
+  },
+
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.backup.Incremental',
+      defaultMessage: '增量',
+    }),
+    fullLabel: formatMessage({
+      id: 'ocp-express.src.constant.backup.IncrementalBackup',
+      defaultMessage: '增量备份',
+    }),
+
+    value: 'INC',
   },
 ];
 
@@ -474,17 +493,24 @@ export const DATA_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
       id: 'ocp-express.src.constant.backup.Starting',
       defaultMessage: '启动中',
     }),
-    badgeStatus: 'warning',
+    badgeStatus: 'processing',
   },
 
   {
-    value: 'INITIALIZING',
+    value: 'INIT',
     label: formatMessage({
       id: 'ocp-express.src.constant.backup.Initializing',
       defaultMessage: '初始化中',
     }),
 
-    badgeStatus: 'warning',
+    badgeStatus: 'processing',
+    operations: [
+      {
+        // 查看失败原因，是基于当前行数据、无需请求新的接口，因此不需要做权限控制
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
   },
 
   {
@@ -494,15 +520,36 @@ export const DATA_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
       defaultMessage: '进行中',
     }),
     badgeStatus: 'processing',
+    operations: [
+      {
+        // 查看失败原因，是基于当前行数据、无需请求新的接口，因此不需要做权限控制
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
   },
 
   {
-    value: 'DONE',
+    value: 'COMPLETED',
     label: formatMessage({
       id: 'ocp-express.src.constant.backup.Completed',
       defaultMessage: '已完成',
     }),
     badgeStatus: 'success',
+  },
+
+  {
+    value: 'CANCELING',
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Canceling', defaultMessage: '取消中' }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+
+  {
+    value: 'CANCELED',
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Cancelled', defaultMessage: '已取消' }),
+    badgeStatus: 'default',
+    operations: [],
   },
 
   {
@@ -520,6 +567,87 @@ export const DATA_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
       },
     ],
   },
+  {
+    value: 'BACKUP_SYS_META',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackUpSystemData',
+      defaultMessage: '备份系统数据',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BACKUP_USER_META',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackupUserMetadata',
+      defaultMessage: '备份用户元数据',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BACKUP_META_FINISH',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackupMetadataComplete',
+      defaultMessage: '备份元数据完成',
+    }),
+    badgeStatus: 'success',
+    operations: [],
+  },
+  {
+    value: 'BACKUP_SYS_DATA',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackUpSystemData',
+      defaultMessage: '备份系统数据',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BACKUP_USER_DATA',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackUpUserData',
+      defaultMessage: '备份用户数据',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BEFORE_BACKUP_LOG',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BeforeBackingUpTheLog',
+      defaultMessage: '备份日志前',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BEFORE_BACKUP_LOG',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackupLog',
+      defaultMessage: '备份日志',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'BACKUP_FUSE_TABLET_MATE',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.BackupFusionTableMetadata',
+      defaultMessage: '备份融合表元数据',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    value: 'PREPARE_BACKUP_LOG',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.PrepareToBackupLogs',
+      defaultMessage: '准备备份日志',
+    }),
+    badgeStatus: 'processing',
+    operations: [],
+  },
 ];
 
 export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
@@ -533,7 +661,7 @@ export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
   },
 
   {
-    value: 'RUNNING',
+    value: 'DOING',
     label: formatMessage({
       id: 'ocp-express.src.constant.backup.InProgress',
       defaultMessage: '进行中',
@@ -546,6 +674,10 @@ export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
           id: 'ocp-express.src.constant.backup.Stop',
           defaultMessage: '停止',
         }),
+      },
+      {
+        value: 'pause',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Pause', defaultMessage: '暂停' }),
       },
     ],
   },
@@ -595,17 +727,18 @@ export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
   },
 
   {
-    // 物理备份有效
-    // INTERRUPTED 为异常状态，无法重新启动任务，也没有错误原因，需要手动排查
-    value: 'INTERRUPTED',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.Interrupted',
-      defaultMessage: '已中断',
-    }),
+    value: 'SUSPEND',
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Pause', defaultMessage: '暂停' }),
 
     badgeStatus: 'error',
-    // INTERRUPTED 状态的日志备份任务允许停止
     operations: [
+      {
+        value: 'start',
+        label: formatMessage({
+          id: 'ocp-express.src.constant.backup.Start',
+          defaultMessage: '启动',
+        }),
+      },
       {
         value: 'stop',
         label: formatMessage({
@@ -619,117 +752,65 @@ export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
 
 export const RESTORE_TASK_STATUS_LIST: Global.StatusItem[] = [
   {
-    value: 'RESTORE_CREATE_TENANT',
+    value: 'RESTORING',
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Restoring', defaultMessage: '恢复中' }),
+
+    badgeStatus: 'processing',
+    operations: [
+      {
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
+  },
+  {
+    value: 'CREATE_TENANT',
     label: formatMessage({
-      id: 'ocp-express.src.constant.backup.CreatingATenant',
-      defaultMessage: '租户创建中',
+      id: 'OBShell.src.constant.backup.CreateTenant',
+      defaultMessage: '创建租户',
     }),
 
     badgeStatus: 'processing',
+    operations: [
+      {
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
   },
 
   {
-    value: 'RESTORE_SYS_REPLICA',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.RestoringSystemReplica',
-      defaultMessage: '系统副本恢复中',
-    }),
+    value: 'UPGRADE',
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Upgrade', defaultMessage: '升级' }),
 
     badgeStatus: 'processing',
+    operations: [
+      {
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
   },
 
   {
-    value: 'RESTORE_UPGRADE_PRE',
+    value: 'RESTORINE_SUCCESS',
     label: formatMessage({
-      id: 'ocp-express.src.constant.backup.PreUpgradeCheck',
-      defaultMessage: '升级前检查',
+      id: 'OBShell.src.constant.backup.RecoverySucceeded',
+      defaultMessage: '恢复成功',
     }),
 
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_UPGRADE_POST',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.PostUpgradeCheck',
-      defaultMessage: '升级后检查',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_MODIFY_SCHEMA',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.SchemaModification',
-      defaultMessage: 'schema 修改中',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_CREATE_USER_PARTITIONS',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.CreatingUserPartitions',
-      defaultMessage: '用户分区创建中',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_USER_REPLICA',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.RestoringUserReplicas',
-      defaultMessage: '用户副本恢复中',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_REBUILD_INDEX',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.CreatingAnIndex',
-      defaultMessage: '索引创建中',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_POST_CHECK',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.CheckingIndexes',
-      defaultMessage: '索引检查中',
-    }),
-
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_SUCCESS',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.Completed',
-      defaultMessage: '已完成',
-    }),
     badgeStatus: 'success',
   },
 
   {
-    value: 'RESTORE_FAIL',
-    label: formatMessage({ id: 'ocp-express.src.constant.backup.Failed', defaultMessage: '失败' }),
-    badgeStatus: 'error',
-    operations: [
-      {
-        value: 'clear',
-        label: formatMessage({
-          id: 'ocp-express.src.constant.backup.ClearResourcePools',
-          defaultMessage: '清理资源池',
-        }),
-      },
+    value: 'RESTORINE_FAIL',
+    label: formatMessage({
+      id: 'OBShell.src.constant.backup.RecoveryFailed',
+      defaultMessage: '恢复失败',
+    }),
 
+    badgeStatus: 'success',
+    operations: [
       {
         value: 'viewErrorMessage',
         label: formatMessage({
@@ -740,59 +821,43 @@ export const RESTORE_TASK_STATUS_LIST: Global.StatusItem[] = [
     ],
   },
 
-  // OB 4.0 新增的恢复任务状态
-  {
-    value: 'RESTORE_PRE',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.SetConfigurationItems',
-      defaultMessage: '设置配置项',
-    }),
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_CREATE_INIT_LS',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.CreateABaselineLogStream',
-      defaultMessage: '创建基线日志流',
-    }),
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'RESTORE_WAIT_LS',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.TheBaselineLogStreamIsBeingRestored',
-      defaultMessage: '基线日志流恢复中',
-    }),
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'POST_CHECK',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.SetUpASecondaryTenant',
-      defaultMessage: '设置备租户',
-    }),
-    badgeStatus: 'processing',
-  },
-
-  {
-    value: 'UPGRADE',
-    label: formatMessage({
-      id: 'ocp-express.src.constant.backup.TenantUpgrading',
-      defaultMessage: '租户升级中',
-    }),
-    badgeStatus: 'processing',
-  },
-
   {
     value: 'WAIT_TENANT_RESTORE_FINISH',
     label: formatMessage({
-      id: 'ocp-express.src.constant.backup.WaitForTenantRecoveryToEnd',
-      defaultMessage: '等待租户恢复结束',
+      id: 'OBShell.src.constant.backup.WaitForTenantRecoveryTo',
+      defaultMessage: '等待租户恢复完成',
     }),
     badgeStatus: 'processing',
+    operations: [
+      {
+        value: 'cancel',
+        label: formatMessage({ id: 'OBShell.src.constant.backup.Cancel', defaultMessage: '取消' }),
+      },
+    ],
+  },
+
+  {
+    value: 'SUCCESS',
+    label: formatMessage({
+      id: 'ocp-express.src.constant.backup.Completed',
+      defaultMessage: '已完成',
+    }),
+    badgeStatus: 'success',
+  },
+
+  {
+    value: 'FAIL',
+    label: formatMessage({ id: 'ocp-express.src.constant.backup.Failed', defaultMessage: '失败' }),
+    badgeStatus: 'error',
+    operations: [
+      {
+        value: 'viewErrorMessage',
+        label: formatMessage({
+          id: 'ocp-express.src.constant.backup.ViewReasons',
+          defaultMessage: '查看原因',
+        }),
+      },
+    ],
   },
 ];
 
@@ -875,6 +940,49 @@ export const BACKUP_SCHEDULE_MODE_LIST = [
   {
     value: 'MONTH',
     label: formatMessage({ id: 'ocp-express.src.constant.backup.Months', defaultMessage: '月' }),
+  },
+];
+
+export const BACKUP_MODE_LIST = [
+  {
+    label: formatMessage({
+      id: 'ocp-v2.src.constant.backup.PhysicalBackup',
+      defaultMessage: '物理备份',
+    }),
+
+    value: 'PHYSICAL_BACKUP',
+    labelForSampling: formatMessage({
+      id: 'ocp-v2.src.constant.backup.PhysicalBackupCluster',
+      defaultMessage: '物理备份集群',
+    }),
+
+    tagColor: 'green',
+  },
+
+  {
+    label: formatMessage({
+      id: 'ocp-v2.src.constant.backup.LogicalBackup',
+      defaultMessage: '逻辑备份',
+    }),
+
+    value: 'LOGICAL_BACKUP',
+    labelForSampling: formatMessage({
+      id: 'ocp-v2.src.constant.backup.LogicalBackupCluster',
+      defaultMessage: '逻辑备份集群',
+    }),
+
+    tagColor: 'cyan',
+  },
+  {
+    label: formatMessage({ id: 'OBShell.src.constant.backup.Total', defaultMessage: '全量' }),
+
+    value: 'NONE',
+    labelForSampling: formatMessage({
+      id: 'OBShell.src.constant.backup.Total',
+      defaultMessage: '全量',
+    }),
+
+    tagColor: 'cyan',
   },
 ];
 

@@ -84,22 +84,21 @@ const UnitBlock: React.FC<UnitBlockProps> = ({
       overlay={
         <div>
           {/* <div
-            style={{
-              color: migrateTypeItem.color,
-            }}
+           style={{
+             color: migrateTypeItem.color,
+           }}
           >
-            <div>
-              {formatMessage(
-                {
-                  id: 'ocp-express.Resource.Component.UnitBlock.StatusMigratetypeitemlabelMigratetext',
-                  defaultMessage: '状态：{migrateTypeItemLabel}{migrateText}',
-                },
-
+           <div>
+             {formatMessage(
+               {
+                 id: 'ocp-express.Resource.Component.UnitBlock.StatusMigratetypeitemlabelMigratetext',
+                 defaultMessage: '状态：{migrateTypeItemLabel}{migrateText}',
+               },
                 { migrateTypeItemLabel: migrateTypeItem.label, migrateText }
-              )}
-            </div>
-            <div>{migrateTarget}</div>
-            {migrateTypeItem.extra && <div>{migrateTypeItem.extra}</div>}
+             )}
+           </div>
+           <div>{migrateTarget}</div>
+           {migrateTypeItem.extra && <div>{migrateTypeItem.extra}</div>}
           </div> */}
           {/* <Divider style={{ margin: '8px -12px', width: 'calc(100% + 24px)' }} /> */}
           {unitInfo && (
@@ -108,46 +107,47 @@ const UnitBlock: React.FC<UnitBlockProps> = ({
               <div>
                 {formatMessage(
                   {
-                    id: 'ocp-express.Resource.Component.UnitBlock.TenantNameUnitinfotenantname',
+                    id: 'OBShell.Unit.Component.UnitBlock.TenancyUnitinfotenantname',
+                    defaultMessage: '租户名：{unitInfoTenantName}',
                   },
-                  { unitInfoTenantName: unitInfo.tenantName },
+                  { unitInfoTenantName: unitInfo.tenantName }
                 )}
               </div>
               <div>
                 {formatMessage(
                   {
-                    id: 'ocp-express.Resource.Component.UnitBlock.ResourcePoolUnitinforesourcepoolname',
+                    id: 'OBShell.Unit.Component.UnitBlock.ResourcePoolUnitinforesourcepoolname',
+                    defaultMessage: '资源池：{unitInfoResourcePoolName}',
                   },
-                  { unitInfoResourcePoolName: unitInfo.resourcePoolName },
+                  { unitInfoResourcePoolName: unitInfo.resourcePoolName }
                 )}
               </div>
               {/* Popover 里就展示 Unit 规格的原本名称 */}
               <div>
                 {formatMessage(
                   {
-                    id: 'ocp-express.Resource.Component.UnitBlock.SpecificationUnitinfounitconfig',
+                    id: 'OBShell.Unit.Component.UnitBlock.SpecificationsUnitinfounitconfig',
+                    defaultMessage: '规格：{unitInfoUnitConfig}',
                   },
-                  { unitInfoUnitConfig: unitInfo.unitConfig },
+                  { unitInfoUnitConfig: unitInfo.unitConfig }
                 )}
               </div>
               <div>
                 {formatMessage(
                   {
-                    id: 'ocp-express.Resource.Component.UnitBlock.CpuCoresUnitinfomincpuassignedcountToUnitinfomaxcpuassignedcount',
+                    id: 'OBShell.Unit.Component.UnitBlock.CpuCoreUnitinfomaxcpuassignedcount',
+                    defaultMessage: 'CPU（核）：{unitInfoMaxCpuAssignedCount}',
                   },
-                  {
-                    unitInfoMaxCpuAssignedCount: unitInfo.maxCpuAssignedCount,
-                  },
+                  { unitInfoMaxCpuAssignedCount: unitInfo.maxCpuAssignedCount }
                 )}
               </div>
               <div>
                 {formatMessage(
                   {
-                    id: 'ocp-express.Resource.Component.UnitBlock.MemoryGbMinmemoryassignedToMaxmemoryassigned',
+                    id: 'OBShell.Unit.Component.UnitBlock.MemoryGbMaxmemoryassigned',
+                    defaultMessage: '内存（GB）：{maxMemoryAssigned}',
                   },
-                  {
-                    maxMemoryAssigned,
-                  },
+                  { maxMemoryAssigned: maxMemoryAssigned }
                 )}
               </div>
               <div>

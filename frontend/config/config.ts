@@ -37,7 +37,6 @@ try {
 const ocp = {
   // target: 'http://1.1.1.1',
 };
-
 export default defineConfig({
   routes,
   singular: true,

@@ -897,29 +897,6 @@ migrateType = NOT_IN_MIGRATE */
     hashCode?: number;
   }
 
-  interface MetricClass {
-    id?: number;
-    key?: string;
-    name?: string;
-    name_en?: string;
-    description?: string;
-    description_en?: string;
-    scope?: MetricScope;
-    type?: MetricType;
-    metricGroups?: Array<MetricGroup>;
-  }
-
-  interface MetricGroup {
-    id?: number;
-    key?: string;
-    className?: string;
-    name?: string;
-    description?: string;
-    metrics?: Array<MetricMeta>;
-    /** 是否为带标签的监控数据群组，方便调用方区数据类型来决定使用哪个 API 获取监控数据详情数据，默认为 false. */
-    withLabel?: boolean;
-  }
-
   type MetricLabels = Record<string, any>;
 
   interface MetricMeta {
@@ -2612,23 +2589,23 @@ all_merged_version 的值和 last_merged_version 是一致的
 
   type TaskType = 'MANUAL' | 'SYS_ONCE' | 'SCHEDULED' | 'SYS_SCHEDULED';
 
-  interface Tenant {
-    id?: number;
-    name?: string;
-    obTenantId?: number;
-    mode?: TenantMode;
-    clusterName?: string;
-    obClusterId?: number;
-    obVersion?: string;
-    createTime?: string;
-    primaryZone?: string;
-    zoneList?: string;
-    locality?: string;
-    status?: TenantStatus;
-    locked?: boolean;
-    readonly?: boolean;
-    description?: string;
-  }
+  // interface Tenant {
+  //   id?: number;
+  //   name?: string;
+  //   obTenantId?: number;
+  //   mode?: TenantMode;
+  //   clusterName?: string;
+  //   obClusterId?: number;
+  //   obVersion?: string;
+  //   createTime?: string;
+  //   primaryZone?: string;
+  //   zoneList?: string;
+  //   locality?: string;
+  //   status?: TenantStatus;
+  //   locked?: boolean;
+  //   readonly?: boolean;
+  //   description?: string;
+  // }
 
   interface TenantChangePasswordParam {
     newPassword?: string;
@@ -2678,29 +2655,6 @@ all_merged_version 的值和 last_merged_version 是一致的
   }
 
   type TenantCompactionResult = 'SUCCESS' | 'FAIL' | 'COMPACTING';
-
-  interface TenantInfo {
-    id?: number;
-    name?: string;
-    obTenantId?: number;
-    mode?: TenantMode;
-    clusterName?: string;
-    obClusterId?: number;
-    obVersion?: string;
-    createTime?: string;
-    primaryZone?: string;
-    zoneList?: string;
-    locality?: string;
-    status?: TenantStatus;
-    locked?: boolean;
-    readonly?: boolean;
-    description?: string;
-    charset?: string;
-    collation?: string;
-    zones?: Array<TenantZone>;
-    whitelist?: string;
-    obproxyAndConnectionStrings?: Array<ObproxyAndConnectionString>;
-  }
 
   type TenantMode = 'ORACLE' | 'MYSQL';
 

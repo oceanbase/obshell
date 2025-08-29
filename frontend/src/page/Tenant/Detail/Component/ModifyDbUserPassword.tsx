@@ -61,20 +61,17 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
     manual: true,
     onSuccess: res => {
       if (res?.successful) {
-        if (onSuccess) {
-          message.success(
-            formatMessage(
-              {
-                id: 'ocp-express.Detail.Component.ModifyDbUserPassword.DbuserusernamePasswordChanged',
-                defaultMessage: '{dbUserUsername} 密码修改成功',
-              },
+        message.success(
+          formatMessage(
+            {
+              id: 'ocp-express.Detail.Component.ModifyDbUserPassword.DbuserusernamePasswordChanged',
+              defaultMessage: '{dbUserUsername} 密码修改成功',
+            },
 
-              { dbUserUsername: dbUser?.user_name || '' }
-            )
-          );
-
-          onSuccess();
-        }
+            { dbUserUsername: dbUser?.user_name || '' }
+          )
+        );
+        onSuccess?.();
       }
     },
   });
@@ -95,7 +92,7 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
           new_password: newPassword,
         }
       ).then(res => {
-        if (res.successful && dbUser?.user_name === 'root') {
+        if (res.successful && (dbUser?.user_name === 'root' || dbUser?.user_name === 'SYS')) {
           createOrReplacePassword(
             {
               name: tenantData?.tenant_name || '',

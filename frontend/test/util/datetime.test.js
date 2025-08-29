@@ -34,6 +34,19 @@ describe('formatTimeWithMicroseconds', () => {
       '2021-04-07 05:42:11.966709'
     );
   });
+
+  // 新增测试：验证当传入包含微秒的格式时，不会重复显示微秒
+  test('with microseconds format - should not duplicate microseconds', () => {
+    expect(formatTimeWithMicroseconds('2021-04-06T21:42:11.966709+08:00', 'HH:mm:ss.SSSSSS')).toEqual(
+      '21:42:11.966709'
+    );
+  });
+
+  test('with microseconds format - should not duplicate microseconds for different time', () => {
+    expect(formatTimeWithMicroseconds('2021-04-08T14:28:03.80652+08:00', 'HH:mm:ss.SSSSSS')).toEqual(
+      '14:28:03.806520'
+    );
+  });
 });
 
 describe('getMicroseconds', () => {

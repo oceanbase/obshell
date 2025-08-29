@@ -362,7 +362,7 @@ a[disabled] {
     }
 
     .ant-table-pagination.ant-pagination {
-      margin-right: 24px;
+      margin-right: 24px!important;
 
       /* 无内边距的卡片中，设置 Table 分页器的外间距，避免分页器紧贴卡片 */
       margin-bottom: 16px;
@@ -494,6 +494,10 @@ a[disabled] {
   // 只读模式的 InputNumber，需要去掉边框和阴影
   border: none;
   box-shadow: none;
+  :focus{
+    border: none;
+  box-shadow: none;
+  }
 }
 
 .editable-text-wrapper {

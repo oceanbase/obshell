@@ -43,9 +43,9 @@ export function getTaskPercent(task: API.DagDetailDTO, withUnit = true) {
 /* 获取任务或子任务的执行耗时 = 最近一次执行的结束时间 - 第一次执行的开始时间。时间单位会通过 secondToTime 自适应转换 */
 export function getTaskDuration(task?: API.DagDetailDTO) {
   // 第一次执行的开始时间
-  const startTime = task?.start_time;
+  const startTime = task?.start_timestamp || task?.start_time;
   // 最近一次执行的结束时间，包括成功和失败，会随着任务或子任务状态的变化而变化
-  const finishTime = task?.end_time;
+  const finishTime = task?.end_timestamp || task?.end_time;
   // 只有执行过，执行耗时才有意义
   if (startTime) {
     // 当任务正在执行中时，直接取当前时间，这样可以实时变化

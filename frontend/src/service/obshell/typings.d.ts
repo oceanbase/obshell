@@ -52,20 +52,48 @@ declare namespace API {
   };
 
   type AgentStatus = {
-    agent?: AgentInfoWithIdentity;
-    obState?: number;
-    /** service pid */
+    architecture?: string;
+    homePath?: string;
+    identity: AgentIdentity;
+    ip: string;
+    isObproxyAgent?: boolean;
+    obVersion?: string;
     pid?: number;
-    /** Ports process occupied ports */
-    port?: number;
-    sqlPort?: number;
-    /** timestamp when service started */
+    port: number;
+    security?: boolean;
     startAt?: number;
-    /** service state */
     state?: number;
-    underMaintenance?: boolean;
-    /** service version */
+    supportedAuth?: string[];
     version?: string;
+    zone: string;
+  };
+
+  type Alert = {
+    description?: string;
+    ends_at: number;
+    fingerprint: string;
+    instance: OBInstance;
+    labels?: KVPair[];
+    rule: string;
+    severity: Severity;
+    starts_at: number;
+    status: Status;
+    summary?: string;
+    updated_at: number;
+  };
+
+  type AlertFilter = {
+    end_time?: number;
+    instance?: OBInstance;
+    instance_type?: OBInstanceType;
+    keyword?: string;
+    severity?: Severity;
+    start_time?: number;
+  };
+
+  type AlertmanagerConfig = {
+    address?: string;
+    auth?: Auth;
   };
 
   type ApiError = {
@@ -95,9 +123,29 @@ declare namespace API {
     tenant_name?: string;
   };
 
+  type Auth = {
+    password?: string;
+    username?: string;
+  };
+
   type BackupDeletePolicy = {
     policy?: string;
     recovery_window?: string;
+  };
+
+  type BackupJob = {
+    backup_set_id?: number;
+    backup_type?: string;
+    comment?: string;
+    description?: string;
+    end_timestamp?: string;
+    job_id?: number;
+    path?: string;
+    plus_archivelog?: string;
+    result?: number;
+    start_timestamp?: string;
+    status?: string;
+    tenant_id?: number;
   };
 
   type BackupOverview = {
@@ -112,11 +160,6 @@ declare namespace API {
 
   type BackupStatusParam = {
     status?: string;
-  };
-
-  type BackupStorageTestParam = {
-    archive_base_uri?: string;
-    data_base_uri?: string;
   };
 
   type BaseResourceStats = {
@@ -138,12 +181,6 @@ declare namespace API {
   type cancelRestoreTaskParams = {
     /** Tenant name */
     tenantName: string;
-  };
-
-  type CdbOBArchivelogBO = {
-    path?: string;
-    status?: string;
-    tenant_id?: number;
   };
 
   type CdbObBackupTask = {
@@ -173,64 +210,6 @@ declare namespace API {
     task_id?: number;
     tenant_id?: number;
     user_ls_start_scn?: number;
-  };
-
-  type CdbObBackupTaskBO = {
-    backup_set_id?: number;
-    comment?: string;
-    data_turn_id?: number;
-    encryption_mode?: string;
-    end_scn?: number;
-    end_timestamp?: string;
-    extra_meta_bytes?: number;
-    file_count?: number;
-    finish_macro_block_count?: number;
-    finish_tablet_count?: number;
-    incarnation?: number;
-    input_bytes?: number;
-    job_id?: number;
-    macro_block_count?: number;
-    meta_turn_id?: number;
-    output_bytes?: number;
-    output_rate_bytes?: number;
-    path?: string;
-    result?: number;
-    start_scn?: number;
-    start_timestamp?: string;
-    status?: string;
-    tablet_count?: number;
-    task_id?: number;
-    tenant_id?: number;
-    user_ls_start_scn?: number;
-  };
-
-  type CdbObRestoreHistory = {
-    backup_cluster_name?: string;
-    backup_cluster_version?: number;
-    backup_piece_list?: string;
-    backup_set_list?: string;
-    backup_tenant_id?: number;
-    backup_tenant_name?: string;
-    comment?: string;
-    description?: string;
-    finish_bytes?: number;
-    finish_bytes_display?: string;
-    finish_ls_count?: number;
-    finish_tablet_count?: number;
-    finish_timestamp?: string;
-    job_id?: number;
-    ls_count?: number;
-    restore_option?: string;
-    restore_scn?: number;
-    restore_scn_display?: string;
-    restore_tenant_id?: number;
-    restore_tenant_name?: string;
-    start_timestamp?: string;
-    status?: string;
-    tablet_count?: number;
-    tenant_id?: number;
-    total_bytes?: number;
-    total_bytes_display?: string;
   };
 
   type CdbObSysVariable = {
@@ -394,7 +373,6 @@ declare namespace API {
     root_password?: string;
     /** Tenant scenario. */
     scenario?: string;
-    time_zone?: string;
     /** Tenant global variables. */
     variables?: Record<string, any>;
     /** Tenant whitelist. */
@@ -416,6 +394,13 @@ declare namespace API {
   type createUserParams = {
     /** tenant name */
     name: string;
+  };
+
+  type CustomPage = {
+    number?: number;
+    size?: number;
+    total_elements?: number;
+    total_pages?: number;
   };
 
   type DagDetailDTO = {
@@ -517,13 +502,6 @@ declare namespace API {
     original_tenant_name?: string;
   };
 
-  type DbObjectBo = {
-    full_name?: string;
-    name?: string;
-    owner?: string;
-    type?: string;
-  };
-
   type DbPrivilege = {
     db_name?: string;
     privileges?: string[];
@@ -539,6 +517,11 @@ declare namespace API {
     name: string;
     /** database name */
     database: string;
+  };
+
+  type DeleteSilencerParams = {
+    /** silencer id */
+    id: string;
   };
 
   type DeleteZoneParams = {
@@ -620,17 +603,12 @@ declare namespace API {
     show_details?: boolean;
   };
 
-  type getRestoreHistoryParams = {
-    /** Tenant name */
-    tenantName: string;
+  type getObclusterCharsetsParams = {
+    /** tenant mode */
+    tenant_mode?: string;
   };
 
   type getRestoreOverviewParams = {
-    /** Tenant name */
-    tenantName: string;
-  };
-
-  type getRestoreTenantInfoByObAdminParams = {
     /** Tenant name */
     tenantName: string;
   };
@@ -640,6 +618,16 @@ declare namespace API {
     name: string;
     /** role name */
     role: string;
+  };
+
+  type GetRuleParams = {
+    /** rule name */
+    name: string;
+  };
+
+  type GetSilencerParams = {
+    /** silencer id */
+    id: string;
   };
 
   type getStatsParams = {
@@ -660,12 +648,12 @@ declare namespace API {
     name: string;
   };
 
-  type getTenantBackupInfoParams = {
+  type getTenantBackupConfigParams = {
     /** Tenant name */
     name: string;
   };
 
-  type getTenantBackupStorageParams = {
+  type getTenantBackupInfoParams = {
     /** Tenant name */
     name: string;
   };
@@ -787,6 +775,16 @@ declare namespace API {
     zoneName: string;
   };
 
+  type KVPair = {
+    key?: string;
+    value?: string;
+  };
+
+  type ListAllMetricsParams = {
+    /** metrics scope */
+    scope: 'OBCLUSTER' | 'OBTENANT';
+  };
+
   type listDatabasesParams = {
     /** tenant name */
     name: string;
@@ -797,8 +795,18 @@ declare namespace API {
     name: string;
   };
 
+  type listRestoreTasksParams = {
+    /** Tenant name */
+    tenantName: string;
+  };
+
   type listRolesParams = {
     /** tenant name */
+    name: string;
+  };
+
+  type listTenantBackupTasksParams = {
+    /** Tenant name */
     name: string;
   };
 
@@ -814,10 +822,57 @@ declare namespace API {
     user: string;
   };
 
+  type Matcher = {
+    is_regex?: boolean;
+    name?: string;
+    value?: string;
+  };
+
   type MemoryInfo = {
     available?: string;
     free?: string;
     total?: string;
+  };
+
+  type Metric = {
+    labels?: KVPair[];
+    name?: string;
+  };
+
+  type MetricClass = {
+    description: string;
+    metric_groups: MetricGroup[];
+    name: string;
+  };
+
+  type MetricData = {
+    metric: Metric;
+    values: MetricValue[];
+  };
+
+  type MetricGroup = {
+    description: string;
+    metrics: MetricMeta[];
+    name: string;
+  };
+
+  type MetricMeta = {
+    description: string;
+    key: string;
+    name: string;
+    unit: string;
+  };
+
+  type MetricQuery = {
+    group_labels?: string[];
+    labels?: KVPair[];
+    metrics?: string[];
+    query_range?: QueryRange;
+  };
+
+  type MetricValue = {
+    timestamp: number;
+    value: number;
   };
 
   type ModifyDatabaseParam = {
@@ -919,7 +974,7 @@ declare namespace API {
     user: string;
   };
 
-  type modifyUserRoleParams = {
+  type modifyUserRolesParams = {
     /** tenant name */
     name: string;
     /** user name */
@@ -978,8 +1033,19 @@ declare namespace API {
     obcluster_info?: ClusterConfig;
   };
 
+  type OBInstance = {
+    obcluster?: string;
+    observer?: string;
+    obtenant?: string;
+    /** obzone may exist in labels */
+    obzone?: string;
+    type: OBInstanceType;
+  };
+
+  type OBInstanceType = 'unknown' | 'obcluster' | 'obzone' | 'obtenant' | 'observer';
+
   type ObjectPrivilege = {
-    object?: DbObjectBo;
+    object?: DbaObjectBo;
     privileges?: string[];
   };
 
@@ -1141,6 +1207,16 @@ declare namespace API {
     version?: string;
   };
 
+  type PaginatedBackupJobResponse = {
+    contents?: BackupJob[];
+    page?: CustomPage;
+  };
+
+  type PaginatedRestoreTaskResponse = {
+    contents?: RestoreTask[];
+    page?: CustomPage;
+  };
+
   type patchRoleObjectPrivilegeParams = {
     /** tenant name */
     name: string;
@@ -1184,6 +1260,17 @@ declare namespace API {
     name: string;
   };
 
+  type PrometheusConfig = {
+    address?: string;
+    auth?: Auth;
+  };
+
+  type QueryRange = {
+    end_timestamp?: number;
+    start_timestamp?: number;
+    step?: number;
+  };
+
   type recyclebinFlashbackTenantParams = {
     /** original tenant name or object name in recyclebin */
     name: string;
@@ -1210,6 +1297,8 @@ declare namespace API {
   type RestoreOverview = {
     backup_cluster_name?: string;
     backup_cluster_version?: number;
+    backup_data_uri?: string;
+    backup_log_uri?: string;
     backup_piece_list?: string;
     backup_set_list?: string;
     backup_tenant_id?: number;
@@ -1264,6 +1353,41 @@ declare namespace API {
     data_backup_uri: string;
   };
 
+  type RestoreTask = {
+    backup_cluster_name?: string;
+    backup_cluster_version?: number;
+    backup_data_uri?: string;
+    backup_log_uri?: string;
+    backup_piece_list?: string;
+    backup_set_list?: string;
+    backup_tenant_id?: number;
+    backup_tenant_name?: string;
+    comment?: string;
+    description?: string;
+    finish_bytes?: number;
+    finish_bytes_display?: string;
+    finish_ls_count?: number;
+    finish_tablet_count?: number;
+    finish_timestamp?: string;
+    job_id?: number;
+    ls_count?: number;
+    recover_progress?: string;
+    recover_scn?: number;
+    recover_scn_display?: string;
+    restore_option?: string;
+    restore_progress?: string;
+    restore_scn?: number;
+    restore_scn_display?: string;
+    restore_tenant_id?: number;
+    restore_tenant_name?: string;
+    start_timestamp?: string;
+    status?: string;
+    tablet_count?: number;
+    tenant_id?: number;
+    total_bytes?: number;
+    total_bytes_display?: string;
+  };
+
   type RestoreTenantInfo = {
     cluster_name?: string;
     restore_windows?: RestoreWindows;
@@ -1309,6 +1433,36 @@ declare namespace API {
     svr_port?: number;
     zone?: string;
   };
+
+  type RuleFilter = {
+    instance_type?: OBInstanceType;
+    keyword?: string;
+    severity?: Severity;
+  };
+
+  type RuleHealth = 'unknown' | 'ok' | 'err';
+
+  type RuleResponse = {
+    description: string;
+    duration: number;
+    evaluation_time: number;
+    health: RuleHealth;
+    instance_type: OBInstanceType;
+    keep_firing_for: number;
+    labels: KVPair[];
+    last_error?: string;
+    last_evaluation: number;
+    name: string;
+    query: string;
+    severity: Severity;
+    state: RuleState;
+    summary: string;
+    type?: RuleType;
+  };
+
+  type RuleState = 'firing' | 'pending' | 'inactive';
+
+  type RuleType = 'built-in' | 'customized';
 
   type ScaleInTenantReplicasParam = {
     zones: string[];
@@ -1384,9 +1538,49 @@ declare namespace API {
     variables: Record<string, any>;
   };
 
+  type Severity = 'critical' | 'major' | 'minor' | 'warning' | 'info';
+
+  type SilencerFilter = {
+    instance?: OBInstance;
+    instance_type?: OBInstanceType;
+    keyword?: string;
+  };
+
+  type SilencerParam = {
+    comment: string;
+    created_by: string;
+    ends_at: number;
+    id?: string;
+    instances: OBInstance[];
+    matchers: Matcher[];
+    rules: string[];
+    starts_at: number;
+  };
+
+  type SilencerResponse = {
+    comment: string;
+    created_by: string;
+    ends_at: number;
+    id: string;
+    instances: OBInstance[];
+    matchers: Matcher[];
+    rules: string[];
+    starts_at: number;
+    status: Status;
+    updated_at: number;
+  };
+
   type StartObParam = {
     forcePassDag?: ForcePassDagParam;
     scope: Scope;
+  };
+
+  type State = 'active' | 'expired' | 'pending';
+
+  type Status = {
+    inhibited_by: string[];
+    silenced_by: string[];
+    state: State;
   };
 
   type TaskDetailDTO = {
@@ -1408,16 +1602,6 @@ declare namespace API {
     name: string;
   };
 
-  type TenantArchiveLogStatus = {
-    checkpoint?: string;
-    delay?: number;
-    path?: string;
-    start_time?: string;
-    status?: string;
-    tenant_id?: number;
-    tenant_name?: string;
-  };
-
   type TenantBackupConfigParam = {
     archive_base_uri?: string;
     archive_lag_target?: string;
@@ -1435,27 +1619,14 @@ declare namespace API {
     name: string;
   };
 
-  type tenantBackupHistoryParams = {
-    /** Tenant name */
-    name: string;
-  };
-
   type TenantBackupInfo = {
-    archive_log_status?: CdbOBArchivelogBO;
-    lastest_backup_task?: CdbObBackupTaskBO;
+    archive_log_delay?: number;
+    lastest_archive_log_checkpoint?: string;
+    lastest_data_backup_time?: string;
+    tenant_id?: number;
   };
 
   type tenantBackupOverviewParams = {
-    /** Tenant name */
-    name: string;
-  };
-
-  type tenantBackupTasksParams = {
-    /** Tenant name */
-    name: string;
-  };
-
-  type tenantBackupStorigeTestParams = {
     /** Tenant name */
     name: string;
   };
@@ -1497,6 +1668,7 @@ declare namespace API {
     in_recyclebin?: string;
     locality?: string;
     locked?: string;
+    lower_case_table_names?: string;
     mode?: string;
     pools?: ResourcePoolWithUnit[];
     primary_zone?: string;
@@ -1505,6 +1677,7 @@ declare namespace API {
     status?: string;
     tenant_id?: number;
     tenant_name?: string;
+    time_zone?: string;
     whitelist?: string;
   };
 
@@ -1639,17 +1812,17 @@ declare namespace API {
 
   type UpgradePkgInfo = {
     architecture?: string;
-    chunkCount?: number;
+    chunk_count?: number;
     distribution?: string;
-    gmtModify?: string;
+    gmt_modify?: string;
     md5?: string;
     name?: string;
-    payloadSize?: number;
-    pkgId?: number;
+    payload_size?: number;
+    pkg_id?: number;
     release?: string;
-    releaseDistribution?: string;
+    release_distribution?: string;
     size?: number;
-    upgradeDepYaml?: string;
+    upgrade_dep_yaml?: string;
     version?: string;
   };
 

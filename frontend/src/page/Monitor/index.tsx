@@ -1,197 +1,109 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
-import { history, connect } from 'umi';
-import React, { useEffect } from 'react';
-import { Alert, Card, Col, Row } from '@oceanbase/design';
-import { PageContainer } from '@oceanbase/ui';
-import { findBy, directTo } from '@oceanbase/util';
-import { find } from 'lodash';
-import { useRequest } from 'ahooks';
 import useDocumentTitle from '@/hook/useDocumentTitle';
-import * as ObClusterParameterController from '@/service/ocp-express/ObClusterParameterController';
-import { getObServersByObCluster } from '@/util/oceanbase';
+import { history } from 'umi';
+import React from 'react';
+import { Tabs } from '@oceanbase/design';
+import { PageContainer } from '@oceanbase/ui';
+import { getSystemExternalPrometheus } from '@/service/obshell/system';
+import { useRequest } from 'ahooks';
 import ContentWithReload from '@/component/ContentWithReload';
-import MonitorSearch from '@/component/MonitorSearch';
-import MetricChart from '@/component/MetricChart';
+import useReload from '@/hook/useReload';
+import MonitorConfig from './MonitorConfig';
+const { TabPane } = Tabs;
 
-interface MonitorProps {
-  location: {
-    query: {
-      tab: string;
-    };
+export type MonitorScope = 'cluster' | 'tenant' | 'obproxy';
+export interface MonitorProps {
+  location?: {
+    pathname: string;
+    query: any;
   };
-
-  dispatch: any;
-  loading: boolean;
-  clusterData: API.ClusterInfo;
-  metricGroupList: API.MetricClass[];
 }
 
-const Monitor: React.FC<MonitorProps> = ({
-  location,
-  dispatch,
-  loading,
-  clusterData,
-  metricGroupList,
-}) => {
+const Monitor: React.FC<MonitorProps> = ({ location: { pathname } = {}, children }) => {
   useDocumentTitle(
-    formatMessage({
-      id: 'ocp-express.page.Monitor.ClusterMonitoring',
-      defaultMessage: '集群监控',
-    })
+    formatMessage({ id: 'OBShell.page.Monitor.PerformanceMonitoring', defaultMessage: '性能监控' })
   );
+  const [reloading, reload] = useReload(false);
 
-  const { query } = location || {};
-  const { tab } = query || {};
-  const activeKey = tab || metricGroupList[0]?.key;
+  const tabs = [
+    {
+      key: 'cluster',
+      tab: formatMessage({
+        id: 'OBShell.page.Monitor.OceanbaseCluster',
+        defaultMessage: 'OceanBase 集群',
+      }),
+      // useRedirectMenu 需要用到 link 属性
+      link: '/monitor/cluster',
+    },
+    {
+      key: 'tenant',
+      tab: formatMessage({
+        id: 'OBShell.page.Monitor.OceanbaseTenant',
+        defaultMessage: 'OceanBase 租户',
+      }),
+      link: '/monitor/tenant',
+    },
+  ];
 
-  const queryData = MonitorSearch.getQueryData(query);
+  const activeKey = pathname?.split('/')?.[2] || tabs[0]?.key;
 
-  const zoneNameList = clusterData?.zones?.map(item => item.name);
-  const serverList = getObServersByObCluster(clusterData).map(item => ({
-    // 需要 ip 加 port 来区分 server
-    ip: `${item.ip}:${item.port}`,
-    zoneName: item.zoneName,
-  }));
-
-  // 指标类
-  const metricClass = findBy(metricGroupList, 'key', activeKey);
-
-  useEffect(() => {
-    getMetricGroupList();
-    dispatch({
-      type: 'cluster/getClusterData',
-    });
-  }, []);
-
-  function getMetricGroupList() {
-    dispatch({
-      type: 'monitor/getMetricGroupListData',
-      payload: {
-        scope: 'CLUSTER',
-      },
-    });
-  }
-
-  // 获取参数配置列表
-  const { data } = useRequest(ObClusterParameterController.listClusterParameters, {
-    defaultParams: [{}],
+  const {
+    data: prometheusData,
+    loading: prometheusLoading,
+    refresh: refreshPrometheusData,
+  } = useRequest(getSystemExternalPrometheus, {
+    defaultParams: [{ HIDE_ERROR_MESSAGE: true }],
   });
 
-  const parameterList = data?.data?.contents || [];
-
-  // 获取 enable_perf_event 参数的值
-  const perfEventData = find(
-    parameterList,
-    (item: API.ClusterParameter) => item.name === 'enable_perf_event'
-  )?.currentValue;
-  // 判断是否存在参数 TRUE，存在的话表明可以生成监控数据
-  const perfEventEnabled = perfEventData?.values?.includes('True');
+  const isPrometheusConfigured =
+    prometheusData?.successful && prometheusData.status === 200 && !!prometheusData?.data;
 
   return (
     <PageContainer
+      loading={reloading || prometheusLoading}
       ghost={true}
       header={{
         title: (
           <ContentWithReload
             content={formatMessage({
-              id: 'ocp-express.page.Monitor.ClusterMonitoring',
-              defaultMessage: '集群监控',
+              id: 'OBShell.page.Monitor.PerformanceMonitoring',
+              defaultMessage: '性能监控',
             })}
-            spin={loading}
+            spin={reloading || prometheusLoading}
             onClick={() => {
-              getMetricGroupList();
+              reload();
             }}
           />
         ),
       }}
     >
-      {perfEventEnabled === false && (
-        <Alert
-          type="info"
-          showIcon
-          style={{ marginBottom: 16 }}
-          message={formatMessage({
-            id: 'ocp-express.Detail.Monitor.BecauseTheEnablePerfEvent',
-            defaultMessage:
-              '因为当前集群的参数 enable_perf_event 已设置为 False，会有部分性能数据的缺失',
-          })}
-          action={
-            <a
-              onClick={() => {
-                directTo(`/overview/parameter?keyword=enable_perf_event`);
-              }}
-            >
-              {formatMessage({
-                id: 'ocp-express.Detail.Monitor.ModifyClusterParameters',
-                defaultMessage: '修改集群参数',
-              })}
-            </a>
-          }
+      {!isPrometheusConfigured && !prometheusLoading ? (
+        <MonitorConfig
+          targetPath={`/monitor/cluster`}
+          onConfigSuccess={() => {
+            // 配置成功后刷新 Prometheus 状态
+            refreshPrometheusData();
+          }}
         />
-      )}
-
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <MonitorSearch location={location} zoneNameList={zoneNameList} serverList={serverList} />
-        </Col>
-        <Col span={24}>
-          <Card
-            className="card-without-padding card-with-grid-card"
-            bordered={false}
-            activeTabKey={activeKey}
-            onTabChange={key => {
+      ) : (
+        <>
+          <Tabs
+            activeKey={activeKey}
+            onChange={(key: string) => {
               history.push({
-                pathname: `/monitor`,
-                query: {
-                  ...query,
-                  tab: key,
-                },
+                pathname: `/monitor/${key}`,
               });
             }}
-            tabList={metricGroupList.length > 0 ? metricGroupList.map(item => ({
-              key: item?.key,
-              tab: item?.name,
-            })) : [{}]}
           >
-            <MetricChart
-              metricGroupList={metricClass.metricGroups || []}
-              metricClass={metricClass}
-              app={activeKey === 'database_metrics' ? 'OB' : 'HOST'}
-              clusterName={clusterData.name}
-              zoneNameList={zoneNameList}
-              serverList={serverList}
-              tenantList={clusterData.tenants}
-              {...queryData}
-            />
-          </Card>
-        </Col>
-      </Row>
-    </PageContainer >
+            {tabs.map(item => (
+              <TabPane key={item.key} tab={item.tab} />
+            ))}
+          </Tabs>
+          {children}
+        </>
+      )}
+    </PageContainer>
   );
 };
 
-function mapStateToProps({ loading, cluster, monitor }) {
-  return {
-    loading: loading.effects['monitor/getMetricGroupListData'],
-    clusterData: cluster.clusterData,
-    metricGroupList: (monitor.metricGroupListData && monitor.metricGroupListData.contents) || [],
-  };
-}
-
-export default connect(mapStateToProps)(Monitor);
+export default Monitor;

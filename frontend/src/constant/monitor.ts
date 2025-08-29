@@ -16,6 +16,7 @@
 
 import moment from 'moment';
 import { formatMessage } from '@/util/intl';
+import { AUTO_FRESH_ITEMS_TYPE } from '@/component/MonitorSearch/AutoFresh';
 
 export const MAX_POINTS = 120;
 
@@ -124,3 +125,164 @@ export function getRanges() {
   });
   return ranges;
 }
+
+export const AUTO_FRESH_ITEMS: AUTO_FRESH_ITEMS_TYPE[] = [
+  {
+    key: 'off',
+    label: 'Off',
+  },
+  {
+    key: 5,
+    label: '5s',
+  },
+  {
+    key: 10,
+    label: '10s',
+  },
+  {
+    key: 30,
+    label: '30s',
+  },
+];
+
+export const DEFAULT_QUERY_RANGE: Monitor.QueryRangeType = {
+  step: 20,
+  end_timestamp: Math.floor(new Date().valueOf() / 1000),
+  start_timestamp: Math.floor(new Date().valueOf() / 1000) - 60 * 30,
+};
+
+export const REFRESH_FREQUENCY = 15;
+
+export const POINT_NUMBER = 15;
+
+export const Dimension = {
+  数据库性能: [
+    {
+      value: 'ob_cluster_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.ClusterDimension',
+        defaultMessage: '集群维度',
+      }),
+      singleMachineFlag: true,
+    },
+    {
+      value: 'tenant_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.TenantDimension',
+        defaultMessage: '租户维度',
+      }),
+      singleMachineFlag: true,
+    },
+    {
+      value: 'svr_ip',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.ObserverDimension',
+        defaultMessage: 'OBServer 维度',
+      }),
+      singleMachineFlag: false,
+    },
+    {
+      value: 'unit',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.UnitDimension',
+        defaultMessage: 'Unit维度',
+      }),
+      singleMachineFlag: false,
+    },
+  ],
+
+  主机性能: [
+    {
+      value: 'ob_cluster_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.ClusterDimension',
+        defaultMessage: '集群维度',
+      }),
+      singleMachineFlag: true,
+    },
+    {
+      value: 'svr_ip',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.HostDimension',
+        defaultMessage: '主机维度',
+      }),
+      singleMachineFlag: true,
+    },
+  ],
+
+  OBServer性能: [
+    {
+      value: 'ob_cluster_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.ClusterDimension',
+        defaultMessage: '集群维度',
+      }),
+      singleMachineFlag: false,
+    },
+    {
+      value: 'svr_ip',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.ObserverDimension',
+        defaultMessage: 'OBServer 维度',
+      }),
+      singleMachineFlag: false,
+    },
+  ],
+
+  性能与SQL: [
+    {
+      value: 'tenant_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.TenantDimension',
+        defaultMessage: '租户维度',
+      }),
+      singleMachineFlag: false,
+    },
+    {
+      value: 'unit',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.UnitDimension',
+        defaultMessage: 'Unit维度',
+      }),
+      singleMachineFlag: false,
+    },
+  ],
+
+  事务: [
+    {
+      value: 'tenant_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.TenantDimension',
+        defaultMessage: '租户维度',
+      }),
+      singleMachineFlag: false,
+    },
+    {
+      value: 'unit',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.UnitDimension',
+        defaultMessage: 'Unit维度',
+      }),
+      singleMachineFlag: false,
+    },
+  ],
+
+  存储与缓存: [
+    {
+      value: 'tenant_name',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.TenantDimension',
+        defaultMessage: '租户维度',
+      }),
+      singleMachineFlag: false,
+    },
+    {
+      value: 'unit',
+      label: formatMessage({
+        id: 'OBShell.src.constant.monitor.UnitDimension',
+        defaultMessage: 'Unit维度',
+      }),
+      singleMachineFlag: false,
+    },
+  ],
+};

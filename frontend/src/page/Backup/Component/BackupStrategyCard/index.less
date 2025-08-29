@@ -1,0 +1,43 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  :global {
+    .ant-form-inline {
+      margin-bottom: 8px;
+    }
+
+    .ant-form-item {
+      .ant-form-item-label {
+        padding-bottom: 0;
+      }
+    }
+
+    .ant-descriptions-header {
+      margin-bottom: 16px;
+    }
+  }
+
+  .scheduleCycleTable {
+    background-color: @colorBgContainer;
+
+    :global {
+      .ant-table {
+        .ant-table-thead > tr > th {
+          background-color: @colorBgContainer;
+        }
+      }
+    }
+  }
+
+  .descriptionTitle {
+    :global {
+      .ant-descriptions-title {
+        font-weight: normal;
+        font-size: 14px;
+        line-height: 22px;
+      }
+    }
+
+    margin-bottom: 16px;
+  }
+}

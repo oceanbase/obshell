@@ -16,19 +16,11 @@
 
 import { createIntl } from 'react-intl';
 // import { getLocale } from 'umi';
-import en_US from '@/locale/en-US';
-import zh_CN from '@/locale/zh-CN';
 
-const messages = {
-  'en-US': en_US,
-  'zh-CN': zh_CN,
-};
+import messages from '@/locale/strings';
 
 export const getLocale = () => {
-  const lang =
-    typeof localStorage !== 'undefined'
-      ? window.localStorage.getItem('umi_locale')
-      : '';
+  const lang = typeof localStorage !== 'undefined' ? window.localStorage.getItem('umi_locale') : '';
   return lang || 'zh-CN';
 };
 export const locale = getLocale();

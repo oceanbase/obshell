@@ -41,12 +41,12 @@ import { findBy, isNullValue } from '@oceanbase/util';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
 import * as ObTenantController from '@/service/ocp-express/ObTenantController';
+import * as ObshellTenantController from '@/service/obshell/tenant';
 import { NAME_RULE, PASSWORD_REGEX } from '@/constant';
 import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
-import { TENANT_MODE_LIST, LOAD_TYPE_LIST, LOWER_CASE_TABLE_NAMES } from '@/constant/tenant';
+import { TENANT_MODE_LIST, LOWER_CASE_TABLE_NAMES } from '@/constant/tenant';
 import { getTextLengthRule, validatePassword } from '@/util';
 import { getUnitSpecLimit, getResourcesLimit } from '@/util/cluster';
-import encrypt from '@/util/encrypt';
 import { getMinServerCount } from '@/util/tenant';
 import { validateUnitCount } from '@/util/oceanbase';
 import { breadcrumbItemRender } from '@/util/component';
@@ -60,13 +60,14 @@ import ContentWithQuestion from '@/component/ContentWithQuestion';
 import FormPrimaryZone from '@/component/FormPrimaryZone';
 import SetParameterEditableProTable from '@/component/ParameterTemplate/SetParameterEditableProTable';
 import useStyles from './index.style';
-import { getObclusterCharsets, getObInfo } from '@/service/obshell/ob';
+import { getObclusterCharsets } from '@/service/obshell/ob';
 import { tenantCreate } from '@/service/obshell/tenant';
 import { unitConfigCreate } from '@/service/obshell/unit';
 import { getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
-import { TIMEZONE_LIST } from '@/constant/timezone';
+import { TIMEZONE_LIST, filterTimezonesByMode } from '@/constant/timezone';
+import Item from 'antd/es/list/Item';
 
 const { Option } = MySelect;
 const { Text } = Typography;
@@ -89,7 +90,6 @@ const New: React.FC<NewProps> = ({
     query: { tenantId: defaultTenantId },
   },
 }) => {
-  // const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
   const { styles } = useStyles();
 
   const [form] = Form.useForm();
@@ -103,9 +103,8 @@ const New: React.FC<NewProps> = ({
 
   const [currentlowerCaseTableNames, setCurrentlowerCaseTableNames] = useState(1);
 
-  const [loadType, setLoadType] = useState(false);
+  const [scenarioDescription, setScenarioDescription] = useState();
 
-  // const [initParameters, setInitParameters] = useState([]);
   // 参数设置开关
   const [advanceSettingSwitch, setAdvanceSettingSwitch] = useState(false);
   const [compatibleOracleAlret, setCompatibleOracleAlret] = useState(false);
@@ -150,17 +149,32 @@ const New: React.FC<NewProps> = ({
 
   const charsetList = charsetListData?.data?.contents || [];
 
+  // 查询集群租户负载类型
+  const { run: getLoadTypeData, data: loadTypeParameterTemplate } = useRequest(
+    ObshellTenantController.listSupportParameterTemplates,
+    {
+      manual: true,
+      onSuccess: res => {
+        const currentScenario = (res.data?.contents || []).find(item => item.scenario === 'HTAP');
+        setScenarioDescription(currentScenario.description);
+      },
+    }
+  );
+
+  const loadTypeParameterList = loadTypeParameterTemplate?.data?.contents || [];
+
   useEffect(() => {
     getClusterData({}).then(() => {
       // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
       listCharsets({
-        tenantMode: 'MYSQL',
+        tenant_mode: 'MYSQL',
       }).then(charsetRes => {
         setFieldsValue({
           charset: 'utf8mb4',
         });
         handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
       });
+      getLoadTypeData();
       if (isClone) {
         getTenantData({
           tenantId: defaultTenantId,
@@ -235,7 +249,7 @@ const New: React.FC<NewProps> = ({
 
         // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
         listCharsets({
-          tenantMode: sourceTenantData.mode,
+          tenant_mode: sourceTenantData.mode,
         }).then(charsetRes => {
           // 需要从 charsetRes 获取最新的字符集列表
           const newChartsetList = charsetRes.data?.contents || [];
@@ -271,7 +285,6 @@ const New: React.FC<NewProps> = ({
         zonesUnitCount,
         primaryZone,
         rootPassword,
-        charset,
         lowerCaseTableNames,
         timeZone,
         parameters = [],
@@ -322,6 +335,7 @@ const New: React.FC<NewProps> = ({
           addTenant({
             ...restValues,
             zone_list: zoneList,
+            import_script: true,
             root_password: rootPassword,
             primary_zone: primaryZone,
             variables: Object.fromEntries(variables),
@@ -329,28 +343,6 @@ const New: React.FC<NewProps> = ({
           });
         }
       });
-
-      // addTenant({
-      //   ...restValues,
-      //   // rootPassword: encrypt(rootPassword, publicKey),
-      //   zones: zones
-      //     // 仅提交勾选的 Zone 副本
-      //     ?.filter(item => item.checked)
-      //     ?.map(item => {
-      //       const { name, replicaType, cpuCore, memorySize, unitCount } = item;
-      //       return {
-      //         name,
-      //         replicaType,
-      //         resourcePool: {
-      //           unitSpec: {
-      //             cpuCore,
-      //             memorySize,
-      //           },
-      //           unitCount,
-      //         },
-      //       };
-      //     }),
-      // });
     });
   };
 
@@ -502,12 +494,6 @@ const New: React.FC<NewProps> = ({
                       id: 'ocp-express.Tenant.New.TenantMode',
                       defaultMessage: '租户模式',
                     })}
-                    tooltip={{
-                      title: formatMessage({
-                        id: 'ocp-express.Tenant.New.OracleTenantModeIsSupported',
-                        defaultMessage: '社区版 OceanBase 不支持 Oracle 租户模式',
-                      }),
-                    }}
                     name="mode"
                     initialValue="MYSQL"
                     rules={[
@@ -527,36 +513,18 @@ const New: React.FC<NewProps> = ({
                         });
 
                         setCurrentMode(value);
-                        const clusterId = getFieldValue('clusterId');
-                        // 以获取最新的 mode 值
-                        if (!isNullValue(clusterId)) {
-                          listCharsets({
-                            tenantMode: value,
-                          }).then(charsetRes => {
-                            handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
-                          });
-                        }
+                        listCharsets({
+                          tenant_mode: value,
+                        }).then(charsetRes => {
+                          handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
+                        });
                       }}
                     >
-                      {TENANT_MODE_LIST.map(item => (
-                        <Option
-                          key={item.value}
-                          value={item.value}
-                          disabled={clusterData?.communityEdition && item.value === 'ORACLE'}
-                        >
-                          {clusterData?.communityEdition && item.value === 'ORACLE' ? (
-                            <Tooltip
-                              placement="topLeft"
-                              title={formatMessage({
-                                id: 'ocp-express.Tenant.New.CommunityEditionOceanbaseDoesNotSupportOracleTenants',
-                                defaultMessage: '社区版 OceanBase 暂不支持 Oracle 租户',
-                              })}
-                            >
-                              <div style={{ width: '100%' }}>{item.label}</div>
-                            </Tooltip>
-                          ) : (
-                            item.label
-                          )}
+                      {TENANT_MODE_LIST.filter(item =>
+                        clusterData?.is_community_edition ? item.value !== 'ORACLE' : true
+                      ).map(item => (
+                        <Option key={item.value} value={item.value}>
+                          {item.label}
                         </Option>
                       ))}
                     </MySelect>
@@ -668,7 +636,10 @@ const New: React.FC<NewProps> = ({
                 {currentMode === 'MYSQL' && (
                   <Col span={8}>
                     <Form.Item
-                      label="表名大小写敏感"
+                      label={formatMessage({
+                        id: 'OBShell.Tenant.New.TableNamesAreCaseSensitive',
+                        defaultMessage: '表名大小写敏感',
+                      })}
                       name="lowerCaseTableNames"
                       initialValue={1}
                       rules={[
@@ -678,15 +649,32 @@ const New: React.FC<NewProps> = ({
                       ]}
                       tooltip={
                         <div>
-                          <div>大小写敏感参数（lower_case_table_names）说明：</div>
                           <div>
-                            · 0：使用 CREATE TABLE 或 CREATE DATABASE
-                            语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.DescriptionOfCaseSensitiveParameters',
+                              defaultMessage: '大小写敏感参数（lower_case_table_names）说明：',
+                            })}
                           </div>
-                          <div>· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。</div>
                           <div>
-                            · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
-                            语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.UseCreateTableOrCreate',
+                              defaultMessage:
+                                '· 0：使用 CREATE TABLE 或 CREATE DATABASE\n                            语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。',
+                            })}
+                          </div>
+                          <div>
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.TableNamesAreSavedIn',
+                              defaultMessage:
+                                '· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。',
+                            })}
+                          </div>
+                          <div>
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.TableNameAndDatabaseName',
+                              defaultMessage:
+                                '· 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE\n                            语句指定的大小写字母进行保存，但名称比较对大小写不敏感。',
+                            })}
                           </div>
                         </div>
                       }
@@ -711,41 +699,56 @@ const New: React.FC<NewProps> = ({
                   </Col>
                 )}
                 <Col span={8}>
-                  <Form.Item
-                    label="时区"
-                    name="timeZone"
-                    initialValue="+08:00"
-                    rules={[
-                      {
-                        required: true,
-                      },
-                    ]}
-                  >
-                    <MySelect
-                      showSearch={true}
-                      optionLabelProp="label"
-                      placeholder={formatMessage({
-                        id: 'ocp-express.Tenant.New.SelectTimezone',
-                        defaultMessage: '请选择时区',
-                      })}
-                    >
-                      {TIMEZONE_LIST.map(item => (
-                        <Option
-                          key={item.value}
-                          value={item.value}
-                          label={`${item.gmt} ${item.label}`}
+                  <Form.Item noStyle shouldUpdate>
+                    {() => {
+                      // 根据租户模式过滤时区列表
+                      const REAL_TIMEZONE_LIST = filterTimezonesByMode(
+                        TIMEZONE_LIST,
+                        currentMode as 'MYSQL' | 'ORACLE'
+                      );
+
+                      return (
+                        <Form.Item
+                          label={formatMessage({
+                            id: 'OBShell.Tenant.New.TimeZone',
+                            defaultMessage: '时区',
+                          })}
+                          name="timeZone"
+                          initialValue="+08:00"
+                          rules={[
+                            {
+                              required: true,
+                            },
+                          ]}
                         >
-                          <div>
-                            <div>
-                              {item.gmt} {item.label}
-                            </div>
-                            <div style={{ fontSize: '12px', color: '#999' }}>
-                              {item.description}
-                            </div>
-                          </div>
-                        </Option>
-                      ))}
-                    </MySelect>
+                          <MySelect
+                            showSearch={true}
+                            optionLabelProp="label"
+                            placeholder={formatMessage({
+                              id: 'ocp-express.Tenant.New.SelectTimezone',
+                              defaultMessage: '请选择时区',
+                            })}
+                          >
+                            {REAL_TIMEZONE_LIST.map(item => (
+                              <Option
+                                key={item.value}
+                                value={item.value}
+                                label={`${item.gmt} ${item.label}`}
+                              >
+                                <div>
+                                  <div>
+                                    {item.gmt} {item.label}
+                                  </div>
+                                  <div style={{ fontSize: '12px', color: '#999' }}>
+                                    {item.description}
+                                  </div>
+                                </div>
+                              </Option>
+                            ))}
+                          </MySelect>
+                        </Form.Item>
+                      );
+                    }}
                   </Form.Item>
                 </Col>
                 <Col span={8}>
@@ -769,71 +772,76 @@ const New: React.FC<NewProps> = ({
                   </Form.Item>
                 </Col>
               </Row>
-              <Row>
-                <Col span={24}>
-                  <Form.Item noStyle shouldUpdate>
-                    {() => {
-                      const currentLoadType = form.getFieldValue('scenario');
-                      const description = LOAD_TYPE_LIST?.find(
-                        item => item.value === currentLoadType
-                      )?.description;
-
-                      return (
-                        <Form.Item
-                          label={
-                            <Space>
-                              <div style={{ width: 56 }}>负载类型</div>
-                              <InfoCircleFilled style={{ color: '#006aff' }} />
-                              <Text
-                                style={{
-                                  width: 'calc(100vw - 450px)',
-                                  fontSize: '14px',
-                                  fontWeight: 400,
-                                  color: token.colorTextTertiary,
-                                }}
-                                ellipsis={{
-                                  tooltip: {
-                                    overlayInnerStyle: {
-                                      background: '#fff',
-                                      width: 484,
-                                      color: token.colorTextTertiary,
-                                    },
-                                    color: '#fff',
-                                  },
-                                }}
-                              >
-                                负载类型主要影响 SQL
-                                类大查询判断时间（参数：large_query_threshold），对 OLTP 类型负载的
-                                RT 可能存在较大影响，请谨慎选择
-                              </Text>
-                            </Space>
-                          }
-                          name={'scenario'}
-                          extra={description}
-                          style={{ marginBottom: 0 }}
-                          rules={[
-                            {
-                              required: true,
-                            },
-                          ]}
-                        >
-                          <MySelect
+              {loadTypeParameterList.length > 0 && (
+                <Row>
+                  <Col span={24}>
+                    <Form.Item
+                      label={
+                        <Space>
+                          <div style={{ width: 56 }}>
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.LoadType',
+                              defaultMessage: '负载类型',
+                            })}
+                          </div>
+                          <InfoCircleFilled style={{ color: '#006aff' }} />
+                          <Text
                             style={{
-                              width: '33%',
+                              width: 'calc(100vw - 450px)',
+                              fontSize: '14px',
+                              fontWeight: 400,
+                              color: token.colorTextTertiary,
+                            }}
+                            ellipsis={{
+                              tooltip: {
+                                overlayInnerStyle: {
+                                  background: '#fff',
+                                  width: 484,
+                                  color: token.colorTextTertiary,
+                                },
+                                color: '#fff',
+                              },
                             }}
                           >
-                            {LOAD_TYPE_LIST?.map(item => (
-                              <Option key={item.value} value={item.value}>
-                                {item.label}
-                              </Option>
-                            ))}
-                          </MySelect>
-                        </Form.Item>
-                      );
-                    }}
-                  </Form.Item>
-                </Col>
-              </Row>
+                            {formatMessage({
+                              id: 'OBShell.Tenant.New.LoadTypeMainlyAffectsSql',
+                              defaultMessage:
+                                '负载类型主要影响 SQL\n                                类大查询判断时间（参数：large_query_threshold），对 OLTP 类型负载的\n                                RT 可能存在较大影响，请谨慎选择',
+                            })}
+                          </Text>
+                        </Space>
+                      }
+                      name={'scenario'}
+                      initialValue={'HTAP'}
+                      extra={scenarioDescription}
+                      style={{ marginBottom: 0 }}
+                      rules={[
+                        {
+                          required: true,
+                        },
+                      ]}
+                    >
+                      <MySelect
+                        style={{
+                          width: '33%',
+                        }}
+                        onChange={val => {
+                          const currentScenario = loadTypeParameterList.find(
+                            item => item.scenario === val
+                          );
+                          setScenarioDescription(currentScenario?.description);
+                        }}
+                      >
+                        {loadTypeParameterList?.map(item => (
+                          <Option key={item.scenario} value={item.scenario}>
+                            {item.scenario}
+                          </Option>
+                        ))}
+                      </MySelect>
+                    </Form.Item>
+                  </Col>
+                </Row>
+              )}
             </MyCard>
           </Col>
           <Col span={24}>

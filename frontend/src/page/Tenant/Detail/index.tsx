@@ -83,6 +83,10 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
         name: tenantName,
       },
     });
+    dispatch({
+      type: 'cluster/getClusterData',
+      payload: {},
+    });
 
     return () => {
       dispatch({
@@ -212,7 +216,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     if (tenantData?.locked !== 'YES') {
       handlePreCheck();
     }
-  }, [tenantName, pathname, tenantData?.locked]);
+  }, [tenantName, tenantData?.locked]);
 
   return (
     <BasicLayout

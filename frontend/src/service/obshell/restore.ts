@@ -2,15 +2,33 @@
 /* eslint-disable */
 import request from '@/util/request';
 
-/** Get restore history GET /api/v1/restore/history */
-export async function getRestoreHistory(
+/** Get original restore tenant info by ob_admin POST /api/v1/restore/source-tenant-info */
+export async function getRestoreSourceTenantInfo(
+  body: API.RestoreStorageParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse & { data?: API.RestoreTenantInfo }>(
+    '/api/v1/restore/source-tenant-info',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** List restore tasks GET /api/v1/restore/tasks */
+export async function listRestoreTasks(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getRestoreHistoryParams,
+  params: API.listRestoreTasksParams,
   options?: { [key: string]: any }
 ) {
   const { tenantName: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.CdbObRestoreHistory[] }>(
-    '/api/v1/restore/history',
+  return request<API.OcsAgentResponse & { data?: API.PaginatedRestoreTaskResponse }>(
+    '/api/v1/restore/tasks',
     {
       method: 'GET',
       params: { ...queryParams },
@@ -59,45 +77,6 @@ export async function getRestoreOverview(
     {
       method: 'GET',
       params: { ...queryParams },
-      ...(options || {}),
-    }
-  );
-}
-
-/** Get original restore tenant info by ob_admin GET /api/v1/tenant/${param0}/restore/source/info */
-export async function getRestoreTenantInfoByObAdmin(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getRestoreTenantInfoByObAdminParams,
-  options?: { [key: string]: any }
-) {
-  const { tenantName: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.RestoreTenantInfo }>(
-    `/api/v1/tenant/${param0}/restore/source/info`,
-    {
-      method: 'GET',
-      params: { ...queryParams },
-      ...(options || {}),
-    }
-  );
-}
-
-/** Restore tenant test POST /api/v1/tenant/${param0}/restore/storage/test */
-export async function restoreTenantTest(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.restoreTenantTestParams,
-  body: API.RestoreStorageTestParam,
-  options?: { [key: string]: any }
-) {
-  const { tenantName: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: Record<string, any> }>(
-    `/api/v1/tenant/${param0}/restore/storage/test`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      params: { ...queryParams },
-      data: body,
       ...(options || {}),
     }
   );

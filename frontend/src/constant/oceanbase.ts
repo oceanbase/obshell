@@ -16,6 +16,30 @@
 
 import { formatMessage } from '@/util/intl';
 
+export const OB_CLUSTER_TYPE_LIST = [
+  {
+    value: 'PRIMARY',
+    label: formatMessage({
+      id: 'OBShell.src.constant.oceanbase.PrimaryCluster',
+      defaultMessage: '主集群',
+    }),
+    signLabel: formatMessage({ id: 'OBShell.src.constant.oceanbase.Lord', defaultMessage: '主' }),
+    backgroundColor: '#3B55A3',
+  },
+  {
+    value: 'STANDBY',
+    label: formatMessage({
+      id: 'OBShell.src.constant.oceanbase.StandbyCluster',
+      defaultMessage: '备集群',
+    }),
+    signLabel: formatMessage({
+      id: 'OBShell.src.constant.oceanbase.Preparation',
+      defaultMessage: '备',
+    }),
+    backgroundColor: '#a3a3a3',
+  },
+];
+
 export const SELECT_MODE_LIST = [
   {
     label: formatMessage({

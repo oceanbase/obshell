@@ -27,7 +27,7 @@ const model = {
   namespace,
   state: {
     allTenantListData: DEFAULT_LIST_DATA,
-    tenantListData: DEFAULT_LIST_DATA,
+    tenantListData: [],
     tenantData: {},
     charsetListData: DEFAULT_LIST_DATA,
     parameterListData: DEFAULT_LIST_DATA,
@@ -44,7 +44,7 @@ const model = {
         yield put({
           type: 'update',
           payload: {
-            tenantListData: res.data || DEFAULT_LIST_DATA,
+            tenantListData: res?.data?.contents || [],
           },
         });
       }

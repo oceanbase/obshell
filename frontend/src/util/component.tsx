@@ -33,6 +33,7 @@ import {
   Tooltip,
   Tree,
   Modal,
+  Tag,
   token,
 } from '@oceanbase/design';
 import React from 'react';
@@ -116,8 +117,7 @@ export const getColumnSearchProps = ({
   dataIndex,
   onConfirm,
 }: {
-  frontEndSearch: boolean;
-  // 前端分页时，dataIndex 必传，该参数对后端分页无效
+  frontEndSearch: boolean; // 前端分页时，dataIndex 必传，该参数对后端分页无效
   dataIndex?: string;
   onConfirm?: (value?: React.Key) => void;
 }) => ({
@@ -326,8 +326,7 @@ export function getOperationComponent<T>({
 }: {
   operations?: Operation[];
   handleOperation: (key: string, record: T, operations: Operation[]) => void;
-  record: T;
-  // link: 链接模式，常用于表格的操作列
+  record: T; // link: 链接模式，常用于表格的操作列
   // buttom: 按钮模式，常用于页头的 extra 操作区域
   mode?: 'link' | 'button';
   displayCount?: number;
@@ -394,7 +393,7 @@ export function getOperationComponent<T>({
         >
           {mode === 'link' ? (
             <a>
-              <EllipsisOutlined />
+              <Button icon={<EllipsisOutlined />} size="small" />
             </a>
           ) : (
             <Button>
@@ -469,7 +468,7 @@ export function getBatchOperationComponent<T>({
 
 // 获取可恢复时间区间
 export function getRecoverableRangeTime(
-  recoverableList: API.ObRecoverableSectionItem[],
+  recoverableList: API.RestoreWindow[],
   format = DATE_TIME_FORMAT_DISPLAY
 ) {
   return (
@@ -479,22 +478,24 @@ export function getRecoverableRangeTime(
           .sort(
             (a, b) =>
               // 根据起始时间进行逆序展示，最新的时间区间展示在前面
-              moment(b.realRecoverableTimeInterval?.startTime).valueOf() -
-              moment(a.realRecoverableTimeInterval?.startTime).valueOf()
+              moment(b?.start_time).valueOf() - moment(a?.start_time).valueOf()
           )
           .map(item => {
             return (
-              <Space key={item.realRecoverableTimeInterval?.startTime}>
+              <Space key={item?.start_time}>
                 <span>
                   {/* 前端展示备份和恢复时间需要精确到微秒 (接口也支持) */}
                   {`${formatTimeWithMicroseconds(
-                    item.realRecoverableTimeInterval?.startTime,
+                    item?.start_time,
                     format
-                  )} ~${formatTimeWithMicroseconds(
-                    item.realRecoverableTimeInterval?.endTime,
-                    format
-                  )}`}
+                  )} ~${formatTimeWithMicroseconds(item?.end_time, format)}`}
                 </span>
+                <Tag color={'green'} style={{ border: 'none', borderRadius: 20 }}>
+                  {formatMessage({
+                    id: 'OBShell.src.util.component.PhysicalBackup',
+                    defaultMessage: '物理备份',
+                  })}
+                </Tag>
               </Space>
             );
           })
@@ -507,7 +508,7 @@ export function getRecoverableRangeTime(
 
 // 获取最近的一个可恢复时间区间
 export function getLatestRecoverableRangeTime(
-  recoverableList: API.ObRecoverableSectionItem[],
+  recoverableList: API.RestoreWindow[],
   format = DATE_TIME_FORMAT_DISPLAY
 ) {
   return (
@@ -517,16 +518,19 @@ export function getLatestRecoverableRangeTime(
         .slice(recoverableList.length - 1, recoverableList.length)
         .map(item => {
           return (
-            <Space key={item.realRecoverableTimeInterval?.startTime}>
+            <Space key={item?.start_time}>
               <span>
                 {`${formatTimeWithMicroseconds(
-                  item.realRecoverableTimeInterval?.startTime,
+                  item?.start_time,
                   format
-                )} ~ ${formatTimeWithMicroseconds(
-                  item.realRecoverableTimeInterval?.endTime,
-                  format
-                )}`}
+                )} ~ ${formatTimeWithMicroseconds(item?.end_time, format)}`}
               </span>
+              <Tag color={'green'} style={{ border: 'none', borderRadius: 20 }}>
+                {formatMessage({
+                  id: 'OBShell.src.util.component.PhysicalBackup',
+                  defaultMessage: '物理备份',
+                })}
+              </Tag>
             </Space>
           );
         })}

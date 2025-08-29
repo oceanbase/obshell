@@ -32,7 +32,7 @@ import tracert from '@/util/tracert';
 import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
 import useStyles from './index.style';
 import { getAgentInfo, getTime } from '@/service/obshell/v1';
-import { getClusterUnfinishDags, getAgentUnfinishDags} from '@/service/obshell/task';
+import { getClusterUnfinishDags, getAgentUnfinishDags } from '@/service/obshell/task';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
   children: React.ReactNode;
@@ -123,7 +123,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
       );
     },
     {
-      pollingInterval: 30000,
+      pollingInterval: 50000,
     }
   );
 
@@ -141,17 +141,21 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     }
   );
 
-  const failedTaskList = (clusterTaskListData?.data?.contents || []).filter(
-    item => item.state === 'FAILED'
-  ).concat(
-    (agentTaskListData?.data?.contents || []).filter(item => item.state === 'FAILED')
-  );
+  useEffect(() => {
+    // 预先获取集群列表
+    dispatch({
+      type: 'cluster/getClusterData',
+      payload: {},
+    });
+  }, []);
 
-  const runningTaskList = (clusterTaskListData?.data?.contents || []).filter(
-    item => item.state === 'RUNNING'
-  ).concat(
-    (agentTaskListData?.data?.contents || []).filter(item => item.state === 'RUNNING')
-  );
+  const failedTaskList = (clusterTaskListData?.data?.contents || [])
+    .filter(item => item.state === 'FAILED')
+    .concat((agentTaskListData?.data?.contents || []).filter(item => item.state === 'FAILED'));
+
+  const runningTaskList = (clusterTaskListData?.data?.contents || [])
+    .filter(item => item.state === 'RUNNING')
+    .concat((agentTaskListData?.data?.contents || []).filter(item => item.state === 'RUNNING'));
 
   // 时间差是否超出最大限制 60 秒
   const overThreshold = Math.abs(offsetSeconds) >= 60;

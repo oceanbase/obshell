@@ -42,7 +42,26 @@ export function formatTimeWithMicroseconds(
   const match = regex.exec(value || '');
   // 微秒值为 0 时，后端不会返回微秒信息，此时匹配值为 null，需要使用空字符串兜底，否则 padEnd 后的字符串展示结果为 undefined
   const microseconds = (match && match[3]) || '';
-  // padEnd 向后补 0
+
+  // 检查传入的格式是否已经包含微秒部分
+  if (format && format.includes('S')) {
+    // 如果格式包含微秒，我们需要精确控制时间格式
+    // 对于 HH:mm:ss.SSSSSS 格式，我们分别格式化时、分、秒，然后添加微秒
+    if (format === 'HH:mm:ss.SSSSSS') {
+      const time = moment(value);
+      const hours = time.format('HH');
+      const minutes = time.format('mm');
+      const seconds = time.format('ss');
+      return `${hours}:${minutes}:${seconds}.${microseconds?.padEnd(6, '0')}`;
+    }
+
+    // 对于其他包含微秒的格式，使用通用处理
+    const formatWithoutMicroseconds = format.replace(/S+/g, '');
+    const baseTime = moment(value).format(formatWithoutMicroseconds);
+    return `${baseTime}.${microseconds?.padEnd(6, '0')}`;
+  }
+
+  // 如果格式不包含微秒，则手动添加微秒部分
   return `${formatTimeFromOBUtil(value, format)}.${microseconds?.padEnd(6, '0')}`;
 }
 

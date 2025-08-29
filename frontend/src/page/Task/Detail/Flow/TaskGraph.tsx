@@ -500,6 +500,8 @@ class TaskGraph extends React.PureComponent<TaskGraphProps, TaskGraphState> {
               <Text
                 copyable={{
                   text: `${currentSubtask?.id}`,
+                  // placement: 'top',
+                  tooltips: false,
                 }}
               >
                 {`ID: ${currentSubtask?.id}`}

@@ -77,7 +77,13 @@ import {
 
 import { unitConfigCreate } from '@/service/obshell/unit';
 import { obclusterInfo, getUnitConfigLimit } from '@/service/obshell/obcluster';
+import { getZonesFromTenant } from '@/util/tenant';
 const { Text } = Typography;
+
+// 将 GB 转换为 GiB (1 GB = 0.931323 GiB)
+const gbToGib = (gb: number): number => {
+  return Number((gb * 0.931323).toFixed(2));
+};
 
 interface NewProps {
   match: {
@@ -121,31 +127,6 @@ const Detail: React.FC<NewProps> = ({
   const clusterData = clusterInfo?.data || {};
   const clusterZones = clusterData?.zones || [];
 
-  const getZones = tData => {
-    return (
-      tData?.locality?.split(',')?.map(str => {
-        const [replicaTypeStr, zoneName] = str?.split('@');
-        const replicaType = REPLICA_TYPE_LIST.find(item =>
-          replicaTypeStr.includes(item.value)
-        )?.value;
-        const resourcePool = tenantData?.pools?.find(item => item.zone_list?.includes(zoneName));
-        return {
-          replicaType,
-          name: zoneName,
-          resourcePool: {
-            ...resourcePool,
-            unitConfig: {
-              ...resourcePool?.unit_config,
-              // 副本详情默认值
-              cpuCore: resourcePool?.unit_config?.max_cpu,
-              memorySize: byte2GB(resourcePool?.unit_config?.memory_size || 0),
-            },
-          },
-        };
-      }) || []
-    );
-  };
-
   const {
     data: tenantInfo,
     run: getTenantData,
@@ -156,7 +137,7 @@ const Detail: React.FC<NewProps> = ({
     onSuccess: res => {
       if (res.successful) {
         const currentTenantData = res?.data || {};
-        const _zones = getZones(currentTenantData);
+        const _zones = getZonesFromTenant(currentTenantData);
 
         setFieldsValue({
           zones: (_zones || []).map(item => ({
@@ -175,7 +156,7 @@ const Detail: React.FC<NewProps> = ({
     name: tenantInfo?.data?.tenant_name,
   } || { tenant_name: tenantName };
 
-  const zones = getZones(tenantData);
+  const zones = getZonesFromTenant(tenantData);
 
   // 获取 unit 规格的限制规则
   const { data: clusterUnitSpecLimitData } = useRequest(getUnitConfigLimit);
@@ -554,9 +535,9 @@ const Detail: React.FC<NewProps> = ({
               </Button>
             </Tooltip>
             {/* <Dropdown overlay={menu}>
-              <Button>
-                <EllipsisOutlined />
-              </Button>
+             <Button>
+               <EllipsisOutlined />
+             </Button>
             </Dropdown> */}
           </Space>
         ),
@@ -597,7 +578,14 @@ const Detail: React.FC<NewProps> = ({
               })}
             >
               <Descriptions column={4}>
-                <Descriptions.Item label="租户名称">{tenantData?.tenant_name}</Descriptions.Item>
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'OBShell.Detail.Overview.TenantName',
+                    defaultMessage: '租户名称',
+                  })}
+                >
+                  {tenantData?.tenant_name}
+                </Descriptions.Item>
                 <Descriptions.Item
                   label={formatMessage({
                     id: 'ocp-express.Tenant.Detail.TenantMode',
@@ -645,20 +633,34 @@ const Detail: React.FC<NewProps> = ({
                   <Descriptions.Item
                     label={
                       <Space size={4}>
-                        表名大小写敏感
+                        {formatMessage({
+                          id: 'OBShell.Detail.Overview.TableNamesAreCaseSensitive',
+                          defaultMessage: '表名大小写敏感',
+                        })}
+
                         <Tooltip
                           title={
                             <div>
                               <div>
-                                · 0：使用 CREATE TABLE 或 CREATE DATABASE
-                                语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。
+                                {formatMessage({
+                                  id: 'OBShell.Detail.Overview.UseCreateTableOrCreate',
+                                  defaultMessage:
+                                    '· 0：使用 CREATE TABLE 或 CREATE DATABASE\n                                语句指定的大小写字母在硬盘上保存表名和数据库名。名称比较对大小写敏感。',
+                                })}
                               </div>
                               <div>
-                                · 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。
+                                {formatMessage({
+                                  id: 'OBShell.Detail.Overview.TableNamesAreSavedIn',
+                                  defaultMessage:
+                                    '· 1：表名在硬盘上以小写保存，名称比较对大小写不敏感。',
+                                })}
                               </div>
                               <div>
-                                · 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE
-                                语句指定的大小写字母进行保存，但名称比较对大小写不敏感。
+                                {formatMessage({
+                                  id: 'OBShell.Detail.Overview.TableNameAndDatabaseName',
+                                  defaultMessage:
+                                    '· 2：表名和数据库名在硬盘上使用 CREATE TABLE 或 CREATE DATABASE\n                                语句指定的大小写字母进行保存，但名称比较对大小写不敏感。',
+                                })}
                               </div>
                             </div>
                           }
@@ -678,7 +680,12 @@ const Detail: React.FC<NewProps> = ({
                     {tenantData.lower_case_table_names || '-'}
                   </Descriptions.Item>
                 )}
-                <Descriptions.Item label="时区">
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'OBShell.Detail.Overview.TimeZone',
+                    defaultMessage: '时区',
+                  })}
+                >
                   {tenantData.time_zone || '-'}
                 </Descriptions.Item>
 

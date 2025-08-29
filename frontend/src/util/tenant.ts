@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
+import { byte2GB } from '@oceanbase/util';
 import { formatMessage } from '@/util/intl';
 import { min } from 'lodash';
 
@@ -47,3 +49,28 @@ export function getUnitSpecLimitText(unitSpecLimit: API.UnitSpecUnitSpecLimit) {
     );
   }
 }
+
+export const getZonesFromTenant = (tenantData: API.TenantInfo) => {
+  return (
+    tenantData?.locality?.split(',')?.map(str => {
+      const [replicaTypeStr, zoneName] = str?.split('@');
+      const replicaType = REPLICA_TYPE_LIST.find(item =>
+        replicaTypeStr.includes(item.value)
+      )?.value;
+      const resourcePool = tenantData?.pools?.find(item => item.zone_list?.includes(zoneName));
+      return {
+        replicaType,
+        name: zoneName,
+        resourcePool: {
+          ...resourcePool,
+          unitConfig: {
+            ...resourcePool?.unit_config,
+            // 副本详情默认值
+            cpuCore: resourcePool?.unit_config?.max_cpu,
+            memorySize: byte2GB(resourcePool?.unit_config?.memory_size || 0),
+          },
+        },
+      };
+    }) || []
+  );
+};

@@ -179,40 +179,18 @@ export async function patchTenantBackupConfig(
   );
 }
 
-/** Test backup storage Test backup storage POST /api/v1/tenant/${param0}/backup/config/storage/test */
-export async function tenantBackupStorigeTest(
+/** Get backup config for tenant Get backup config for tenant GET /api/v1/tenant/${param0}/backup/config/storage */
+export async function getTenantBackupConfig(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.tenantBackupStorigeTestParams,
-  body: API.BackupStorageTestParam,
+  params: API.getTenantBackupConfigParams,
   options?: { [key: string]: any }
 ) {
   const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/backup/config/storage/test`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/backup/config/storage`, {
+    method: 'GET',
     params: { ...queryParams },
-    data: body,
     ...(options || {}),
   });
-}
-
-/** Get backup history for tenant Get backup history for tenant GET /api/v1/tenant/${param0}/backup/history */
-export async function tenantBackupHistory(
-  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.tenantBackupHistoryParams,
-  options?: { [key: string]: any }
-) {
-  const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.CdbObBackupTask[] }>(
-    `/api/v1/tenant/${param0}/backup/history`,
-    {
-      method: 'GET',
-      params: { ...queryParams },
-      ...(options || {}),
-    }
-  );
 }
 
 /** Get backup info for tenant Get backup info for tenant GET /api/v1/tenant/${param0}/backup/info */
@@ -251,15 +229,15 @@ export async function patchTenantArchiveLog(
   });
 }
 
-/** Get archive log overview for tenant Get archive log overview for tenant GET /api/v1/tenant/${param0}/backup/log/overview */
+/** Get archive log overview for tenant Get archive log overview for tenant GET /api/v1/tenant/${param0}/backup/log/tasks */
 export async function getTenantArchiveLogOverview(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getTenantArchiveLogOverviewParams,
   options?: { [key: string]: any }
 ) {
   const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.TenantArchiveLogStatus }>(
-    `/api/v1/tenant/${param0}/backup/log/overview`,
+  return request<API.OcsAgentResponse & { data?: API.ArchiveLogTask[] }>(
+    `/api/v1/tenant/${param0}/backup/log/tasks`,
     {
       method: 'GET',
       params: { ...queryParams },
@@ -285,16 +263,19 @@ export async function tenantBackupOverview(
   );
 }
 
-/** Get backup storage for tenant Get backup storage for tenant GET /api/v1/tenant/${param0}/backup/storage */
-export async function getTenantBackupStorage(
+/** List backup tasks for tenant List backup tasks for tenant GET /api/v1/tenant/${param0}/backup/tasks */
+export async function listTenantBackupTasks(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-  params: API.getTenantBackupStorageParams,
+  params: API.listTenantBackupTasksParams,
   options?: { [key: string]: any }
 ) {
   const { name: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/backup/storage`, {
-    method: 'GET',
-    params: { ...queryParams },
-    ...(options || {}),
-  });
+  return request<API.OcsAgentResponse & { data?: API.PaginatedBackupJobResponse }>(
+    `/api/v1/tenant/${param0}/backup/tasks`,
+    {
+      method: 'GET',
+      params: { ...queryParams },
+      ...(options || {}),
+    }
+  );
 }

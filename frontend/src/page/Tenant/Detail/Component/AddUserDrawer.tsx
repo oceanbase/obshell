@@ -84,9 +84,10 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
         message.success(
           formatMessage(
             {
-              id: 'ocp-express.Detail.Component.AddUserDrawer.TheSystemPermissionOfDbusername',
+              id: 'OBShell.Detail.Component.AddUserDrawer.DbusernameSystemPermissionsModifiedSuccessfully',
+              defaultMessage: '{dbUsername} 的系统权限修改成功',
             },
-            { dbUsername }
+            { dbUsername: dbUsername }
           )
         );
         if (onSuccess) {
@@ -104,9 +105,10 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
         message.success(
           formatMessage(
             {
-              id: 'ocp-express.Detail.Component.AddUserDrawer.ThePermissionOfDbusernameHas',
+              id: 'OBShell.Detail.Component.AddUserDrawer.DbusernamePermissionModifiedSuccessfully',
+              defaultMessage: '{dbUsername} 权限修改成功',
             },
-            { dbUsername }
+            { dbUsername: dbUsername }
           )
         );
         if (onSuccess) {
@@ -127,6 +129,7 @@ const AddUserDrawer: React.FC<AddOrEditUserDrawerProps> = ({
         name: tenantData?.tenant_name,
       },
     ],
+
     refreshDeps: [ready],
     manual: false,
   });

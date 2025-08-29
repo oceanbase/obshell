@@ -89,6 +89,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     });
 
     setEncryptLocalStorage('password', password);
+    setEncryptLocalStorage('username', username);
     setEncryptLocalStorage('login', 'true');
     getObInfo();
   };
