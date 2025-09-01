@@ -466,7 +466,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
 
   const routes: Route[] = [
     {
-      path: `/tenant/${tenantName}/user`,
+      path: `/cluster/tenant/${tenantName}/user`,
       breadcrumbName: formatMessage({
         id: 'ocp-express.Oracle.UserOrRoleDetail.UserManagement',
         defaultMessage: '用户管理',
@@ -474,16 +474,16 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
     },
 
     {
-      path: `/tenant/${tenantName}/user${roleName ? '/role' : ''}`,
+      path: `/cluster/tenant/${tenantName}/user${roleName ? '/role' : ''}`,
       breadcrumbName: roleName
         ? formatMessage({
-            id: 'ocp-express.Oracle.UserOrRoleDetail.RoleList',
-            defaultMessage: '角色列表',
-          })
+          id: 'ocp-express.Oracle.UserOrRoleDetail.RoleList',
+          defaultMessage: '角色列表',
+        })
         : formatMessage({
-            id: 'ocp-express.Oracle.UserOrRoleDetail.UserList',
-            defaultMessage: '用户列表',
-          }),
+          id: 'ocp-express.Oracle.UserOrRoleDetail.UserList',
+          defaultMessage: '用户列表',
+        }),
     },
 
     {
@@ -624,12 +624,12 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
           >
             {userOrRoleDetail?.global_privileges
               ? userOrRoleDetail?.global_privileges
-                  ?.map(item =>
-                    item === 'PURGE_DBA_RECYCLEBIN'
-                      ? 'PURGE DBA_RECYCLEBIN'
-                      : item.replace(/_/g, ' ')
-                  )
-                  .join('、')
+                ?.map(item =>
+                  item === 'PURGE_DBA_RECYCLEBIN'
+                    ? 'PURGE DBA_RECYCLEBIN'
+                    : item.replace(/_/g, ' ')
+                )
+                .join('、')
               : '-'}
           </MyCard>
         </Col>

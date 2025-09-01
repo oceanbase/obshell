@@ -350,7 +350,7 @@ const Detail: React.FC<NewProps> = ({
 
   const handleMenuClick = (key: 'clone' | 'modifyPassword') => {
     if (key === 'clone') {
-      directTo(`/tenant/new?tenantName=${tenantData.tenant_name}`);
+      directTo(`/cluster/tenant/new?tenantName=${tenantData.tenant_name}`);
     } else if (key === 'modifyPassword') {
       setModifyPasswordVisible(true);
     }
@@ -701,22 +701,22 @@ const Detail: React.FC<NewProps> = ({
                       tenantData.tenant_name === 'sys'
                         ? false
                         : {
-                            editing: false,
-                            onStart: () => {
-                              setEdiLockStatusModal(true);
-                            },
-                          }
+                          editing: false,
+                          onStart: () => {
+                            setEdiLockStatusModal(true);
+                          },
+                        }
                     }
                   >
                     {tenantData?.locked === 'YES'
                       ? formatMessage({
-                          id: 'ocp-express.Detail.Overview.Locked',
-                          defaultMessage: '已锁定',
-                        })
+                        id: 'ocp-express.Detail.Overview.Locked',
+                        defaultMessage: '已锁定',
+                      })
                       : formatMessage({
-                          id: 'ocp-express.Detail.Overview.Unlocked',
-                          defaultMessage: '未锁定',
-                        })}
+                        id: 'ocp-express.Detail.Overview.Unlocked',
+                        defaultMessage: '未锁定',
+                      })}
                   </Text>
                 </Descriptions.Item>
                 <Descriptions.Item
@@ -738,12 +738,12 @@ const Detail: React.FC<NewProps> = ({
                     <Text
                       style={{ width: '95%', minWidth: 180 }}
                       ellipsis={true}
-                      // editable={{
-                      //   editing: false,
-                      //   onStart: () => {
-                      //     setEdiRemarksModal(true);
-                      //   },
-                      // }}
+                    // editable={{
+                    //   editing: false,
+                    //   onStart: () => {
+                    //     setEdiRemarksModal(true);
+                    //   },
+                    // }}
                     >
                       {tenantData?.comment || '-'}
                     </Text>

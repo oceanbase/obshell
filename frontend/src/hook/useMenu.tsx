@@ -139,11 +139,11 @@ export const useTenantMenu = (
 ): MenuItem[] => {
   const menus = [
     {
-      link: `/tenant/${tenantName}`,
+      link: `/cluster/tenant/${tenantName}`,
       title: formatMessage({ id: 'ocp-express.src.util.menu.Overview', defaultMessage: '总览' }),
     },
     {
-      link: `/tenant/${tenantName}/database`,
+      link: `/cluster/tenant/${tenantName}/database`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.DatabaseManagement',
         defaultMessage: '数据库管理',
@@ -153,7 +153,7 @@ export const useTenantMenu = (
     },
 
     {
-      link: `/tenant/${tenantName}/user`,
+      link: `/cluster/tenant/${tenantName}/user`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.UserManagement',
         defaultMessage: '用户管理',
@@ -161,14 +161,14 @@ export const useTenantMenu = (
       accessible: true,
     },
     {
-      link: `/tenant/${tenantName}/monitor`,
+      link: `/cluster/tenant/${tenantName}/monitor`,
       title: formatMessage({
         id: 'OBShell.src.hook.useMenu.PerformanceMonitoring',
         defaultMessage: '性能监控',
       }),
     },
     {
-      link: `/tenant/${tenantName}/backup`,
+      link: `/cluster/tenant/${tenantName}/backup`,
       title: formatMessage({
         id: 'OBShell.src.hook.useMenu.BackupRecovery',
         defaultMessage: '备份恢复',
@@ -176,7 +176,7 @@ export const useTenantMenu = (
       hidden: tenantName === 'sys',
     },
     {
-      link: `/tenant/${tenantName}/parameter`,
+      link: `/cluster/tenant/${tenantName}/parameter`,
       title: formatMessage({
         id: 'ocp-express.src.util.menu.ParameterManagement',
         defaultMessage: '参数管理',

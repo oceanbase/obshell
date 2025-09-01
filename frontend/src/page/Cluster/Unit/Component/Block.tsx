@@ -377,14 +377,13 @@ const Block: React.FC<BlockProps> = ({
             tenantInfo &&
             ['CREATING', 'DELETING'].includes(tenantInfo.status) === false
           ) {
-            directTo(`/tenant/${tenantInfo?.obTenantId}`);
+            directTo(`/cluster/tenant/${tenantInfo?.obTenantId}`);
           }
         }}
         // 当 target 是 Unit 数目时，可能是数字 0，需要用 isNullValue 来判空
         // 对于无权限访问的租户，hover 时需要重置鼠标样式和字体颜色
-        className={`${styles.container} ${
-          !isNullValue(target) || serverInfo ? styles[`${type}WithTarget`] : styles[type]
-        } ${type === 'tenant' && tenantInfo ? styles.tenantWithTargetForNoAuth : ''} ${className}`}
+        className={`${styles.container} ${!isNullValue(target) || serverInfo ? styles[`${type}WithTarget`] : styles[type]
+          } ${type === 'tenant' && tenantInfo ? styles.tenantWithTargetForNoAuth : ''} ${className}`}
         {...restProps}
       >
         {serverInfo && ['memory', 'cpu', 'disk'].includes(type) ? (
@@ -409,27 +408,27 @@ const Block: React.FC<BlockProps> = ({
         ) : /**
          * 当 target 是 Unit 数目时，可能是数字 0，需要用 isNullValue 来判空
          */
-        !isNullValue(target) ? (
-          typeItem.badgeColor ? (
-            <Badge color={typeItem.badgeColor} text={target} />
+          !isNullValue(target) ? (
+            typeItem.badgeColor ? (
+              <Badge color={typeItem.badgeColor} text={target} />
+            ) : (
+              <Text ellipsis={true}>{target}</Text>
+            )
           ) : (
-            <Text ellipsis={true}>{target}</Text>
-          )
-        ) : (
-          <Space>
-            <img src={`/assets/unit/${type}.svg`} alt="" />
-            <Text ellipsis={true} style={{ display: 'inline-flex', alignItems: 'center' }}>
-              {typeItem.label}
-              {typeItem.tooltip && (
-                <Tooltip title={typeItem.tooltip} placement="right">
-                  <QuestionCircleOutlined
-                    style={{ color: 'rgba(0, 0, 0, 0.45)', marginLeft: '4px', fontSize: '14px' }}
-                  />
-                </Tooltip>
-              )}
-            </Text>
-          </Space>
-        )}
+            <Space>
+              <img src={`/assets/unit/${type}.svg`} alt="" />
+              <Text ellipsis={true} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                {typeItem.label}
+                {typeItem.tooltip && (
+                  <Tooltip title={typeItem.tooltip} placement="right">
+                    <QuestionCircleOutlined
+                      style={{ color: 'rgba(0, 0, 0, 0.45)', marginLeft: '4px', fontSize: '14px' }}
+                    />
+                  </Tooltip>
+                )}
+              </Text>
+            </Space>
+          )}
       </div>
     </MouseTooltip>
   );

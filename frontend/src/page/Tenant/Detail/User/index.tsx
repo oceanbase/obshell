@@ -42,7 +42,7 @@ const Index: React.FC<IndexProps> = ({
 
   useEffect(() => {
     if (tenantData?.locked === 'YES' && tenantName) {
-      history.push(`/tenant/${tenantName}`);
+      history.push(`/cluster/tenant/${tenantName}`);
     }
   }, [tenantName, tenantData?.locked]);
 

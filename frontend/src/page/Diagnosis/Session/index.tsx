@@ -118,7 +118,7 @@ const Index: React.FC<IndexProps> = ({ location, tenantData }: IndexProps) => {
           <Button
             type="primary"
             onClick={() => {
-              history.push(`/tenant/${tenantId}`);
+              history.push(`/cluster/tenant/${tenantId}`);
             }}
           >
             {formatMessage({

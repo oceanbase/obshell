@@ -63,7 +63,7 @@ const Database: React.FC<DatabaseProps> = ({
 }) => {
   useEffect(() => {
     if (tenantData?.locked === 'YES' && tenantName) {
-      history.push(`/tenant/${tenantName}`);
+      history.push(`/cluster/tenant/${tenantName}`);
     }
   }, [tenantName, tenantData?.locked]);
 
@@ -269,7 +269,7 @@ const Database: React.FC<DatabaseProps> = ({
       <Button
         type="primary"
         onClick={() => {
-          history.push(`/tenant/${tenantName}/overview`);
+          history.push(`/cluster/tenant/${tenantName}/overview`);
         }}
       >
         {formatMessage({

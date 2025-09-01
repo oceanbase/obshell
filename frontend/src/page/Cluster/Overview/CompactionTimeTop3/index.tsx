@@ -27,7 +27,7 @@ import useStyles from './index.style';
 import { formatDuration } from '@/util';
 import { getTenantTopCompaction } from '@/service/obshell/tenant';
 
-export interface CompactionTimeTop3Props {}
+export interface CompactionTimeTop3Props { }
 
 const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
   const { styles } = useStyles();
@@ -134,7 +134,7 @@ const CompactionTimeTop3: React.FC<CompactionTimeTop3Props> = () => {
                   data-aspm-expo
                   onClick={() => {
                     if (item.tenant_name) {
-                      history.push(`/tenant/${item.tenant_name}`);
+                      history.push(`/cluster/tenant/${item.tenant_name}`);
                     }
                   }}
                   className={item.tenant_name ? 'ocp-link-hover' : ''}

@@ -115,7 +115,7 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
       <Button
         type="primary"
         onClick={() => {
-          history.push(`/tenant/${tenantName}`);
+          history.push(`/cluster/tenant/${tenantName}`);
         }}
       >
         {formatMessage({
@@ -207,7 +207,7 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
         onTabChange={key => {
           setTab(key);
           history.push({
-            pathname: `/tenant/${tenantName}/user${key === 'role' ? '/role' : ''}`,
+            pathname: `/cluster/tenant/${tenantName}/user${key === 'role' ? '/role' : ''}`,
           });
         }}
         tabList={[

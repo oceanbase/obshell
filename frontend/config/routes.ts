@@ -41,18 +41,12 @@ export default [
         spmb: 'b55554',
       },
       {
-        path: 'tenant/backup/restoreNow',
-        component: 'Tenant/Detail/Backup/RestoreNow',
-        name: '租户发起恢复',
-        spmBPos: 'b50372',
-      },
-      {
         // 单个租户管理
-        path: 'tenant/:tenantName',
+        path: 'cluster/tenant/:tenantName',
         component: 'Tenant/Detail',
         routes: [
           {
-            path: '/tenant/:tenantName',
+            path: '/cluster/tenant/:tenantName',
             redirect: 'overview',
           },
           {
@@ -103,7 +97,6 @@ export default [
             name: '租户参数',
             spmb: 'b55547',
           },
-
           {
             path: 'backup',
             component: 'Tenant/Detail/Backup',
@@ -125,7 +118,7 @@ export default [
             spmBPos: 'b50372',
           },
           {
-            path: 'backup/backup/nowBackupTenant',
+            path: 'backup/nowBackupTenant',
             component: 'Backup/Backup/NowBackupTenant',
             name: '立即备份', // 租户
             spmBPos: '',
@@ -188,6 +181,12 @@ export default [
             component: 'Tenant',
             name: '租户列表',
             spmb: 'b55552',
+          },
+          {
+            path: 'tenant/restore',
+            component: 'Tenant/Detail/Backup/RestoreNow',
+            name: '租户发起恢复',
+            spmBPos: 'b50372',
           },
           // {
           //   path: 'monitor',

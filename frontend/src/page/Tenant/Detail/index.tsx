@@ -112,11 +112,11 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
   const timeDifference = new Date().getTime() - (ocpExpressEmptySuperUserPasswordTime || 0);
 
   const checkEmptyPasswordRootPath = [
-    `/tenant/${tenantName}/overview`,
-    `/tenant/${tenantName}/parameter`,
+    `/cluster/tenant/${tenantName}/overview`,
+    `/cluster/tenant/${tenantName}/parameter`,
   ];
 
-  const checkEmptyPasswordPath = [`/tenant/${tenantName}/database`, `/tenant/${tenantName}/user`];
+  const checkEmptyPasswordPath = [`/cluster/tenant/${tenantName}/database`, `/cluster/tenant/${tenantName}/user`];
 
   const isCheckEmptyPasswordRootPath = checkEmptyPasswordRootPath?.some(url =>
     pathname?.includes(url)
@@ -272,7 +272,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
                   />
                 }
                 onChange={value => {
-                  history.push(`/tenant/${value}`);
+                  history.push(`/cluster/tenant/${value}`);
                 }}
                 className={styles.tenantSelect}
               />

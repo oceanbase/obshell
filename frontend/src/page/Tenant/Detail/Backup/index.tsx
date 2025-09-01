@@ -7,7 +7,7 @@ import * as ObTenantBackupController from '@/service/obshell/backup';
 import { getOperationComponent } from '@/util/component';
 import { formatTime } from '@/util/datetime';
 import { history, useSelector } from 'umi';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Button, Descriptions, message, Modal, Space, Tooltip } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { findByValue, isNullValue } from '@oceanbase/util';
@@ -45,6 +45,23 @@ const Backup: React.FC<BackupProps> = ({
   const [loading, reload] = useReload(false);
 
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+
+  const { data: tenantBackupConfigData, run } = useRequest(
+    ObTenantBackupController.getTenantBackupConfig,
+    {
+      manual: true,
+    }
+  );
+
+  const tenantBackupConfigInfo = tenantBackupConfigData?.data || {};
+
+  useEffect(() => {
+    if (tenantName) {
+      run({
+        name: tenantName,
+      });
+    }
+  }, [tenantName]);
 
   // 获取租户的备份详情
   const {
@@ -147,7 +164,7 @@ const Backup: React.FC<BackupProps> = ({
       <Button
         disabled={backupTenant.obClusterType === 'STANDBY' || tenantData?.tenant_name === 'sys'}
         onClick={() => {
-          history.push(`/tenant/${tenantName}/backup/backup/nowBackupTenant`);
+          history.push(`/cluster/tenant/${tenantName}/backup/nowBackupTenant`);
         }}
       >
         {formatMessage({ id: 'ocp-v2.Detail.Backup.BackUpNow', defaultMessage: '立即备份' })}
@@ -356,18 +373,17 @@ const Backup: React.FC<BackupProps> = ({
                     <Tooltip
                       placement="topRight"
                       title={
-                        tenantData.name === 'sys' &&
+                        tenantName === 'sys' &&
                         formatMessage({
                           id: 'ocp-v2.Detail.Backup.TheSysTenantDoesNot',
                           defaultMessage: 'sys 租户不支持恢复',
                         })
                       }
                     >
-                      {/* TODO: 需要确定租户发起恢复的权限表达式 */}
                       <Button
-                        disabled={tenantData.name === 'sys'}
+                        disabled={tenantName === 'sys' || isNullValue(tenantBackupConfigInfo?.archive_base_uri) || isNullValue(tenantBackupConfigInfo?.data_base_uri)}
                         onClick={() => {
-                          history.push(`/tenant/${tenantName}/backup/restoreNow`);
+                          history.push(`/cluster/tenant/${tenantName}/backup/restoreNow`);
                         }}
                       >
                         {/* 需要有备份策略才能发起恢复 */}
@@ -376,11 +392,11 @@ const Backup: React.FC<BackupProps> = ({
                           defaultMessage: '发起恢复',
                         })}
                       </Button>
-                    </Tooltip>
+                    </Tooltip >
                   )}
                   {backupNowTenantButton}
                   {/* {addTenantBackupStrategyButton(noBackupStrategy ? 'default' : 'primary')} */}
-                </Space>
+                </Space >
               ),
           }}
         >
@@ -410,17 +426,18 @@ const Backup: React.FC<BackupProps> = ({
            </Tabs>
           )} */}
 
-          {tab === 'detail' && (
-            <>
-              <MyCard
-                title={formatMessage({
-                  id: 'ocp-v2.Detail.Backup.BasicInformation',
-                  defaultMessage: '基本信息',
-                })}
-                style={{ marginBottom: 16 }}
-              >
-                <Descriptions>
-                  {/* {hasBackupStrategy && (
+          {
+            tab === 'detail' && (
+              <>
+                <MyCard
+                  title={formatMessage({
+                    id: 'ocp-v2.Detail.Backup.BasicInformation',
+                    defaultMessage: '基本信息',
+                  })}
+                  style={{ marginBottom: 16 }}
+                >
+                  <Descriptions>
+                    {/* {hasBackupStrategy && (
                  <>
                    <Descriptions.Item
                      label={formatMessage({
@@ -446,47 +463,48 @@ const Backup: React.FC<BackupProps> = ({
                  </>
                 )} */}
 
-                  <Descriptions.Item
-                    label={formatMessage({
-                      id: 'ocp-v2.Detail.Backup.LastDataBackup',
-                      defaultMessage: '最近一次数据备份',
-                    })}
-                  >
-                    {formatTime(backupTenant.lastest_data_backup_time)}
-                  </Descriptions.Item>
-                  <Descriptions.Item
-                    label={formatMessage({
-                      id: 'ocp-v2.Detail.Backup.LogBackupOffset',
-                      defaultMessage: '日志备份位点',
-                    })}
-                  >
-                    {formatTime(backupTenant.lastest_archive_log_checkpoint)}
-                  </Descriptions.Item>
-                  {hasBackupStrategy && (
                     <Descriptions.Item
                       label={formatMessage({
-                        id: 'ocp-v2.Detail.Backup.LogLatency',
-                        defaultMessage: '日志延时',
+                        id: 'ocp-v2.Detail.Backup.LastDataBackup',
+                        defaultMessage: '最近一次数据备份',
                       })}
                     >
-                      {isNullValue(backupTenant.archive_log_delay)
-                        ? '-'
-                        : `${backupTenant.archive_log_delay}s`}
+                      {formatTime(backupTenant.lastest_data_backup_time)}
                     </Descriptions.Item>
-                  )}
-                </Descriptions>
-              </MyCard>
-              <Overview
-                tenantName={tenantName}
-                // 有备份策略才展示可恢复时间区间
-                hasBackupStrategy={hasBackupStrategy}
-                backupMode={backupTenant.backupMode}
-                taskTab={taskTab}
-                taskSubTab={taskSubTab}
-              />
-            </>
-          )}
-        </PageContainer>
+                    <Descriptions.Item
+                      label={formatMessage({
+                        id: 'ocp-v2.Detail.Backup.LogBackupOffset',
+                        defaultMessage: '日志备份位点',
+                      })}
+                    >
+                      {formatTime(backupTenant.lastest_archive_log_checkpoint)}
+                    </Descriptions.Item>
+                    {hasBackupStrategy && (
+                      <Descriptions.Item
+                        label={formatMessage({
+                          id: 'ocp-v2.Detail.Backup.LogLatency',
+                          defaultMessage: '日志延时',
+                        })}
+                      >
+                        {isNullValue(backupTenant.archive_log_delay)
+                          ? '-'
+                          : `${backupTenant.archive_log_delay}s`}
+                      </Descriptions.Item>
+                    )}
+                  </Descriptions>
+                </MyCard>
+                <Overview
+                  tenantName={tenantName}
+                  // 有备份策略才展示可恢复时间区间
+                  hasBackupStrategy={hasBackupStrategy}
+                  backupMode={backupTenant.backupMode}
+                  taskTab={taskTab}
+                  taskSubTab={taskSubTab}
+                />
+              </>
+            )
+          }
+        </PageContainer >
       )}
     </>
   );

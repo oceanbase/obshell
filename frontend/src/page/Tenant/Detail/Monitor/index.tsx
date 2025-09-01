@@ -90,7 +90,7 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
   const renderMonitor = () => {
     return !isPrometheusConfigured && !prometheusLoading ? (
       <MonitorConfig
-        targetPath={`/tenant/${tenantData?.tenant_name}/monitor`}
+        targetPath={`/cluster/tenant/${tenantData?.tenant_name}/monitor`}
         onConfigSuccess={() => {
           // 配置成功后刷新 Prometheus 状态
           refreshPrometheusData();

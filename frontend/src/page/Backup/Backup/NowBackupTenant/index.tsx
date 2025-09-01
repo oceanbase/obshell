@@ -203,7 +203,7 @@ const NowBackupTenant: React.FC<BackupNowDrawerProps> = ({
 
   const routes: Route[] = [
     {
-      path: `/tenant/${tenantName}/backup`,
+      path: `/cluster/tenant/${tenantName}/backup`,
       breadcrumbName: formatMessage({
         id: 'OBShell.Backup.NowBackupTenant.BackupRecovery',
         defaultMessage: '备份恢复',

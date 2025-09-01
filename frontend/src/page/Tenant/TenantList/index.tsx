@@ -175,7 +175,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
             </Tooltip>
           );
         }
-        const pathname = `/tenant/${record.obTenantId}`;
+        const pathname = `/cluster/tenant/${record.name}`;
         return (
           <a
             data-aspm-click="c304184.d308808"
@@ -399,7 +399,7 @@ const TenantList: React.FC<TenantListProps> = ({ statusList: initialStatusList }
                 data-aspm-param={``}
                 data-aspm-expo
                 onClick={() => {
-                  directTo(`/tenant/new?tenantId=${record.obTenantId}`);
+                  directTo(`/cluster/tenant/new?tenantId=${record.obTenantId}`);
                 }}
               >
                 {formatMessage({

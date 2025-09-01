@@ -1,17 +1,13 @@
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import MySelect from '@/component/MySelect';
 import Result from '@/component/Result';
-import {
-  DATE_FORMAT_DISPLAY,
-  DATE_TIME_FORMAT,
-  RFC3339_DATE_TIME_FORMAT,
-  TIME_FORMAT,
-} from '@/constant/datetime';
+import { DATE_FORMAT_DISPLAY, DATE_TIME_FORMAT, TIME_FORMAT } from '@/constant/datetime';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import { formatMessage } from '@/util/intl';
 import { getTenantOverView } from '@/service/obshell/tenant';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import { unitConfigCreate } from '@/service/obshell/unit';
+import { getTenantBackupConfig } from '@/service/obshell/backup';
 import * as ObTenantBackupController from '@/service/obshell/restore';
 import {
   breadcrumbItemRender,
@@ -21,7 +17,7 @@ import {
 import { getBackupTimeData } from '@/util/backup';
 import { getMicroseconds } from '@/util/datetime';
 import { history } from 'umi';
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { find, uniqueId, uniqWith } from 'lodash';
 import type { Moment } from 'moment';
 import moment from 'moment';
@@ -36,6 +32,7 @@ import {
   InputNumber,
   message,
   Popconfirm,
+  Descriptions,
   Popover,
   Row,
   Space,
@@ -44,7 +41,7 @@ import {
   TimePicker,
 } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
-import { ExclamationCircleFilled, InfoCircleFilled, LoadingOutlined } from '@oceanbase/icons';
+import { ExclamationCircleFilled, InfoCircleFilled } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
 import { isNullValue } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
@@ -75,7 +72,7 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
   minObBuildVersion,
   isCopy,
 }) => {
-  // const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
+  const isGlobalRestore = isNullValue(tenantName);
 
   const restoreTenantRef = useRef();
 
@@ -118,6 +115,47 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
   });
 
   const clusterData = clusterInfo?.data || {};
+
+  const { data: tenantBackupConfigData, run } = useRequest(getTenantBackupConfig, {
+    manual: true,
+    defaultParams: [
+      {
+        name: tenantName,
+      },
+    ],
+
+    onSuccess: res => {
+      if (res?.successful) {
+        const { archive_base_uri, data_base_uri } = res?.data;
+        getRestoreSourceTenantInfo({
+          archive_log_uri: archive_base_uri,
+          data_backup_uri: data_base_uri,
+        }).then(res => {
+          if (res?.successful && res?.data) {
+            setCheckedStatus('passed');
+            setShowObAdminTip(false);
+          } else if (res?.error && res?.error?.errCode === 'Environment.WithoutObAdmin') {
+            setShowObAdminTip(true);
+            setCheckedStatus('passed');
+          } else {
+            setCheckedStatus('failed');
+            setShowObAdminTip(false);
+            setRecoveryCheckResult(res.error);
+          }
+        });
+      }
+    },
+  });
+
+  const tenantBackupConfigInfo = tenantBackupConfigData?.data || {};
+
+  useEffect(() => {
+    if (tenantName) {
+      run({
+        name: tenantName,
+      });
+    }
+  }, [tenantName]);
 
   const { data } = useRequest(getTenantOverView, {
     defaultParams: [{}],
@@ -294,10 +332,11 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
           )}`
         : null;
 
+      const { archive_base_uri, data_base_uri } = tenantBackupConfigInfo;
       const restoreParam = {
         ...restValues,
-        archive_log_uri: 'file://' + archive_log_uri,
-        data_backup_uri: 'file://' + data_backup_uri,
+        archive_log_uri: isGlobalRestore ? 'file://' + archive_log_uri : archive_base_uri,
+        data_backup_uri: isGlobalRestore ? 'file://' + data_backup_uri : data_base_uri,
         timestamp,
         restore_tenant_name,
         primary_zone,
@@ -351,11 +390,16 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
 
   const routes: Route[] = [
     {
-      path: `/tenant/${tenantName}/backup`,
-      breadcrumbName: formatMessage({
-        id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
-        defaultMessage: '备份恢复',
-      }),
+      path: isGlobalRestore ? `/tenant` : `/cluster/tenant/${tenantName}/backup`,
+      breadcrumbName: isGlobalRestore
+        ? formatMessage({
+            id: 'OBShell.component.MonitorSearch.Tenant',
+            defaultMessage: '租户',
+          })
+        : formatMessage({
+            id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
+            defaultMessage: '备份恢复',
+          }),
     },
 
     { breadcrumbName: title },
@@ -486,18 +530,20 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
             })}
           </Button>
         </Popconfirm>,
-        <Button
-          key="check"
-          loading={tenantRestoreLoading}
-          onClick={() => {
-            handleCheck();
-          }}
-        >
-          {formatMessage({
-            id: 'OBShell.Backup.Component.RestoreNow.Test',
-            defaultMessage: '测试',
-          })}
-        </Button>,
+        isGlobalRestore && (
+          <Button
+            key="check"
+            loading={tenantRestoreLoading}
+            onClick={() => {
+              handleCheck();
+            }}
+          >
+            {formatMessage({
+              id: 'OBShell.Backup.Component.RestoreNow.Test',
+              defaultMessage: '测试',
+            })}
+          </Button>
+        ),
         <Button
           key="Cancel"
           onClick={() => {
@@ -512,26 +558,28 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
       ]}
     >
       <Row gutter={[0, 16]}>
-        <Col span={24}>
-          <Form
-            form={form}
-            layout="vertical"
-            colon={false}
-            hideRequiredMark={true}
-            onValuesChange={() => {
-              setCheckedStatus('unchecked');
-            }}
-          >
-            <StorageConfigCard
+        {isGlobalRestore && (
+          <Col span={24}>
+            <Form
               form={form}
-              useType={'restore'}
-              obVersion={minObBuildVersion}
-              checkedStatus={checkedStatus}
-              loading={getRestoreSourceTenantInfoLoading}
-              recoveryCheckResult={recoveryCheckResult}
-            />
-          </Form>
-        </Col>
+              layout="vertical"
+              colon={false}
+              hideRequiredMark={true}
+              onValuesChange={() => {
+                setCheckedStatus('unchecked');
+              }}
+            >
+              <StorageConfigCard
+                form={form}
+                useType={'restore'}
+                obVersion={minObBuildVersion}
+                checkedStatus={checkedStatus}
+                loading={getRestoreSourceTenantInfoLoading}
+                recoveryCheckResult={recoveryCheckResult}
+              />
+            </Form>
+          </Col>
+        )}
 
         <Col span={24}>
           <Spin spinning={getRestoreSourceTenantInfoLoading}>
@@ -545,59 +593,74 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
               <Form form={form} layout="vertical" colon={false} hideRequiredMark={true}>
                 <Row gutter={24}>
                   <Col span={8}>
-                    <Form.Item noStyle={true} shouldUpdate={true}>
-                      {() => {
-                        return (
-                          <Form.Item
-                            label={formatMessage({
-                              id: 'ocp-v2.Backup.Component.RestoreNow.SourceTenant',
-                              defaultMessage: '源租户',
-                            })}
-                            name="sourceTenantName"
-                            validateFirst
-                            rules={[
-                              {
-                                required: showObAdminTip ? false : true,
-                                message: formatMessage({
-                                  id: 'ocp-v2.Backup.Component.RestoreNow.SelectASourceTenant',
-                                  defaultMessage: '请选择源租户',
-                                }),
-                              },
-                            ]}
-                          >
-                            {/* 由于恢复数据可能从存储目录解析而来，因此租户名和 obTenantId 均可能重复，但两者的组合是唯一的 */}
-                            <MySelect
-                              loading={getRestoreSourceTenantInfoLoading}
-                              disabled={!isCopy && !isNullValue(tenantName)}
-                              showSearch={true}
-                              optionFilterProp="label"
-                              optionLabelProp="label"
-                              dropdownMatchSelectWidth={false}
-                              onChange={() => {
-                                setFieldsValue({
-                                  restoreDate: undefined,
-                                  restoreTime: undefined,
-                                  restoreMicroseconds: undefined,
-                                });
-                              }}
-                            >
-                              {tenantList.map(item => {
-                                const value = item.tenant_name;
-                                return (
-                                  <Option key={value} value={value} label={value}>
-                                    <span>
-                                      <Space>
-                                        <span>{value}</span>
-                                      </Space>
-                                    </span>
-                                  </Option>
-                                );
+                    {isGlobalRestore ? (
+                      <Form.Item noStyle={true} shouldUpdate={true}>
+                        {() => {
+                          return (
+                            <Form.Item
+                              label={formatMessage({
+                                id: 'ocp-v2.Backup.Component.RestoreNow.SourceTenant',
+                                defaultMessage: '源租户',
                               })}
-                            </MySelect>
-                          </Form.Item>
-                        );
-                      }}
-                    </Form.Item>
+                              name="sourceTenantName"
+                              validateFirst
+                              rules={[
+                                {
+                                  required: showObAdminTip ? false : true,
+                                  message: formatMessage({
+                                    id: 'ocp-v2.Backup.Component.RestoreNow.SelectASourceTenant',
+                                    defaultMessage: '请选择源租户',
+                                  }),
+                                },
+                              ]}
+                            >
+                              {/* 由于恢复数据可能从存储目录解析而来，因此租户名和 obTenantId 均可能重复，但两者的组合是唯一的 */}
+                              <MySelect
+                                loading={getRestoreSourceTenantInfoLoading}
+                                disabled={!isCopy && isGlobalRestore}
+                                showSearch={true}
+                                optionFilterProp="label"
+                                optionLabelProp="label"
+                                dropdownMatchSelectWidth={false}
+                                onChange={() => {
+                                  setFieldsValue({
+                                    restoreDate: undefined,
+                                    restoreTime: undefined,
+                                    restoreMicroseconds: undefined,
+                                  });
+                                }}
+                              >
+                                {tenantList.map(item => {
+                                  const value = item.tenant_name;
+                                  return (
+                                    <Option key={value} value={value} label={value}>
+                                      <span>
+                                        <Space>
+                                          <span>{value}</span>
+                                        </Space>
+                                      </span>
+                                    </Option>
+                                  );
+                                })}
+                              </MySelect>
+                            </Form.Item>
+                          );
+                        }}
+                      </Form.Item>
+                    ) : (
+                      <Descriptions column={4} style={{ marginBottom: 24 }}>
+                        <Descriptions.Item
+                          label={formatMessage({
+                            id: 'ocp-v2.Backup.Component.RestoreNow.SourceTenant',
+                            defaultMessage: '源租户',
+                          })}
+                        >
+                          {clusterData?.cluster_name
+                            ? `${clusterData.cluster_name}/${tenantName}`
+                            : tenantName}
+                        </Descriptions.Item>
+                      </Descriptions>
+                    )}
                   </Col>
                 </Row>
                 <Row gutter={8}>
@@ -734,7 +797,7 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
                       }}
                     </Form.Item>
                   </Col>
-                  <Col span={6}>
+                  <Col span={9}>
                     <Form.Item label=" " style={{ marginBottom: 0 }}>
                       <span style={{ color: token.colorTextTertiary }}>
                         {formatMessage(

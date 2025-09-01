@@ -211,7 +211,7 @@ const Tenant: React.FC<TenantProps> = ({
             </Tooltip>
           );
         }
-        const pathname = `/tenant/${record.tenant_name}`;
+        const pathname = `/cluster/tenant/${record.tenant_name}`;
         return (
           <a
             onClick={() => {
@@ -511,7 +511,17 @@ const Tenant: React.FC<TenantProps> = ({
         ),
 
         extra: (
-          <>
+          <Space>
+            <Button
+              onClick={() => {
+                history.push(`/tenant/restore`);
+              }}
+            >
+              {formatMessage({
+                id: 'ocp-v2.Detail.Backup.InitiateRecovery',
+                defaultMessage: '发起恢复',
+              })}
+            </Button>
             <Button
               data-aspm-click="c304184.d308814"
               data-aspm-desc="租户列表-新建租户"
@@ -525,16 +535,6 @@ const Tenant: React.FC<TenantProps> = ({
               {formatMessage({
                 id: 'ocp-express.page.Tenant.NewTenant',
                 defaultMessage: '新建租户',
-              })}
-            </Button>
-            <Button
-              onClick={() => {
-                history.push(`/tenant/backup/restoreNow`);
-              }}
-            >
-              {formatMessage({
-                id: 'ocp-v2.Detail.Backup.InitiateRecovery',
-                defaultMessage: '发起恢复',
               })}
             </Button>
             {/* 二期 */}
@@ -563,7 +563,7 @@ const Tenant: React.FC<TenantProps> = ({
           <EllipsisOutlined />
           </Button>
           </Dropdown> */}
-          </>
+          </Space>
         ),
       }}
     >

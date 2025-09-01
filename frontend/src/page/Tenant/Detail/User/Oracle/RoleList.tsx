@@ -55,7 +55,7 @@ const RoleList: React.FC<RoleListProps> = ({
             data-aspm-desc="Oracle 角色列表-跳转角色详情"
             data-aspm-param={``}
             data-aspm-expo
-            onClick={() => history.push(`/tenant/${tenantName}/user/role/${text}`)}
+            onClick={() => history.push(`/cluster/tenant/${tenantName}/user/role/${text}`)}
           >
             {text}
           </a>

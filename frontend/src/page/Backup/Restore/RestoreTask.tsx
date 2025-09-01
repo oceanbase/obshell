@@ -97,7 +97,7 @@ const RestoreTask: React.FC<RestoreTaskProps> = ({
       setCurrentRecord(record);
     } else if (key === 'cancel') {
       Modal.confirm({
-        title: `确定要取消${record.restore_tenant_name}的恢复任务吗？`,
+        title: `确定要取消 ${record.restore_tenant_name} 的恢复任务吗？`,
         okButtonProps: { danger: true, ghost: true },
         onOk: () => {
           return cancelRestoreTask(

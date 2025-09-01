@@ -400,7 +400,7 @@ const Index: React.FC<IndexProps> = ({
       <Button
         type="primary"
         onClick={() => {
-          history.push(`/tenant/${tenantId}`);
+          history.push(`/cluster/tenant/${tenantName}`);
         }}
       >
         {formatMessage({
