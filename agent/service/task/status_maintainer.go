@@ -19,7 +19,7 @@ package task
 import (
 	"strconv"
 
-	"github.com/go-sql-driver/mysql"
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -86,7 +86,7 @@ func (maintainer *clusterStatusMaintainer) holdPartialLock(tx *gorm.DB, dag task
 	}
 	err := tx.Model(&paritialLock).Create(&paritialLock).Error
 	if err != nil {
-		if dbErr, ok := err.(*mysql.MySQLError); ok {
+		if dbErr, ok := err.(*obdriver.MySQLError); ok {
 			if dbErr.Number == 1062 {
 				// If there is a unique key conflict (error number 1062), get the lock for update
 				if err1 := maintainer.getPartialLockForUpdate(tx, &paritialLock); err1 != nil {

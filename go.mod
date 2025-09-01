@@ -16,12 +16,12 @@ require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-resty/resty/v2 v2.12.0
-	github.com/go-sql-driver/mysql v1.7.0
 	github.com/google/uuid v1.6.0
 	github.com/jedib0t/go-pretty/v6 v6.5.4
 	github.com/mattn/go-isatty v0.0.20
 	github.com/mattn/go-sqlite3 v1.14.19
 	github.com/nicksnyder/go-i18n/v2 v2.3.0
+	github.com/oceanbase/go-oceanbase-driver v1.7.0-oceanbase.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/alertmanager v0.27.0
 	github.com/prometheus/common v0.61.0
@@ -91,6 +91,7 @@ require (
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
+	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect

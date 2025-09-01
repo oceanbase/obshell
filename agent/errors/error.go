@@ -20,7 +20,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/go-sql-driver/mysql"
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 	"golang.org/x/text/language"
 )
 
@@ -138,7 +138,7 @@ func Is(err error, target error) bool {
 }
 
 func IsMysqlError(err error) bool {
-	if _, ok := err.(*mysql.MySQLError); ok {
+	if _, ok := err.(*obdriver.MySQLError); ok {
 		return true
 	}
 	if x, ok := err.(interface{ Unwrap() error }); ok {

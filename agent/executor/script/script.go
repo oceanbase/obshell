@@ -22,7 +22,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -148,7 +148,7 @@ func (t *ImportScriptForTenantTask) CheckEnv() error {
 func (t *ImportScriptForTenantTask) importTimeZoneInfo() (err error) {
 	t.ExecuteLogf("Importing %s.", constant.OB_MODULE_TIMEZONE)
 	if err = tenantService.LoadModuleData(t.tenantName, constant.OB_MODULE_TIMEZONE); err != nil {
-		if dbErr, ok := err.(*mysql.MySQLError); ok && dbErr.Number == 1064 {
+		if dbErr, ok := err.(*obdriver.MySQLError); ok && dbErr.Number == 1064 {
 			// This version of OceanBase does not support importing timezone info by sql
 			err = t.importByPython(constant.OB_MODULE_TIMEZONE, path.ImportTimeZoneInfoScriptPath(), path.ImportTimeZoneInfoFilePath())
 		}
@@ -159,7 +159,7 @@ func (t *ImportScriptForTenantTask) importTimeZoneInfo() (err error) {
 func (t *ImportScriptForTenantTask) importGIS() (err error) {
 	t.ExecuteLogf("Importing %s.", constant.OB_MODULE_GIS)
 	if err = tenantService.LoadModuleData(t.tenantName, constant.OB_MODULE_GIS); err != nil {
-		if dbErr, ok := err.(*mysql.MySQLError); ok && dbErr.Number == 1064 {
+		if dbErr, ok := err.(*obdriver.MySQLError); ok && dbErr.Number == 1064 {
 			// This version of OceanBase does not support importing gis by sql
 			err = t.importByPython(constant.OB_MODULE_GIS, path.ImportSrsDataScriptPath(), path.ImportSrsDataFilePath())
 		}

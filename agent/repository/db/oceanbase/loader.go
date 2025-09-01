@@ -28,7 +28,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
-	"github.com/oceanbase/obshell/agent/repository/driver/mysql"
+	"github.com/oceanbase/obshell/agent/repository/driver"
 )
 
 var (
@@ -277,7 +277,7 @@ func LoadOceanbaseInstanceForTest(dsConfig *config.ObDataSourceConfig) error {
 
 // loadObGormForTest will try to connect to the db according to the configuration and close it.
 func loadObGormForTest(dsConfig *config.ObDataSourceConfig) error {
-	db, err := gorm.Open(mysql.Open(dsConfig.GetDSN()))
+	db, err := gorm.Open(driver.Open(dsConfig.GetDSN(), dsConfig.IsOracle()))
 	defer func() {
 		if db != nil {
 			oceanbaseDB, _ := db.DB()
@@ -292,7 +292,7 @@ func loadObGormForTest(dsConfig *config.ObDataSourceConfig) error {
 }
 
 func LoadTempOceanbaseInstance(dsConfig *config.ObDataSourceConfig) (*gorm.DB, error) {
-	db, err := gorm.Open(mysql.Open(dsConfig.GetDSN()))
+	db, err := gorm.Open(driver.Open(dsConfig.GetDSN(), dsConfig.IsOracle()))
 	if err != nil {
 		log.WithError(err).Error("open ob db failed")
 		return nil, err

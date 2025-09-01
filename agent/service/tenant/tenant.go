@@ -21,7 +21,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-sql-driver/mysql"
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -701,7 +701,7 @@ func (s *TenantService) CheckModuleData(tenantName string, moduleName string) (p
 	sql := fmt.Sprintf("alter system check module data module=%s tenant=%s", moduleName, tenantName)
 	err = oceanbaseDb.Exec(sql).Error
 	if err != nil {
-		if dbErr, ok := err.(*mysql.MySQLError); ok && dbErr.Number == 4025 {
+		if dbErr, ok := err.(*obdriver.MySQLError); ok && dbErr.Number == 4025 {
 			pass = false
 			err = nil
 		}

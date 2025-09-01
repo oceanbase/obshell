@@ -286,7 +286,7 @@ const (
 )
 
 const (
-	CHUNK_SIZE uint64 = 1024*1024*16 - 1
+	CHUNK_SIZE uint64 = 1024*1024*8 - 1
 )
 
 const (

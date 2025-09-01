@@ -32,8 +32,8 @@ import (
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
-	"github.com/oceanbase/obshell/agent/repository/driver/mysql"
-	"github.com/oceanbase/obshell/agent/repository/driver/oracle"
+
+	"github.com/oceanbase/obshell/agent/repository/driver"
 	"github.com/oceanbase/obshell/agent/repository/logger"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 )
@@ -75,11 +75,7 @@ func createGormDbByConfig(datasourceConfig *config.ObDataSourceConfig) (db *gorm
 
 	for ; times != 0; updateTimes() {
 		log.Info("try connect oceanbase: ", times)
-		if datasourceConfig.IsOracle() {
-			db, err = gorm.Open(oracle.Open(dsn), &gormConfig)
-		} else {
-			db, err = gorm.Open(mysql.Open(dsn), &gormConfig)
-		}
+		db, err = gorm.Open(driver.Open(dsn, datasourceConfig.IsOracle()), &gormConfig)
 		if err == nil {
 			break
 		}

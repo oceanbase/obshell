@@ -25,7 +25,7 @@ import (
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/meta"
-	"github.com/oceanbase/obshell/agent/repository/driver/mysql"
+	"github.com/oceanbase/obshell/agent/repository/driver"
 	"github.com/oceanbase/obshell/agent/repository/logger"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
@@ -49,7 +49,7 @@ func LoadObproxyInstance() (db *gorm.DB, err error) {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		}}
-	db, err = gorm.Open(mysql.OpenObproxy(dsConfig.GetDSN()), &gormConfig)
+	db, err = gorm.Open(driver.OpenObproxy(dsConfig.GetDSN()), &gormConfig)
 	if err == nil {
 		releaseDB(obproxyInstance)
 		obproxyInstance = db
@@ -78,7 +78,7 @@ func LoadTempObproxyInstance(dsConfig *config.ObDataSourceConfig) (db *gorm.DB, 
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		}}
-	db, err = gorm.Open(mysql.OpenObproxy(dsConfig.GetDSN()), &gormConfig)
+	db, err = gorm.Open(driver.OpenObproxy(dsConfig.GetDSN()), &gormConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, "load temp obproxy instance failed")
 	}

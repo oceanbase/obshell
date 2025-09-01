@@ -17,6 +17,8 @@
 package driver
 
 import (
+	_ "github.com/oceanbase/go-oceanbase-driver"
+	"github.com/oceanbase/obshell/agent/constant"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/migrator"
@@ -24,12 +26,17 @@ import (
 
 type Dialector struct {
 	mysql.Dialector
+	isOracle bool
 }
 
-func Open(dsn string) gorm.Dialector {
+func Open(dsn string, isOracle bool) gorm.Dialector {
 	mysqlDialector := mysql.Open(dsn).(*mysql.Dialector)
+	if isOracle {
+		mysqlDialector.Config.SkipInitializeWithVersion = true
+	}
 	return Dialector{
 		Dialector: *mysqlDialector,
+		isOracle:  isOracle,
 	}
 }
 
@@ -54,4 +61,16 @@ func (dialector Dialector) Migrator(db *gorm.DB) gorm.Migrator {
 	return Migrator{
 		Migrator: mysqlMigrator,
 	}
+}
+
+func (dialector Dialector) Name() string {
+	if dialector.isOracle {
+		return constant.ORACLE_MODE
+	}
+	return constant.MYSQL_MODE
+}
+
+func (dialector Dialector) Initialize(db *gorm.DB) (err error) {
+	dialector.DriverName = "oceanbase"
+	return dialector.Dialector.Initialize(db)
 }

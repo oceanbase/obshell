@@ -97,20 +97,16 @@ func (t MysqlUser) Name() string {
 }
 
 type OracleUser struct {
-	UserName      string `gorm:"column:USERNAME"`
-	Created       string `gorm:"column:CREATED"`
-	AccountStatus string `gorm:"column:ACCOUNT_STATUS"` // OPEN means unlocked, else means locked
+	UserName      string    `gorm:"column:USERNAME"`
+	Created       time.Time `gorm:"column:CREATED"`
+	AccountStatus string    `gorm:"column:ACCOUNT_STATUS"` // OPEN means unlocked, else means locked
 }
 
 func (t OracleUser) ToUserBo() bo.ObUser {
-	createTime, err := time.Parse("02-Jan-06", t.Created)
-	if err != nil {
-		createTime = time.Time{}
-	}
 	return bo.ObUser{
 		UserName:   t.UserName,
 		IsLocked:   t.AccountStatus != "OPEN",
-		CreateTime: createTime,
+		CreateTime: t.Created,
 	}
 }
 

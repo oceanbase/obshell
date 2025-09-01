@@ -448,6 +448,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f h1:KUppIJq7/+
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/nicksnyder/go-i18n/v2 v2.3.0 h1:2NPsCsNFCVd7i+Su0xYsBrIhS3bE2XMv5gNTft2O+PQ=
 github.com/nicksnyder/go-i18n/v2 v2.3.0/go.mod h1:nxYSZE9M0bf3Y70gPQjN9ha7XNHX7gMc814+6wVyEI4=
+github.com/oceanbase/go-oceanbase-driver v1.7.0-oceanbase.1 h1:gPmpZPIhmadIoSrewLtv/U/tZz8yPKwuvsOUq3ExtOQ=
+github.com/oceanbase/go-oceanbase-driver v1.7.0-oceanbase.1/go.mod h1:bEmS9wEJeKtLsYCtwEj61ut+bSPrRFVTfvwaT9mrIqo=
 github.com/oklog/ulid v1.3.1 h1:EGfNDEx6MqHz8B3uNV6QAib1UR2Lm97sHi3ocA6ESJ4=
 github.com/oklog/ulid v1.3.1/go.mod h1:CirwcVhetQ6Lv90oh/F+FBtV6XMibvdAFo93nm5qn4U=
 github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8Oi/yOhh5U=

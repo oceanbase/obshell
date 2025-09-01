@@ -19,7 +19,7 @@ package agent
 import (
 	"os"
 
-	"github.com/go-sql-driver/mysql"
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
@@ -96,7 +96,7 @@ func (s *AgentService) UpgradeBinary() error {
 		}
 		err := tx.Model(info).Create(info).Error
 		if err != nil {
-			if dbErr, ok := err.(*mysql.MySQLError); ok {
+			if dbErr, ok := err.(*obdriver.MySQLError); ok {
 				if dbErr.Number == 1062 || dbErr.Number == 1205 {
 					// check if the binary has been upgraded
 					if err = tx.Model(info).Where("version = ?", constant.VERSION).Where("architecture = ?", global.Architecture).Where("distribution = ?", constant.DIST).Scan(info).Error; err != nil {
