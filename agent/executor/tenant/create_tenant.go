@@ -195,9 +195,23 @@ func renderCreateTenantParam(param *param.CreateTenantParam) error {
 	return nil
 }
 
+func checkMode(mode string) error {
+	if mode == constant.ORACLE_MODE {
+		_, isCommunityEdition, _ := binary.GetMyOBVersion()
+		if isCommunityEdition {
+			return errors.Occur(errors.ErrObTenantModeNotSupported, mode)
+		}
+	}
+	return nil
+}
+
 func checkCreateTenantParam(param *param.CreateTenantParam) (err error) {
 	if len(param.ZoneList) == 0 {
 		return errors.Occur(errors.ErrObTenantZoneListEmpty)
+	}
+
+	if err = checkMode(param.Mode); err != nil {
+		return
 	}
 
 	if err = zone.CheckZoneParams(param.ZoneList); err != nil {
@@ -483,8 +497,8 @@ func buildCreateTenantSql(param *param.CreateTenantParam, poolList []string) (st
 		input = append(input, transfer(param.Charset))
 	}
 
-	if param.Collation != "" && param.Mode == constant.MYSQL_MODE {
-		sql += ", COLLATE = \"%s\"" // STRING_VALUE
+	if param.Collation != "" {
+		sql += ", COLLATE = \"%s\""
 		input = append(input, transfer(param.Collation))
 	}
 	if param.Comment != "" {
