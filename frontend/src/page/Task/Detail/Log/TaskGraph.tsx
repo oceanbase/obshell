@@ -374,7 +374,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
           </div>
           <Space size={4} className={styles.right}>
             <Space size={14}>
-              <span style={{ display: 'inline-block', width: 90, fontSize: 12 }}>
+              <span style={{ display: 'inline-block', maxWidth: 90, fontSize: 12 }}>
                 {formatMessage(
                   {
                     id: 'ocp-express.Detail.Log.TaskGraph.StartSubtaskstarttime',
@@ -388,7 +388,7 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
                 ellipsis={{
                   tooltip: subTaskDuration,
                 }}
-                style={{ color: token.colorTextTertiary, fontSize: 12 }}
+                style={{ color: token.colorTextTertiary, maxWidth: 90, fontSize: 12 }}
               >
                 {formatMessage(
                   {

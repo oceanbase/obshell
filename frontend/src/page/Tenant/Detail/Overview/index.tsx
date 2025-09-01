@@ -151,10 +151,10 @@ const Detail: React.FC<NewProps> = ({
     },
   });
 
-  const tenantData = {
+  const tenantData: API.TenantInfo = {
     ...(tenantInfo?.data || {}),
     name: tenantInfo?.data?.tenant_name,
-  } || { tenant_name: tenantName };
+  };
 
   const zones = getZonesFromTenant(tenantData);
 
@@ -858,8 +858,10 @@ const Detail: React.FC<NewProps> = ({
               </Button>
             }
           >
-            {tenantData.primary_zone &&
-              tenantData.primary_zone.split(';').map(item => <Tag>{item}</Tag>)}
+            {tenantData?.primary_zone &&
+              tenantData?.primary_zone
+                ?.split(';')
+                .map((item: string) => <Tag key={item}>{item}</Tag>)}
           </MyCard>
         </Col>
         <Col span={24}>

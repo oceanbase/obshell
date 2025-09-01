@@ -16,10 +16,8 @@
 
 import { tenantModifyPrimaryZone } from '@/service/obshell/tenant';
 import { formatMessage } from '@/util/intl';
-import { useDispatch } from 'umi';
 import React from 'react';
-import { Form, message } from '@oceanbase/design';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
+import { DrawerProps, Form, message } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import MyDrawer from '@/component/MyDrawer';
 import FormPrimaryZone from '@/component/FormPrimaryZone';
@@ -27,9 +25,10 @@ import { taskSuccess } from '@/util/task';
 
 const FormItem = Form.Item;
 
-export interface ModifyPrimaryZoneDrawerProps {
+export interface ModifyPrimaryZoneDrawerProps extends DrawerProps {
   tenantData?: API.TenantInfo;
   onSuccess?: () => void;
+  zones: API.Zone[];
 }
 
 const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
@@ -64,7 +63,7 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
       const { primaryZone } = values;
       run(
         {
-          name: tenantData?.name,
+          name: tenantData?.tenant_name!,
         },
 
         { primary_zone: primaryZone }
@@ -92,7 +91,7 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
           })}
           style={{ marginBottom: 24 }}
         >
-          {tenantData.name}
+          {tenantData?.tenant_name}
         </FormItem>
       </Form>
       <Form form={form} preserve={false} layout="vertical" hideRequiredMark={true}>
@@ -102,9 +101,9 @@ const ModifyPrimaryZoneDrawer: React.FC<ModifyPrimaryZoneDrawerProps> = ({
             defaultMessage: 'Zone 优先级排序',
           })}
           name="primaryZone"
-          initialValue={tenantData.primaryZone}
+          initialValue={tenantData?.primary_zone}
         >
-          <FormPrimaryZone zoneList={(zones || []).map(item => item.name)} />
+          <FormPrimaryZone zoneList={(zones || []).map(item => item.name!)} />
         </FormItem>
       </Form>
     </MyDrawer>
