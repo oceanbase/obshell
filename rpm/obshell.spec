@@ -36,9 +36,9 @@ if [ %{name} != "obshell" ]; then
     [[ $release =~ ^\.([a-zA-Z]+)([0-9]+)$ ]]
     numbers=${BASH_REMATCH[2]}
     host=${HOST:-https://mirrors.oceanbase.com}
-    rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/oceanbase-ce-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
+    rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
     if [ -z "$WITHOUT_LIBS" ]; then
-        rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/oceanbase-ce-libs-${OB_version}.el${numbers}.%{_arch}.rpm | cpio -div
+        rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-libs-${OB_version}.el${numbers}.%{_arch}.rpm | cpio -div
     fi
     find "./home/admin/oceanbase/bin/" -type f -name "*.py" -exec sed -i '1s_^#!/usr/bin/python$_#!/usr/bin/python2_' {} +
 fi
