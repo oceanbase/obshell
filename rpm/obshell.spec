@@ -36,9 +36,18 @@ if [ %{name} != "obshell" ]; then
     [[ $release =~ ^\.([a-zA-Z]+)([0-9]+)$ ]]
     numbers=${BASH_REMATCH[2]}
     host=${HOST:-https://mirrors.oceanbase.com}
-    rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
+    if [ %{name} == "oceanbase-standalone" ] || [ %{name} == "oceanbase" ]; then
+        rpm2cpio $host/${numbers}/%{_arch}/test/%{name}/%{name}-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
+    else
+        rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
+    fi
+
     if [ -z "$WITHOUT_LIBS" ]; then
-        rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-libs-${OB_version}.el${numbers}.%{_arch}.rpm | cpio -div
+        if [ %{name} == "oceanbase-standalone" ] || [ %{name} == "oceanbase" ]; then
+          rpm2cpio $host/${numbers}/%{_arch}/test/%{name}-libs/%{name}-libs-${OB_version}.el${numbers}.%{_arch}.rpm| cpio -div
+        else
+          rpm2cpio $host/community/stable/el/${numbers}/%{_arch}/%{name}-libs-${OB_version}.el${numbers}.%{_arch}.rpm | cpio -div
+        fi
     fi
     find "./home/admin/oceanbase/bin/" -type f -name "*.py" -exec sed -i '1s_^#!/usr/bin/python$_#!/usr/bin/python2_' {} +
 fi
