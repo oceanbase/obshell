@@ -30,10 +30,12 @@ import (
 	"github.com/oceanbase/obshell/agent/global"
 	"github.com/oceanbase/obshell/agent/lib/system"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 )
 
 type GetAllRequiredPkgsTask struct {
 	task.Task
+	obType              modelob.OBType
 	needPkgNameList     []string
 	upgradeDir          string
 	upgradeRoute        []RouteNode
@@ -82,7 +84,14 @@ func (t *GetAllRequiredPkgsTask) getParams() (err error) {
 	if onlyForAgent != nil {
 		t.needPkgNameList = []string{constant.PKG_OBSHELL}
 	} else {
-		t.needPkgNameList = []string{constant.PKG_OCEANBASE_CE, constant.PKG_OCEANBASE_CE_LIBS}
+		obType := t.GetContext().GetParam(PARAM_OB_TYPE) // compatible with previous version
+		t.obType = modelob.OBTypeCommunity
+		if obType != nil {
+			if obType, ok := obType.(string); ok {
+				t.obType = modelob.OBType(obType)
+			}
+		}
+		t.needPkgNameList = constant.REQUIRE_UPGRADE_PKG_NAMES_MAP[t.obType]
 	}
 
 	if err = t.GetLocalDataWithValue(PARAM_UPGRADE_DIR, &t.upgradeDir); err != nil {

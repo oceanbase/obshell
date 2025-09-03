@@ -34,6 +34,7 @@ import (
 	sqlitedb "github.com/oceanbase/obshell/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/sqlite"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -894,6 +895,34 @@ func (obclusterService *ObclusterService) IsCommunityEdition() (bool, error) {
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (obclusterService *ObclusterService) GetOBType() (obType modelob.OBType, err error) {
+	obType = modelob.OBTypeUnknown
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return
+	}
+
+	var count int64
+	err = oceanbaseDb.Raw("select version() REGEXP 'OceanBase[\\s_]CE'").Scan(&count).Error
+	if err != nil {
+		return
+	}
+	if count > 0 {
+		return modelob.OBTypeCommunity, nil
+	}
+	err = oceanbaseDb.Raw("SELECT COUNT(*) FROM oceanbase.DBA_OB_LICENSE").Scan(&count).Error
+	if err != nil {
+		return
+	}
+	if count > 0 {
+		obType = modelob.OBTypeStandalone
+	} else {
+		obType = modelob.OBTypeBusiness
+	}
+
+	return
 }
 
 func (*ObclusterService) GetAllZoneRootServers() (rootServersMap map[string]oceanbase.RootServer, err error) {

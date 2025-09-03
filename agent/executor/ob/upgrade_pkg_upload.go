@@ -32,6 +32,7 @@ import (
 	"github.com/oceanbase/obshell/agent/errors"
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 )
 
 const (
@@ -68,12 +69,18 @@ type upgradeRpmPkgInfo struct {
 	version              string
 	release              string
 	distribution         string
+	obType               modelob.OBType
 }
 
 func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, error) {
 	r := &upgradeRpmPkgInfo{
 		rpmFile: input,
 	}
+	obType, err := obclusterService.GetOBType()
+	if err != nil {
+		return nil, err
+	}
+	r.obType = obType
 
 	if err := r.CheckUpgradePkg(true); err != nil {
 		return nil, err
@@ -86,23 +93,45 @@ func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, error) {
 	return record, nil
 }
 
+// TODO: Skip this check during upgrade since it has already been checked during upload and this method is quite time-consuming.
 func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	if r.rpmPkg, err = ReadRpm(r.rpmFile); err != nil {
 		return
 	}
 	r.version = r.rpmPkg.Version()
-
 	switch r.rpmPkg.Name() {
 	case constant.PKG_OBSHELL:
 		r.isAgentPkg = true
 		err = r.fileCheck()
 	case constant.PKG_OCEANBASE_CE:
-		err = r.fileCheck()
+		if r.obType == modelob.OBTypeCommunity {
+			err = r.fileCheck()
+		} else {
+			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
+		}
+		log.Info("rpm dep yml is ", r.upgradeDepYml)
+	case constant.PKG_OCEANBASE:
+		if r.obType == modelob.OBTypeBusiness {
+			err = r.fileCheck()
+		} else {
+			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
+		}
+		log.Info("rpm dep yml is ", r.upgradeDepYml)
+	case constant.PKG_OCEANBASE_STANDALONE:
+		if r.obType == modelob.OBTypeStandalone {
+			err = r.fileCheck()
+		} else {
+			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
+		}
 		log.Info("rpm dep yml is ", r.upgradeDepYml)
 	case constant.PKG_OCEANBASE_CE_LIBS:
-		err = r.dirCheckForLibs()
+		if r.obType == modelob.OBTypeCommunity {
+			err = r.dirCheckForLibs()
+		} else {
+			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
+		}
 	default:
-		err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES, ", "))
+		err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 	}
 	if err != nil {
 		return
@@ -224,6 +253,7 @@ func (r *upgradeRpmPkgInfo) GetUpgradeDepYml() (err error) {
 				return err
 			}
 			r.upgradeDepYml = buffer.String()
+			break
 		}
 	}
 	return

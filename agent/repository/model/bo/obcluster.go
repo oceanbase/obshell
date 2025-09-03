@@ -124,6 +124,7 @@ type ClusterBasicInfo struct {
 	ClusterId          int    `json:"cluster_id"`
 	Status             string `json:"status"`
 	IsCommunityEdition bool   `json:"is_community_edition"`
+	IsStandalone       bool   `json:"is_standalone"`
 	ObVersion          string `json:"ob_version"`
 }
 

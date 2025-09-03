@@ -21,6 +21,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 )
 
 // only for mysql
@@ -47,11 +48,12 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	if err := observerService.GetOBParatemerByName("cluster_id", &info.ClusterId); err != nil {
 		return nil, err
 	}
-	isCommunityEdition, err := obclusterService.IsCommunityEdition()
+	obType, err := obclusterService.GetOBType()
 	if err != nil {
 		return nil, err
 	}
-	info.IsCommunityEdition = isCommunityEdition
+	info.IsCommunityEdition = obType == modelob.OBTypeCommunity
+	info.IsStandalone = obType == modelob.OBTypeStandalone
 	info.Status = oceanbase.OBStateShortMap[oceanbase.GetState()]
 	version, err := obclusterService.GetObVersion()
 	if err != nil {

@@ -32,6 +32,7 @@ import (
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/agent/secure"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -56,7 +57,11 @@ type obUpgradeParams struct {
 
 func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, error) {
 	log.Info("check and upgrade ob")
-	p, err := preCheckForObUpgrade(param)
+	obType, err := obclusterService.GetOBType()
+	if err != nil {
+		return nil, err
+	}
+	p, err := preCheckForObUpgrade(param, obType)
 	if err != nil {
 		log.WithError(err).Error("pre check for ob upgrade failed")
 		return nil, err
@@ -68,7 +73,7 @@ func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, error) {
 	}
 
 	checkAndUpgradeObTemplate := buildCheckAndUpgradeObTemplate(p)
-	checkAndUpgradeObTaskContext := buildCheckAndUpgradeObTaskContext(p)
+	checkAndUpgradeObTaskContext := buildCheckAndUpgradeObTaskContext(p, obType)
 	checkAndUpgradeObDag, e := taskService.CreateDagInstanceByTemplate(checkAndUpgradeObTemplate, checkAndUpgradeObTaskContext)
 	if e != nil {
 		return nil, e
@@ -76,7 +81,7 @@ func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, error) {
 	return task.NewDagDetailDTO(checkAndUpgradeObDag), nil
 }
 
-func buildCheckAndUpgradeObTaskContext(p *obUpgradeParams) *task.TaskContext {
+func buildCheckAndUpgradeObTaskContext(p *obUpgradeParams, obType modelob.OBType) *task.TaskContext {
 	ctx := task.NewTaskContext()
 	buildNumber, distribution, _ := pkg.SplitRelease(p.RequestParam.Release)
 	taskTime := strconv.Itoa(int(time.Now().UnixMilli()))
@@ -89,7 +94,8 @@ func buildCheckAndUpgradeObTaskContext(p *obUpgradeParams) *task.TaskContext {
 		SetParam(PARAM_DISTRIBUTION, distribution).
 		SetParam(PARAM_RELEASE_DISTRIBUTION, p.RequestParam.Release).
 		SetParam(PARAM_UPGRADE_ROUTE, p.upgradeRoute).
-		SetParam(PARAM_ROLLING_UPGRADE, p.rollingUpgrade)
+		SetParam(PARAM_ROLLING_UPGRADE, p.rollingUpgrade).
+		SetParam(PARAM_OB_TYPE, obType)
 	return ctx
 }
 
@@ -249,7 +255,7 @@ func (p *obUpgradeParams) initParamsForObUpgrade() (err error) {
 	return nil
 }
 
-func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err error) {
+func preCheckForObUpgrade(param param.ObUpgradeParam, obType modelob.OBType) (p *obUpgradeParams, err error) {
 	log.Info("start precheck for ob upgrade")
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
@@ -302,7 +308,7 @@ func preCheckForObUpgrade(param param.ObUpgradeParam) (p *obUpgradeParams, err e
 		return nil, err
 	}
 
-	p.upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release)
+	p.upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release, obType)
 	if err != nil {
 		return nil, err
 	}

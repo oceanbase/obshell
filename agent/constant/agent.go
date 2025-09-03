@@ -16,7 +16,11 @@
 
 package constant
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/oceanbase/obshell/model/oceanbase"
+)
 
 const (
 	OCSAGENT_META_PATH = ".meta"
@@ -84,16 +88,41 @@ const (
 
 // upload pkg names
 const (
-	PKG_OBSHELL           = "obshell"
-	PKG_OCEANBASE_CE      = "oceanbase-ce"
-	PKG_OCEANBASE_CE_LIBS = "oceanbase-ce-libs"
-	PKG_OBPROXY_CE        = "obproxy-ce"
+	PKG_OBSHELL              = "obshell"
+	PKG_OCEANBASE_CE         = "oceanbase-ce"
+	PKG_OCEANBASE_CE_LIBS    = "oceanbase-ce-libs"
+	PKG_OCEANBASE            = "oceanbase"
+	PKG_OCEANBASE_STANDALONE = "oceanbase-standalone"
+	PKG_OBPROXY_CE           = "obproxy-ce"
 )
 
-var SUPPORT_PKG_NAMES = []string{
-	PKG_OBSHELL,
-	PKG_OCEANBASE_CE,
-	PKG_OCEANBASE_CE_LIBS,
+var SUPPORT_PKG_NAMES_MAP = map[oceanbase.OBType][]string{
+	oceanbase.OBTypeCommunity: {
+		PKG_OBSHELL,
+		PKG_OCEANBASE_CE,
+		PKG_OCEANBASE_CE_LIBS,
+	},
+	oceanbase.OBTypeBusiness: {
+		PKG_OBSHELL,
+		PKG_OCEANBASE,
+	},
+	oceanbase.OBTypeStandalone: {
+		PKG_OBSHELL,
+		PKG_OCEANBASE_STANDALONE,
+	},
+}
+
+var REQUIRE_UPGRADE_PKG_NAMES_MAP = map[oceanbase.OBType][]string{
+	oceanbase.OBTypeCommunity: {
+		PKG_OCEANBASE_CE,
+		PKG_OCEANBASE_CE_LIBS,
+	},
+	oceanbase.OBTypeBusiness: {
+		PKG_OCEANBASE,
+	},
+	oceanbase.OBTypeStandalone: {
+		PKG_OCEANBASE_STANDALONE,
+	},
 }
 
 const (

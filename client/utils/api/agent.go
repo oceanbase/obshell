@@ -19,7 +19,6 @@ package api
 import (
 	log "github.com/sirupsen/logrus"
 
-	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/agent/cmd/daemon"
 	"github.com/oceanbase/obshell/agent/constant"
 	"github.com/oceanbase/obshell/agent/engine/task"
@@ -27,7 +26,9 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/http"
 	"github.com/oceanbase/obshell/agent/lib/path"
 	"github.com/oceanbase/obshell/agent/meta"
+	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	taskservice "github.com/oceanbase/obshell/agent/service/task"
+	"github.com/oceanbase/obshell/client/lib/stdio"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -90,6 +91,16 @@ func GetObInfo() (obInfo *param.ObInfoResp, err error) {
 	err = http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, nil, &obInfo)
 	if err != nil {
 		return nil, errors.Wrap(err, "get ob info failed")
+	}
+	return
+}
+
+func GetObclusterSummary() (obclusterSummary *bo.ClusterInfo, err error) {
+	uri := constant.URI_OBCLUSTER_API_PREFIX + constant.URI_INFO
+	stdio.Verbosef("Calling API %s", uri)
+	err = http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, nil, &obclusterSummary)
+	if err != nil {
+		return nil, errors.Wrap(err, "get obcluster summary failed")
 	}
 	return
 }

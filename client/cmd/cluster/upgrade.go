@@ -314,12 +314,25 @@ var pkgNames = []string{constant.PKG_OCEANBASE_CE, constant.PKG_OCEANBASE_CE_LIB
 
 func getAllOBRpmsInDir(pkgDir string) (rpmPkgs map[string]*rpm.Package, err error) {
 	stdio.Printf("Getting all rpm packages in %s", pkgDir)
+	clusterBasicInfo, err := api.GetObclusterSummary()
+	if err != nil {
+		return nil, err
+	}
+
+	if clusterBasicInfo.IsCommunityEdition {
+		pkgNames = []string{constant.PKG_OCEANBASE_CE, constant.PKG_OCEANBASE_CE_LIBS}
+	} else if clusterBasicInfo.IsStandalone {
+		pkgNames = []string{constant.PKG_OCEANBASE_STANDALONE}
+	} else {
+		pkgNames = []string{constant.PKG_OCEANBASE}
+	}
+
 	rpmPkgs, err = rpmutil.GetAllRpmsInDirByNames(pkgDir, pkgNames)
 	if err != nil {
 		return nil, err
 	}
 	if len(rpmPkgs) == 0 {
-		return nil, errors.Occur(errors.ErrCliUpgradePackageNotFoundInPath, "oceanbase", pkgDir)
+		return nil, errors.Occur(errors.ErrCliUpgradePackageNotFoundInPath, strings.Join(pkgNames, ","), pkgDir)
 	}
 	printer.PrintPkgsTable(rpmPkgs)
 	return rpmPkgs, nil

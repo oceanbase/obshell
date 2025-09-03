@@ -112,7 +112,10 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 		t.ExecuteLogf("Successfully installed %s", rpmPkgInfo.RpmPkgPath)
 
 		// Only check the observer bin when the package is oceanbase-ce and not only for agent.
-		if rpmPkgInfo.RpmName == constant.PKG_OCEANBASE_CE && t.GetContext().GetParam(PARAM_ONLY_FOR_AGENT) == nil {
+		if (rpmPkgInfo.RpmName == constant.PKG_OCEANBASE_CE ||
+			rpmPkgInfo.RpmName == constant.PKG_OCEANBASE ||
+			rpmPkgInfo.RpmName == constant.PKG_OCEANBASE_STANDALONE) &&
+			t.GetContext().GetParam(PARAM_ONLY_FOR_AGENT) == nil {
 			if err = t.checkObserverBinAvailable(rpmPkgInfo); err != nil {
 				t.ExecuteErrorLogf("check observer bin failed, err: %s", err.Error())
 				success = false

@@ -32,6 +32,7 @@ import (
 	"github.com/oceanbase/obshell/agent/lib/pkg"
 	"github.com/oceanbase/obshell/agent/meta"
 	"github.com/oceanbase/obshell/agent/repository/model/oceanbase"
+	modelob "github.com/oceanbase/obshell/model/oceanbase"
 	"github.com/oceanbase/obshell/param"
 )
 
@@ -49,7 +50,12 @@ var (
 
 func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 	log.Info("ob upgrade check")
-	upgradeRoute, err := preCheckForObUpgradeCheck(param)
+	obType, err := obclusterService.GetOBType()
+	if err != nil {
+		return nil, err
+	}
+
+	upgradeRoute, err := preCheckForObUpgradeCheck(param, obType)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +64,7 @@ func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 		return nil, err
 	}
 	obUpgradeCheckTemplate := buildObUpgradeCheckTemplate(param)
-	obUpgradeCheckTaskContext := buildObUpgradeCheckTaskContext(param, upgradeRoute, agents)
+	obUpgradeCheckTaskContext := buildObUpgradeCheckTaskContext(param, upgradeRoute, agents, obType)
 	obUpgradeCheckDag, err := taskService.CreateDagInstanceByTemplate(obUpgradeCheckTemplate, obUpgradeCheckTaskContext)
 	if err != nil {
 		log.WithError(err).Error("create dag instance by template failed")
@@ -67,7 +73,7 @@ func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 	return task.NewDagDetailDTO(obUpgradeCheckDag), nil
 }
 
-func buildObUpgradeCheckTaskContext(param param.UpgradeCheckParam, upgradeRoute []RouteNode, agents []meta.AgentInfo) *task.TaskContext {
+func buildObUpgradeCheckTaskContext(param param.UpgradeCheckParam, upgradeRoute []RouteNode, agents []meta.AgentInfo, obType modelob.OBType) *task.TaskContext {
 	ctx := task.NewTaskContext()
 	buildNumer, distribution, _ := pkg.SplitRelease(param.Release)
 	taskTime := strconv.Itoa(int(time.Now().UnixMilli()))
@@ -78,7 +84,8 @@ func buildObUpgradeCheckTaskContext(param param.UpgradeCheckParam, upgradeRoute 
 		SetParam(PARAM_BUILD_NUMBER, buildNumer).
 		SetParam(PARAM_DISTRIBUTION, distribution).
 		SetParam(PARAM_TASK_TIME, taskTime).
-		SetParam(PARAM_UPGRADE_ROUTE, upgradeRoute)
+		SetParam(PARAM_UPGRADE_ROUTE, upgradeRoute).
+		SetParam(PARAM_OB_TYPE, obType)
 	return ctx
 }
 
@@ -103,7 +110,12 @@ func getKeyForPkgInfoMap(ctx *task.TaskContext) (keys []string, err error) {
 	}
 	for _, node := range upgradeRoute {
 		if ctx.GetParam(PARAM_ONLY_FOR_AGENT) == nil {
-			keys = append(keys, GenerateLibsBuildVersion(node.BuildVersion))
+			obTypeParam := ctx.GetParam(PARAM_OB_TYPE)
+			if obTypeParam == nil {
+				keys = append(keys, GenerateLibsBuildVersion(node.BuildVersion))
+			} else if obType, ok := ctx.GetParam(PARAM_OB_TYPE).(string); ok && modelob.OBType(obType) == modelob.OBTypeCommunity {
+				keys = append(keys, GenerateLibsBuildVersion(node.BuildVersion))
+			}
 		}
 		keys = append(keys, node.BuildVersion)
 	}
@@ -119,14 +131,14 @@ func getUpgradeRouteForTask(taskContext *task.TaskContext) (upgradeRoute []Route
 	return
 }
 
-func preCheckForObUpgradeCheck(param param.UpgradeCheckParam) (upgradeRoute []RouteNode, err error) {
+func preCheckForObUpgradeCheck(param param.UpgradeCheckParam, obType modelob.OBType) (upgradeRoute []RouteNode, err error) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		return nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
 	}
 	if err = checkUpgradeDir(&param.UpgradeDir); err != nil {
 		return nil, err
 	}
-	upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release)
+	upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release, obType)
 	if err != nil {
 		return
 	}
@@ -134,7 +146,7 @@ func preCheckForObUpgradeCheck(param param.UpgradeCheckParam) (upgradeRoute []Ro
 	return upgradeRoute, nil
 }
 
-func getTargetObUpgradeDepYaml(targetVersion string, targetRelease string) ([]RouteNode, error) {
+func getTargetObUpgradeDepYaml(targetVersion string, targetRelease string, obType modelob.OBType) ([]RouteNode, error) {
 	// Param 'targetRelease' is like '***.**.el7'.
 	targetBuildNumber, _, err := pkg.SplitRelease(targetRelease)
 	if err != nil {
@@ -142,9 +154,18 @@ func getTargetObUpgradeDepYaml(targetVersion string, targetRelease string) ([]Ro
 	}
 
 	log.Info("get target pkg info")
-	pkgInfo, err := obclusterService.GetUpgradePkgInfoByVersionAndReleaseDist(constant.PKG_OCEANBASE_CE, targetVersion, targetRelease, global.Architecture)
+	var pkgName string
+	switch obType {
+	case modelob.OBTypeCommunity:
+		pkgName = constant.PKG_OCEANBASE_CE
+	case modelob.OBTypeBusiness:
+		pkgName = constant.PKG_OCEANBASE
+	case modelob.OBTypeStandalone:
+		pkgName = constant.PKG_OCEANBASE_STANDALONE
+	}
+	pkgInfo, err := obclusterService.GetUpgradePkgInfoByVersionAndReleaseDist(pkgName, targetVersion, targetRelease, global.Architecture)
 	if err != nil {
-		return nil, errors.Wrapf(err, "%s-%s-%s.%s.rpm", constant.PKG_OCEANBASE_CE, targetVersion, targetRelease, global.Architecture)
+		return nil, errors.Wrapf(err, "%s-%s-%s.%s.rpm", pkgName, targetVersion, targetRelease, global.Architecture)
 	}
 
 	upgradeRoute, err := generateUpgradeRouteList(targetVersion, targetBuildNumber, pkgInfo.UpgradeDepYaml)
@@ -158,7 +179,7 @@ func getTargetObUpgradeDepYaml(targetVersion string, targetRelease string) ([]Ro
 	return upgradeRoute, nil
 }
 
-func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, error) {
+func checkForAllRequiredPkgs(targetVersion, targetRelease string, obType modelob.OBType) ([]RouteNode, error) {
 	// Param 'targetRelease' is like '***.**.el7'.
 	targetBuildNumber, targetDistribution, err := pkg.SplitRelease(targetRelease)
 	if err != nil {
@@ -170,13 +191,13 @@ func checkForAllRequiredPkgs(targetVersion, targetRelease string) ([]RouteNode, 
 		return nil, err
 	}
 
-	upgradeRoute, err := getTargetObUpgradeDepYaml(targetVersion, targetRelease)
+	upgradeRoute, err := getTargetObUpgradeDepYaml(targetVersion, targetRelease, obType)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info("check for all required pkgs")
-	if err = checkForAllRequiredPkgsExist(upgradeRoute, targetDistribution); err != nil {
+	if err = checkForAllRequiredPkgsExist(upgradeRoute, targetDistribution, obType); err != nil {
 		log.WithError(err).Error("check for all required pkgs failed")
 		return nil, err
 	}
@@ -199,13 +220,13 @@ func checkTargetOBVersionSupport(targetBV string) (err error) {
 	return nil
 }
 
-func checkForAllRequiredPkgsExist(upgradeRoute []RouteNode, distribution string) (err error) {
+func checkForAllRequiredPkgsExist(upgradeRoute []RouteNode, distribution string, obType modelob.OBType) (err error) {
 	archList, err := obclusterService.GetAllArchs()
 	if err != nil {
 		return err
 	}
 	var errs []error
-	needPkgNameList := []string{constant.PKG_OCEANBASE_CE, constant.PKG_OCEANBASE_CE_LIBS}
+	needPkgNameList := constant.REQUIRE_UPGRADE_PKG_NAMES_MAP[obType]
 	var missingPkgs []string
 	for _, node := range upgradeRoute[1:] {
 		for _, arch := range archList {

@@ -92,6 +92,7 @@ const (
 	PARAM_SCRIPT_FILE            = "scriptFile"
 	PARAM_OB_PARAMETERS          = "obParameters"
 	PARAM_UPGRADE_ROUTE          = "upgradeRoute"
+	PARAM_OB_TYPE                = "obType"
 	PARAM_UPGRADE_ROUTE_INDEX    = "upgradeRouteIndex"
 	PARAM_ZONE                   = "zone"
 	PARAM_ZONE_REGION            = "region"

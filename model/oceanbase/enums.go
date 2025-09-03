@@ -25,3 +25,12 @@ const (
 	TypeOBTenant  OBInstanceType = "obtenant"
 	TypeOBServer  OBInstanceType = "observer"
 )
+
+type OBType string
+
+const (
+	OBTypeUnknown    OBType = "unknown"
+	OBTypeCommunity  OBType = "oceanbase-ce"
+	OBTypeBusiness   OBType = "oceanbase"
+	OBTypeStandalone OBType = "oceanbase-standalone"
+)
