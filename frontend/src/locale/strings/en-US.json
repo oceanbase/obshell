@@ -2815,6 +2815,6 @@
   "obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "Only packages starting with oceanbase-standalone and obshell and files with the suffix .rpm are supported.",
   "obshell.Backup.Backup.Data.AreYouSureYouWantToCancelThe": "Are you sure you want to cancel the backup schedule?",
   "obshell.Backup.Restore.RestoreTask.AreYouSureYouWantToCancelThe": "Are you sure you want to cancel the {recordRestoreTenant} recovery task?",
-  "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "Only packages starting with oceanbase-standalone and files with the suffix .rpm are supported.",
+  "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "oceanbase-standalone package",
   "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "The current tenant {tenantUserName}password is empty, there is a security risk, please modify the {tenantUserName}password"
 }

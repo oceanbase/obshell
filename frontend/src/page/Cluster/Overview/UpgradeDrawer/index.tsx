@@ -321,16 +321,14 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                 {formatMessage({
                   id: 'ocp-v2.Overview.UpgradeDrawer.UploadRequiredDuringUpgrade',
                   defaultMessage: '升级时需要上传',
-                })}
+                })}{' '}
                 {isStandalone ? (
                   formatMessage({
                     id: 'obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
-                    defaultMessage:
-                      '只支持 oceanbase-standalone 开头的包 ，同时后缀名为 .rpm 的文件。',
+                    defaultMessage: 'oceanbase-standalone 包',
                   })
                 ) : (
                   <>
-                    {' '}
                     <a
                       href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
                       target="_blank"
@@ -522,8 +520,8 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                       freezeServer,
                       ...(zone
                         ? {
-                          zoneOrder: zoneOrderList?.map(item => item.name),
-                        }
+                            zoneOrder: zoneOrderList?.map(item => item.name),
+                          }
                         : {}),
                     };
 

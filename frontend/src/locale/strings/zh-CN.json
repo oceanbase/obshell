@@ -2815,6 +2815,6 @@
   "obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "只支持 oceanbase-standalone、obshell 开头的包 ，同时后缀名为 .rpm 的文件。",
   "obshell.Backup.Backup.Data.AreYouSureYouWantToCancelThe": "确定要取消备份调度吗？",
   "obshell.Backup.Restore.RestoreTask.AreYouSureYouWantToCancelThe": "确定要取消 {recordRestoreTenant} 的恢复任务吗？",
-  "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "只支持 oceanbase-standalone 开头的包 ，同时后缀名为 .rpm 的文件。",
+  "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "oceanbase-standalone 包",
   "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "当前租户 {tenantUserName} 密码为空，存在安全隐患，请修改 {tenantUserName} 密码"
 }

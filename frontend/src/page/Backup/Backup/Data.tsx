@@ -156,16 +156,6 @@ const Data: React.FC<DataProps> = ({
     },
 
     {
-      title: formatMessage({
-        id: 'ocp-v2.Backup.Backup.Data.RecoverablePointInTime',
-        defaultMessage: '可恢复时间点',
-      }),
-      dataIndex: 'snapshot_version_time',
-      sorter: true,
-      render: (text: string) => <span>{formatTime(text)}</span>,
-    },
-
-    {
       title: formatMessage({ id: 'ocp-v2.Backup.Backup.Data.State', defaultMessage: '状态' }),
       dataIndex: 'status',
       filters: DATA_BACKUP_TASK_STATUS_LIST.map(item => ({
