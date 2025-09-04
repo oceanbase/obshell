@@ -90,6 +90,12 @@ func (t *CheckAllRequiredPkgsTask) checkUpgradePkgFromDb(filePath string) (err e
 		rpmFile: input,
 	}
 
+	obType, err := obclusterService.GetOBType()
+	if err != nil {
+		return err
+	}
+	r.obType = obType
+
 	if err = r.CheckUpgradePkg(false); err != nil {
 		return err
 	}
