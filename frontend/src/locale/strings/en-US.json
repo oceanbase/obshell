@@ -2811,5 +2811,8 @@
   "OBShell.Unit.Component.UnitBlock.SpecificationsUnitinfounitconfig": "Specifications: {unitInfoUnitConfig}",
   "OBShell.Unit.Component.UnitBlock.CpuCoreUnitinfomaxcpuassignedcount": "CPU (core): {unitInfoMaxCpuAssignedCount}",
   "OBShell.Unit.Component.UnitBlock.MemoryGbMaxmemoryassigned": "Memory (GB): {maxMemoryAssigned}",
-  "OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully": "{objectName}object permissions modified successfully"
+  "OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully": "{objectName}object permissions modified successfully",
+  "OBShell.Backup.Backup.Data.AreYouSureYouWant": "Are you sure you want to cancel the backup schedule?",
+  "OBShell.Backup.Restore.RestoreTask.AreYouSureYouWant.1": "Are you sure you want to cancel {recordRestoreTenant}the recovery task?",
+  "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "The current tenant {tenantUserName}password is empty, there is a security risk, please modify the {tenantUserName}password"
 }

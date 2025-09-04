@@ -97,7 +97,13 @@ const RestoreTask: React.FC<RestoreTaskProps> = ({
       setCurrentRecord(record);
     } else if (key === 'cancel') {
       Modal.confirm({
-        title: `确定要取消 ${record.restore_tenant_name} 的恢复任务吗？`,
+        title: formatMessage(
+          {
+            id: 'OBShell.Backup.Restore.RestoreTask.AreYouSureYouWant.1',
+            defaultMessage: '确定要取消 {recordRestoreTenant} 的恢复任务吗？',
+          },
+          { recordRestoreTenant: record.restore_tenant_name }
+        ),
         okButtonProps: { danger: true, ghost: true },
         onOk: () => {
           return cancelRestoreTask(
@@ -120,7 +126,6 @@ const RestoreTask: React.FC<RestoreTaskProps> = ({
   };
   const columns = [
     { title: 'ID', dataIndex: 'job_id', fixed: 'left' },
-
     {
       title: formatMessage({
         id: 'ocp-v2.Backup.Restore.RestoreTask.BackupCluster',

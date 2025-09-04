@@ -2811,5 +2811,8 @@
   "OBShell.Unit.Component.UnitBlock.SpecificationsUnitinfounitconfig": "规格：{unitInfoUnitConfig}",
   "OBShell.Unit.Component.UnitBlock.CpuCoreUnitinfomaxcpuassignedcount": "CPU（核）：{unitInfoMaxCpuAssignedCount}",
   "OBShell.Unit.Component.UnitBlock.MemoryGbMaxmemoryassigned": "内存（GB）：{maxMemoryAssigned}",
-  "OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully": "{objectName} 的对象权限修改成功"
+  "OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully": "{objectName} 的对象权限修改成功",
+  "OBShell.Backup.Backup.Data.AreYouSureYouWant": "确定要取消备份调度吗？",
+  "OBShell.Backup.Restore.RestoreTask.AreYouSureYouWant.1": "确定要取消 {recordRestoreTenant} 的恢复任务吗？",
+  "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "当前租户 {tenantUserName} 密码为空，存在安全隐患，请修改 {tenantUserName} 密码"
 }

@@ -36,7 +36,7 @@ export default function AlertConfig({ onConfigSuccess }: AlertConfigProps) {
           history.push('/alert/event');
         } else {
           setErrorMessage(
-            res.error?.errCode ||
+            res.error?.message ||
               formatMessage({
                 id: 'OBShell.Alert.AlertConfig.AlarmCenterConfigurationFailed',
                 defaultMessage: '告警中心配置失败',
@@ -109,12 +109,12 @@ export default function AlertConfig({ onConfigSuccess }: AlertConfigProps) {
             message={errorMessage}
             onClose={() => setErrorMessage('')}
             type="error"
-            style={{ marginBottom: 16 }}
+            style={{ marginBottom: 16, width: 400 }}
           />
         )}
 
         {/* 配置表单 */}
-        <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
+        <div style={{ width: 400, position: 'relative' }}>
           <Form
             form={form}
             hideRequiredMark={true}

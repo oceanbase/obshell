@@ -37,6 +37,7 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
   const { validateFields, getFieldsValue } = form;
 
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
+  const tenantUserName = tenantData?.mode === 'ORACLE' ? 'SYS' : 'root';
   const [newPasswordPassed, setNewPasswordPassed] = useState(false);
   const [confirmPasswordPassed, setConfirmPasswordPassed] = useState(false);
 
@@ -116,10 +117,14 @@ const ModifyTenantPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
     >
       <Alert
         icon={<ExclamationCircleFilled />}
-        message={formatMessage({
-          id: 'ocp-express.Detail.Component.ModifyTenantPasswordModal.TheRootPasswordOfTheCurrentTenantIs',
-          defaultMessage: '当前租户 root 密码为空，存在安全隐患，请修改 root 密码',
-        })}
+        message={formatMessage(
+          {
+            id: 'OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword',
+            defaultMessage:
+              '当前租户 {tenantUserName} 密码为空，存在安全隐患，请修改 {tenantUserName} 密码',
+          },
+          { tenantUserName: tenantUserName }
+        )}
         type="error"
         showIcon
         style={{

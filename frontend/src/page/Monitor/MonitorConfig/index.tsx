@@ -37,7 +37,7 @@ const MonitorConfig: React.FC<MonitorConfigProps> = ({ targetPath, onConfigSucce
           history.push(targetPath);
         } else {
           setErrorMessage(
-            res.error?.errCode ||
+            res.error?.message ||
               formatMessage({
                 id: 'OBShell.Monitor.MonitorConfig.PrometheusConfigurationFailed',
                 defaultMessage: 'Prometheus配置失败',
@@ -110,12 +110,12 @@ const MonitorConfig: React.FC<MonitorConfigProps> = ({ targetPath, onConfigSucce
             message={errorMessage}
             onClose={() => setErrorMessage('')}
             type="error"
-            style={{ marginBottom: 16 }}
+            style={{ marginBottom: 16, width: 400 }}
           />
         )}
 
         {/* 配置表单 */}
-        <div style={{ width: '100%', maxWidth: 400, position: 'relative' }}>
+        <div style={{ width: 400, position: 'relative' }}>
           <Form
             form={form}
             hideRequiredMark={true}
