@@ -735,8 +735,8 @@ export const LOG_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
       {
         value: 'start',
         label: formatMessage({
-          id: 'ocp-express.src.constant.backup.Start',
-          defaultMessage: '启动',
+          id: 'ocp-express.src.constant.backup.Resume',
+          defaultMessage: '恢复',
         }),
       },
       {
