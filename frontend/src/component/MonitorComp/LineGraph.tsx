@@ -57,10 +57,9 @@ export default function LineGraph({
     return {
       group_labels: groupLabels,
       labels: type === 'OVERVIEW' ? [] : labels, // If empty, query all clusters
-      metrics:
-        type === 'DETAIL' ? metrics.map((metric: API.MetricMeta) => metric.key) : [metrics[0].key],
-      query_range: queryRange,
       type,
+      metrics,
+      query_range: queryRange,
       useFor,
       filterData,
       filterQueryMetric,
@@ -75,6 +74,7 @@ export default function LineGraph({
       labels: params.labels,
       query_range: params.query_range,
       metrics: params.metrics,
+      type: params.type,
       group_labels: params.group_labels,
       filterQueryMetric: params.filterQueryMetric,
       isRefresh,

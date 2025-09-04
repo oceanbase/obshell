@@ -1,11 +1,12 @@
 import { formatMessage } from '@/util/intl';
 import { flatten } from 'lodash';
 import { queryMetrics } from './obshell/metric';
+import { findBy, formatNumber } from '@oceanbase/util';
 
 type QueryMetricsType = {
   groupLabels: string[];
   labels: Monitor.LabelType[];
-  metrics: string[];
+  metrics: API.MetricMeta[];
   queryRange: { endTimestamp: number; startTimestamp: number; step: number };
   type: Monitor.MonitorUseTarget;
   useFor: Monitor.MonitorUseFor;
@@ -103,11 +104,14 @@ const sortLegendNames = (names: string[]): string[] => {
 export async function queryMetricsReq({
   useFor,
   type,
+  metrics,
   filterData,
   filterQueryMetric,
   ...data
 }: QueryMetricsType) {
-  const r = await queryMetrics(data);
+  const metricsKeys =
+    type === 'DETAIL' ? metrics.map((metric: API.MetricMeta) => metric.key) : [metrics[0].key];
+  const r = await queryMetrics({ metrics: metricsKeys, ...data });
 
   let metricsData: MetricDataItem[] = r.data?.contents || [];
   if (r.successful) {
@@ -137,6 +141,7 @@ export async function queryMetricsReq({
     metricsData.forEach((metric: MetricDataItem) => {
       metric.values?.forEach((item: any) => {
         item.date = item.timestamp * 1000;
+        item.value = formatNumber(item.value, 2);
         if (type === 'OVERVIEW') {
           if (useFor === 'tenant') {
             const metricLabels = metric.metric?.labels;
@@ -157,7 +162,8 @@ export async function queryMetricsReq({
             .map((label: LabelType) => label.value)
             .join('，');
           const tenantName = tenantLabel || '';
-          item.name = `${metric.metric?.name} (${tenantName})`;
+          const metricName = findBy(metrics, 'key', metric.metric?.name)?.name || '';
+          item.name = `${metricName} (${tenantName})`;
         }
       });
     });
