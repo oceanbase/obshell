@@ -686,7 +686,7 @@ const Detail: React.FC<NewProps> = ({
                     defaultMessage: '时区',
                   })}
                 >
-                  {tenantData.time_zone || '-'}
+                  GMT{tenantData.time_zone || '-'}
                 </Descriptions.Item>
 
                 <Descriptions.Item
