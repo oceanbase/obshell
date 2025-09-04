@@ -144,7 +144,7 @@ func (t *PreRestoreCheckTask) Execute() (err error) {
 	}
 
 	if t.param.Timestamp != nil {
-		t.ExecuteLogf("Check restore time '%s'", t.param.Timestamp.Format("2006-01-02 15:04:05.00"))
+		t.ExecuteLogf("Check restore time '%s'", t.param.Timestamp.Format("2006-01-02 15:04:05.000000"))
 		t.scn = t.param.Timestamp.UnixNano()
 	} else {
 		t.ExecuteLogf("Check restore time '%d'", t.scn)

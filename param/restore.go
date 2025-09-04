@@ -39,7 +39,7 @@ type RestoreParam struct {
 
 	TenantName string `json:"restore_tenant_name" binding:"required"`
 
-	Timestamp *time.Time `json:"timestamp" time_format:"2006-01-02T15:04:05.000Z07:00"`
+	Timestamp *time.Time `json:"timestamp" time_format:"2006-01-02T15:04:05.000Z07:00"` // time_format does not cause precision loss
 	SCN       *int64     `json:"scn"`
 
 	ZoneList          []ZoneParam `json:"zone_list" binding:"required"` // Tenant zone list with unit config.

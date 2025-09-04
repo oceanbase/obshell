@@ -183,7 +183,9 @@ func getRestoreWindows(dataURI, logURI string) ([][2]int64, error) {
 			for (i < len(logPointSet)-1) && (logPointSet[i+1][0] == logPointSet[i][1]) {
 				i++
 			}
-			restoreWindows = append(restoreWindows, [2]int64{data.MinRestoreSCN.Val, logPointSet[i][1]})
+			if logPointSet[i][1] > data.MinRestoreSCN.Val {
+				restoreWindows = append(restoreWindows, [2]int64{data.MinRestoreSCN.Val, logPointSet[i][1]})
+			}
 			break
 		}
 	}
@@ -264,9 +266,13 @@ func GetRestoreWindows(dataURI, logURI string) (*RestoreWindows, error) {
 
 	res := new(RestoreWindows)
 	for _, window := range windows {
+		// window[0] and window[1] are in microseconds
+		startTimeMicro := time.Unix(0, (window[0]/1000)*1000)
+		endTimeMicro := time.Unix(0, (window[1]/1000)*1000)
+
 		res.Windows = append(res.Windows, RestoreWindow{
-			StartTime: time.Unix(0, window[0]),
-			EndTime:   time.Unix(0, window[1]),
+			StartTime: startTimeMicro,
+			EndTime:   endTimeMicro,
 		})
 	}
 
