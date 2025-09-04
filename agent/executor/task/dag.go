@@ -136,6 +136,7 @@ func GetDagDetail(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header	header string true "Authorization"
+// @Param show_details query param.TaskQueryParams true "show details"
 // @Success 200 object	http.OcsAgentResponse{data=[]task.DagDetailDTO}
 // @Failure 400 object	http.OcsAgentResponse
 // @Failure 404 object	http.OcsAgentResponse
@@ -147,6 +148,7 @@ func GetAllClusterDags(c *gin.Context) {
 		return
 	}
 
+	param := getTaskQueryParams(c)
 	// TODO: distinguish between obproxy tasks and ob tasks
 	dags, err := clusterTaskService.GetAllDagInstances()
 	if err != nil {
@@ -156,7 +158,7 @@ func GetAllClusterDags(c *gin.Context) {
 
 	dagDetailDTOs := make([]*task.DagDetailDTO, 0)
 	for _, dag := range dags {
-		dagDetailDTO, err := convertDagDetailDTO(dag, true)
+		dagDetailDTO, err := convertDagDetailDTO(dag, *param.ShowDetails)
 		if err != nil {
 			log.WithContext(common.NewContextWithTraceId(c)).Errorf("convert dag detail dto failed: %v", err)
 			continue
@@ -175,12 +177,14 @@ func GetAllClusterDags(c *gin.Context) {
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
+// @Param show_details query param.TaskQueryParams true "show details"
 // @Success 200 object http.OcsAgentResponse{data=[]task.DagDetailDTO}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 404 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
 // @Router	/api/v1/task/dags/agent [get]
 func GetAllAgentDags(c *gin.Context) {
+	param := getTaskQueryParams(c)
 	dags, err := localTaskService.GetAllDagInstances()
 	if err != nil {
 		common.SendResponse(c, nil, err)
@@ -189,7 +193,7 @@ func GetAllAgentDags(c *gin.Context) {
 
 	dagDetailDTOs := make([]*task.DagDetailDTO, 0)
 	for _, dag := range dags {
-		dagDetailDTO, err := convertDagDetailDTO(dag, true)
+		dagDetailDTO, err := convertDagDetailDTO(dag, *param.ShowDetails)
 		if err != nil {
 			log.WithContext(common.NewContextWithTraceId(c)).Errorf("convert dag detail dto failed: %v", err)
 			continue

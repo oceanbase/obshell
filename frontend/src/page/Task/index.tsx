@@ -63,16 +63,30 @@ const Task: React.FC<TaskProps> = ({
 
   const { data, loading, refresh } = useRequest(
     () =>
-      getAllClusterDags({
+      getAllClusterDags(
+        {
+          show_details: false,
+        },
+        {
         HIDE_ERROR_MESSAGE: true,
-      }),
+        }
+      ),
+
     {}
   );
   const {
     data: agentDagsRes,
     loading: agentDagsLoading,
     refresh: refreshAgentDags,
-  } = useRequest(getAllAgentDags, {});
+  } = useRequest(
+    () =>
+      getAllAgentDags(
+        {
+          show_details: false,
+        }
+      ),
+    {}
+  );
 
   const clusterTasks = data?.data?.contents || [];
   const agentTasks = agentDagsRes?.data?.contents || [];
@@ -286,6 +300,7 @@ const Task: React.FC<TaskProps> = ({
             })}
             onClick={() => {
               refresh();
+              refreshAgentDags();
             }}
           />
         ),
