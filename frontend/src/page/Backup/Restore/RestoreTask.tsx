@@ -99,7 +99,7 @@ const RestoreTask: React.FC<RestoreTaskProps> = ({
       Modal.confirm({
         title: formatMessage(
           {
-            id: 'OBShell.Backup.Restore.RestoreTask.AreYouSureYouWant.1',
+            id: 'obshell.Backup.Restore.RestoreTask.AreYouSureYouWantToCancelThe',
             defaultMessage: '确定要取消 {recordRestoreTenant} 的恢复任务吗？',
           },
           { recordRestoreTenant: record.restore_tenant_name }

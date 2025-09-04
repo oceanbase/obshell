@@ -73,7 +73,7 @@ const useStyles = createStyles(({ token }) => {
     newValue: {
       paddingLeft: '5px',
       lineHeight: '30px',
-      backgroundColor: token.colorBgTextActive
+      backgroundColor: token.colorBgTextActive,
     },
     treeNewValue: {
       width: '205px',

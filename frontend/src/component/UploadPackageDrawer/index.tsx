@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@oceanbase/design';
 import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
-import { useRequest } from 'ahooks';
 import CryptoJS from 'crypto-js';
 import { newPkgUpload } from '@/service/obshell/package';
+import { useCluster } from '@/hook/useCluster';
 import './index.less';
 
 interface UploadPackageDrawerProps {
@@ -27,6 +27,8 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   onSuccess,
   ...restProps
 }) => {
+  const { isStandalone } = useCluster();
+
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
@@ -370,23 +372,31 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
             },
           ]}
           extra={
-            <div>
-              {formatMessage({
-                id: 'ocp-v2.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbase',
+            isStandalone ? (
+              formatMessage({
+                id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
                 defaultMessage:
-                  '只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
-              })}
-
-              <a
-                href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
-                target="_blank"
-              >
+                  '只支持 oceanbase-standalone、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
+              })
+            ) : (
+              <div>
                 {formatMessage({
-                  id: 'ocp-v2.component.UploadPackageDrawer.RpmPackageDownloadAddress',
-                  defaultMessage: 'RPM 包下载地址',
+                  id: 'ocp-v2.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbase',
+                  defaultMessage:
+                    '只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
                 })}
-              </a>
-            </div>
+
+                <a
+                  href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
+                  target="_blank"
+                >
+                  {formatMessage({
+                    id: 'ocp-v2.component.UploadPackageDrawer.RpmPackageDownloadAddress',
+                    defaultMessage: 'RPM 包下载地址',
+                  })}
+                </a>
+              </div>
+            )
           }
         >
           <Upload

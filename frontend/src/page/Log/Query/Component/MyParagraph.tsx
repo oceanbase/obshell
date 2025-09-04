@@ -25,33 +25,35 @@ interface MyParagraphProps extends React.FC<TypographyProps> {
   style?: React.CSSProperties;
 }
 
-const MyParagraph: React.FC<MyParagraphProps> = ({
-  children,
-  style
-}) => {
+const MyParagraph: React.FC<MyParagraphProps> = ({ children, style }) => {
   const [ellipsis, setEllipsis] = useState(true);
 
-  return (<div>
-    <Paragraph
-      style={style}
-      ellipsis={ellipsis ? {
-        rows: 10,
-        expandable: true,
-        // symbol: <DownSquareOutlined />,
-      } : false}
-    >
-      {children}
-    </Paragraph>
-    <span
-      style={{
-        color: 'rgba(0, 0, 0, 0.65)',
-        cursor: 'pointer'
-      }}
-      onClick={() => {
-        setEllipsis(!ellipsis)
-      }}>
-    </span>
-  </div>
+  return (
+    <div>
+      <Paragraph
+        style={style}
+        ellipsis={
+          ellipsis
+            ? {
+                rows: 10,
+                expandable: true,
+                // symbol: <DownSquareOutlined />,
+              }
+            : false
+        }
+      >
+        {children}
+      </Paragraph>
+      <span
+        style={{
+          color: 'rgba(0, 0, 0, 0.65)',
+          cursor: 'pointer',
+        }}
+        onClick={() => {
+          setEllipsis(!ellipsis);
+        }}
+      ></span>
+    </div>
   );
 };
 

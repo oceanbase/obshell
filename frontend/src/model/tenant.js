@@ -33,12 +33,12 @@ const model = {
     parameterListData: DEFAULT_LIST_DATA,
     unitSpecList: [],
     unitSpecLimitRule: null,
-    precheckResult: {}
+    precheckResult: {},
   },
 
   effects: {
     // 根据集群下的全部租户
-    *getTenantListData ({ payload }, { call, put }) {
+    *getTenantListData({ payload }, { call, put }) {
       const res = yield call(ObShellTenantController.getTenantOverView, payload);
       if (res.successful) {
         yield put({
@@ -50,7 +50,7 @@ const model = {
       }
     },
     // 根据集群下的全部租户
-    *getTenantPreCheck ({ payload }, { call, put }) {
+    *getTenantPreCheck({ payload }, { call, put }) {
       const res = yield call(ObShellTenantController.tenantPreCheck, payload);
 
       if (res.successful) {
@@ -59,19 +59,18 @@ const model = {
           payload: {
             precheckResult: {
               ...(res.data || {}),
-              tenantName: payload?.name
+              tenantName: payload?.name,
             },
           },
         });
       }
     },
-    *getTenantData ({ payload, onSuccess }, { call, put }) {
+    *getTenantData({ payload, onSuccess }, { call, put }) {
       const res = yield call(ObShellTenantController.getTenantInfo, payload);
       if (res.successful) {
-
         const resTenantData = {
           ...(res?.data || {}),
-          tenantName: res?.data?.tenant_name || ''
+          tenantName: res?.data?.tenant_name || '',
         };
 
         if (onSuccess) {
@@ -86,7 +85,7 @@ const model = {
         });
       }
     },
-    *addTenant ({ payload, onSuccess }, { call }) {
+    *addTenant({ payload, onSuccess }, { call }) {
       const { id, ...rest } = payload;
       const res = yield call(
         ObShellTenantController.tenantCreate,
@@ -115,7 +114,7 @@ const model = {
         }
       }
     },
-    *deleteTenant ({ payload, onSuccess }, { call }) {
+    *deleteTenant({ payload, onSuccess }, { call }) {
       const res = yield call(ObShellTenantController.tenantDrop, payload);
       if (res.successful) {
         message.success(
@@ -130,7 +129,7 @@ const model = {
         }
       }
     },
-    *lockTenant ({ payload, onSuccess }, { call }) {
+    *lockTenant({ payload, onSuccess }, { call }) {
       const res = yield call(ObShellTenantController.tenantLock, payload);
       if (res.successful) {
         message.success(
@@ -145,7 +144,7 @@ const model = {
         }
       }
     },
-    *unlockTenant ({ payload, onSuccess }, { call }) {
+    *unlockTenant({ payload, onSuccess }, { call }) {
       const res = yield call(ObShellTenantController.tenantUnlock, payload);
       if (res.successful) {
         message.success(
@@ -160,7 +159,7 @@ const model = {
         }
       }
     },
-    *changePassword ({ payload, onSuccess }, { call, put }) {
+    *changePassword({ payload, onSuccess }, { call, put }) {
       const { id, tenantId, ...rest } = payload;
       const res = yield call(
         ObShellTenantController.tenantModifyPassword,
@@ -192,7 +191,7 @@ const model = {
         });
       }
     },
-    *modifyPrimaryZone ({ payload, onSuccess }, { call, put }) {
+    *modifyPrimaryZone({ payload, onSuccess }, { call, put }) {
       const { id, tenantId, ...rest } = payload;
       const res = yield call(
         ObShellTenantController.tenantModifyPrimaryZone,
@@ -224,7 +223,7 @@ const model = {
         });
       }
     },
-    *modifyWhitelist ({ payload, onSuccess }, { call, put }) {
+    *modifyWhitelist({ payload, onSuccess }, { call, put }) {
       const { id, tenantId, ...rest } = payload;
       const res = yield call(
         ObShellTenantController.tenantModifyWhitelist,
@@ -256,7 +255,7 @@ const model = {
         });
       }
     },
-    *modifyReplica ({ payload, onSuccess }, { call, put }) {
+    *modifyReplica({ payload, onSuccess }, { call, put }) {
       const { id, tenantId, body } = payload;
       const res = yield call(
         ObShellTenantController.tenantAddReplicas,
@@ -298,7 +297,7 @@ const model = {
       return res;
     },
     // TODO：缺少描述
-    *modifyTenantDescription ({ payload, onSuccess }, { call }) {
+    *modifyTenantDescription({ payload, onSuccess }, { call }) {
       const { id, tenantId, ...rest } = payload;
       const res = yield call(
         ObShellTenantController?.modifyTenantDescription,
@@ -326,7 +325,7 @@ const model = {
   },
 
   reducers: {
-    update (state, { payload }) {
+    update(state, { payload }) {
       return { ...state, ...payload };
     },
   },

@@ -147,8 +147,8 @@ const CheckboxPopover = ({
                                 tooltip={
                                   item.description
                                     ? {
-                                      title: item.description,
-                                    }
+                                        title: item.description,
+                                      }
                                     : false
                                 }
                               />

@@ -108,8 +108,8 @@ const TableTreeFilterDropdown: React.FC<TableTreeFilterDropdownProps> = ({
             style={
               selectedKeys?.length > 0
                 ? {
-                  color: token.colorPrimary,
-                }
+                    color: token.colorPrimary,
+                  }
                 : {}
             }
           >

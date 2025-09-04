@@ -16,7 +16,18 @@
 
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import { Button, Card, Checkbox, Col, Form, Input, Row, Space, message, Alert } from '@oceanbase/design';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Col,
+  Form,
+  Input,
+  Row,
+  Space,
+  message,
+  Alert,
+} from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import React, { Fragment, useEffect, useState } from 'react';
 import { flatten, isArray, isEqual, isObject, omit } from 'lodash';
@@ -365,9 +376,9 @@ const SQLDiagnosis: React.FC<IProps> = ({ location }) => {
                     {...(isEnglish()
                       ? { labelCol: { span: 6 }, wrapperCol: { span: 18 } }
                       : {
-                        labelCol: { span: 4 },
-                        wrapperCol: { span: 20 },
-                      })}
+                          labelCol: { span: 4 },
+                          wrapperCol: { span: 20 },
+                        })}
                   >
                     <Row>
                       {/* 收缩情况下也不展示 OBServer */}

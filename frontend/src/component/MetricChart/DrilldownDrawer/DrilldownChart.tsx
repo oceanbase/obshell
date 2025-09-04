@@ -64,11 +64,11 @@ export interface DrilldownChartProps extends Omit<MyCardProps, 'children'> {
   serverList?: MonitorServer[];
   tenantList?: API.TenantInfo[];
   options?: OptionType &
-  {
-    clusterId: number;
-    tenantId: number;
-    hostId: number;
-  }[];
+    {
+      clusterId: number;
+      tenantId: number;
+      hostId: number;
+    }[];
 
   // 当前组件包含 FilterDropdown、Tooltip 和 CheckboxPopover 等弹窗层组件，并会在抽屉中使用到 (滚动时容器不是 body)，需要支持定制 getPopupContainer
   getPopupContainer?: (triggerNode: HTMLElement) => HTMLElement;
@@ -142,8 +142,8 @@ const DrilldownChart: React.FC<DrilldownChartProps> = ({
               scope === 'device'
                 ? true
                 : scope === 'svr_ip'
-                  ? serverList?.map(server => server.ip).includes(item)
-                  : tenantList?.map(tenant => tenant.name).includes(item)
+                ? serverList?.map(server => server.ip).includes(item)
+                : tenantList?.map(tenant => tenant.name).includes(item)
             );
           setDefaultSelectedList(newDefaultSelectedList);
           setSelectedList(newDefaultSelectedList);
@@ -342,8 +342,8 @@ const DrilldownChart: React.FC<DrilldownChartProps> = ({
             // 如果聚合维度是 device，则 Top 对象数可能较多，允许鼠标进入并滚动查看 tooltip
             scope === 'device'
               ? {
-                maxHeight: '200px',
-              }
+                  maxHeight: '200px',
+                }
               : false
           }
           {...chartConfig}

@@ -113,17 +113,17 @@ const SubDrilldownDrawer: React.FC<SubDrilldownDrawerProps> = ({
   // 下钻维度的展示文本
   const dilldownScopeLabel = isTenant
     ? formatMessage({
-      id: 'ocp-express.MetricChart.DrilldownDrawer.SubDrilldownDrawer.Tenant',
-      defaultMessage: '租户',
-    })
+        id: 'ocp-express.MetricChart.DrilldownDrawer.SubDrilldownDrawer.Tenant',
+        defaultMessage: '租户',
+      })
     : 'OBServer';
   // 聚合维度的展示文本
   const scopeLabel = isTenant
     ? 'OBServer'
     : formatMessage({
-      id: 'ocp-express.MetricChart.DrilldownDrawer.SubDrilldownDrawer.Tenant',
-      defaultMessage: '租户',
-    });
+        id: 'ocp-express.MetricChart.DrilldownDrawer.SubDrilldownDrawer.Tenant',
+        defaultMessage: '租户',
+      });
   const selectedTarget = `${isTenant ? selectedTenantName : selectedServerIp}`;
 
   // 是否存在多个细分指标
@@ -286,27 +286,27 @@ const SubDrilldownDrawer: React.FC<SubDrilldownDrawerProps> = ({
                 >
                   {isTenant
                     ? realTenantList?.map(item => (
-                      <Menu.Item
-                        key={item.name}
-                        onClick={() => {
-                          setSelectedTenantName(item.name);
-                        }}
-                        style={{ padding: '0 24px' }}
-                      >
-                        {item.name}
-                      </Menu.Item>
-                    ))
+                        <Menu.Item
+                          key={item.name}
+                          onClick={() => {
+                            setSelectedTenantName(item.name);
+                          }}
+                          style={{ padding: '0 24px' }}
+                        >
+                          {item.name}
+                        </Menu.Item>
+                      ))
                     : realServerList?.map(item => (
-                      <Menu.Item
-                        key={item.ip}
-                        onClick={() => {
-                          setSelectedServerIp(item.ip);
-                        }}
-                        style={{ padding: '0 24px' }}
-                      >
-                        {item.ip}
-                      </Menu.Item>
-                    ))}
+                        <Menu.Item
+                          key={item.ip}
+                          onClick={() => {
+                            setSelectedServerIp(item.ip);
+                          }}
+                          style={{ padding: '0 24px' }}
+                        >
+                          {item.ip}
+                        </Menu.Item>
+                      ))}
                 </Menu>
               </Col>
               <Col span={18}>

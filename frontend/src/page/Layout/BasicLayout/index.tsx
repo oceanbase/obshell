@@ -90,6 +90,11 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     dispatch({
       type: 'global/getSystemInfo',
     });
+    // 获取集群信息
+    dispatch({
+      type: 'global/getClusterData',
+    });
+
     // getFailedTaskList({
     //   status: "FAILED",
     // });

@@ -521,7 +521,6 @@ export const PLAN_TYPE_LIST = [
   },
 ];
 
-
 export const LOWER_CASE_TABLE_NAMES = [
   {
     label: 0,

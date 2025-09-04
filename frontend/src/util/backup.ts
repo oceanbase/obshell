@@ -43,36 +43,38 @@ export function getBackupTimeData(
   const dayEnd = targetMoment.clone().endOf('day');
 
   // 计算与目标日期的实际交集
-  const matchedRanges = timeRanges.map(item => {
-    if (!item.start_time || !item.end_time) {
-      return null;
-    }
+  const matchedRanges = timeRanges
+    .map(item => {
+      if (!item.start_time || !item.end_time) {
+        return null;
+      }
 
-    const rangeStart = moment(item.start_time);
-    const rangeEnd = moment(item.end_time);
+      const rangeStart = moment(item.start_time);
+      const rangeEnd = moment(item.end_time);
 
-    // 检查时间范围是否与目标日期有交集
-    if (rangeStart.isAfter(dayEnd) || rangeEnd.isBefore(dayStart)) {
-      return null; // 无交集
-    }
+      // 检查时间范围是否与目标日期有交集
+      if (rangeStart.isAfter(dayEnd) || rangeEnd.isBefore(dayStart)) {
+        return null; // 无交集
+      }
 
-    // 计算交集时间范围
-    const intersectionStart = rangeStart.isBefore(dayStart) ? dayStart : rangeStart;
-    const intersectionEnd = rangeEnd.isAfter(dayEnd) ? dayEnd : rangeEnd;
+      // 计算交集时间范围
+      const intersectionStart = rangeStart.isBefore(dayStart) ? dayStart : rangeStart;
+      const intersectionEnd = rangeEnd.isAfter(dayEnd) ? dayEnd : rangeEnd;
 
-    // 返回交集时间范围，保持原有属性
-    return {
-      ...item,
-      // 保持原始时间字符串，确保微秒值不丢失
-      start_time: item.start_time,
-      end_time: item.end_time,
-      // 添加交集信息
-      intersection_start: intersectionStart.format(),
-      intersection_end: intersectionEnd.format(),
-      original_start: item.start_time,
-      original_end: item.end_time,
-    };
-  }).filter((item): item is NonNullable<typeof item> => item !== null); // 类型安全的过滤
+      // 返回交集时间范围，保持原有属性
+      return {
+        ...item,
+        // 保持原始时间字符串，确保微秒值不丢失
+        start_time: item.start_time,
+        end_time: item.end_time,
+        // 添加交集信息
+        intersection_start: intersectionStart.format(),
+        intersection_end: intersectionEnd.format(),
+        original_start: item.start_time,
+        original_end: item.end_time,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null); // 类型安全的过滤
 
   // 按时间排序
   const sortedRanges = matchedRanges.sort((a, b) => {

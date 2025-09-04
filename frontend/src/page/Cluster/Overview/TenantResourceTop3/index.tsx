@@ -191,7 +191,7 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                             let label1 = '';
                             if (item?.key === 'ob_memory_percent') {
                               if (byte2MB(memory) >= 1024) {
-                                label1 = `${formatNumber(byte2GB(memory),2)} GB`;
+                                label1 = `${formatNumber(byte2GB(memory), 2)} GB`;
                               } else {
                                 label1 = `${formatNumber(byte2MB(memory))} MB`;
                               }

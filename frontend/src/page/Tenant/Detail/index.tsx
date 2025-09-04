@@ -116,7 +116,10 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     `/cluster/tenant/${tenantName}/parameter`,
   ];
 
-  const checkEmptyPasswordPath = [`/cluster/tenant/${tenantName}/database`, `/cluster/tenant/${tenantName}/user`];
+  const checkEmptyPasswordPath = [
+    `/cluster/tenant/${tenantName}/database`,
+    `/cluster/tenant/${tenantName}/user`,
+  ];
 
   const isCheckEmptyPasswordRootPath = checkEmptyPasswordRootPath?.some(url =>
     pathname?.includes(url)

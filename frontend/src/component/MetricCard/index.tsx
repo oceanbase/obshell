@@ -46,12 +46,12 @@ const MetricCard: React.FC<MetricCardProps> = ({
     ...chartConfig,
     ...(chartConfig.type === 'Line'
       ? {
-        interactions: [
-          {
-            type: 'brush-x',
-          },
-        ],
-      }
+          interactions: [
+            {
+              type: 'brush-x',
+            },
+          ],
+        }
       : {}),
   };
 

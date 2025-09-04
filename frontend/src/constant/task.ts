@@ -90,7 +90,6 @@ export const TASK_STATUS_LIST: Global.StatusItem[] = [
   },
 ];
 
-
 export const TASK_MAINTENANCE_LIST: Global.StatusItem[] = [
   {
     label: formatMessage({
@@ -119,8 +118,8 @@ export const TASK_MAINTENANCE_LIST: Global.StatusItem[] = [
       defaultMessage: 'OBProxy 运维',
     }),
     value: '4',
-  }
-]
+  },
+];
 
 export const TASK_TYPE_LIST: Global.StatusItem[] = [
   {

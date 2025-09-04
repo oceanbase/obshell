@@ -83,7 +83,7 @@ const Data: React.FC<DataProps> = ({
     } else if (key === 'cancel') {
       Modal.confirm({
         title: formatMessage({
-          id: 'OBShell.Backup.Backup.Data.AreYouSureYouWant',
+          id: 'obshell.Backup.Backup.Data.AreYouSureYouWantToCancelThe',
           defaultMessage: '确定要取消备份调度吗？',
         }),
         okButtonProps: { danger: true, ghost: true },

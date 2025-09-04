@@ -137,12 +137,12 @@ const getMsg = (errorMessage = '') => {
   if (name) {
     return name
       ? formatMessage(
-        {
-          id: 'ocp-v2.src.util.request.NameIsInOperationAnd',
-          defaultMessage: '{name} 处于运维状态中',
-        },
-        { name: name }
-      )
+          {
+            id: 'ocp-v2.src.util.request.NameIsInOperationAnd',
+            defaultMessage: '{name} 处于运维状态中',
+          },
+          { name: name }
+        )
       : undefined;
   }
 };
@@ -297,37 +297,39 @@ request.interceptors.request.use((url, options) => {
 
   const ocsHeader = isTestEnv
     ? JSON.stringify({
-      // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-      Auth: password,
-      // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-      Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-      // 请求的 URI
-      Uri: `${url}${Object.keys(options.params).length > 0
-          ? `?${queryString.stringify(options.params, { sort: false })}`
-          : ''
+        // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
+        Auth: password,
+        // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
+        Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+        // 请求的 URI
+        Uri: `${url}${
+          Object.keys(options.params).length > 0
+            ? `?${queryString.stringify(options.params, { sort: false })}`
+            : ''
         }`,
-    })
+      })
     : Base64.decode(
-      Base64.encode(
-        encrypt(
-          JSON.stringify({
-            // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-            Auth: password,
-            // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-            Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-            // 请求的 URI
-            Uri: `${url}${Object.keys(options.params).length > 0
-                ? `?${queryString.stringify(options.params, { sort: false })}`
-                : ''
+        Base64.encode(
+          encrypt(
+            JSON.stringify({
+              // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
+              Auth: password,
+              // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
+              Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+              // 请求的 URI
+              Uri: `${url}${
+                Object.keys(options.params).length > 0
+                  ? `?${queryString.stringify(options.params, { sort: false })}`
+                  : ''
               }`,
 
-            // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
-            ...(options.data ? { Keys: keys } : {}),
-          }),
-          publicKey
+              // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
+              ...(options.data ? { Keys: keys } : {}),
+            }),
+            publicKey
+          )
         )
-      )
-    );
+      );
 
   // url list to skip auth validation
   const skipUrlList = ['/api/v1/secret'];
@@ -362,9 +364,9 @@ request.interceptors.request.use((url, options) => {
         ...(skipUrlList.includes(url)
           ? {}
           : {
-            'X-OCS-Header': ocsHeader,
-            ...(isTestEnv ? {} : isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
-          }),
+              'X-OCS-Header': ocsHeader,
+              ...(isTestEnv ? {} : isFormData ? { 'X-OCS-File-SHA256': X_OCS_File_SHA256 } : {}),
+            }),
       },
     },
   };

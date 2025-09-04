@@ -171,7 +171,9 @@ const UserList: React.FC<UserProps> = ({
       dataIndex: 'user_name',
       render: (text: string, record: API.ObUser) => (
         <Tooltip placement="topLeft" title={text}>
-          <a onClick={() => history.push(`/cluster/tenant/${tenantName}/user/${record?.user_name}`)}>
+          <a
+            onClick={() => history.push(`/cluster/tenant/${tenantName}/user/${record?.user_name}`)}
+          >
             {text}
           </a>
         </Tooltip>

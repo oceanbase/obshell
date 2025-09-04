@@ -4,18 +4,17 @@ import SelectDropdownRender from '@/component/SelectDropdownRender';
 // import { PACKAGE_TYPE_LIST } from '@/constant/package';
 // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { buildVersionCompare, versionCompare } from '@/util/package';
-import { formatMessage, useSelector } from 'umi';
+import { formatMessage } from 'umi';
 import React, { useImperativeHandle, useState } from 'react';
 import { uniqBy } from 'lodash';
-import { Space, theme, Tooltip } from '@oceanbase/design';
+import { Space, Tooltip } from '@oceanbase/design';
 import type { SelectProps } from '@oceanbase/design/es/select';
-import { findByValue } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
 import { upgradePkgInfo } from '@/service/obshell/upgrade';
+import { useCluster } from '@/hook/useCluster';
 
 const { Option } = MySelect;
 
-const SoftwarePackageController = {};
 export interface PackageSelectProps extends SelectProps<string> {
   // 接口支持的筛选参数
   keyword?: string;
@@ -83,6 +82,8 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
 
     ref
   ) => {
+    const { isStandalone } = useCluster();
+
     const [visible, setVisible] = useState(false);
 
     const { data, loading, refresh } = useRequest(upgradePkgInfo, {
@@ -95,7 +96,9 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
 
     let packageList = (data?.data?.contents || []).filter(item => {
       if (useType === 'UPGRADE_CLUSTER') {
-        return item.name === 'oceanbase-ce';
+        return isStandalone
+          ? item.name === 'oceanbase-standalone'
+          : item.name === 'oceanbase-ce';
       }
       if (useType === 'UPGRADE_AGENT') {
         return item.name === 'obshell';
@@ -155,16 +158,16 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
         >
           {(isHeterogeneousUpgrade
             ? uniqBy(
-                packageList,
-                item =>
-                  `${item.name}-${item.version}-${item.release_distribution}-${item.distribution}`
-              )
+              packageList,
+              item =>
+                `${item.name}-${item.version}-${item.release_distribution}-${item.distribution}`
+            )
             : isObproxyUpgrade
-            ? uniqBy(
+              ? uniqBy(
                 packageList,
                 item => `${item.name}-${item.version}-${item.release_distribution}`
               )
-            : packageList
+              : packageList
           )
             // 对文件名按照 ASCII 码进行从小到大排序，方便用户选择
             // TODO 升级排序方式

@@ -70,11 +70,11 @@ const RoleList: React.FC<RoleListProps> = ({
       }),
       dataIndex: 'global_privileges',
       render: (text: string[]) => {
-        const textContent = text?.map(item =>
-          item === 'PURGE_DBA_RECYCLEBIN'
-            ? 'PURGE DBA_RECYCLEBIN'
-            : item.replace(/_/g, ' ')
-        ).join('、');
+        const textContent = text
+          ?.map(item =>
+            item === 'PURGE_DBA_RECYCLEBIN' ? 'PURGE DBA_RECYCLEBIN' : item.replace(/_/g, ' ')
+          )
+          .join('、');
         return textContent ? (
           <Tooltip placement="topLeft" title={textContent}>
             <span

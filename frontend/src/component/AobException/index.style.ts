@@ -37,8 +37,8 @@ const useStyles = createStyles(() => {
       actions: {
         'button:not(:last-child)': {
           marginRight: '8px',
-        }
-      }
+        },
+      },
     },
     desc: {
       marginBottom: '16px',

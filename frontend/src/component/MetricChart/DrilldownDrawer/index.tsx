@@ -480,7 +480,7 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                         }}
                         extra={
                           sqlDirlldownItem?.name === metricItem?.name &&
-                            drilldownScope === 'tenant_name' ? (
+                          drilldownScope === 'tenant_name' ? (
                             <a
                               onClick={() => {
                                 if (sqlDirlldownItem?.customColumnName) {
@@ -496,7 +496,8 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                                   );
                                 }
                                 directTo(
-                                  `/cluster/${tenantData?.clusterId}/tenant/${tenantData?.id
+                                  `/cluster/${tenantData?.clusterId}/tenant/${
+                                    tenantData?.id
                                   }/sqlDiagnosis/topSql?${stringify({
                                     startTime,
                                     endTime,
@@ -505,10 +506,10 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                                     customColumnName: sqlDirlldownItem?.customColumnName,
                                     ...(sqlDirlldownItem?.customColumns
                                       ? {
-                                        customColumns: JSON.stringify(
-                                          sqlDirlldownItem?.customColumns
-                                        ),
-                                      }
+                                          customColumns: JSON.stringify(
+                                            sqlDirlldownItem?.customColumns
+                                          ),
+                                        }
                                       : {}),
                                   })}`
                                 );
@@ -541,21 +542,21 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                           title={
                             drilldownScope === 'ob_cluster_id'
                               ? formatMessage(
-                                {
-                                  id: 'ocp-express.MetricChart.DrilldownDrawer.TenantMetriclabel',
-                                  defaultMessage: '租户的{metricLabel}',
-                                },
+                                  {
+                                    id: 'ocp-express.MetricChart.DrilldownDrawer.TenantMetriclabel',
+                                    defaultMessage: '租户的{metricLabel}',
+                                  },
 
-                                { metricLabel: metricLabel }
-                              )
+                                  { metricLabel: metricLabel }
+                                )
                               : formatMessage(
-                                {
-                                  id: 'ocp-express.MetricChart.DrilldownDrawer.MetriclabelOfDifferentTenantsOn',
-                                  defaultMessage: '在该 OBServer 上不同租户的{metricLabel}',
-                                },
+                                  {
+                                    id: 'ocp-express.MetricChart.DrilldownDrawer.MetriclabelOfDifferentTenantsOn',
+                                    defaultMessage: '在该 OBServer 上不同租户的{metricLabel}',
+                                  },
 
-                                { metricLabel: metricLabel }
-                              )
+                                  { metricLabel: metricLabel }
+                                )
                           }
                           metricClass={metricClass}
                           metricGroup={metricGroup}
@@ -584,7 +585,7 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                           // 二级下钻链路: 集群监控 + 非主机指标 -> OBServer -> 租户
                           drilldownable={
                             drilldownScope === 'ob_cluster_id' &&
-                              metricClass?.key !== 'host_metrics'
+                            metricClass?.key !== 'host_metrics'
                               ? true
                               : false
                           }
@@ -592,21 +593,21 @@ const DrilldownDrawer: React.FC<DrilldownDrawerProps> = ({
                           title={
                             drilldownScope === 'ob_cluster_id'
                               ? formatMessage(
-                                {
-                                  id: 'ocp-express.MetricChart.DrilldownDrawer.Metriclabel',
-                                  defaultMessage: 'OBServer 的{metricLabel}',
-                                },
+                                  {
+                                    id: 'ocp-express.MetricChart.DrilldownDrawer.Metriclabel',
+                                    defaultMessage: 'OBServer 的{metricLabel}',
+                                  },
 
-                                { metricLabel: metricLabel }
-                              )
+                                  { metricLabel: metricLabel }
+                                )
                               : formatMessage(
-                                {
-                                  id: 'ocp-express.MetricChart.DrilldownDrawer.TenantInDifferentHostsOn',
-                                  defaultMessage: '租户在不同 OBServer 上的{metricLabel}',
-                                },
+                                  {
+                                    id: 'ocp-express.MetricChart.DrilldownDrawer.TenantInDifferentHostsOn',
+                                    defaultMessage: '租户在不同 OBServer 上的{metricLabel}',
+                                  },
 
-                                { metricLabel: metricLabel }
-                              )
+                                  { metricLabel: metricLabel }
+                                )
                           }
                           metricClass={metricClass}
                           metricGroup={metricGroup}

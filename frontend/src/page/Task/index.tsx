@@ -173,7 +173,7 @@ const Task: React.FC<TaskProps> = ({
     },
 
     {
-      title: formatMessage({  id: 'ocp-express.page.Task.Type', defaultMessage: '类型' }),
+      title: formatMessage({ id: 'ocp-express.page.Task.Type', defaultMessage: '类型' }),
       dataIndex: 'id',
       render: (text: string, record: API.DagDetailDTO) => {
         const statusItem = findByValue(TASK_TYPE_LIST, text[0]);

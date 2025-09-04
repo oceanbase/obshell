@@ -78,21 +78,21 @@ const ColumnManager = ({
     setSelected(
       checked
         ? // 选中当前组
-        attributes.filter(
-          attr =>
-            uniqBy(
-              [...selected, ...filterContents.filter(item => item.group === group)],
-              i => i.name
-            ).indexOf(attr) !== -1
-        )
+          attributes.filter(
+            attr =>
+              uniqBy(
+                [...selected, ...filterContents.filter(item => item.group === group)],
+                i => i.name
+              ).indexOf(attr) !== -1
+          )
         : // 取消选中当前组
-        selected.filter(item => {
-          // displayAlways 表示常驻项，不可取消
-          if (item.displayAlways === true) {
-            return true;
-          }
-          return item.group !== group || !filterContents.map(i => i.name).includes(item.name);
-        })
+          selected.filter(item => {
+            // displayAlways 表示常驻项，不可取消
+            if (item.displayAlways === true) {
+              return true;
+            }
+            return item.group !== group || !filterContents.map(i => i.name).includes(item.name);
+          })
     );
   };
 
@@ -259,9 +259,7 @@ const ColumnManager = ({
                           onChange={e => handleItemChange(item.name as string, e.target.checked)}
                         >
                           <ContentWithQuestion
-                            content={
-                              <span style={{ color: token.colorText }}>{item.title}</span>
-                            }
+                            content={<span style={{ color: token.colorText }}>{item.title}</span>}
                             tooltip={{
                               title: item.tooltip,
                             }}
@@ -276,7 +274,6 @@ const ColumnManager = ({
             </div>
           );
         })}
-
       </Drawer>
     </>
   );

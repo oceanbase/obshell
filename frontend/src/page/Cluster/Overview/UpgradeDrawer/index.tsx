@@ -16,6 +16,7 @@ import PackageSelect from '@/component/PackageSelect';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import styles from './index.less';
 import { obUpgrade } from '@/service/obshell/upgrade';
+import { useCluster } from '@/hook/useCluster';
 
 const { Option } = MySelect;
 export interface UpgradeDrawerProps extends MyDrawerProps {
@@ -47,7 +48,9 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
 }) => {
   const [form] = Form.useForm();
   const { getFieldsValue, validateFields } = form;
-  const { systemInfo } = useSelector((state: DefaultRootState) => state.global);
+
+  const { isStandalone } = useCluster();
+
   const dispatch = useDispatch();
   const packageSelectRef = useRef<PackageSelectRef>();
 
@@ -181,22 +184,22 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
 
       <Form form={form} preserve={false} layout="horizontal" hideRequiredMark={true}>
         {/* <Form.Item
-           label={
-             <OBUIContentWithIcon
-               iconType="question"
-               content={'停止进程前执行转储操作'}
-               tooltip={{
-                 title: '执行本动作会延长停止进程的响应时间，但可以显著缩短 OBServer 恢复时间。',
-               }}
-             />
-           }
-           initialValue={true}
-           valuePropName="checked"
-           name="freezeServer"
-           style={{ marginTop: '8px' }}
-          >
-           <Checkbox />
-          </Form.Item> */}
+            label={
+              <OBUIContentWithIcon
+                iconType="question"
+                content={'停止进程前执行转储操作'}
+                tooltip={{
+                  title: '执行本动作会延长停止进程的响应时间，但可以显著缩短 OBServer 恢复时间。',
+                }}
+              />
+            }
+            initialValue={true}
+            valuePropName="checked"
+            name="freezeServer"
+            style={{ marginTop: '8px' }}
+           >
+            <Checkbox />
+           </Form.Item> */}
         <Form.Item shouldUpdate={true} noStyle={true}>
           {({ getFieldValue }) => (
             <Form.Item
@@ -318,20 +321,31 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                 {formatMessage({
                   id: 'ocp-v2.Overview.UpgradeDrawer.UploadRequiredDuringUpgrade',
                   defaultMessage: '升级时需要上传',
-                })}{' '}
-                <a
-                  href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
-                  target="_blank"
-                >
-                  {formatMessage({
-                    id: 'ocp-v2.Overview.UpgradeDrawer.OceanbaseCeAndOceanbaseCe',
-                    defaultMessage: 'oceanbase-ce 和 oceanbase-ce-libs',
-                  })}
-                </a>{' '}
-                {formatMessage({
-                  id: 'ocp-v2.Overview.UpgradeDrawer.TwoBags',
-                  defaultMessage: '两个包',
                 })}
+                {isStandalone ? (
+                  formatMessage({
+                    id: 'obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
+                    defaultMessage:
+                      '只支持 oceanbase-standalone 开头的包 ，同时后缀名为 .rpm 的文件。',
+                  })
+                ) : (
+                  <>
+                    {' '}
+                    <a
+                      href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
+                      target="_blank"
+                    >
+                      {formatMessage({
+                        id: 'ocp-v2.Overview.UpgradeDrawer.OceanbaseCeAndOceanbaseCe',
+                        defaultMessage: 'oceanbase-ce 和 oceanbase-ce-libs',
+                      })}
+                    </a>{' '}
+                    {formatMessage({
+                      id: 'ocp-v2.Overview.UpgradeDrawer.TwoBags',
+                      defaultMessage: '两个包',
+                    })}
+                  </>
+                )}
               </div>
               {architectureList?.length === 2 && (
                 <div>
@@ -375,82 +389,82 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
         </Form.Item>
 
         {/* <Form.Item shouldUpdate={true} noStyle={true}>
-           {() => {
-             const { rpmFileName } = getFieldsValue();
-             const currentZonePackage = find(
-               packageList,
-               rpm =>
-                 `${rpm?.name}-${rpm?.version}-${rpm?.buildNumber}-${rpm?.operatingSystem}` ===
-                 rpmFileName?.label
-             );
-             return (
-               <>
-                 {zoneSwitch && (
-                   <>
-                     <Alert
-                       showIcon
-                       type="info"
-                       style={{ marginBottom: '24px' }}
-                       message={
-                         <>
-                           <div style={{ fontWeight: 500 }}>
-                             { '升级注意事项'}
-                           </div>
-                           {isGte4_1(currentZonePackage?.version) ? (
-                             <>
-                               <div>
-                                 {formatMessage({
-                                   id: 'ocp-v2.Component.UpgradeDrawer.IfThePrimaryAndSecondaryTenantsAreIn',
-                                   defaultMessage:
-                                     '1.如果主备租户在不同集群，建议您升级前将主租户切换至另一个集群，先升级备租户所在集群，再升级主租户所在集群',
-                                 })}
-                               </div>
-                               <div>
-                                 {formatMessage({
-                                   id: 'ocp-v2.Component.UpgradeDrawer.AfterYouChooseToAdjustTheUpgradeOrder',
-                                   defaultMessage:
-                                     '2. 当您选择调整 Zone 的升级顺序后，您需要在任务流程：Stop Zone\n                      之前人工确认是否继续执行升级操作，同时建议您尽快执行完升级操作，避免出现异常行为造成集群升级问题，敬请知悉；',
-                                 })}
-                               </div>
-                             </>
-                           ) : (
-                             <>
-                               <div>
-                                 {formatMessage({
-                                   id: 'ocp-v2.Component.UpgradeDrawer.OnlyThePrimaryClusterZoneCanBeSet',
-                                   defaultMessage:
-                                     '1. 仅支持设置主集群 Zone\n                      升级顺序，若存在备集群，则先升级备集群，且备集群按默认顺序进行升级且中间不会停止。注意：在备集群升级完成至主集群后，需要暂停，由用户确认后再进行升级动作；',
-                                 })}
-                               </div>
-                               <div>
-                                 {formatMessage({
-                                   id: 'ocp-v2.Component.UpgradeDrawer.AfterYouChooseToAdjustTheUpgradeOrder',
-                                   defaultMessage:
-                                     '2. 当您选择调整 Zone 的升级顺序后，您需要在任务流程：Stop Zone\n                      之前人工确认是否继续执行升级操作，同时建议您尽快执行完升级操作，避免出现异常行为造成集群升级问题，敬请知悉；',
-                                 })}
-                               </div>
-                             </>
-                           )}
-                         </>
-                       }
-                     />
-                      <Form.Item
-                       name="primaryZone"
-                       label={ 'Zone 升级顺序'}
-                       {...MODAL_FORM_ITEM_LAYOUT}
-                       wrapperCol={{ span: 24 }}
-                     >
-                       <DraggableTable
-                         zoneOrderList={zoneOrderList}
-                         setZoneOrderList={setZoneOrderList}
-                       />
-                     </Form.Item>
-                   </>
-                 )}
-               </>
-             );
-           }}
-          </Form.Item> */}
+            {() => {
+              const { rpmFileName } = getFieldsValue();
+              const currentZonePackage = find(
+                packageList,
+                rpm =>
+                  `${rpm?.name}-${rpm?.version}-${rpm?.buildNumber}-${rpm?.operatingSystem}` ===
+                  rpmFileName?.label
+              );
+              return (
+                <>
+                  {zoneSwitch && (
+                    <>
+                      <Alert
+                        showIcon
+                        type="info"
+                        style={{ marginBottom: '24px' }}
+                        message={
+                          <>
+                            <div style={{ fontWeight: 500 }}>
+                              { '升级注意事项'}
+                            </div>
+                            {isGte4_1(currentZonePackage?.version) ? (
+                              <>
+                                <div>
+                                  {formatMessage({
+                                    id: 'ocp-v2.Component.UpgradeDrawer.IfThePrimaryAndSecondaryTenantsAreIn',
+                                    defaultMessage:
+                                      '1.如果主备租户在不同集群，建议您升级前将主租户切换至另一个集群，先升级备租户所在集群，再升级主租户所在集群',
+                                  })}
+                                </div>
+                                <div>
+                                  {formatMessage({
+                                    id: 'ocp-v2.Component.UpgradeDrawer.AfterYouChooseToAdjustTheUpgradeOrder',
+                                    defaultMessage:
+                                      '2. 当您选择调整 Zone 的升级顺序后，您需要在任务流程：Stop Zone\n                      之前人工确认是否继续执行升级操作，同时建议您尽快执行完升级操作，避免出现异常行为造成集群升级问题，敬请知悉；',
+                                  })}
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <div>
+                                  {formatMessage({
+                                    id: 'ocp-v2.Component.UpgradeDrawer.OnlyThePrimaryClusterZoneCanBeSet',
+                                    defaultMessage:
+                                      '1. 仅支持设置主集群 Zone\n                      升级顺序，若存在备集群，则先升级备集群，且备集群按默认顺序进行升级且中间不会停止。注意：在备集群升级完成至主集群后，需要暂停，由用户确认后再进行升级动作；',
+                                  })}
+                                </div>
+                                <div>
+                                  {formatMessage({
+                                    id: 'ocp-v2.Component.UpgradeDrawer.AfterYouChooseToAdjustTheUpgradeOrder',
+                                    defaultMessage:
+                                      '2. 当您选择调整 Zone 的升级顺序后，您需要在任务流程：Stop Zone\n                      之前人工确认是否继续执行升级操作，同时建议您尽快执行完升级操作，避免出现异常行为造成集群升级问题，敬请知悉；',
+                                  })}
+                                </div>
+                              </>
+                            )}
+                          </>
+                        }
+                      />
+                       <Form.Item
+                        name="primaryZone"
+                        label={ 'Zone 升级顺序'}
+                        {...MODAL_FORM_ITEM_LAYOUT}
+                        wrapperCol={{ span: 24 }}
+                      >
+                        <DraggableTable
+                          zoneOrderList={zoneOrderList}
+                          setZoneOrderList={setZoneOrderList}
+                        />
+                      </Form.Item>
+                    </>
+                  )}
+                </>
+              );
+            }}
+           </Form.Item> */}
       </Form>
       <MyDrawer
         className={styles.upgradePathContainer}
@@ -508,8 +522,8 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                       freezeServer,
                       ...(zone
                         ? {
-                            zoneOrder: zoneOrderList?.map(item => item.name),
-                          }
+                          zoneOrder: zoneOrderList?.map(item => item.name),
+                        }
                         : {}),
                     };
 

@@ -49,7 +49,7 @@ const Index: React.FC<IndexProps> = ({ location, tenantData }: IndexProps) => {
   const [activeOnly, setActiveOnly] = useState(false);
   const [loading, setLoading] = useState(false);
   const listRef = useRef({
-    refreshListTenantSessions: () => { },
+    refreshListTenantSessions: () => {},
   });
 
   const { tab = 'list', tenantId: propTenantId } = location?.query || {};
@@ -80,13 +80,12 @@ const Index: React.FC<IndexProps> = ({ location, tenantData }: IndexProps) => {
             </span>
             {!listTenantsLoading && (
               <MyDropdown
-                menuList={tenants
-                  .map(item => {
-                    return {
-                      value: item.obTenantId,
-                      label: item.name,
-                    };
-                  })}
+                menuList={tenants.map(item => {
+                  return {
+                    value: item.obTenantId,
+                    label: item.name,
+                  };
+                })}
                 isSolidIcon={true}
                 defaultMenuKey={tenantId}
                 onChange={(v: string) => {
