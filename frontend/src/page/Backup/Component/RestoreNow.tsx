@@ -29,7 +29,7 @@ import {
   Col,
   DatePicker,
   Form,
-  InputNumber,
+  Input,
   message,
   Popconfirm,
   Descriptions,
@@ -325,11 +325,11 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
       // 需要精确到微秒级
       const timestamp = restoreDateValue
         ? !isNullValue(restoreMicrosecondsValue) &&
-          `${restoreDateValue.format('YYYY-MM-DD')}T${(restoreTimeValue || 0).format(
-            'HH:mm:ss'
-          )}.${formatRestoreMicroseconds(restoreMicrosecondsValue || 0)}${restoreTimeValue.format(
-            'Z'
-          )}`
+        `${restoreDateValue.format('YYYY-MM-DD')}T${(restoreTimeValue || 0).format(
+          'HH:mm:ss'
+        )}.${formatRestoreMicroseconds(restoreMicrosecondsValue || 0)}${restoreTimeValue.format(
+          'Z'
+        )}`
         : null;
 
       const { archive_base_uri, data_base_uri } = tenantBackupConfigInfo;
@@ -368,8 +368,8 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
   const selectedRestoreDateTime =
     currentRestoreDate && currentRestoreTime && !isNullValue(currentRestoreMicroseconds)
       ? `${moment(currentRestoreDate).format(DATE_FORMAT_DISPLAY)} ${moment(
-          currentRestoreTime
-        ).format(TIME_FORMAT)}.${formatRestoreMicroseconds(currentRestoreMicroseconds)}`
+        currentRestoreTime
+      ).format(TIME_FORMAT)}.${formatRestoreMicroseconds(currentRestoreMicroseconds)}`
       : '-';
 
   // 源租户在不同视图下的展示 label
@@ -393,13 +393,13 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
       path: isGlobalRestore ? `/tenant` : `/cluster/tenant/${tenantName}/backup`,
       breadcrumbName: isGlobalRestore
         ? formatMessage({
-            id: 'OBShell.component.MonitorSearch.Tenant',
-            defaultMessage: '租户',
-          })
+          id: 'OBShell.component.MonitorSearch.Tenant',
+          defaultMessage: '租户',
+        })
         : formatMessage({
-            id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
-            defaultMessage: '备份恢复',
-          }),
+          id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
+          defaultMessage: '备份恢复',
+        }),
     },
 
     { breadcrumbName: title },
@@ -770,22 +770,54 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
                                   defaultMessage: '请输入微秒',
                                 }),
                               },
+                              {
+                                pattern: /^\d{1,6}$/,
+                                message: formatMessage({
+                                  id: 'ocp-v2.Backup.Component.RestoreNow.MicrosecondsFormat',
+                                  defaultMessage: '微秒只能输入1-6位数字',
+                                }),
+                              },
                             ]}
                           >
-                            <InputNumber
-                              min={0}
-                              max={999999}
-                              // 仅支持整数，不支持小数
-                              precision={0}
+                            <Input
+                              type="text"
                               disabled={isNullValue(currentRestoreTime)}
-                              onChange={value => {
-                                setCurrentRestoreMicroseconds(value);
-                                handleRestoreEndTimeChange(
-                                  getFieldValue('restoreDate'),
-                                  getFieldValue('restoreTime'),
-                                  value
-                                );
+                              onChange={e => {
+                                const value = e.target.value;
+                                // 只允许输入数字，最多6位
+                                if (/^\d{0,6}$/.test(value)) {
+                                  const numValue = value === '' ? undefined : parseInt(value, 10);
+                                  setCurrentRestoreMicroseconds(numValue);
+                                  handleRestoreEndTimeChange(
+                                    getFieldValue('restoreDate'),
+                                    getFieldValue('restoreTime'),
+                                    numValue
+                                  );
+                                }
                               }}
+                              onFocus={e => {
+                                const currentValue = getFieldValue('restoreMicroseconds');
+                                if (currentValue !== undefined && currentValue !== null) {
+                                  e.target.value = currentValue.toString();
+                                }
+                              }}
+                              onBlur={e => {
+                                const value = e.target.value;
+                                // 失焦时补齐前导零到6位
+                                if (value && value.length < 6) {
+                                  const paddedValue = value.padStart(6, '0');
+                                  e.target.value = paddedValue;
+                                  const numValue = parseInt(paddedValue, 10);
+                                  setCurrentRestoreMicroseconds(numValue);
+                                  handleRestoreEndTimeChange(
+                                    getFieldValue('restoreDate'),
+                                    getFieldValue('restoreTime'),
+                                    numValue
+                                  );
+                                }
+                              }}
+                              placeholder="000000"
+                              maxLength={6}
                               style={{
                                 width: '100%',
                                 // 未选择时间时，对微秒置灰处理

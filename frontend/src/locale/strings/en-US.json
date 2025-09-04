@@ -2816,5 +2816,6 @@
   "obshell.Backup.Backup.Data.AreYouSureYouWantToCancelThe": "Are you sure you want to cancel the backup schedule?",
   "obshell.Backup.Restore.RestoreTask.AreYouSureYouWantToCancelThe": "Are you sure you want to cancel the {recordRestoreTenant} recovery task?",
   "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "oceanbase-standalone package",
-  "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "The current tenant {tenantUserName}password is empty, there is a security risk, please modify the {tenantUserName}password"
+  "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "The current tenant {tenantUserName}password is empty, there is a security risk, please modify the {tenantUserName}password",
+  "ocp-v2.Backup.Component.RestoreNow.MicrosecondsFormat": "Microseconds can only be entered as 1-6 digits"
 }
