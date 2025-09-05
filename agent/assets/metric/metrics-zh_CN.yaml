@@ -636,13 +636,13 @@ OBTENANT:
       name: rpc_deliver_succ_ratio
       unit: '%'
     name: "RPC 请求成功率"
-  - description: "Gts 请求数"
+  - description: "GTS 请求数"
     metrics:
-    - description: "Gts 请求数"
+    - description: "GTS 请求数"
       key: gts_request_count
       name: gts_request_count
       unit: ''
-    name: "Gts 请求数"
+    name: "GTS 请求数"
   - description: "采样周期内 RPC 网络延迟"
     metrics:
     - description: "采样周期内 RPC 网络延迟"

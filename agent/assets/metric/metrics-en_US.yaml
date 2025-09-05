@@ -636,13 +636,13 @@ OBTENANT:
       name: rpc_deliver_succ_ratio
       unit: '%'
     name: "RPC deliver success ratio"
-  - description: "Gts request count"
+  - description: "GTS request count"
     metrics:
-    - description: "Gts request count"
+    - description: "GTS request count"
       key: gts_request_count
       name: gts_request_count
       unit: ''
-    name: "Gts request count"
+    name: "GTS request count"
   - description: "RPC packet net delay in the sampling period"
     metrics:
     - description: "RPC packet net delay in the sampling period"
