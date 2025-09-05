@@ -17,6 +17,45 @@
 import moment from 'moment';
 
 /**
+ * 计算时间交集，保持微秒信息
+ * @param originalTime 原始时间字符串（包含微秒）
+ * @param intersectionTime 交集时间（moment对象）
+ * @param isStart 是否为开始时间
+ * @param dayStart 选中日期的开始时间（用于判断是否为边界时间）
+ * @param dayEnd 选中日期的结束时间（用于判断是否为边界时间）
+ * @returns 调整后的时间字符串
+ */
+function calculateIntersectionTime(
+  originalTime: string,
+  intersectionTime: moment.Moment,
+  isStart: boolean,
+  dayStart?: moment.Moment,
+  dayEnd?: moment.Moment
+): string {
+  if (!originalTime) return intersectionTime.format();
+
+  // 如果交集时间就是原始时间，直接返回原始时间
+  const originalMoment = moment(originalTime);
+  if (originalMoment.isSame(intersectionTime, 'second')) {
+    return originalTime;
+  }
+
+  // 判断是否为边界时间（需要将微秒设为000000）
+  const isBoundaryTime = dayStart && dayEnd && (
+    (isStart && intersectionTime.isSame(dayStart, 'second')) ||
+    (!isStart && intersectionTime.isSame(dayEnd, 'second'))
+  );
+
+  // 提取微秒和时区信息
+  const timeMatch = originalTime.match(/\.(\d{1,6})(Z|[+-]\d{2}:\d{2})$/);
+  const microseconds = isBoundaryTime ? '000000' : (timeMatch?.[1]?.padEnd(6, '0') || '000000');
+  const timezone = timeMatch?.[2] || '+08:00';
+
+  // 构建新的时间字符串
+  return intersectionTime.format('YYYY-MM-DDTHH:mm:ss') + '.' + microseconds + timezone;
+}
+
+/**
  * 根据传入的时间日期和时间范围区间，匹配出符合传入日期的当日区间
  * @param timeRanges 时间范围数组，每个元素包含 start_time 和 end_time
  * @param targetDate 目标日期，可以是 moment 对象、Date 对象或日期字符串
@@ -64,9 +103,10 @@ export function getBackupTimeData(
       // 返回交集时间范围，保持原有属性
       return {
         ...item,
-        // 保持原始时间字符串，确保微秒值不丢失
-        start_time: item.start_time,
-        end_time: item.end_time,
+        // 使用交集时间作为显示时间，确保显示的是选中日期内的实际时间范围
+        // 保持微秒信息，传入日期边界信息用于判断边界时间
+        start_time: calculateIntersectionTime(item.start_time, intersectionStart, true, dayStart, dayEnd),
+        end_time: calculateIntersectionTime(item.end_time, intersectionEnd, false, dayStart, dayEnd),
         // 添加交集信息
         intersection_start: intersectionStart.format(),
         intersection_end: intersectionEnd.format(),
