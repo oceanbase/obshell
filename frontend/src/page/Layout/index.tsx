@@ -40,6 +40,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
   const { query } = location;
   const { mode } = query || {};
+  const { uiMode } = query || {};
   const isPasswordFreeLogin = mode === 'passwordFreeLogin';
 
   const locale = getLocale();
@@ -53,6 +54,15 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   useEffect(() => {
     // 设置标签页的 title
     document.title = 'OB-Dashboard';
+  }, []);
+
+  useEffect(() => {
+    dispatch({
+      type: 'global/update',
+      payload: {
+        uiMode,
+      },
+    });
   }, []);
 
   // request and save publicKey to global state

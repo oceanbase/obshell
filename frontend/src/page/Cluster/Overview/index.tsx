@@ -30,6 +30,7 @@ import {
   Modal,
 } from '@oceanbase/design';
 import { flatten, isEmpty, reduce } from 'lodash';
+import { useSelector } from 'umi';
 import { PageContainer } from '@oceanbase/ui';
 import scrollIntoView from 'scroll-into-view';
 import useReload from '@/hook/useReload';
@@ -53,6 +54,7 @@ import { getAllAgentsStatus, getStatus } from '@/service/obshell/v1';
 import moment from 'moment';
 import { getAgentMainDags } from '@/service/obshell/task';
 import { message } from 'antd';
+import useUiMode from '@/hook/useUiMode';
 
 export const getServerStatus = (server: API.Observer) => {
   let status = 'OTHER';
@@ -92,6 +94,7 @@ const Detail: React.FC<DetailProps> = ({
   const [clusterStatus, setClusterStatus] = useState<'normal' | 'abnormal'>('normal');
 
   const isAbnormal = clusterStatus === 'abnormal';
+  const { isDesktopMode } = useUiMode();
 
   useDocumentTitle(
     formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
@@ -642,7 +645,7 @@ const Detail: React.FC<DetailProps> = ({
               })}
             </Button>
 
-            {clusterData.status !== 'AVAILABLE' && (
+            {!isDesktopMode && clusterData.status !== 'AVAILABLE' && (
               <Button
                 onClick={() => {
                   handleMenuClick('start');
@@ -657,7 +660,7 @@ const Detail: React.FC<DetailProps> = ({
               </Button>
             )}
 
-            {clusterData.status === 'AVAILABLE' && (
+            {!isDesktopMode && clusterData.status === 'AVAILABLE' && (
               <Button
                 onClick={() => {
                   handleMenuClick('stop');

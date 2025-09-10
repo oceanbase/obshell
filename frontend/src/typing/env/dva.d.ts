@@ -123,6 +123,7 @@ declare global {
     global: {
       themeMode: 'light' | 'dark';
       publicKey: string;
+      uiMode: string;
       // 后端返回的应用信息没有定义类型，需要手动指定
       appInfo: Global.AppInfo;
       systemInfo: API.SystemInfo;

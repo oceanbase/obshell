@@ -29,6 +29,7 @@ const model = {
     themeMode: localStorage.getItem('themeMode') || 'light',
     // RSA 加密用的公钥
     publicKey: '',
+    uiMode: '',
     // 应用信息
     appInfo: {},
     // 系统配置
@@ -47,6 +48,12 @@ const model = {
         payload: {
           themeMode,
         },
+      });
+    },
+    *setUiMode({ payload }, { put }) {
+      yield put({
+        type: 'update',
+        payload: { uiMode: payload.uiMode },
       });
     },
     *getPublicKey(_, { call, put }) {

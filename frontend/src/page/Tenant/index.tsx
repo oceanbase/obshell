@@ -215,7 +215,9 @@ const Tenant: React.FC<TenantProps> = ({
         return (
           <a
             onClick={() => {
-              history.push(pathname);
+              history.push({
+                pathname,
+              });
             }}
           >
             {record.tenant_name}

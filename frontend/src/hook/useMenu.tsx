@@ -16,14 +16,18 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Lottie } from '@oceanbase/ui';
 import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
 import Icon from '@oceanbase/icons';
-import IconFont from '@/component/IconFont';
 import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
-import { ReactComponent as DiagnosisSvg } from '@/asset/diagnosis.svg';
+import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
 import { ReactComponent as AlarmSvg } from '@/asset/alarm.svg';
-import { ReactComponent as AlarmCheSvg } from '@/asset/alarm_che.svg';
+import { ReactComponent as AlarmSelectedSvg } from '@/asset/alarm_selected.svg';
+import { ReactComponent as TenantSvg } from '@/asset/tenant.svg';
+import { ReactComponent as TenantSelectedSvg } from '@/asset/tenant_selected.svg';
+import { ReactComponent as ClusterSvg } from '@/asset/cluster.svg';
+import { ReactComponent as ClusterSelectedSvg } from '@/asset/cluster_selected.svg';
+import { ReactComponent as SystemSvg } from '@/asset/system.svg';
+import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
 
 export const useBasicMenu = (): MenuItem[] => {
   return [
@@ -33,8 +37,8 @@ export const useBasicMenu = (): MenuItem[] => {
         id: 'ocp-v2.src.hook.useMenu.ClusterManagement',
         defaultMessage: '集群管理',
       }),
-      icon: <IconFont type="overview" />,
-      selectedIcon: <Lottie path="/lottie/overview.json" mode="icon" speed={3} loop={false} />,
+      icon: <Icon component={ClusterSvg} />,
+      selectedIcon: <Icon component={ClusterSelectedSvg} />,
     },
 
     {
@@ -43,8 +47,8 @@ export const useBasicMenu = (): MenuItem[] => {
         id: 'ocp-express.src.util.menu.TenantManagement',
         defaultMessage: '租户管理',
       }),
-      icon: <IconFont type="tenant" />,
-      selectedIcon: <Lottie path="/lottie/tenant.json" mode="icon" speed={3} loop={false} />,
+      icon: <Icon component={TenantSvg} />,
+      selectedIcon: <Icon component={TenantSelectedSvg} />,
     },
 
     {
@@ -54,7 +58,7 @@ export const useBasicMenu = (): MenuItem[] => {
         defaultMessage: '性能监控',
       }),
       icon: <Icon component={MonitorSvg} />,
-      selectedIcon: <Lottie path="/lottie/monitor.json" mode="icon" speed={3} loop={false} />,
+      selectedIcon: <Icon component={MonitorSelectedSvg} />,
     },
 
     {
@@ -64,7 +68,7 @@ export const useBasicMenu = (): MenuItem[] => {
         defaultMessage: '告警中心',
       }),
       icon: <Icon component={AlarmSvg} />,
-      selectedIcon: <Icon component={AlarmCheSvg} />,
+      selectedIcon: <Icon component={AlarmSelectedSvg} />,
     },
 
     // {
@@ -110,8 +114,8 @@ export const useBasicMenu = (): MenuItem[] => {
         id: 'ocp-express.src.util.menu.SystemManagement',
         defaultMessage: '系统管理',
       }),
-      icon: <IconFont type="property" />,
-      selectedIcon: <Lottie path="/lottie/property.json" mode="icon" speed={3} loop={false} />,
+      icon: <Icon component={SystemSvg} />,
+      selectedIcon: <Icon component={SystemSelectedSvg} />,
       children: [
         {
           link: `/package`,

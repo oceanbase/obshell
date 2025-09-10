@@ -40,6 +40,7 @@ import DeleteUserModal from '../Component/DeleteUserModal';
 import OBProxyAndConnectionStringModal from '../../Component/OBProxyAndConnectionStringModal';
 import RenderConnectionString from '@/component/RenderConnectionString';
 import { listUsers, lockUser, unlockUser, getStats } from '@/service/obshell/tenant';
+import useUiMode from '@/hook/useUiMode';
 
 export interface IndexProps {
   tenantName: string;
@@ -59,6 +60,8 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
   const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   // 删除Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+
+  const { isDesktopMode } = useUiMode();
 
   const ready =
     tenantData?.tenant_name === 'sys' ||
@@ -296,20 +299,25 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
       render: (text: string, record: API.DbUser) => {
         return (
           <Space size="middle">
-            <a
-              data-aspm-click="c304264.d308787"
-              data-aspm-desc="MySQL 用户列表-修改密码"
-              data-aspm-param={``}
-              data-aspm-expo
-              onClick={() => {
-                modifyPassword(record);
-              }}
-            >
-              {formatMessage({
-                id: 'ocp-express.User.MySQL.ChangePassword',
-                defaultMessage: '修改密码',
-              })}
-            </a>
+            {(!isDesktopMode ||
+              (record.username !== 'root' && tenantData?.tenant_name !== 'sys')) && (
+              <>
+                <a
+                  data-aspm-click="c304264.d308787"
+                  data-aspm-desc="MySQL 用户列表-修改密码"
+                  data-aspm-param={``}
+                  data-aspm-expo
+                  onClick={() => {
+                    modifyPassword(record);
+                  }}
+                >
+                  {formatMessage({
+                    id: 'ocp-express.User.MySQL.ChangePassword',
+                    defaultMessage: '修改密码',
+                  })}
+                </a>
+              </>
+            )}
             {record.username !== 'root' && (
               <>
                 <a
