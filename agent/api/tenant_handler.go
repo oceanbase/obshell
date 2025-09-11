@@ -104,7 +104,7 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	// for compaction
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION, tenantExistHandlerWrapper(getTenantCompactionHandler))
 	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACT, tenantExistHandlerWrapper(tenantMajorCompactionHandler))
-	tenant.GET(constant.URI_TOP_COMPACTIONS, tenantExistHandlerWrapper(getTenantTopCompactionsHandler))
+	tenant.GET(constant.URI_TOP_COMPACTIONS, getTenantTopCompactionsHandler)
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION_ERROR, tenantExistHandlerWrapper(clearTenantCompactionErrorHandler))
 
 	// for slow sql
