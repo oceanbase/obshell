@@ -108,7 +108,7 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION_ERROR, tenantExistHandlerWrapper(clearTenantCompactionErrorHandler))
 
 	// for slow sql
-	tenant.GET(constant.URI_TOP_SLOW_SQLS, tenantExistHandlerWrapper(getTenantTopSlowSqlRankHandler))
+	tenant.GET(constant.URI_TOP_SLOW_SQLS, getTenantTopSlowSqlRankHandler)
 
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
