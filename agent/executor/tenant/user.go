@@ -35,7 +35,7 @@ import (
 
 func CreateUser(tenantName string, param *param.CreateUserParam) error {
 	// check the user name is valid
-	if !regexp.MustCompile(`^[a-zA-Z][a-zA-Z_0-9]{1,29}$`).MatchString(param.UserName) {
+	if !regexp.MustCompile(constant.USERNAME_PATTERN).MatchString(param.UserName) {
 		return errors.Occur(errors.ErrObUserNameInvalid, param.UserName)
 	}
 
@@ -301,7 +301,6 @@ func ModifyUserGlobalPrivilege(tenantName, userName string, p *param.ModifyUserG
 	}
 
 	userService := user.GetUserService(db)
-
 	// check if user exist
 	exist, err := userService.IsUserExist(userName)
 	if err != nil {

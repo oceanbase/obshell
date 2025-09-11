@@ -17,10 +17,6 @@
 package tenant
 
 func LockTenant(tenantName string) error {
-	if err := checkTenantName(tenantName); err != nil {
-		return err
-	}
-
 	if err := tenantService.LockTenant(tenantName); err != nil {
 		return err
 	}
@@ -28,10 +24,6 @@ func LockTenant(tenantName string) error {
 }
 
 func UnlockTenant(tenantName string) error {
-	if err := checkTenantName(tenantName); err != nil {
-		return err
-	}
-
 	if err := tenantService.UnlockTenant(tenantName); err != nil {
 		return err
 	}

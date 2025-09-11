@@ -27,6 +27,12 @@ import (
 )
 
 func getObproxyVersion(homepath string) (string, error) {
+	originalDir, _ := os.Getwd()
+	defer func() {
+		if originalDir != "" {
+			os.Chdir(originalDir)
+		}
+	}()
 	if err := os.Chdir(homepath); err != nil {
 		return "", err
 	}

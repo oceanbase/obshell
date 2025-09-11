@@ -115,7 +115,7 @@ func filterZones(tenantId int, param *param.ScaleInTenantReplicasParam) error {
 }
 
 func ScaleInTenantReplicas(tenantName string, param *param.ScaleInTenantReplicasParam) (*task.DagDetailDTO, error) {
-	tenant, err := checkTenantExistAndStatus(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, err
 	}

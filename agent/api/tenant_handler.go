@@ -38,26 +38,26 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	}
 	tenant.POST("", tenantCreateHandler)
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME, tenantDropHandler)
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_NAME, tenantRenameHandler)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_LOCK, tenantLockHandler)
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_LOCK, tenantUnlockHandler)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantAddReplicasHandler)
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantRemoveReplicasHandler)
-	tenant.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantModifyReplicasHandler)
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_NAME, tenantExistHandlerWrapper(tenantRenameHandler))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_LOCK, tenantExistHandlerWrapper(tenantLockHandler))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_LOCK, tenantExistHandlerWrapper(tenantUnlockHandler))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantStatusHandlerWrapper(tenantAddReplicasHandler))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantStatusHandlerWrapper(tenantRemoveReplicasHandler))
+	tenant.PATCH(constant.URI_PATH_PARAM_NAME+constant.URI_REPLICAS, tenantStatusHandlerWrapper(tenantModifyReplicasHandler))
 
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PRIMARYZONE, tenantModifyPrimaryZoneHandler)
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD, tenantModifyPasswordHandler)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST, checkClusterAgentWrapper(common.AutoForwardToMaintainerWrapper(persistTenantRootPassword)))
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_WHITELIST, tenantModifyWhitelistHandler)
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PRIMARYZONE, tenantStatusHandlerWrapper(tenantModifyPrimaryZoneHandler))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD, tenantStatusHandlerWrapper(tenantModifyPasswordHandler))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST, tenantExistHandlerWrapper(common.AutoForwardToMaintainerWrapper(persistTenantRootPassword)))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_WHITELIST, tenantStatusHandlerWrapper(tenantModifyWhitelistHandler))
 
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantSetParametersHandler)
-	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, tenantSetVariableHandler)
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantStatusHandlerWrapper(tenantSetParametersHandler))
+	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, tenantStatusHandlerWrapper(tenantSetVariableHandler))
 	tenant.GET(constant.URI_PATH_PARAM_NAME, getTenantInfo)
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PRECHECK, tenantHandlerWrapper(tenantPrecheck))
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETER+constant.URI_PATH_PARAM_PARA, getTenantParameter)
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, getTenantVariable)
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, getTenantParameters)
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, getTenantVariables)
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETER+constant.URI_PATH_PARAM_PARA, tenantStatusHandlerWrapper(getTenantParameter))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLE+constant.URI_PATH_PARAM_VAR, tenantStatusHandlerWrapper(getTenantVariable))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantStatusHandlerWrapper(getTenantParameters))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_VARIABLES, tenantStatusHandlerWrapper(getTenantVariables))
 
 	tenant.GET(constant.URI_SUPPORT_TEMPLATES, listParameterTemplatesHandler)
 
@@ -79,7 +79,7 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_ROLES, tenantHandlerWrapper(modifyUserRoles, constant.ORACLE_MODE))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_PASSWORD, tenantHandlerWrapper(changePassword))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(lockUser))
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_STATS, getUserStats)
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_STATS, tenantExistHandlerWrapper(getUserStats))
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_USER+constant.URI_PATH_PARAM_USER+constant.URI_LOCK, tenantHandlerWrapper(unlockUser))
 
 	// for database
@@ -102,13 +102,13 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROLE+constant.URI_PATH_PARAM_ROLE+constant.URI_OBJECT_PRIVILEGES, tenantHandlerWrapper(grantRoleObjectPrivilege, constant.ORACLE_MODE))
 
 	// for compaction
-	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION, getTenantCompactionHandler)
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACT, tenantMajorCompactionHandler)
-	tenant.GET(constant.URI_TOP_COMPACTIONS, getTenantTopCompactionsHandler)
-	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION_ERROR, clearTenantCompactionErrorHandler)
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION, tenantExistHandlerWrapper(getTenantCompactionHandler))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACT, tenantExistHandlerWrapper(tenantMajorCompactionHandler))
+	tenant.GET(constant.URI_TOP_COMPACTIONS, tenantExistHandlerWrapper(getTenantTopCompactionsHandler))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_COMPACTION_ERROR, tenantExistHandlerWrapper(clearTenantCompactionErrorHandler))
 
 	// for slow sql
-	tenant.GET(constant.URI_TOP_SLOW_SQLS, getTenantTopSlowSqlRankHandler)
+	tenant.GET(constant.URI_TOP_SLOW_SQLS, tenantExistHandlerWrapper(getTenantTopSlowSqlRankHandler))
 
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
@@ -165,9 +165,13 @@ func tenantDropHandler(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
+	name := c.Param(constant.URI_PARAM_NAME)
+	if name == "" {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
+		return
+	}
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
 		return
 	}
 	param.Name = name
@@ -198,12 +202,7 @@ func tenantRenameHandler(c *gin.Context) {
 		common.SendResponse(c, nil, err)
 		return
 	}
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
-	param.Name = name
+	param.Name = c.Param(constant.URI_PARAM_NAME)
 	common.SendResponse(c, nil, tenant.RenameTenant(param))
 }
 
@@ -221,11 +220,7 @@ func tenantRenameHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/lock [post]
 func tenantLockHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	common.SendResponse(c, nil, tenant.LockTenant(name))
 }
 
@@ -243,11 +238,7 @@ func tenantLockHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/lock [delete]
 func tenantUnlockHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	common.SendResponse(c, nil, tenant.UnlockTenant(name))
 }
 
@@ -266,11 +257,7 @@ func tenantUnlockHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/replicas [post]
 func tenantAddReplicasHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ScaleOutTenantReplicasParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -295,11 +282,7 @@ func tenantAddReplicasHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/replicas [delete]
 func tenantRemoveReplicasHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ScaleInTenantReplicasParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -327,11 +310,7 @@ func tenantRemoveReplicasHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/replicas [patch]
 func tenantModifyReplicasHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ModifyReplicasParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -360,16 +339,13 @@ func tenantModifyReplicasHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/whitelist [put]
 func tenantModifyWhitelistHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ModifyTenantWhitelistParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
 		return
 	}
+	var err error
 	if param.Whitelist == nil {
 		err = tenant.ModifyTenantWhitelist(name, "")
 	} else {
@@ -393,11 +369,7 @@ func tenantModifyWhitelistHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/password [put]
 func tenantModifyPasswordHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ModifyTenantRootPasswordParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -451,11 +423,7 @@ func persistTenantRootPassword(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/primary-zone [put]
 func tenantModifyPrimaryZoneHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.ModifyTenantPrimaryZoneParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -480,11 +448,7 @@ func tenantModifyPrimaryZoneHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/parameters [put]
 func tenantSetParametersHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.SetTenantParametersParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -508,11 +472,7 @@ func tenantSetParametersHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/variables [put]
 func tenantSetVariableHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.SetTenantVariablesParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -535,11 +495,7 @@ func tenantSetVariableHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name} [get]
 func getTenantInfo(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	tenantInfo, err := tenant.GetTenantInfo(name)
 	common.SendResponse(c, tenantInfo, err)
 }
@@ -559,12 +515,7 @@ func getTenantInfo(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/parameter/{para} [get]
 func getTenantParameter(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
-
+	name := c.Param(constant.URI_PARAM_NAME)
 	parameterName := c.Param(constant.URI_PARAM_PARA)
 	if parameterName == "" {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantParameterNameEmpty))
@@ -590,11 +541,7 @@ func getTenantParameter(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/parameters [get]
 func getTenantParameters(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	format := c.Query("filter")
 	parameters, err := tenant.GetTenantParameters(name, format)
 	common.SendResponse(c, parameters, err)
@@ -615,12 +562,7 @@ func getTenantParameters(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/variable/{var} [get]
 func getTenantVariable(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
-
+	name := c.Param(constant.URI_PARAM_NAME)
 	variableName := c.Param(constant.URI_PARAM_VAR)
 	if variableName == "" {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantVariableNameEmpty))
@@ -646,11 +588,7 @@ func getTenantVariable(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/variables [get]
 func getTenantVariables(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	format := c.Query("filter")
 	variables, err := tenant.GetTenantVariables(name, format)
 	common.SendResponse(c, variables, err)
@@ -694,11 +632,7 @@ func getTenantOverView(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user [post]
 func createUserHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.CreateUserParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -723,11 +657,7 @@ func createUserHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user} [delete]
 func dropUserHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	user := c.Param(constant.URI_PARAM_USER)
 	if user == "" {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrObUserNameEmpty))
@@ -1009,11 +939,7 @@ func modifyUserRoles(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/user/{user}/stats [GET]
 func getUserStats(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.TenantRootPasswordParam
 	if err := c.BindJSON(&param); err != nil {
 		common.SendResponse(c, nil, err)
@@ -1574,11 +1500,7 @@ func grantRoleObjectPrivilege(c *gin.Context) {
 // @Failure		500				object	http.OcsAgentResponse
 // @Router			/api/v1/tenant/{name}/compaction [get]
 func getTenantCompactionHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	compaction, err := tenant.GetTenantCompaction(name)
 	common.SendResponse(c, compaction, err)
 }
@@ -1596,11 +1518,7 @@ func getTenantCompactionHandler(c *gin.Context) {
 // @Failure		500				object	http.OcsAgentResponse
 // @Router			/api/v1/tenant/{name}/compact [post]
 func tenantMajorCompactionHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	common.SendResponse(c, nil, tenant.TenantMajorCompaction(name))
 }
 
@@ -1617,11 +1535,7 @@ func tenantMajorCompactionHandler(c *gin.Context) {
 // @Failure		500				object	http.OcsAgentResponse
 // @Router			/api/v1/tenant/{name}/compaction-error [delete]
 func clearTenantCompactionErrorHandler(c *gin.Context) {
-	name, err := tenantCheckWithName(c)
-	if err != nil {
-		common.SendResponse(c, nil, err)
-		return
-	}
+	name := c.Param(constant.URI_PARAM_NAME)
 	common.SendResponse(c, nil, tenant.ClearTenantCompactionError(name))
 }
 

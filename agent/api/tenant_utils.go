@@ -70,6 +70,53 @@ func getBodyFromContext(c *gin.Context) (map[string]interface{}, error) {
 	return bodyInterface, nil
 }
 
+func tenantExistHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		err := checkClusterAgent()
+		if err != nil {
+			common.SendResponse(c, nil, err)
+			return
+		}
+		tenantName := c.Param(constant.URI_PARAM_NAME)
+		if tenantName == "" {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
+			return
+		}
+		if exist, err := tenantService.IsTenantExist(tenantName); err != nil {
+			common.SendResponse(c, nil, errors.Wrapf(err, "check tenant '%s' exist failed", tenantName))
+			return
+		} else if !exist {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNotExist, tenantName))
+			return
+		}
+		f(c)
+	}
+}
+
+func tenantStatusHandlerWrapper(f func(*gin.Context)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		tenantName := c.Param(constant.URI_PARAM_NAME)
+		if tenantName == "" {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNameEmpty))
+			return
+		}
+		tenantInfo, err := tenantService.GetTenantByName(tenantName)
+		if err != nil {
+			common.SendResponse(c, nil, errors.Wrapf(err, "get tenant '%s' info failed", tenantName))
+			return
+		}
+		if tenantInfo == nil {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantNotExist, tenantName))
+			return
+		}
+		if tenantInfo.Status != constant.TENANT_STATUS_NORMAL {
+			common.SendResponse(c, nil, errors.Occur(errors.ErrObTenantStatusNotNormal, tenantName, tenantInfo.Status))
+			return
+		}
+		f(c)
+	}
+}
+
 func tenantHandlerWrapper(f func(*gin.Context), mode ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
 		// prev check
@@ -199,15 +246,4 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 		return executeAgent, errors.Occur(errors.ErrObTenantNoActiveServer, tenantName)
 	}
 	return executeAgent, err
-}
-
-func tenantCheckWithName(c *gin.Context) (string, error) {
-	name := c.Param(constant.URI_PARAM_NAME)
-	if name == "" {
-		return "", errors.Occur(errors.ErrObTenantNameEmpty)
-	}
-	if !meta.OCS_AGENT.IsClusterAgent() {
-		return "", errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT)
-	}
-	return name, nil
 }

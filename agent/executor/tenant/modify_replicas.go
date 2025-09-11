@@ -278,7 +278,7 @@ func modifyLocality(tenantId int, zone string, replicaType string) (map[string]s
 }
 
 func ModifyTenantReplica(tenantName string, param *param.ModifyReplicasParam) (*task.DagDetailDTO, error) {
-	tenant, err := checkTenantExistAndStatus(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, err
 	}

@@ -295,3 +295,17 @@ const (
 
 	OBSERVER_STATUS_DELETING = "DELETING"
 )
+
+const (
+	USERNAME_PATTERN    = "^[a-zA-Z][a-zA-Z_0-9]{1,29}$"
+	ROLE_PATTERN        = "^[a-zA-Z][a-zA-Z0-9_]{0,30}[a-zA-Z0-9]$"
+	DATABASE_PATTERN    = "^[a-zA-Z_0-9-]{2,64}$"
+	TENANT_NAME_PATTERN = "^[a-zA-Z0-9-_~#+]+$"
+)
+
+var PATH_PARAM_PATTERN = map[string]string{
+	URI_PARAM_USER:     USERNAME_PATTERN,
+	URI_PARAM_ROLE:     ROLE_PATTERN,
+	URI_PARAM_DATABASE: DATABASE_PATTERN,
+	URI_PARAM_NAME:     TENANT_NAME_PATTERN,
+}

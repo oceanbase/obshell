@@ -35,9 +35,6 @@ func isUnkonwnTimeZoneErr(err error) bool {
 }
 
 func GetTenantVariables(tenantName string, filter string) ([]oceanbase.CdbObSysVariable, error) {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return nil, err
-	}
 	if filter == "" {
 		filter = "%"
 	}
@@ -49,9 +46,6 @@ func GetTenantVariables(tenantName string, filter string) ([]oceanbase.CdbObSysV
 }
 
 func GetTenantVariable(tenantName string, variableName string) (*oceanbase.CdbObSysVariable, error) {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return nil, err
-	}
 	variable, err := tenantService.GetTenantVariable(tenantName, variableName)
 	if err != nil {
 		return nil, err
@@ -62,15 +56,31 @@ func GetTenantVariable(tenantName string, variableName string) (*oceanbase.CdbOb
 	return variable, nil
 }
 
-func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenantVariablesParam) error {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return err
+func checkVariablesExist(vars map[string]interface{}) error {
+	for k, v := range vars {
+		if k == "" || v == nil {
+			return errors.Occur(errors.ErrObTenantEmptyVariable)
+		}
+		if exist, err := tenantService.IsVariableExist(k); err != nil {
+			return err
+		} else if !exist {
+			return errors.Occur(errors.ErrObTenantVariableNotExist, k)
+		}
 	}
+	return nil
+}
+
+func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenantVariablesParam) error {
 	for k, v := range param.Variables {
 		if k == "" || v == nil {
 			return errors.Occur(errors.ErrObTenantEmptyVariable)
 		}
 	}
+
+	if err := checkVariablesExist(param.Variables); err != nil {
+		return err
+	}
+
 	transferNumber(param.Variables)
 
 	needConnectTenant := false

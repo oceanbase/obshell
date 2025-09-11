@@ -18,6 +18,7 @@ package tenant
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/oceanbase/obshell/agent/constant"
@@ -33,6 +34,13 @@ func DeleteDatabase(tenantName, databaseName string, password *string) error {
 	if err != nil {
 		return errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
 	}
+	exist, err := tenantService.IsDatabaseExist(db, databaseName)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to check if database %s exists in tenant %s", databaseName, tenantName)
+	}
+	if !exist {
+		return nil
+	}
 	err = tenantService.DropDatabase(db, databaseName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to drop database %s of tenant %s", databaseName, tenantName)
@@ -41,6 +49,10 @@ func DeleteDatabase(tenantName, databaseName string, password *string) error {
 }
 
 func CreateDatabase(tenantName string, param *param.CreateDatabaseParam) error {
+	// check the database name is valid
+	if !regexp.MustCompile(constant.DATABASE_PATTERN).MatchString(param.DbName) {
+		return errors.Occur(errors.ErrObDatabaseNameInvalid, param.DbName)
+	}
 	db, err := GetConnectionWithPassword(tenantName, param.RootPassword)
 	defer CloseDbConnection(db)
 	if err != nil {
@@ -61,6 +73,13 @@ func AlterDatabase(tenantName string, databaseName string, param *param.ModifyDa
 	defer CloseDbConnection(db)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to get db connection of tenant %s", tenantName)
+	}
+	exist, err := tenantService.IsDatabaseExist(db, databaseName)
+	if err != nil {
+		return errors.Wrapf(err, "Failed to check if database %s exists in tenant %s", databaseName, tenantName)
+	}
+	if !exist {
+		return errors.Occur(errors.ErrObDatabaseNotExist, databaseName, tenantName)
 	}
 	err = tenantService.AlterDatabase(db, databaseName, param)
 	if err != nil {

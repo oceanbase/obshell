@@ -95,8 +95,6 @@ const (
 	DAG_MODIFY_TENANT_REPLICA      = "Modify tenant replicas"
 	DAG_MODIFY_TENANT_PRIMARY_ZONE = "Modify tenant primary zone"
 
-	TENANT_NAME_PATTERN = `^[a-zA-Z0-9-_~#+]+$`
-
 	EXPRESS_OLTP = "express_oltp"
 	COMPLEX_OLTP = "complex_oltp"
 	OLAP         = "olap"
@@ -116,17 +114,6 @@ func checkTenantExist(name string) (*oceanbase.DbaObTenant, error) {
 	}
 	if tenant == nil {
 		return tenant, errors.Occur(errors.ErrObTenantNotExist, name)
-	}
-	return tenant, nil
-}
-
-func checkTenantExistAndStatus(name string) (*oceanbase.DbaObTenant, error) {
-	tenant, err := checkTenantExist(name)
-	if err != nil {
-		return tenant, err
-	}
-	if tenant.Status != NORMAL_TENANT {
-		return tenant, errors.Occur(errors.ErrObTenantStatusNotNormal, name, tenant.Status)
 	}
 	return tenant, nil
 }

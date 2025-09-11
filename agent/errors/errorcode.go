@@ -275,7 +275,8 @@ var (
 	ErrEnvironmentWithoutObAdmin      = NewErrorCode("Environment.WithoutObAdmin", unexpected, "err.environment.without.ob.admin")
 
 	// Ob.Database
-	ErrObDatabaseNotExist = NewErrorCode("OB.Database.NotExist", notFound, "err.ob.database.not.exist")
+	ErrObDatabaseNotExist    = NewErrorCode("OB.Database.NotExist", notFound, "err.ob.database.not.exist")
+	ErrObDatabaseNameInvalid = NewErrorCode("OB.Database.Name.Invalid", illegalArgument, "err.ob.database.name.invalid")
 
 	// Ob.User
 	ErrObUserPrivilegeNotSupported = NewErrorCode("OB.User.Privilege.NotSupported", illegalArgument, "err.ob.user.privilege.not.supported")

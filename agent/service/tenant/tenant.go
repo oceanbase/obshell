@@ -442,6 +442,16 @@ func (t *TenantService) GetTenantVariables(tenantName string, filter string) (va
 	return
 }
 
+func (t *TenantService) IsVariableExist(variableName string) (bool, error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	err = db.Table(DBA_OB_SYS_VARIABLES).Where("NAME = ?", variableName).Count(&count).Error
+	return count > 0, err
+}
+
 func (t *TenantService) GetTenantVariable(tenantName string, variableName string) (variable *oceanbase.CdbObSysVariable, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

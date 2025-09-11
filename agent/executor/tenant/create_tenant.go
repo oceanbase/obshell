@@ -267,7 +267,7 @@ func checkTenantName(name string) error {
 	if name == constant.TENANT_ALL || name == constant.TENANT_ALL_META || name == constant.TENANT_ALL_USER {
 		return errors.Occur(errors.ErrObTenantNameInvalid, name, fmt.Sprintf("Since 4.2.1, using '%s' (case insensitive) as a tenant name is not supported", name))
 	}
-	if !regexp.MustCompile(TENANT_NAME_PATTERN).MatchString(name) {
+	if !regexp.MustCompile(constant.TENANT_NAME_PATTERN).MatchString(name) {
 		return errors.Occur(errors.ErrObTenantNameInvalid, name, "Tenant names may only contain letters, numbers, and special characters(- _ # ~ +).")
 	}
 	return nil

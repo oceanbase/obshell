@@ -25,10 +25,6 @@ func RenameTenant(param param.RenameTenantParam) error {
 		return err
 	}
 
-	if _, err := checkTenantExistAndStatus(param.Name); err != nil {
-		return err
-	}
-
 	if err := tenantService.RenameTenant(param.Name, *param.NewName); err != nil {
 		return err
 	}

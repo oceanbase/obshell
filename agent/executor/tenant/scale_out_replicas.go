@@ -74,7 +74,7 @@ func checkScaleOutTenantReplicasParam(tenant *oceanbase.DbaObTenant, param *para
 }
 
 func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplicasParam) (*task.DagDetailDTO, error) {
-	tenant, err := checkTenantExistAndStatus(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, err
 	}

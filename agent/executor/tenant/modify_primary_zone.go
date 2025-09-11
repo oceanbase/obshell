@@ -64,7 +64,7 @@ func renderModifyTenantPrimaryZone(param *param.ModifyTenantPrimaryZoneParam) {
 }
 
 func ModifyTenantPrimaryZone(tenantName string, param *param.ModifyTenantPrimaryZoneParam) (*task.DagDetailDTO, error) {
-	tenant, err := checkTenantExistAndStatus(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func ModifyTenantPrimaryZone(tenantName string, param *param.ModifyTenantPrimary
 		return nil, err
 	}
 
-	if err := tenantService.AlterTenantPrimaryZone(tenant.TenantName, *param.PrimaryZone); err != nil {
+	if err := tenantService.AlterTenantPrimaryZone(tenantName, *param.PrimaryZone); err != nil {
 		return nil, err
 	}
 

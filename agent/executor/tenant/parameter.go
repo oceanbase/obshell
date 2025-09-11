@@ -23,10 +23,6 @@ import (
 )
 
 func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObParameter, error) {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return nil, err
-	}
-
 	if filter == "" {
 		filter = "%"
 	}
@@ -39,7 +35,7 @@ func GetTenantParameters(tenantName string, filter string) ([]oceanbase.GvObPara
 }
 
 func GetTenantParameter(tenantName string, parameterName string) (*oceanbase.GvObParameter, error) {
-	tenant, err := checkTenantExistAndStatus(tenantName)
+	tenant, err := tenantService.GetTenantByName(tenantName)
 	if err != nil {
 		return nil, err
 	}
@@ -54,17 +50,12 @@ func GetTenantParameter(tenantName string, parameterName string) (*oceanbase.GvO
 }
 
 func SetTenantParameters(tenantName string, parameters map[string]interface{}) error {
-	tenant, err := checkTenantExistAndStatus(tenantName)
-	if err != nil {
-		return err
-	}
-
 	if err := checkParameters(parameters); err != nil {
 		return err
 	}
 
 	transferNumber(parameters)
-	if err := tenantService.SetTenantParameters(tenant.TenantName, parameters); err != nil {
+	if err := tenantService.SetTenantParameters(tenantName, parameters); err != nil {
 		return errors.Wrap(err, "set tenant parameters failed")
 	}
 	return nil

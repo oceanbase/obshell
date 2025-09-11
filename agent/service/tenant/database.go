@@ -66,6 +66,12 @@ func (t *TenantService) AlterDatabase(db *gorm.DB, databaseName string, modifyDa
 	return db.Exec(sql).Error
 }
 
+func (t *TenantService) IsDatabaseExist(db *gorm.DB, databaseName string) (bool, error) {
+	var count int64
+	err := db.Raw("SELECT COUNT(*) FROM oceanbase.DBA_OB_DATABASES WHERE DATABASE_NAME = ?", databaseName).Scan(&count).Error
+	return count > 0, err
+}
+
 func (t *TenantService) CreateDatabase(db *gorm.DB, createDatabaseParam *param.CreateDatabaseParam) error {
 	sql := fmt.Sprintf("CREATE DATABASE `%s`", createDatabaseParam.DbName)
 	if createDatabaseParam.Collation != nil {

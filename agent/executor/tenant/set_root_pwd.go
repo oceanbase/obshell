@@ -75,9 +75,6 @@ func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) 
 }
 
 func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (error, bool) {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return err, false
-	}
 	if tenantName == constant.TENANT_SYS {
 		return errors.Occur(errors.ErrObTenantSysOperationNotAllowed), false
 	}

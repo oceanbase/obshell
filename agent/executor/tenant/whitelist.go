@@ -28,9 +28,6 @@ const (
 )
 
 func ModifyTenantWhitelist(tenantName string, whitelist string) error {
-	if _, err := checkTenantExistAndStatus(tenantName); err != nil {
-		return err
-	}
 	if err := tenantService.ModifyTenantWhitelist(tenantName, mergeWhitelist(whitelist)); err != nil {
 		return err
 	}
