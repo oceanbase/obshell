@@ -76,6 +76,7 @@ func createGormDbByConfig(datasourceConfig *config.ObDataSourceConfig) (db *gorm
 	for ; times != 0; updateTimes() {
 		log.Info("try connect oceanbase: ", times)
 		db, err = gorm.Open(driver.Open(dsn, datasourceConfig.IsOracle()), &gormConfig)
+		hasAttemptedConnection = true
 		if err == nil {
 			break
 		}
