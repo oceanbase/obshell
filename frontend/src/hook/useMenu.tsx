@@ -28,6 +28,7 @@ import { ReactComponent as ClusterSvg } from '@/asset/cluster.svg';
 import { ReactComponent as ClusterSelectedSvg } from '@/asset/cluster_selected.svg';
 import { ReactComponent as SystemSvg } from '@/asset/system.svg';
 import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
+import useUiMode from './useUiMode';
 
 export const useBasicMenu = (): MenuItem[] => {
   return [
@@ -141,6 +142,7 @@ export const useTenantMenu = (
   tenantMode: API.TenantMode,
   oraclePrivilegeManagementSupported: boolean
 ): MenuItem[] => {
+  const { isDesktopMode } = useUiMode();
   const menus = [
     {
       link: `/cluster/tenant/${tenantName}`,
@@ -170,6 +172,7 @@ export const useTenantMenu = (
         id: 'OBShell.src.hook.useMenu.PerformanceMonitoring',
         defaultMessage: '性能监控',
       }),
+      hidden: isDesktopMode,
     },
     {
       link: `/cluster/tenant/${tenantName}/backup`,
@@ -177,7 +180,7 @@ export const useTenantMenu = (
         id: 'OBShell.src.hook.useMenu.BackupRecovery',
         defaultMessage: '备份恢复',
       }),
-      hidden: tenantName === 'sys',
+      hidden: tenantName === 'sys' || isDesktopMode,
     },
     {
       link: `/cluster/tenant/${tenantName}/parameter`,

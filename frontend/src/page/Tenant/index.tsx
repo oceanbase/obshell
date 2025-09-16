@@ -32,6 +32,7 @@ import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
 import { getBooleanLabel, getYESorNOLabel } from '@/util';
 import useStyles from './index.style';
 import { message } from 'antd';
+import useUiMode from '@/hook/useUiMode';
 
 interface TenantProps {
   location: {
@@ -55,6 +56,8 @@ const Tenant: React.FC<TenantProps> = ({
       defaultMessage: '租户管理',
     })
   );
+
+  const { isDesktopMode } = useUiMode();
 
   // 预先获取租户列表
   const {
@@ -514,16 +517,18 @@ const Tenant: React.FC<TenantProps> = ({
 
         extra: (
           <Space>
-            <Button
-              onClick={() => {
-                history.push(`/tenant/restore`);
-              }}
-            >
-              {formatMessage({
-                id: 'ocp-v2.Detail.Backup.InitiateRecovery',
-                defaultMessage: '发起恢复',
-              })}
-            </Button>
+            {!isDesktopMode && (
+              <Button
+                onClick={() => {
+                  history.push(`/tenant/restore`);
+                }}
+              >
+                {formatMessage({
+                  id: 'ocp-v2.Detail.Backup.InitiateRecovery',
+                  defaultMessage: '发起恢复',
+                })}
+              </Button>
+            )}
             <Button
               data-aspm-click="c304184.d308814"
               data-aspm-desc="租户列表-新建租户"
