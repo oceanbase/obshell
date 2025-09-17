@@ -24,6 +24,10 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
   const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
     {
+      key: 'ob_cluster_name',
+      value: clusterData.cluster_name || '',
+    },
+    {
       key: 'tenant_name',
       value: tenantData?.tenant_name || '',
     },
@@ -47,6 +51,10 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
   useDeepCompareEffect(() => {
     if (tenantData?.tenant_name && !monitorScope) {
       setFilterLabel([
+        {
+          key: 'ob_cluster_name',
+          value: clusterData.cluster_name || '',
+        },
         {
           key: 'tenant_name',
           value: tenantData.tenant_name,
@@ -79,6 +87,10 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
     if (tenantOptions && tenantOptions.length > 0) {
       const firstTenant = tenantOptions[0];
       setFilterLabel([
+        {
+          key: 'ob_cluster_name',
+          value: clusterData.cluster_name || '',
+        },
         {
           key: 'tenant_name',
           value: firstTenant.value,
