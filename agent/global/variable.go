@@ -40,6 +40,7 @@ var (
 	CaCertPool      *x509.CertPool
 	SkipVerify      bool
 	EnableHTTPS     bool
+	EnableTelemetry bool
 	Architecture    string
 	Os              string
 	ObproxyHomePath string
@@ -64,12 +65,22 @@ func initArchitecture() {
 	log.Info("architecture is ", Architecture)
 }
 
+func initTelemetry() {
+	EnableTelemetry = true // default enable telemetry
+	envValue := os.Getenv(constant.ENV_OBSHELL_TELEMETRY_ENABLED)
+	if envValue != "" {
+		// if env value is not empty, only enable telemetry when env value is 1
+		EnableTelemetry = envValue == "1"
+	}
+}
+
 func InitGlobalVariable() {
 	HomePath = path.AgentDir()
 	Uid = process.Uid()
 	Gid = process.Gid()
 	log.Info("homePath is ", HomePath)
 	initArchitecture()
+	initTelemetry()
 	Os = runtime.GOOS
 }
 

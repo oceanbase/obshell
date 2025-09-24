@@ -106,7 +106,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
       pollingInterval: 1000 * 60 * 60 + 5000,
       onSuccess: res => {
-        if (res.successful) {
+        if (res.successful && res.data?.telemetryEnabled) {
           telemetryReport({
             content: res.data,
             component: 'obshell',

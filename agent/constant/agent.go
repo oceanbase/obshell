@@ -23,6 +23,10 @@ import (
 )
 
 const (
+	ENV_OBSHELL_TELEMETRY_ENABLED = "OBSHELL_TELEMETRY_ENABLED"
+)
+
+const (
 	OCSAGENT_META_PATH = ".meta"
 )
 

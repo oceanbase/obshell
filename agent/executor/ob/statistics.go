@@ -26,15 +26,23 @@ import (
 
 	"github.com/oceanbase/obshell/agent/config"
 	"github.com/oceanbase/obshell/agent/constant"
+	"github.com/oceanbase/obshell/agent/global"
+	"github.com/oceanbase/obshell/agent/lib/binary"
 	"github.com/oceanbase/obshell/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/agent/secure"
 	"github.com/oceanbase/obshell/utils"
 )
 
 func GetStatisticsInfo() *bo.ObclusterStatisticInfo {
+	telemetryEnabled := global.EnableTelemetry
+	_, isCommunityEdition, _ := binary.GetMyOBVersion() // ignore the error
+	if !isCommunityEdition {
+		telemetryEnabled = false
+	}
 	info := &bo.ObclusterStatisticInfo{
+		TelemetryEnabled: telemetryEnabled,
 		Reporter:         "obshell-dashboard",
-		ObshellVersion:   fmt.Sprintf("OBShell %s (for OceanBase_CE)", constant.VERSION),
+		ObshellVersion:   fmt.Sprintf("obshell %s (for OceanBase_CE)", constant.VERSION),
 		ObshellRevision:  fmt.Sprintf("%s-%s", constant.RELEASE, config.GitCommitId),
 		TelemetryVersion: 1,
 		ReportTime:       time.Now().Unix(),

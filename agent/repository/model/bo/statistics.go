@@ -74,6 +74,7 @@ type ObserverInfo struct {
 }
 
 type ObclusterStatisticInfo struct {
+	TelemetryEnabled bool           `json:"telemetryEnabled"`
 	ClusterId        string         `json:"clusterId"`
 	Reporter         string         `json:"reporter"`
 	ObshellVersion   string         `json:"obshellVersion"`
