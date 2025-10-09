@@ -67,7 +67,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   // 是否展示修改密码的弹窗
   const [passwordVisible, setPasswordVisible] = useState(false);
 
-  const simpleLogoUrl = '/assets/logo/ob_dashboard_simple_logo_en.svg';
+  const simpleLogoUrl = '/assets/logo/obshell_dashboard_logo.svg';
 
   useEffect(() => {
     // 获取当前登录用户数据
@@ -177,7 +177,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         {
           id: 'ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient',
           defaultMessage:
-            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，OB-Dashboard 可正常使用',
+            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，obshell Dashboard 可正常使用',
         },
 
         { offsetSeconds }
@@ -384,7 +384,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
           showLocale: true,
           locales: ['zh-CN', 'en-US'],
           appData: {
-            shortName: 'OB-Dashboard',
+            shortName: 'obshell Dashboard',
             version: version,
             // releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
           },

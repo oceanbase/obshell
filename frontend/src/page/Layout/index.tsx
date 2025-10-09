@@ -53,7 +53,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
 
   useEffect(() => {
     // 设置标签页的 title
-    document.title = 'OB-Dashboard';
+    document.title = 'obshell Dashboard';
   }, []);
 
   useEffect(() => {

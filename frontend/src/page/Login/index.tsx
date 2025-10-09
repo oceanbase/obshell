@@ -94,7 +94,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     getObInfo();
   };
 
-  const logoUrl = '/assets/logo/ob_dashboard_simple_logo_en.svg';
+  const logoUrl = '/assets/logo/obshell_dashboard_logo.svg';
 
   return (
     <Login
@@ -106,7 +106,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
       }
       title={
         <div>
-          Welcome to <div>OB-Dashboard !</div>
+          Welcome to <div>obshell Dashboard !</div>
         </div>
       }
       description="Let's start a happy journey"

@@ -23,7 +23,7 @@ const useDocumentTitle = (title?: string) => {
       document.title = formatMessage(
         {
           id: 'ocp-express.src.hook.useDocumentTitle.TitleOceanbaseYunPingtai',
-          defaultMessage: '{title} · OB-Dashboard',
+          defaultMessage: '{title} · obshell Dashboard',
         },
         { title }
       );
