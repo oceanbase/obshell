@@ -570,8 +570,8 @@ export const DATA_BACKUP_TASK_STATUS_LIST: Global.StatusItem[] = [
   {
     value: 'BACKUP_SYS_META',
     label: formatMessage({
-      id: 'OBShell.src.constant.backup.BackUpSystemData',
-      defaultMessage: '备份系统数据',
+      id: 'OBShell.src.constant.backup.BackupSystemMetadata',
+      defaultMessage: '备份系统元数据',
     }),
     badgeStatus: 'processing',
     operations: [],

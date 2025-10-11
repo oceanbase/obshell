@@ -2818,5 +2818,6 @@
   "obshell.Backup.Restore.RestoreTask.AreYouSureYouWantToCancelThe": "确定要取消 {recordRestoreTenant} 的恢复任务吗？",
   "obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported": "oceanbase-standalone 包",
   "OBShell.Detail.Component.ModifyTenantPasswordModal.TheCurrentTenantTenantusernamePassword": "当前租户 {tenantUserName} 密码为空，存在安全隐患，请修改 {tenantUserName} 密码",
-  "ocp-v2.Backup.Component.RestoreNow.MicrosecondsFormat": "微秒只能输入1-6位数字"
+  "ocp-v2.Backup.Component.RestoreNow.MicrosecondsFormat": "微秒只能输入1-6位数字",
+  "OBShell.src.constant.backup.BackupSystemMetadata": "备份系统元数据"
 }
