@@ -1,0 +1,61 @@
+---
+globs: *.ts,*.tsx
+description: TypeScript和React开发规范
+---
+
+# TypeScript & React 开发规范
+
+## TypeScript 规范
+
+1. **类型定义**
+   - 优先使用接口定义对象类型：`interface UserInfo {}`
+   - 使用 `type` 定义联合类型和工具类型
+   - 避免使用 `any`，使用 `unknown` 或具体类型
+   - API响应类型定义在 `src/service/typings.d.ts`
+
+2. **导入导出**
+   - 使用具名导出，避免默认导出
+   - 导入顺序：第三方库 → 项目内模块 → 相对路径
+
+## React 组件规范
+
+1. **函数组件**
+   - 优先使用函数组件和 Hooks
+   - 组件名使用 PascalCase
+   - Props 接口命名：`组件名Props`
+
+2. **组件结构**
+   ```typescript
+   interface ComponentNameProps {
+     // props定义
+   }
+
+   const ComponentName: React.FC<ComponentNameProps> = (props) => {
+     // hooks
+     // 事件处理函数
+     // render logic
+
+     return (
+       // JSX
+     );
+   };
+
+   export { ComponentName };
+   ```
+
+3. **状态管理**
+   - 页面级状态使用 DVA model
+   - 组件级状态使用 useState
+   - 副作用使用 useEffect
+
+4. **事件处理**
+   - 事件处理函数以 `handle` 开头：`handleSubmit`、`handleChange`
+   - 避免在 JSX 中直接写箭头函数
+
+## 代码质量
+
+- 使用 ESLint 和 Prettier
+- 函数和变量使用 camelCase
+- 常量使用 UPPER_SNAKE_CASE
+- 添加必要的注释，特别是复杂逻辑
+- 保持函数简短，单一职责

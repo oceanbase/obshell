@@ -1,0 +1,78 @@
+---
+globs: src/component/**/*,src/page/**/*
+description: 组件开发规范和最佳实践
+---
+
+# 组件开发规范
+
+## 组件文件结构
+
+每个组件应包含以下文件：
+- `index.tsx`: 组件主文件
+- `index.style.ts`: CSS-in-JS样式（优先）
+- `index.less`: Less样式（必要时）
+
+## 通用组件开发
+
+**位置**: `src/component/组件名/`
+
+**特点**:
+- 高度可复用
+- 无业务逻辑耦合
+- 完整的 Props 接口定义
+- 支持主题和样式定制
+
+**示例结构**:
+```typescript
+// src/component/MyCard/index.tsx
+interface MyCardProps {
+  title?: string;
+  children: React.ReactNode;
+  className?: string;
+  style?: React.CSSProperties;
+}
+
+const MyCard: React.FC<MyCardProps> = ({ title, children, className, style }) => {
+  return (
+    <div className={`my-card ${className}`} style={style}>
+      {title && <div className="my-card-title">{title}</div>}
+      <div className="my-card-content">{children}</div>
+    </div>
+  );
+};
+
+export { MyCard };
+```
+
+## 页面组件开发
+
+**位置**: `src/page/模块名/`
+
+**特点**:
+- 业务逻辑处理
+- DVA model 连接
+- API 调用
+- 路由处理
+
+## 组件设计原则
+
+1. **单一职责**: 每个组件只负责一个功能
+2. **可复用性**: 通用组件避免硬编码业务逻辑
+3. **Props设计**: 提供合理的默认值和可选配置
+4. **性能优化**: 合理使用 memo、useMemo、useCallback
+5. **无障碍性**: 添加适当的 aria 属性
+
+## 常用组件模式
+
+1. **表单组件**: 使用 Ant Design Form
+2. **表格组件**: 使用 ProTable
+3. **弹窗组件**: 使用 Modal + Drawer
+4. **图表组件**: 使用封装的 Chart 组件
+5. **布局组件**: 参考现有的 PageCard、MyCard 等
+
+## 样式规范
+
+- 优先使用 CSS-in-JS (styled-components风格)
+- 使用 Ant Design 的设计令牌
+- 遵循项目的设计系统
+- 支持深色/浅色主题切换

@@ -7,10 +7,12 @@ default: clean fmt pre-build build
 pre-build: bindata swagger
 
 bindata: get
-	go-bindata -o agent/bindata/bindata.go -pkg bindata agent/assets/...
+	cd ob; go-bindata -o agent/bindata/bindata.go -pkg bindata agent/assets/...
+	cd seekdb; go-bindata -o agent/bindata/bindata.go -pkg bindata agent/assets/...
 
 swagger: get
-	swag init -g agent/api/agent_route.go -o agent/api/docs
+	cd ob; swag init -g agent/api/agent_route.go -o agent/api/docs --instanceName ob_swagger
+	cd seekdb; swag init -g agent/api/agent_route.go -o agent/api/docs --instanceName seekdb_swagger
 
 build: build-debug
 
@@ -25,11 +27,17 @@ build-for-test: pre-build enable-swagger set-disable-encryption-flags build-debu
 frontend-dep:
 	npm i -g pnpm@7
 
-frontend-build:
-	cd frontend && pnpm i && pnpm build && cd ../
+seekdb-frontend-build:
+	cd seekdb/frontend && pnpm i && pnpm build && cd ../
 
-frontend-build-tester:
-	cd frontend && pnpm i && pnpm build:tester && cd ../
+seekdb-frontend-build-tester:
+	cd seekdb/frontend && pnpm i && pnpm build:tester && cd ../
+
+ob-frontend-build:
+	cd ob/frontend && pnpm i && pnpm build && cd ../
+
+ob-frontend-build-tester:
+	cd ob/frontend && pnpm i && pnpm build:tester && cd ../
 
 rpm:
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec

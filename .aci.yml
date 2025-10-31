@@ -83,8 +83,10 @@ jobs:
         go env -w GOPROXY=https://goproxy.cn GOPATH="/usr/local"
         go install github.com/go-bindata/go-bindata/...@v3.1.2+incompatible
         cd "${BASE_WORKSPACE}/codeWorkspace"
-        mkdir -p frontend/dist
-        touch frontend/dist/index.html
+        mkdir -p seekdb/frontend/dist
+        mkdir -p ob/frontend/dist
+        touch seekdb/frontend/dist/index.html
+        touch ob/frontend/dist/index.html
         make pre-build build-with-swagger
   
   规范检查:

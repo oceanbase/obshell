@@ -1,0 +1,102 @@
+---
+globs: src/service/**/*,src/model/**/*
+description: API服务和状态管理开发规范
+---
+
+# API 服务和状态管理规范
+
+## API 服务结构
+
+项目中的 API 服务分为三个模块：
+
+### 1. OBShell API (`src/service/obshell/`)
+- OceanBase Shell 相关接口
+- 文件示例：[agent.ts](mdc:src/service/obshell/agent.ts)、[backup.ts](mdc:src/service/obshell/backup.ts)
+
+### 2. OCP Express API (`src/service/ocp-express/`)
+- OCP Express 平台接口
+- 控制器风格的 API 组织
+
+### 3. 自定义 API (`src/service/custom/`)
+- 项目特定的业务接口
+
+## API 开发规范
+
+1. **函数命名**
+   - 查询：`get`, `list`, `query`
+   - 创建：`create`, `add`
+   - 更新：`update`, `modify`
+   - 删除：`delete`, `remove`
+
+2. **类型定义**
+   ```typescript
+   // 请求参数类型
+   interface GetUserListParams {
+     page?: number;
+     pageSize?: number;
+     keyword?: string;
+   }
+
+   // 响应数据类型
+   interface UserInfo {
+     id: number;
+     name: string;
+     email: string;
+   }
+
+   // API 函数
+   export async function getUserList(params: GetUserListParams): Promise<API.ResponseData<UserInfo[]>> {
+     return request('/api/users', { params });
+   }
+   ```
+
+3. **错误处理**
+   - 使用统一的错误处理机制
+   - API 调用失败时显示友好的错误信息
+   - 关键操作添加确认弹窗
+
+## DVA Model 规范
+
+**位置**: `src/model/`
+
+**结构**:
+```javascript
+export default {
+  namespace: 'moduleName',
+
+  state: {
+    // 初始状态
+  },
+
+  effects: {
+    *fetchData({ payload }, { call, put }) {
+      // 异步操作
+    },
+  },
+
+  reducers: {
+    save(state, { payload }) {
+      return { ...state, ...payload };
+    },
+  },
+};
+```
+
+**最佳实践**:
+- namespace 使用 camelCase
+- effects 处理异步逻辑和 API 调用
+- reducers 处理同步状态更新
+- 使用 `save` reducer 进行通用状态更新
+
+## 请求处理
+
+1. **加载状态**: 使用 loading 插件自动管理
+2. **缓存策略**: 合理使用缓存避免重复请求
+3. **分页处理**: 统一的分页参数和响应格式
+4. **参数校验**: 重要参数在前端进行校验
+
+## 数据流
+
+页面组件 → dispatch action → DVA effects → API调用 → reducers → 组件状态更新
+
+遵循单向数据流，保持状态管理的可预测性。

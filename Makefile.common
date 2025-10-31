@@ -1,5 +1,5 @@
 PROCESSOR=8
-VERSION=4.3.2.0
+VERSION=4.3.3.0
 NAME=obshell
 RELEASE=0
 DIST=0
@@ -15,20 +15,35 @@ GOCOVERAGE_REPORT := tests/coverage-report
 GOTEST          := OB_AGENT_CONFIG_PATH=$(PWD) $(GO) test -tags test -covermode=count -coverprofile=$(GOCOVERAGE_FILE) -p $(PROCESSOR)
 
 GO_RACE_FLAG =-race
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/constant.VERSION=${VERSION}"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/constant.RELEASE=${RELEASE}"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/constant.DIST=${DIST}"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.BuildTime=$(shell date +"%b %d %Y %H:%M:%S %Z")"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.BuildGoVersion=$(shell go version)"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.GitCommitId=$(shell git rev-parse HEAD)"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.GitShortCommitId=$(shell git rev-parse --short HEAD)"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.GitCommitTime=$(shell git log -1 --format=%cd)"
-LDFLAGS += -X "github.com/oceanbase/obshell/agent/config.BuildFlags=${BUILD_FLAG}"
-LDFLAGS_DEBUG = -X "github.com/oceanbase/obshell/agent/config.Mode=debug"
-LDFLAGS_RELEASE = -X "github.com/oceanbase/obshell/agent/config.Mode=release"
-LDFLAGS_DISABLE_ENCRYPTION = -X "github.com/oceanbase/obshell/agent/config.EncryptionDisabled=true"
-OBSHELL_LDFLAGS = $(LDFLAGS) -X "github.com/oceanbase/obshell/agent/config.CurProcess=obshell"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/constant.VERSION=${VERSION}"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/constant.RELEASE=${RELEASE}"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/constant.DIST=${DIST}"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.BuildTime=$(shell date +"%b %d %Y %H:%M:%S %Z")"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.BuildGoVersion=$(shell go version)"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.GitCommitId=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.GitShortCommitId=$(shell git rev-parse --short HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.GitCommitTime=$(shell git log -1 --format=%cd)"
+LDFLAGS += -X "github.com/oceanbase/obshell/ob/agent/config.BuildFlags=${BUILD_FLAG}"
+LDFLAGS_DEBUG = -X "github.com/oceanbase/obshell/ob/agent/config.Mode=debug"
+LDFLAGS_RELEASE = -X "github.com/oceanbase/obshell/ob/agent/config.Mode=release"
+LDFLAGS_DISABLE_ENCRYPTION = -X "github.com/oceanbase/obshell/ob/agent/config.EncryptionDisabled=true"
+OBSHELL_LDFLAGS = $(LDFLAGS) -X "github.com/oceanbase/obshell/ob/agent/config.CurProcess=obshell"
+
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/constant.VERSION=${VERSION}"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/constant.RELEASE=${RELEASE}"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/constant.DIST=${DIST}"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.BuildTime=$(shell date +"%b %d %Y %H:%M:%S %Z")"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.BuildGoVersion=$(shell go version)"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.GitBranch=$(shell git rev-parse --abbrev-ref HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.GitCommitId=$(shell git rev-parse HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.GitShortCommitId=$(shell git rev-parse --short HEAD)"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.GitCommitTime=$(shell git log -1 --format=%cd)"
+LDFLAGS += -X "github.com/oceanbase/obshell/seekdb/agent/config.BuildFlags=${BUILD_FLAG}"
+LDFLAGS_DEBUG = -X "github.com/oceanbase/obshell/seekdb/agent/config.Mode=debug"
+LDFLAGS_RELEASE = -X "github.com/oceanbase/obshell/seekdb/agent/config.Mode=release"
+LDFLAGS_DISABLE_ENCRYPTION = -X "github.com/oceanbase/obshell/seekdb/agent/config.EncryptionDisabled=true"
+OBSHELL_LDFLAGS = $(LDFLAGS) -X "github.com/oceanbase/obshell/seekdb/agent/config.CurProcess=obshell"
 
 GOFILES ?= $(shell git ls-files '*.go')
 GOTEST_PACKAGES = $(shell go list ./... | grep -v -f tests/excludes.txt)

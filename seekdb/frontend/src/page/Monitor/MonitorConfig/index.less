@@ -1,0 +1,32 @@
+.container {
+  height: calc(100vh - 200px);
+  min-height: 900px;
+  padding: 40px 24px;
+  background: #fff;
+  border-radius: 8px;
+  margin-bottom: 0;
+  padding-bottom: 60px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  .content {
+    position: absolute;
+    top: 144px;
+    left: 50%;
+    transform: translateX(-50%);
+    .configIcon {
+      position: absolute;
+      top: -30px;
+      left: -230px;
+      width: 200px;
+      height: 130px;
+      z-index: 1;
+    }
+    .description {
+      margin-top: 16px;
+      margin-bottom: 0;
+      color: #8592ad;
+      font-size: 14px;
+      line-height: 22px;
+    }
+  }
+}

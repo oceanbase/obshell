@@ -1,48 +1,61 @@
+# Python files
 src/**/*.pyc
 src/**/build
 
-# go Binary files
+# Go Binary files
 bin/*
 cmd/agent/ocsagent
 go.work
 go.work.sum
 
-# go test files and generated files
-bindata/
-agent/api/docs/*
+# Go dependencies and generated files
 vendor
 
 # macOS files
 .DS_Store
 
-# frontend
-/frontend/pids
-/frontend/logs
-/frontend/node_modules
-/frontend/npm-debug.log
-/frontend/coverage/
-/frontend/build/
-/frontend/run
-/frontend/.basement
-/frontend/src/.umi
-/frontend/src/.umi-production
-/frontend/speed-measure.json
-/frontend/dist
-/frontend/unuseful-locale-key.txt
-/frontend/docs.zip
-/frontend/config.local.ts
-/frontend/package-lock.json
-/frontend/yarn.lock
-/frontend/pnpm-lock.yaml
-
+# IDE files
 .idea/*
 *.iml
 .vscode/*
+
+# Project specific
 .OWNERS
 .meta
 etc/
 log_obshell/
 run/
-
 zz/*
 script/*
+
+# Frontend common rules
+node_modules/
+npm-debug.log
+coverage/
+build/
+dist/
+.nyc_output
+.umi
+.umi-production
+speed-measure.json
+unprocessed-code.txt
+unprocessed-code.ts.txt
+yarn.lock
+.node
+.ignore
+src/i18n
+unuseful-locale-key.txt
+docs.zip
+config.local.ts
+.env
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Frontend specific directories
+frontend/pids
+frontend/logs
+frontend/run
+frontend/.basement
+frontend/src/.umi
+frontend/src/.umi-production

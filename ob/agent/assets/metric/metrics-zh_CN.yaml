@@ -1,0 +1,1388 @@
+OBCLUSTER:
+- description: "数据库性能"
+  name: "数据库性能"
+  metricGroups:
+  - description: "平均每秒处理 SQL 语句数"
+    metrics:
+    - description: "每秒处理 SQL 语句数"
+      key: sql_all_count
+      name: all
+      unit: times/s
+    - description: "每秒处理 Select 语句数"
+      key: sql_select_count
+      name: select
+      unit: times/s
+    - description: "每秒处理 Insert 语句数"
+      key: sql_insert_count
+      name: insert
+      unit: times/s
+    - description: "每秒处理 Update 语句数"
+      key: sql_update_count
+      name: update
+      unit: times/s
+    - description: "每秒处理 Replace 语句数"
+      key: sql_replace_count
+      name: replace
+      unit: times/s
+    - description: "每秒处理 Delete 语句数"
+      key: sql_delete_count
+      name: delete
+      unit: times/s
+    - description: "每秒处理 Commit 语句数"
+      key: sql_commit_count
+      name: commit
+      unit: times/s
+    - description: "每秒处理 Rollback 语句数"
+      key: sql_rollback_count
+      name: rollback
+      unit: times/s
+    - description: "DDL, DCL, DTL 等其他语句数"
+      key: sql_other_count
+      name: other
+      unit: times/s
+    name: QPS
+  - description: "服务端每条 SQL 语句处理平均耗时"
+    metrics:
+    - description: "SQL 语句平均处理耗时"
+      key: sql_all_rt
+      name: all
+      unit: "μs"
+    - description: "Select 语句平均处理耗时"
+      key: sql_select_rt
+      name: select
+      unit: "μs"
+    - description: "Insert 语句平均处理耗时"
+      key: sql_insert_rt
+      name: insert
+      unit: "μs"
+    - description: "Update 语句平均处理耗时"
+      key: sql_update_rt
+      name: update
+      unit: "μs"
+    - description: "Replace 语句平均处理耗时"
+      key: sql_replace_rt
+      name: replace
+      unit: "μs"
+    - description: "Delete 语句平均处理耗时"
+      key: sql_delete_rt
+      name: delete
+      unit: "μs"
+    - description: "DDL, DCL, DTL 等其他语句平均处理耗时"
+      key: sql_other_rt
+      name: other
+      unit: "μs"
+    name: "SQL 响应时间"
+  - description: "平均每秒处理事务数"
+    metrics:
+    - description: "每秒处理事务数"
+      key: tps
+      name: all
+      unit: times/s
+    - description: "每秒提交事务数"
+      key: transaction_commit_count
+      name: trans_commit_count
+      unit: times/s
+    - description: "每秒回滚事务数"
+      key: transaction_rollback_count
+      name: trans_rollback_count
+      unit: times/s
+    - description: "每秒超时事务数"
+      key: transaction_timeout_count
+      name: trans_timeout_count
+      unit: times/s
+    name: TPS
+  - description: "服务端每个事务平均处理时间"
+    metrics:
+    - description: "事务平均处理耗时"
+      key: tps_rt
+      name: all
+      unit: "μs"
+    - description: "事务平均提交耗时"
+      key: transaction_commit_rt
+      name: trans_commit_rt
+      unit: "μs"
+    - description: "事务平均回滚耗时"
+      key: transaction_rollback_rt
+      name: trans_rollback_rt
+      unit: "μs"
+    name: "事务响应时间"
+  - description: "会话数"
+    metrics:
+    - description: "当前活跃会话数"
+      key: active_session
+      name: active_session
+      unit: ''
+    - description: "当前会话数"
+      key: all_session
+      name: all_session
+      unit: ''
+    name: "会话数"
+  - description: "SQL 请求在等待队列中的等待耗时"
+    metrics:
+    - description: "SQL 在等待队列中等待耗时"
+      key: request_queue_time
+      name: queue_time
+      unit: "μs"
+    name: "请求等待队列耗时"
+  - description: "每秒提交的事务日志数"
+    metrics:
+    - description: "每秒提交的事务日志数"
+      key: trans_commit_log_count
+      name: log_count
+      unit: times/s
+    name: "事务日志数"
+  - description: "每秒提交的事务日志大小"
+    metrics:
+    - description: "每秒提交的事务日志大小"
+      key: clog_trans_log_total_size
+      name: log_size
+      unit: byte
+    name: "事务日志量"
+  - description: "服务端处理事务日志的平均耗时"
+    metrics:
+    - description: "每次事务日志写盘平均耗时"
+      key: clog_write_disk_rt
+      name: clog_write
+      unit: "μs"
+    - description: "每次事务日志网络同步平均耗时"
+      key: trans_commit_log_sync_rt
+      name: sync_time
+      unit: "μs"
+    name: "事务日志耗时"
+  - description: "平均每秒 IO 次数"
+    metrics:
+    - description: "SSStore 每秒读次数"
+      key: io_read_count
+      name: ssstore_read
+      unit: times/s
+    - description: "SSStore 每秒写次数"
+      key: io_write_count
+      name: ssstore_write
+      unit: times/s
+    - description: "Clog 每秒读次数"
+      key: clog_io_read_count
+      name: clog_read
+      unit: times/s
+    - description: "Clog 每秒写次数"
+      key: clog_io_write_count
+      name: clog_write
+      unit: times/s
+    name: 物理 IO 次数
+  - description: "平均每次 IO 耗时"
+    metrics:
+    - description: "SSStore 每次读取平均耗时"
+      key: io_read_rt
+      name: ssstore_read
+      unit: "μs"
+    - description: "SSStore 每次写入平均耗时"
+      key: io_write_rt
+      name: ssstore_write
+      unit: "μs"
+    - description: "Clog 每次读取平均耗时"
+      key: clog_io_read_rt
+      name: clog_read
+      unit: "μs"
+    - description: "Clog 每次写入平均耗时"
+      key: clog_io_write_rt
+      name: clog_write
+      unit: "μs"
+    name: "物理 IO 耗时"
+  - description: "平均每秒 IO 数据量"
+    metrics:
+    - description: "SSStore 每秒读取数据量"
+      key: io_read_size
+      name: ssstore_read
+      unit: byte
+    - description: "SSStore 每秒写入数据量"
+      key: io_write_size
+      name: ssstore_write
+      unit: byte
+    - description: "Clog 每秒读取数据量"
+      key: clog_io_read_size
+      name: clog_read
+      unit: byte
+    - description: "Clog 每秒写入数据量"
+      key: clog_io_write_size
+      name: clog_write
+      unit: byte
+    name: "物理 IO 吞吐量"
+  - description: "平均每秒指定类型事务数"
+    metrics:
+    - description: "每秒普通事务数"
+      key: transaction_single_partition_count
+      name: trans_single_partition_count
+      unit: times/s
+    - description: "每秒分布式事务数"
+      key: transaction_multi_partition_count
+      name: trans_multi_partition_count
+      unit: times/s
+    name: "事务数量"
+- description: 主机性能
+  name: 主机性能
+  metricGroups:
+  - description: Linux 系统负载
+    name: Linux 系统负载
+    metrics:
+    - description: 过去1分钟系统平均负载
+      key: load1
+      name: load1
+      unit: ""
+    - description: 过去5分钟系统平均负载
+      key: load5
+      name: load5
+      unit: ""
+    - description: 过去15分钟系统平均负载
+      key: load15
+      name: load15
+      unit: ""
+    - description: 主机负载load1 / CPU 核数
+      key: load1_per_cpu
+      name: load1_per_cpu
+      unit: ""
+  - description: CPU 使用率
+    name: CPU 使用率
+    metrics:
+    - description: CPU 使用率
+      key: cpu_percent
+      name: cpu_percent
+      unit: "%"
+  - description: 内存
+    name: 内存
+    metrics:
+    - description: 使用物理内存大小
+      key: memory_used
+      name: used
+      unit: byte
+    - description: 内核 Buffer Cache 大小
+      key: memory_buffers
+      name: buffers
+      unit: byte
+    - description: 可用物理内存大小
+      key: memory_free
+      name: free
+      unit: byte
+    - description: 缓存使用的内存
+      key: memory_cached
+      name: cached
+      unit: byte
+  - description: 主机内存使用率
+    name: 内存使用率
+    metrics:
+    - description: 主机内存使用率
+      key: memory_percent
+      name: memory_percent
+      unit: "%"
+  - description: 平均每秒 IO 次数
+    name: IOPS
+    metrics:
+    - description: 每秒读次数
+      key: io_read
+      name: read
+      unit: times/s
+    - description: 每秒写次数
+      key: io_write
+      name: write
+      unit: times/s
+  - description: 平均每次 IO 耗时
+    name: IO 耗时
+    metrics:
+    - description: 平均每次 IO 读取耗时
+      key: io_read_time
+      name: read
+      unit: "μs"
+    - description: 平均每次 IO 写入耗时
+      key: io_write_time
+      name: write
+      unit: "μs"
+  - description: 平均每秒 IO 数据量
+    name: IO 吞吐量
+    metrics:
+    - description: 每次读取数据量
+      key: io_read_byte
+      name: read
+      unit: byte
+    - description: 每次写入数据量
+      key: io_write_byte
+      name: write
+      unit: byte
+  - description: 网络吞吐率
+    name: 网络吞吐率
+    metrics:
+    - description: 每秒接收数据量
+      key: net_recv
+      name: receive
+      unit: byte
+    - description: 每秒发送数据量
+      key: net_send
+      name: send
+      unit: byte
+OBTENANT:
+- description: "性能与SQL"
+  metricGroups:
+  - description: "平均每秒处理 SQL 语句数"
+    metrics:
+    - description: "每秒处理 SQL 语句数"
+      key: sql_all_count
+      name: all
+      unit: times/s
+    - description: "每秒处理 Select 语句数"
+      key: sql_select_count
+      name: select
+      unit: times/s
+    - description: "每秒处理 Insert 语句数"
+      key: sql_insert_count
+      name: insert
+      unit: times/s
+    - description: "每秒处理 Update 语句数"
+      key: sql_update_count
+      name: update
+      unit: times/s
+    - description: "每秒处理 Replace 语句数"
+      key: sql_replace_count
+      name: replace
+      unit: times/s
+    - description: "每秒处理 Delete 语句数"
+      key: sql_delete_count
+      name: delete
+      unit: times/s
+    - description: "每秒处理 Commit 语句数"
+      key: sql_commit_count
+      name: commit
+      unit: times/s
+    - description: "每秒处理 Rollback 语句数"
+      key: sql_rollback_count
+      name: rollback
+      unit: times/s
+    - description: "DDL, DCL, DTL 等其他语句数"
+      key: sql_other_count
+      name: other
+      unit: times/s
+    name: QPS
+  - description: "响应时间"
+    metrics:
+    - description: "SQL 语句平均处理耗时"
+      key: sql_all_rt
+      name: all
+      unit: "μs"
+    - description: "Select 语句平均处理耗时"
+      key: sql_select_rt
+      name: select
+      unit: "μs"
+    - description: "Insert 语句平均处理耗时"
+      key: sql_insert_rt
+      name: insert
+      unit: "μs"
+    - description: "Update 语句平均处理耗时"
+      key: sql_update_rt
+      name: update
+      unit: "μs"
+    - description: "Replace 语句平均处理耗时"
+      key: sql_replace_rt
+      name: replace
+      unit: "μs"
+    - description: "Delete 语句平均处理耗时"
+      key: sql_delete_rt
+      name: delete
+      unit: "μs"
+    - description: "DDL, DCL, DTL 等其他语句平均处理耗时"
+      key: sql_other_rt
+      name: other
+      unit: "μs"
+    - description: "SQL 语句平均处理耗时 TP99"
+      key: sql_all_rt_tp99
+      name: 99-all
+      unit: "μs"
+    - description: "SQL 语句平均处理耗时 TP95"
+      key: sql_all_rt_tp95
+      name: 95-all
+      unit: "μs"
+    name: "响应时间"
+  - description: "SQL 执行计划类别"
+    metrics:
+    - description: "每秒处理本地执行计划数"
+      key: sql_local_count
+      name: local
+      unit: times/s
+    - description: "每秒处理远程执行计划数"
+      key: sql_remote_count
+      name: remote
+      unit: times/s
+    - description: "每秒处理分布式执行计划数"
+      key: sql_distributed_count
+      name: distributed
+      unit: times/s
+    name: "SQL 执行计划类别"
+  - name: "SQL 执行时间"
+    description: "SQL 执行时间"
+    metrics:
+    - name: "local"
+      description: "本地执行耗时"
+      key: sql_local_time
+      unit: "μs"
+    - name: "remote"
+      description: "远程执行耗时"
+      key: sql_remote_time
+      unit: "μs"
+    - name: "distributed"
+      description: "分布式执行耗时"
+      key: sql_distributed_time
+      unit: "μs"
+  - description: "会话数"
+    metrics:
+    - description: "当前活跃会话数"
+      key: active_session
+      name: active_session
+      unit: ''
+    - description: "当前会话数"
+      key: all_session
+      name: all_session
+      unit: ''
+    name: "会话数"
+  - description: "每秒等待事件次数"
+    metrics:
+    - description: "每秒等待事件次数"
+      key: wait_event_count
+      name: all
+      unit: times/s
+    - description: "每秒 application 等待事件次数"
+      key: system_event_application_total_waits
+      name: application_wait
+      unit: times/s
+    - description: "每秒 configuration 事件次数"
+      key: system_event_configuration_total_waits
+      name: configuration_lock_wait
+      unit: times/s
+    - description: "每秒 administrative 等待事件次数"
+      key: system_event_administrative_total_waits
+      name: administrative_wait
+      unit: times/s
+    - description: "每秒 concurrency 等待事件次数"
+      key: system_event_concurrency_total_waits
+      name: concurrency_wait
+      unit: times/s
+    - description: "每秒 commit 等待事件次数"
+      key: system_event_commit_total_waits
+      name: commit_wait
+      unit: times/s
+    - description: "每秒 network 等待事件次数"
+      key: system_event_network_total_waits
+      name: network_wait
+      unit: times/s
+    - description: "每秒 user_io 等待事件次数"
+      key: system_event_user_io_total_waits
+      name: user_io_wait
+      unit: times/s
+    - description: "每秒 system_io 等待事件次数"
+      key: system_event_system_io_total_waits
+      name: system_io_wait
+      unit: times/s
+    - description: "每秒 cluster 等待事件次数"
+      key: system_event_cluster_total_waits
+      name: cluster_wait
+      unit: times/s
+    - description: "每秒其他等待事件次数"
+      key: system_event_other_total_waits
+      name: other_wait
+      unit: times/s
+    name: "等待事件"
+  - description: "等待事件平均耗时"
+    metrics:
+    - description: "等待事件平均耗时"
+      key: wait_event_rt
+      name: all
+      unit: "μs"
+    - description: "application 等待事件平均耗时"
+      key: system_event_application_time_waited
+      name: application_wait
+      unit: "μs"
+    - description: "configuration 等待事件平均耗时"
+      key: system_event_configuration_time_waited
+      name: configuration_wait
+      unit: "μs"
+    - description: "administrative 等待事件平均耗时"
+      key: system_event_administrative_time_waited
+      name: administrative_wait
+      unit: "μs"
+    - description: "concurrency 等待事件平均耗时"
+      key: system_event_concurrency_time_waited
+      name: concurrency_wait
+      unit: "μs"
+    - description: "commit 等待事件平均耗时"
+      key: system_event_commit_time_waited
+      name: commit_wait
+      unit: "μs"
+    - description: "network 等待事件平均耗时"
+      key: system_event_network_time_waited
+      name: network_wait
+      unit: "μs"
+    - description: "user_io 等待事件平均耗时"
+      key: system_event_user_io_time_waited
+      name: user_io_wait
+      unit: "μs"
+    - description: "system_io 等待事件平均耗时"
+      key: system_event_system_io_time_waited
+      name: system_io_wait
+      unit: "μs"
+    - description: "cluster 等待事件平均耗时"
+      key: system_event_cluster_time_waited
+      name: cluster_wait
+      unit: "μs"
+    - description: "其他等待事件平均耗时"
+      key: system_event_other_time_waited
+      name: other_wait
+      unit: "μs"
+    name: "等待事件耗时"
+  - description: "每秒 SQL 进入等待队列个数"
+    metrics:
+    - description: "进入处理队列的请求数量"
+      key: request_enqueue_count
+      name: request_enqueue_count
+      unit: times/s
+    - description: "从处理队列出队的请求数量"
+      key: request_dequeue_count
+      name: request_dequeue_count
+      unit: times/s
+    name: "请求等待队列"
+  - description: "SQL 请求在等待队列中的等待耗时"
+    metrics:
+    - description: "SQL 在等待队列中等待耗时"
+      key: request_queue_time
+      name: queue_time
+      unit: "μs"
+    name: "请求等待队列耗时"
+      #   - description: "请求等待队列大小"
+      #     metrics:
+      #     - description: "OceanBase 租户请求队列大小"
+      #       key: ob_tenant_request_enqueue_size
+      #       name: request_queue
+      #       unit: ""
+      #     - description: "OceanBase 租户大查询队列大小"
+      #       key: ob_tenant_request_queue_large_size
+      #       name: large_request_queue
+      #       unit: ""
+      #     name: "请求等待队列大小"
+  - name: "租户 CPU 消耗"
+    description: "租户 CPU 使用量 * 100 / 租户 CPU 分配量"
+    metrics:
+    - name: "租户 CPU 消耗"
+      description: "租户 CPU 使用量 * 100 / 租户 CPU 分配量"
+      key: ob_tenant_cpu_percent
+      unit: '%'
+  - name: "租户线程使用率"
+    description: "活跃线程数 / 租户的最大线程数"
+    metrics:
+    - name: "租户线程使用率"
+      description: "活跃线程数 / 租户的最大线程数"
+      key: ob_tenant_thread_percent
+      unit: '%'
+  - description: "租户内存使用百分比"
+    metrics:
+    - description: "租户内存已使用百分比"
+      key: ob_memory_percent
+      name: memory_usage
+      unit: '%'
+    name: "内存使用率"
+  - description: "MEMStore使用百分比"
+    metrics:
+    - description: "MEMStore使用百分比"
+      key: memstore_percent
+      name: Memstore_percent
+      unit: '%'
+    - description: "MEMStore使用占触发冻结百分比"
+      key: active_memstore_percent
+      name: Active_memstore_percent
+      unit: '%'
+    name: "MEMStore使用百分比"
+  - description: "RPC 收、发包耗时"
+    metrics:
+    - description: "RPC 收包平均耗时"
+      key: rpc_packet_in_rt
+      name: in
+      unit: "μs"
+    - description: "RPC 发包平均耗时"
+      key: rpc_packet_out_rt
+      name: out
+      unit: "μs"
+    name: "RPC 包耗时"
+  - description: "单位时间内RPC 收、发包byte数据量"
+    metrics:
+    - description: "RPC 收包吞吐量"
+      key: rpc_packet_in
+      name: in
+      unit: byte
+    - description: "RPC 发包吞吐量"
+      key: rpc_packet_out
+      name: out
+      unit: byte
+    name: "RPC 包吞吐量"
+  - description: "打开的游标数"
+    metrics:
+    - description: "打开的游标数"
+      key: opened_cursors_count
+      name: open_cursors
+      unit: ''
+    name: "打开的游标数"
+      #   - description: "并行执行工作线程使用率"
+      #     metrics:
+      #     - description: "并行执行工作线程使用率"
+      #       key: px_worker_usage
+      #       name: px_worker_usage
+      #       unit: '%'
+      #     name: "并行执行工作线程使用率"
+  - description: "RPC 请求成功率"
+    metrics:
+    - description: "RPC 请求成功率"
+      key: rpc_deliver_succ_ratio
+      name: rpc_deliver_succ_ratio
+      unit: '%'
+    name: "RPC 请求成功率"
+  - description: "GTS 请求数"
+    metrics:
+    - description: "GTS 请求数"
+      key: gts_request_count
+      name: gts_request_count
+      unit: ''
+    name: "GTS 请求数"
+  - description: "采样周期内 RPC 网络延迟"
+    metrics:
+    - description: "采样周期内 RPC 网络延迟"
+      key: rpc_packet_net_delay
+      name: rpc_packet_net_delay
+      unit: ''
+    name: "RPC 网络延迟"
+  - description: "采样周期内 RPC 交付失败"
+    metrics:
+    - description: "采样周期内 RPC 交付失败"
+      key: rpc_packet_deliver_fail_count
+      name: rpc_deliver_fail_count
+      unit: ''
+    name: "RPC 交付失败"
+  name: "性能与SQL"
+- description: "事务"
+  metricGroups:
+  - description: "平均每秒处理事务数"
+    metrics:
+    - description: "每秒处理事务数"
+      key: tps
+      name: all
+      unit: times/s
+    - description: "每秒提交事务数"
+      key: transaction_commit_count
+      name: trans_commit_count
+      unit: times/s
+    - description: "每秒回滚事务数"
+      key: transaction_rollback_count
+      name: trans_rollback_count
+      unit: times/s
+    - description: "每秒超时事务数"
+      key: transaction_timeout_count
+      name: trans_timeout_count
+      unit: times/s
+    name: TPS
+  - description: "服务端每个事务平均处理时间"
+    metrics:
+    - description: "本地事务响应时间"
+      key: trans_sp_total_used_time
+      name: local
+      unit: "μs"
+    - description: "分布式事务响应时间"
+      key: trans_distributed_total_used_time
+      name: distributed
+      unit: "μs"
+    name: "事务响应时间"
+  - description: "服务端每个事务平均处理时间明细"
+    metrics:
+    - description: "事务平均处理耗时"
+      key: tps_rt
+      name: all
+      unit: "μs"
+    - description: "事务平均提交耗时"
+      key: transaction_commit_rt
+      name: trans_commit_rt
+      unit: "μs"
+    - description: "事务平均回滚耗时"
+      key: transaction_rollback_rt
+      name: trans_rollback_rt
+      unit: "μs"
+    name: "事务响应时间明细"
+  - description: "事务回滚比例"
+    metrics:
+    - description: "事务回滚比例"
+      key: transaction_rollback_ratio
+      name: transaction_rollback_ratio
+      unit: "%"
+    name: "事务回滚比例"
+  - description: "每秒提交的事务日志数"
+    metrics:
+    - description: "每秒提交的事务日志数"
+      key: trans_commit_log_count
+      name: log_count
+      unit: times/s
+    name: "事务日志数"
+  - description: "每秒提交的事务日志大小"
+    metrics:
+    - description: "每秒提交的事务日志大小"
+      key: clog_trans_log_total_size
+      name: log_size
+      unit: byte
+    name: "事务日志量"
+  - description: "服务端处理事务日志的平均耗时"
+    metrics:
+    - description: "每次事务日志网络同步平均耗时"
+      key: trans_commit_log_sync_rt
+      name: sync_time
+      unit: "μs"
+    - description: "每次事务日志写盘平均耗时"
+      key: clog_write_disk_rt
+      name: write_disk
+      unit: "μs"
+    name: "事务日志耗时"
+  - description: "每秒事务锁等待次数"
+    metrics:
+    - description: "写锁等待成功次数"
+      key: memstore_write_lock_succ_count
+      name: success
+      unit: times/s
+    - description: "写锁等待失败次数"
+      key: memstore_write_lock_fail_count
+      name: fail
+      unit: times/s
+    name: "事务锁等待次数"
+  - description: "每个事务锁等待平均耗时"
+    metrics:
+    - description: "写锁平均等待耗时"
+      key: memstore_write_lock_wait_time
+      name: wait_time
+      unit: "μs"
+    name: "事务锁平均等待时间"
+  - description: "平均每秒指定类型事务数"
+    metrics:
+    - description: "每秒普通事务数"
+      key: transaction_single_partition_count
+      name: trans_single_partition_count
+      unit: times/s
+    - description: "每秒分布式事务数"
+      key: transaction_multi_partition_count
+      name: trans_multi_partition_count
+      unit: times/s
+    name: "事务数量"
+      #   - description: "事务表读请求命中数"
+      #     metrics:
+      #     - description: "事务读请求命中 mini cache 数量"
+      #       key: tx_data_hit_mini_cache_count
+      #       name: Mini_Cache_Hit_Count
+      #       unit: times/s
+      #     - description: "事务读请求命中 KV cache 数量"
+      #       key: tx_data_hit_kv_cache_count
+      #       name: KV_Cache_Hit_Count
+      #       unit: times/s
+      #     - description: "事务读请求命中事务上下文数量"
+      #       key: tx_data_read_tx_ctx_count
+      #       name: TX_CTX_Hit_Count
+      #       unit: times/s
+      #     - description: "事务读请求命中 memtable 数量"
+      #       key: tx_data_read_tx_data_memtable_count
+      #       name: TX_Data_Memtable_hit_count
+      #       unit: times/s
+      #     - description: "事务读请求命中 sstable 数量"
+      #       key: tx_data_read_tx_data_sstable_count
+      #       name: TX_Data_Sstable_hit_count
+      #       unit: times/s
+      #     name: "事务表读请求命中数"
+      #   - description: "XA 事务数"
+      #     metrics:
+      #     - description: "已经成功开启 XA 事务总个数(包含已经结束的)"
+      #       key: xa_trans_start_count
+      #       name: xa_trans_start_count
+      #       unit: ""
+      #     - description: "只读的 XA 事务总个数"
+      #       key: xa_read_only_trans_total_count
+      #       name: xa_read_only_trans_total_count
+      #       unit: ""
+      #     - description: "采用一阶段提交的 XA 事务总个数"
+      #       key: xa_one_phase_commit_total_count
+      #       name: xa_one_phase_commit_total_count
+      #       unit: ""
+      #     name: "XA 事务数"
+      #   - description: "XA 语句数"
+      #     metrics:
+      #     - description: "XA start 语句数"
+      #       key: xa_start_total_count
+      #       name: xa_start_total_count
+      #       unit: ""
+      #     - description: "XA end 语句数"
+      #       key: xa_end_total_count
+      #       name: xa_end_total_count
+      #       unit: ""
+      #     - description: "XA prepare 语句数"
+      #       key: xa_prepare_total_count
+      #       name: xa_prepare_total_count
+      #       unit: ""
+      #     - description: "XA commit 语句数"
+      #       key: xa_commit_total_count
+      #       name: xa_commit_total_count
+      #       unit: ""
+      #     - description: "XA rollback 语句数"
+      #       key: xa_rollback_total_count
+      #       name: xa_rollback_total_count
+      #       unit: ""
+      #     name: "XA 语句数"
+      #   - description: "XA 语句耗时"
+      #     metrics:
+      #     - description: "XA start 语句耗时"
+      #       key: xa_start_total_rt
+      #       name: xa_start_total_rt
+      #       unit: "μs"
+      #     - description: "XA end 语句耗时"
+      #       key: xa_end_total_rt
+      #       name: xa_end_total_rt
+      #       unit: "μs"
+      #     - description: "XA prepare 语句耗时"
+      #       key: xa_prepare_total_rt
+      #       name: xa_prepare_total_rt
+      #       unit: "μs"
+      #     - description: "XA commit 语句耗时"
+      #       key: xa_commit_total_rt
+      #       name: xa_commit_total_rt
+      #       unit: "μs"
+      #     - description: "XA rollback 语句耗时"
+      #       key: xa_rollback_total_rt
+      #       name: xa_rollback_total_rt
+      #       unit: "μs"
+      #     name: "XA 语句耗时"
+  - description: "Memstore 锁申请成功率"
+    metrics:
+    - description: "Memstore 读锁申请成功率"
+      key: memstore_read_lock_succ_ratio
+      name: memstore_read_lock_succ_ratio
+      unit: "%"
+    - description: "Memstore 写锁申请成功率"
+      key: memstore_write_lock_succ_ratio
+      name: memstore_write_lock_succ_ratio
+      unit: "%"
+    name: "Memstore 锁申请成功率"
+  name: "事务"
+- description: "存储与缓存"
+  metricGroups:
+  - description: "OB 可写入数据内存"
+    metrics:
+    - description: "MEMStore 总大小"
+      key: total_memstore_used
+      name: total
+      unit: MB
+    - description: "活跃 MEMStore 大小"
+      key: active_memstore_used
+      name: active
+      unit: MB
+    - description: "触发合并阈值"
+      key: major_freeze_trigger
+      name: trigger
+      unit: MB
+    - description: "MEMStore的limit"
+      key: memstore_limit
+      name: limit
+      unit: MB
+    name: MEMStore
+  - description: "平均每秒 IO 次数"
+    metrics:
+    - description: "SSStore 每秒读次数"
+      key: io_read_count
+      name: ssstore_read
+      unit: times/s
+    - description: "SSStore 每秒写次数"
+      key: io_write_count
+      name: ssstore_write
+      unit: times/s
+    - description: "Clog 每秒读次数"
+      key: clog_io_read_count
+      name: clog_read
+      unit: times/s
+    - description: "Clog 每秒写次数"
+      key: clog_io_write_count
+      name: clog_write
+      unit: times/s
+    name: 物理 IO 次数
+  - description: "平均每次 IO 耗时"
+    metrics:
+    - description: "SSStore 每次读取平均耗时"
+      key: io_read_rt
+      name: ssstore_read
+      unit: "μs"
+    - description: "SSStore 每次写入平均耗时"
+      key: io_write_rt
+      name: ssstore_write
+      unit: "μs"
+    - description: "Clog 每次读取平均耗时"
+      key: clog_io_read_rt
+      name: clog_read
+      unit: "μs"
+    - description: "Clog 每次写入平均耗时"
+      key: clog_io_write_rt
+      name: clog_write
+      unit: "μs"
+    name: "物理 IO 耗时"
+  - description: "平均每秒 IO 数据量"
+    metrics:
+    - description: "SSStore 每秒读取数据量"
+      key: io_read_size
+      name: ssstore_read
+      unit: byte
+    - description: "SSStore 每秒写入数据量"
+      key: io_write_size
+      name: ssstore_write
+      unit: byte
+    - description: "Clog 每秒读取数据量"
+      key: clog_io_read_size
+      name: clog_read
+      unit: byte
+    - description: "Clog 每秒写入数据量"
+      key: clog_io_write_size
+      name: clog_write
+      unit: byte
+    name: "物理 IO 吞吐量"
+  - description: "缓存大小"
+    metrics:
+    - description: "块缓存大小"
+      key: block_cache_size_mb
+      name: block_cache
+      unit: MB
+    - description: "行缓存大小"
+      key: row_cache_size_mb
+      name: row_cache
+      unit: MB
+    - description: "执行计划缓存大小"
+      key: plan_cache_size_mb
+      name: plan_cache
+      unit: MB
+    - description: "Clog 缓存大小"
+      key: clog_cache_size_mb
+      name: clog_cache
+      unit: MB
+    - description: "bloom filter 缓存大小"
+      key: bloom_filter_cache_size_mb
+      name: bloom_filter_cache
+      unit: MB
+    - description: "location 缓存大小"
+      key: location_cache_size_mb
+      name: location_cache
+      unit: MB
+    name: "缓存大小"
+  - description: "缓存命中率"
+    metrics:
+    - description: "块缓存命中率"
+      key: block_cache_hit_ratio
+      name: block_cache
+      unit: '%'
+    - description: "行缓存命中率"
+      key: row_cache_hit_ratio
+      name: row_cache
+      unit: '%'
+    - description: "执行计划缓存命中率"
+      key: plan_cache_hit_ratio
+      name: plan_cache
+      unit: '%'
+    - description: "Clog 缓存命中率"
+      key: clog_cache_hit_ratio
+      name: clog_cache
+      unit: '%'
+    - description: "bloom filter 缓存命中率"
+      key: bloom_filter_cache_hit_ratio
+      name: bloom_filter_cache
+      unit: '%'
+    - description: "location 缓存命中率"
+      key: location_cache_hit_ratio
+      name: location_cache
+      unit: '%'
+    name: "缓存命中率"
+  - description: "缓存请求次数"
+    metrics:
+    - description: "块缓存请求次数"
+      key: block_cache_req_total
+      name: block_cache
+      unit: ''
+    - description: "行缓存请求次数"
+      key: row_cache_req_total
+      name: row_cache
+      unit: ''
+    - description: "Clog 缓存请求次数"
+      key: clog_cache_req_total
+      name: clog_cache
+      unit: ''
+    - description: "bloom filter 缓存请求次数"
+      key: bloom_filter_cache_req_total
+      name: bloom_filter_cache
+      unit: ''
+    - description: "location 缓存请求次数"
+      key: location_cache_req_total
+      name: location_cache
+      unit: ''
+    name: "缓存请求次数"
+  - description: "租户日志盘"
+    metrics:
+    - description: "租户日志盘分配大小"
+      key: ob_tenant_log_disk_size
+      name: log_disk_size
+      unit: 'byte'
+    - description: "租户日志盘使用大小"
+      key: ob_tenant_log_disk_used
+      name: log_disk_used
+      unit: 'byte'
+    name: "日志盘"
+  - description: "租户日志盘百分比"
+    metrics:
+    - description: "租户日志盘使用百分比"
+      key: ob_tenant_log_disk_used_percentage
+      name: log_disk_used_percent
+      unit: '%'
+    name: "日志盘百分比"
+      #   - description: "租户数据盘"
+      #     metrics:
+      #     - description: "租户数据盘数据量"
+      #       key: ob_tenant_data_size
+      #       name: data_disk_size
+      #       unit: 'byte'
+      #     - description: "租户数据盘占用量"
+      #       key: ob_tenant_disk_used
+      #       name: data_disk_used
+      #       unit: 'byte'
+      #     - description: "租户数据盘索引大小"
+      #       key: ob_tenant_data_index_size
+      #       name: data_index_size
+      #       unit: 'byte'
+      #     name: "数据盘"
+      #   - description: "租户数据盘百分比"
+      #     metrics:
+      #     - description: "租户数据盘使用百分比"
+      #       key: ob_tenant_disk_used_percentage
+      #       name: data_disk_used_percent
+      #       unit: '%'
+      #     name: "数据盘百分比"
+  - description: "租户 Vector 内存使用情况"
+    metrics:
+    - description: "租户 Vector 内存占用"
+      key: ob_tenant_vector_mem_hold
+      name: mem_hold
+      unit: 'byte'
+    - description: "租户 Vector 内存使用"
+      key: ob_tenant_vector_mem_used
+      name: mem_used
+      unit: 'byte'
+    - description: "租户 Vector 内存限制"
+      key: ob_tenant_vector_mem_limit
+      name: mem_limit
+      unit: 'byte'
+    name: "Vector 内存"
+  - description: "租户 Vector 内存百分比"
+    metrics:
+    - description: "租户 Vector 内存占用百分比"
+      key: ob_tenant_vector_mem_hold_percentage
+      name: mem_hold_percent
+      unit: '%'
+    - description: "租户 Vector 内存使用百分比"
+      key: ob_tenant_vector_mem_used_percentage
+      name: mem_used_percent
+      unit: '%'
+    name: "Vector 内存百分比"
+  name: "存储与缓存"
+    # - description: "仅统计用户创建的表以及全局索引的主分区/副本分区数量"
+    #   metricGroups:
+    #   - description: 数据库对象数量
+    #     metrics:
+    #     - description: "主分区 leader 数量"
+    #       key: primary_leaders_cnt
+    #       name: primary_leaders
+    #       unit: ''
+    #     - description: "副本数量"
+    #       key: partition_replicas_cnt
+    #       name: partition_replicas
+    #       unit: ''
+    #     - description: "日志流 Leader 数量"
+    #       key: log_stream_leaders_cnt
+    #       name: log_stream_leaders
+    #       unit: ''
+    #     name: "对象数量"
+    #   name: 数据库对象
+OBTENANT_OVERVIEW:
+- description: Tenant Overview
+  name: "租户概览指标"
+  metricGroups:
+  - description: "平均每秒处理 SQL 语句数"
+    metrics:
+    - description: "每秒处理 SQL 语句数"
+      key: sql_all_count
+      name: query_count
+      unit: times/s
+    name: QPS
+  - description: "响应时间"
+    metrics:
+    - description: "SQL 语句平均处理耗时"
+      key: sql_all_rt
+      name: query_time
+      unit: "μs"
+    name: "响应时间"
+  - description: "平均每秒处理事务数"
+    metrics:
+    - description: "每秒处理事务数"
+      key: tps
+      name: trans_count
+      unit: times/s
+    name: TPS
+  - description: "服务端每个事务平均处理时间"
+    metrics:
+    - description: "事务平均处理耗时"
+      key: tps_rt
+      name: trans_time
+      unit: "μs"
+    name: "事务响应时间"
+  - description: "会话数"
+    metrics:
+    - description: "当前活跃会话数"
+      key: active_session
+      name: active_session
+      unit: ''
+    name: "会话数"
+  - description: "等待事件平均耗时"
+    metrics:
+    - description: "等待事件平均耗时"
+      key: wait_event_rt
+      name: wait_time
+      unit: "μs"
+    name: "等待事件耗时"
+OBCLUSTER_OVERVIEW:
+- description: Cluster Overview
+  name: "集群性能概览"
+  metricGroups:
+  - description: "平均每秒处理 SQL 语句数"
+    metrics:
+    - description: "每秒处理 SQL 语句数"
+      key: sql_all_count
+      name: query_count
+      unit: times/s
+    name: QPS
+  - description: "响应时间"
+    metrics:
+    - description: "SQL 语句平均处理耗时"
+      key: sql_all_rt
+      name: query_time
+      unit: "μs"
+    name: "响应时间"
+  - description: "平均每秒处理事务数"
+    metrics:
+    - description: "每秒处理事务数"
+      key: tps
+      name: trans_count
+      unit: times/s
+    name: TPS
+  - description: "服务端每个事务平均处理时间"
+    metrics:
+    - description: "事务平均处理耗时"
+      key: tps_rt
+      name: trans_time
+      unit: "μs"
+    name: "事务响应时间"
+  - description: "会话数"
+    metrics:
+    - description: "当前活跃会话数"
+      key: active_session
+      name: active_session
+      unit: ''
+    name: "会话数"
+  - description: "等待事件平均耗时"
+    metrics:
+    - description: "等待事件平均耗时"
+      key: wait_event_rt
+      name: wait_time
+      unit: "μs"
+    name: "等待事件耗时"
+OBPROXY:
+- name: OBProxy 服务监控
+  description: OBProxy 服务监控
+  metricGroups:
+  - name: TPS
+    description: TPS
+    metrics:
+    - name: "total"
+      description: "每秒事务数"
+      key: transaction_total
+      unit: ""
+  - name: QPS
+    description: QPS
+    metrics:
+    - name: "commit"
+      description: "每秒 commit 请求数"
+      key: request_total_commit
+      unit: ""
+    - name: "delete"
+      description: "每秒 delete 请求数"
+      key: request_total_delete
+      unit: ""
+    - name: "insert"
+      description: "每秒 insert 请求数"
+      key: request_total_insert
+      unit: ""
+    - name: "large"
+      description: "每秒大请求数"
+      key: request_total_large
+      unit: ""
+    - name: "select"
+      description: "每秒 select 请求数"
+      key: request_total_select
+      unit: ""
+    - name: "sequence"
+      description: "每秒 sequence 请求数"
+      key: request_total_sequence
+      unit: ""
+    - name: "slow"
+      description: "每秒慢请求数"
+      key: request_total_slow
+      unit: ""
+    - name: "update"
+      description: "每秒 update 请求数"
+      key: request_total_update
+      unit: ""
+    - name: "others"
+      description: "每秒其他请求数"
+      key: request_total_others
+      unit: ""
+  - name: 客户端连接
+    description: 客户端连接
+    metrics:
+    - name: "client"
+      description: "客户端连接数"
+      key: current_session_client
+      unit: ""
+    - name: "client_connections_usage"
+      description: "OBProxy 客户端连接数 / client_max_connections"
+      key: client_connection_used_percent
+      unit: "%"
+  - name: 服务端连接
+    description: 服务端连接
+    metrics:
+    - name: "server"
+      description: "服务端连接数"
+      key: current_session_server
+      unit: ""
+    - name: "server_connection_usage"
+      description: "OBProxy 服务端连接数 / max_connections"
+      key: server_connection_used_percent
+      unit: "%"
+  - name: SQL 响应时间
+    description: 平均每条 SQL 响应时间
+    metrics:
+    - name: "commit"
+      description: "平均每次 commit 请求耗时"
+      key: request_cost_commit
+      unit: "μs"
+    - name: "delete"
+      description: "平均每次 delete 请求耗时"
+      key: request_cost_delete
+      unit: "μs"
+    - name: "insert"
+      description: "平均每次 insert 请求耗时"
+      key: request_cost_insert
+      unit: "μs"
+    - name: "prepare_send_request"
+      description: "平均每次请求发送准备耗时"
+      key: request_cost_prepare_send_request_time
+      unit: "μs"
+    - name: "server_process_request"
+      description: "平均每次服务端处理请求耗时"
+      key: request_cost_server_process_request_time
+      unit: "μs"
+    - name: "select"
+      description: "平均每次 select 请求耗时"
+      key: request_cost_select
+      unit: "μs"
+    - name: "sequence"
+      description: "平均每次 sequence 请求耗时"
+      key: request_cost_sequence
+      unit: "μs"
+    - name: "update"
+      description: "平均每次 update 请求耗时"
+      key: request_cost_update
+      unit: "μs"
+    - name: "others"
+      description: "平均每次其他请求耗时"
+      key: request_cost_others
+      unit: "μs"
+  - name: OBProxy 内存
+    description: OBProxy 内存
+    metrics:
+    - name: "obproxy_rss"
+      description: "OBProxy 进程常驻内存大小"
+      key: obproxy_rss_memory
+      unit: "byte"
+    - name: "obproxy_rss_usage"
+      description: "OBProxy 进程常驻内存 / proxy_mem_limited"
+      key: obproxy_rss_mem_used_percent
+      unit: "%"
+  - name: OBProxy CPU 使用率
+    description: OBProxy 进程 CPU 使用率
+    metrics:
+    - name: "obproxy_cpu_usage"
+      description: "OBProxy 进程 CPU 使用率"
+      key: obproxy_process_cpu_percent
+      unit: "%"
+  - name: OBProxy 文件句柄数
+    description: OBProxy 文件句柄数
+    metrics:
+    - name: "obproxy_fd"
+      description: "OBProxy 文件句柄数"
+      key: obproxy_fd_count
+      unit: ""
+  - name: OBProxy 线程数
+    description: OBProxy 线程数
+    metrics:
+    - name: "obproxy_threads"
+      description: "OBProxy 进程线程数"
+      key: obproxy_thread_count
+      unit: ""
+  - name: 错误日志
+    description: 错误日志个数
+    metrics:
+    - name: "obproxy"
+      description: "OBProxy ERROR 日志个数"
+      key: obproxy_log_error_count
+      unit: ""
+  - name: 路由表
+    description: 平均每秒路由表查询次数 (默认不开启，如果需要开启，需要设置obproxy参数enable_extra_prometheus_metric=true)
+    metrics:
+    - name: "hit"
+      description: "平均每秒路由表命中次数"
+      key: entry_total_hit
+      unit: ""
+    - name: "partition"
+      description: "平均每秒查询 partition entry 的次数"
+      key: entry_total_partition
+      unit: ""
+    - name: "route"
+      description: "平均每秒查询 route entry 的次数"
+      key: entry_total_route
+      unit: ""
+    - name: "success"
+      description: "平均每秒路由表查询成功次数"
+      key: entry_total_success
+      unit: ""
+    - name: "table"
+      description: "平均每秒查询 table entry 的次数"
+      key: entry_total_table
+      unit: ""
+  - name: 字节数
+    description: 平均每次网络请求或响应字节数 (默认不开启, 如果需要开启，需要设置obproxy参数enable_extra_prometheus_metric=true)
+    metrics:
+    - name: "client_request"
+      description: "客户端 request 字节数"
+      key: request_byte_client_request
+      unit: "byte"
+    - name: "client_response"
+      description: "客户端 response 字节数"
+      key: request_byte_client_response
+      unit: "byte"
+    - name: "server_request"
+      description: "服务端 request 字节数"
+      key: request_byte_server_request
+      unit: "byte"
+    - name: "server_response"
+      description: "服务端 response 字节数"
+      key: request_byte_server_response
+      unit: "byte"

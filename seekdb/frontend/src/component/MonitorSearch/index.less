@@ -1,0 +1,37 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  .updateTime {
+    color: @colorTextTertiary;
+
+    :global {
+      .ant-form-item-label > label {
+        color: @colorTextTertiary;
+
+        &::after {
+          color: @colorTextTertiary;
+        }
+      }
+    }
+  }
+
+  .searchForm {
+    display: flex;
+    flex-wrap: wrap;
+
+    .lastForm {
+      display: flex;
+      margin-bottom: 16px;
+    }
+
+    :global {
+      .ant-select-arrow {
+        color: @colorTextSecondary;
+      }
+    }
+  }
+
+  .hiddenForm {
+    display: none;
+  }
+}
