@@ -243,38 +243,38 @@ SEEKDB:
       #       name: large_request_queue
       #       unit: ""
       #     name: "Request waiting queue size"
-  - name: Tenant CPU cost
-    description: Percentage of CPU cores occupied by the tenant/Total number of CPU cores allocated to the tenant
+  - name: CPU cost
+    description: Percentage of CPU cores occupied /Total number of CPU cores allocated
     metrics:
-    - name: Tenant CPU cost
-      description: Percentage of CPU cores occupied by the tenant/Total number of CPU cores allocated to the tenant
+    - name: CPU cost
+      description: Percentage of CPU cores occupied /Total number of CPU cores allocated
       key: ob_tenant_cpu_percent
       unit: '%'
-  - name: Tenant thread usage
-    description: Number of active threads/Maximum number of threads for the tenant
+  - name: Thread usage
+    description: Number of active threads/Maximum number of threads
     metrics:
-    - name: Tenant thread usage
-      description: Number of active threads/Maximum number of threads for the tenant
+    - name: Thread usage
+      description: Number of active threads/Maximum number of threads
       key: ob_tenant_thread_percent
       unit: '%'
-  - description: Tenant memory usage percent
+  - description: Memory usage percent
     metrics:
-    - description: Tenant memory usage percent
+    - description: Memory usage percent
       key: ob_memory_percent
       name: memory_usage
       unit: '%'
     name: memory usage percent
-  - description: MEMStore usage percent
+  - description: MemStore usage percent
     metrics:
-    - description: MEMStore usage percent
+    - description: MemStore usage percent
       key: memstore_percent
-      name: Memstore_percent
+      name: memstore_percent
       unit: '%'
     - description: The MemStore usage for triggering a freeze.
       key: active_memstore_percent
-      name: Active_memstore_percent
+      name: active_memstore_percent
       unit: '%'
-    name: MEMStore usage percent
+    name: MemStore usage percent
   - description: Cursors
     metrics:
     - description: Number of open cursors
@@ -489,27 +489,27 @@ SEEKDB:
       #      name: xa_rollback_total_rt
       #      unit: "μs"
       #    name: "XA trans statement rt"
-  - description: "Memstore lock success ratio"
+  - description: "MemStore lock success ratio"
     metrics:
-    - description: "Memstore read lock success ratio"
+    - description: "MemStore read lock success ratio"
       key: memstore_read_lock_succ_ratio
       name: memstore_read_lock_succ_ratio
       unit: "%"
-    - description: "Memstore write lock success ratio"
+    - description: "MemStore write lock success ratio"
       key: memstore_write_lock_succ_ratio
       name: memstore_write_lock_succ_ratio
       unit: "%"
-    name: "Memstore lock success ratio"
+    name: "MemStore lock success ratio"
   name: Transaction
 - description: Storage and Cache
   metricGroups:
   - description: OB writable data memory
     metrics:
-    - description: MEMStore total size
+    - description: MemStore total size
       key: total_memstore_used
       name: total
       unit: MB
-    - description: Active MEMStore size
+    - description: Active MemStore size
       key: active_memstore_used
       name: active
       unit: MB
@@ -517,11 +517,11 @@ SEEKDB:
       key: major_freeze_trigger
       name: trigger
       unit: MB
-    - description: MEMStore limit
+    - description: MemStore limit
       key: memstore_limit
       name: limit
       unit: MB
-    name: MEMStore
+    name: MemStore
   - description: Average number of IOs per second
     metrics:
     - description: SSStore reads per second
@@ -656,20 +656,20 @@ SEEKDB:
       name: location_cache
       unit: ''
     name: Cache request total count
-  - description: "Tenant log disk"
+  - description: "Log disk"
     metrics:
-    - description: "The size of space allocated to the tenant log disk"
+    - description: "The size of space allocated to the log disk"
       key: ob_tenant_log_disk_size
       name: log_disk_size
       unit: 'byte'
-    - description: "The size of occupied space of the tenant log disk"
+    - description: "The size of occupied space of the log disk"
       key: ob_tenant_log_disk_used
       name: log_disk_used
       unit: 'byte'
     name: "Log Disk"
-  - description: "Tenant Log Disk Percentage"
+  - description: "Log Disk Percentage"
     metrics:
-    - description: "The usage of the tenant log disk"
+    - description: "The usage of the log disk"
       key: ob_tenant_log_disk_used_percentage
       name: log_disk_used_percent
       unit: '%'
@@ -696,28 +696,28 @@ SEEKDB:
       #      name: data_disk_used_percent
       #      unit: '%'
       #    name: "Data Disk Percentage"
-  - description: "Tenant Vector Memory"
+  - description: "Vector Memory"
     metrics:
-    - description: "Tenant vector memory hold size"
+    - description: "Vector memory hold size"
       key: ob_tenant_vector_mem_hold
       name: mem_hold
       unit: 'byte'
-    - description: "Tenant vector memory used size"
+    - description: "Vector memory used size"
       key: ob_tenant_vector_mem_used
       name: mem_used
       unit: 'byte'
-    - description: "Tenant vector memory limit size"
+    - description: "Vector memory limit size"
       key: ob_tenant_vector_mem_limit
       name: mem_limit
       unit: 'byte'
     name: "Vector Memory"
-  - description: "Tenant Vector Memory Percentage"
+  - description: "Vector Memory Percentage"
     metrics:
-    - description: "Tenant vector memory hold percent"
+    - description: "Vector memory hold percent"
       key: ob_tenant_vector_mem_hold_percentage
       name: mem_hold_percent
       unit: '%'
-    - description: "Tenant vector memory used percent"
+    - description: "Vector memory used percent"
       key: ob_tenant_vector_mem_used_percentage
       name: mem_used_percent
       unit: '%'

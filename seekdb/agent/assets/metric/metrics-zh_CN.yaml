@@ -243,38 +243,38 @@ SEEKDB:
       #       name: large_request_queue
       #       unit: ""
       #     name: "请求等待队列大小"
-  - name: "租户 CPU 消耗"
-    description: "租户 CPU 使用量 * 100 / 租户 CPU 分配量"
+  - name: "CPU 消耗"
+    description: "CPU 使用量 * 100 / CPU 分配量"
     metrics:
-    - name: "租户 CPU 消耗"
-      description: "租户 CPU 使用量 * 100 / 租户 CPU 分配量"
+    - name: "CPU 消耗"
+      description: "CPU 使用量 * 100 / CPU 分配量"
       key: ob_tenant_cpu_percent
       unit: '%'
-  - name: "租户线程使用率"
-    description: "活跃线程数 / 租户的最大线程数"
+  - name: "线程使用率"
+    description: "活跃线程数 / 的最大线程数"
     metrics:
-    - name: "租户线程使用率"
-      description: "活跃线程数 / 租户的最大线程数"
+    - name: "线程使用率"
+      description: "活跃线程数 / 的最大线程数"
       key: ob_tenant_thread_percent
       unit: '%'
-  - description: "租户内存使用百分比"
+  - description: "内存使用百分比"
     metrics:
-    - description: "租户内存已使用百分比"
+    - description: "内存已使用百分比"
       key: ob_memory_percent
       name: memory_usage
       unit: '%'
     name: "内存使用率"
-  - description: "MEMStore使用百分比"
+  - description: "MemStore使用百分比"
     metrics:
-    - description: "MEMStore使用百分比"
+    - description: "MemStore使用百分比"
       key: memstore_percent
-      name: Memstore_percent
+      name: memstore_percent
       unit: '%'
-    - description: "MEMStore使用占触发冻结百分比"
+    - description: "MemStore使用占触发冻结百分比"
       key: active_memstore_percent
-      name: Active_memstore_percent
+      name: active_memstore_percent
       unit: '%'
-    name: "MEMStore使用百分比"
+    name: "MemStore使用百分比"
   - description: "打开的游标数"
     metrics:
     - description: "打开的游标数"
@@ -489,27 +489,27 @@ SEEKDB:
       #       name: xa_rollback_total_rt
       #       unit: "μs"
       #     name: "XA 语句耗时"
-  - description: "Memstore 锁申请成功率"
+  - description: "MemStore 锁申请成功率"
     metrics:
-    - description: "Memstore 读锁申请成功率"
+    - description: "MemStore 读锁申请成功率"
       key: memstore_read_lock_succ_ratio
       name: memstore_read_lock_succ_ratio
       unit: "%"
-    - description: "Memstore 写锁申请成功率"
+    - description: "MemStore 写锁申请成功率"
       key: memstore_write_lock_succ_ratio
       name: memstore_write_lock_succ_ratio
       unit: "%"
-    name: "Memstore 锁申请成功率"
+    name: "MemStore 锁申请成功率"
   name: "事务"
 - description: "存储与缓存"
   metricGroups:
   - description: "OB 可写入数据内存"
     metrics:
-    - description: "MEMStore 总大小"
+    - description: "MemStore 总大小"
       key: total_memstore_used
       name: total
       unit: MB
-    - description: "活跃 MEMStore 大小"
+    - description: "活跃 MemStore 大小"
       key: active_memstore_used
       name: active
       unit: MB
@@ -517,11 +517,11 @@ SEEKDB:
       key: major_freeze_trigger
       name: trigger
       unit: MB
-    - description: "MEMStore的limit"
+    - description: "MemStore的limit"
       key: memstore_limit
       name: limit
       unit: MB
-    name: MEMStore
+    name: MemStore
   - description: "平均每秒 IO 次数"
     metrics:
     - description: "SSStore 每秒读次数"
@@ -656,20 +656,20 @@ SEEKDB:
       name: location_cache
       unit: ''
     name: "缓存请求次数"
-  - description: "租户日志盘"
+  - description: "日志盘"
     metrics:
-    - description: "租户日志盘分配大小"
+    - description: "日志盘分配大小"
       key: ob_tenant_log_disk_size
       name: log_disk_size
       unit: 'byte'
-    - description: "租户日志盘使用大小"
+    - description: "日志盘使用大小"
       key: ob_tenant_log_disk_used
       name: log_disk_used
       unit: 'byte'
     name: "日志盘"
-  - description: "租户日志盘百分比"
+  - description: "日志盘百分比"
     metrics:
-    - description: "租户日志盘使用百分比"
+    - description: "日志盘使用百分比"
       key: ob_tenant_log_disk_used_percentage
       name: log_disk_used_percent
       unit: '%'
@@ -696,28 +696,28 @@ SEEKDB:
       #       name: data_disk_used_percent
       #       unit: '%'
       #     name: "数据盘百分比"
-  - description: "租户 Vector 内存使用情况"
+  - description: "Vector 内存使用情况"
     metrics:
-    - description: "租户 Vector 内存占用"
+    - description: "Vector 内存占用"
       key: ob_tenant_vector_mem_hold
       name: mem_hold
       unit: 'byte'
-    - description: "租户 Vector 内存使用"
+    - description: "Vector 内存使用"
       key: ob_tenant_vector_mem_used
       name: mem_used
       unit: 'byte'
-    - description: "租户 Vector 内存限制"
+    - description: "Vector 内存限制"
       key: ob_tenant_vector_mem_limit
       name: mem_limit
       unit: 'byte'
     name: "Vector 内存"
-  - description: "租户 Vector 内存百分比"
+  - description: "Vector 内存百分比"
     metrics:
-    - description: "租户 Vector 内存占用百分比"
+    - description: "Vector 内存占用百分比"
       key: ob_tenant_vector_mem_hold_percentage
       name: mem_hold_percent
       unit: '%'
-    - description: "租户 Vector 内存使用百分比"
+    - description: "Vector 内存使用百分比"
       key: ob_tenant_vector_mem_used_percentage
       name: mem_used_percent
       unit: '%'
