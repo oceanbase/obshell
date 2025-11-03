@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"regexp"
 	"strings"
 
@@ -53,14 +52,13 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 }
 
 func GetClusterId() (string, error) {
-	var clusterIdPath = filepath.Join(path.RunDir(), ".cluster_id")
-	if _, err := os.Stat(clusterIdPath); err != nil {
+	if _, err := os.Stat(path.ObserverClusterIdFilePath()); err != nil {
 		if os.IsNotExist(err) {
 			return "", nil
 		}
 		return "", err
 	}
-	content, err := os.ReadFile(clusterIdPath)
+	content, err := os.ReadFile(path.ObserverClusterIdFilePath())
 	if err != nil {
 		return "", err
 	}

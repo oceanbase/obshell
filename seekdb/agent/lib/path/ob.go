@@ -28,10 +28,6 @@ func ObConfigPath() string {
 	return filepath.Join(EtcDir(), constant.OB_CONFIG_FILE)
 }
 
-func SeekDBClusterIdFilePath() string {
-	return filepath.Join(RunDir(), ".cluster_id")
-}
-
 func IsEtcDirExist() bool {
 	_, err := os.Stat(EtcDir())
 	return err == nil

@@ -7,7 +7,7 @@
   "err.agent.info.not.equal": "agent 信息不匹配，输入为 %v，元数据为 %v",
   "err.agent.ip.inconsistent.with.ob.server": "agent IP 与 observer 不一致",
   "err.agent.load.ob.config.failed": "从配置文件加载 observer 配置信息失败",
-  "err.agent.need.to.takeover": "请先接管集群",
+  "err.agent.seekdb.not.exists": "当前目录下不存在 SeekDB，请先初始化 SeekDB 实例",
   "err.agent.not.initialized": "agent 未初始化",
   "err.agent.ob.version.not.supported": "不支持的 OB 版本 '%s'，最低支持版本为 '%s'",
   "err.agent.oceanbase.db.not.ocs": "当前数据库不是 OCS",

@@ -128,16 +128,8 @@ func getMyPathByArgs() (string, error) {
 			}
 			return internalBaseDir, nil
 		} else {
-			workDir := filepath.Join(filepath.Dir(binDir))
-			obConfigPath := filepath.Join(workDir, constant.OB_DIR_ETC, constant.OB_CONFIG_FILE)
-			if _, err := os.Stat(obConfigPath); err != nil {
-				if errors.Is(err, os.ErrNotExist) {
-					return "/var/lib/oceanbase", nil // default base-dir of observer
-				}
-				return "", err
-			} else {
-				return filepath.Dir(binDir), nil
-			}
+			// retrun current directory
+			return os.Getwd()
 		}
 	} else {
 		for i := 1; i < len(os.Args); i++ {
@@ -212,6 +204,10 @@ func RunDir() string {
 func ObserverBinPath() string {
 	initialize()
 	return filepath.Join(RunDir(), constant.PROC_OBSERVER)
+}
+
+func ObserverClusterIdFilePath() string {
+	return filepath.Join(RunDir(), "id")
 }
 
 func BinDir() string {

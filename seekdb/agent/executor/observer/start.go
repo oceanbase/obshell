@@ -79,7 +79,8 @@ func (t *StartObserverTask) observerHealthCheck() error {
 		SetTryTimes(1).
 		SetDBName("").
 		SetTimeout(10).
-		SetPort(meta.MYSQL_PORT)
+		SetPort(meta.MYSQL_PORT).
+		SetPassword(meta.GetOceanbasePwd())
 
 	const (
 		maxRetries    = 60 // It should be small for seekdb

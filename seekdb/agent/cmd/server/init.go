@@ -156,7 +156,7 @@ func (a *Agent) initAgent() (err error) {
 			}
 		}
 	} else if meta.OCS_AGENT.IsUnidentified() {
-		return errors.Occur(errors.ErrAgentNeedToTakeOver)
+		return errors.Occur(errors.ErrAgentSeekDBNotExists)
 	}
 
 	a.checkAgentInfo()

@@ -235,7 +235,7 @@ var (
 	ErrAgentLoadOBConfigFailed             = NewErrorCode("Agent.Load.OBConfigFailed", unexpected, "err.agent.load.ob.config.failed")                            // "load ob config from config file failed"
 	ErrAgentInfoNotEqual                   = NewErrorCode("Agent.Info.NotEqual", unexpected, "err.agent.info.not.equal")                                         // "agent info not equal"
 	ErrAgentStartWithInvalidInfo           = NewErrorCode("Agent.Start.WithInvalidInfo", unexpected, "err.agent.start.with.invalid.info")                        // "agent start with invalid info: %v"
-	ErrAgentNeedToTakeOver                 = NewErrorCode("Agent.NeedToTakeOver", illegalArgument, "err.agent.need.to.takeover")                                 // "obshell need to be cluster. Please do takeover first."
+	ErrAgentSeekDBNotExists                = NewErrorCode("Agent.SeekDB.Not.Exists", illegalArgument, "err.agent.seekdb.not.exists")                             // "SeekDB not exists in current directory. Please do takeover first."
 	ErrAgentStartObserverFailed            = NewErrorCode("Agent.Start.ObserverFailed", unexpected, "err.agent.start.observer.failed")                           // "start observer via flag failed, err: %v"
 	ErrAgentTakeOverFailed                 = NewErrorCode("Agent.TakeOverFailed", unexpected, "err.agent.take.over.failed")                                      // "take over or rebuild failed: %v"
 	ErrAgentServeOnUnixSocketFailed        = NewErrorCode("Agent.ServeOnUnixSocketFailed", unexpected, "err.agent.serve.on.unix.socket.failed")                  // "serve on unix listener failed: %v\n"
