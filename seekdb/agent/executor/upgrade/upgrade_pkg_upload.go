@@ -65,7 +65,6 @@ func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, error) {
 	return record, nil
 }
 
-// TODO: Skip this check during upgrade since it has already been checked during upload and this method is quite time-consuming.
 func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	if r.rpmPkg, err = ReadRpm(r.rpmFile); err != nil {
 		return
@@ -85,27 +84,12 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	return nil
 }
 
-func (r *upgradeRpmPkgInfo) dirCheckForLibs() (err error) {
-	if err = r.checkVersion(); err != nil {
-		return errors.Wrap(err, "failed to check version and release")
-	}
-	files := r.rpmPkg.Files()
-	for _, actual := range files {
-		if actual.Name() == "/home/admin/oceanbase/lib" && actual.IsDir() {
-			return nil
-		}
-	}
-	return errors.Occur(errors.ErrObPackageMissingFile, r.rpmPkg.Name(), "/home/admin/oceanbase/lib")
-}
-
 func (r *upgradeRpmPkgInfo) fileCheck() (err error) {
 	// Check for the necessary files required for the agent upgrade process.
 	if err = r.checkVersion(); err != nil {
 		return errors.Wrap(err, "failed to check version and release")
 	}
 	return r.findAllExpectedFiles(defaultFilesForAgent)
-
-	return nil
 }
 
 func (r *upgradeRpmPkgInfo) checkVersion() (err error) {

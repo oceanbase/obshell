@@ -23,7 +23,7 @@ type ObserverInfo struct {
 	ClusterName  string     `json:"cluster_name"`
 	Version      string     `json:"version"`
 	Architecture string     `json:"architecture"`
-	Status       string     `json:"status"` // TODO: should be sys tenant status instead of observer status
+	Status       string     `json:"status"`
 	InnerStatus  string     `json:"inner_status"`
 	Port         int        `json:"port"`
 	ObshellPort  int        `json:"obshell_port"`

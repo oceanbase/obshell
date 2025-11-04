@@ -99,5 +99,5 @@ func taskShow(flags *TaskShowFlags) (err error) {
 func showCmdExample() string {
 	return `  obshell task show --seekdb
   obshell task show --seekdb --port 2886
-  obshell task show -i 11 -d`
+  obshell task show -i 11 -d --seekdb`
 }

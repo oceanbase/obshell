@@ -60,49 +60,11 @@ func callApiHelper(sendRequest func(uri string, param interface{}, res interface
 	return res, nil
 }
 
-func CallApiWithMethodHelper(sendRequest func(method string, uri string, param interface{}, ret interface{}) error, method string, uri string, param interface{}, ret interface{}) error {
-	stdio.Verbosef("Calling API %s", uri)
-	stdio.Verbosef("Param is %+v", param)
-
-	err := sendRequest(method, uri, param, ret)
-	if err != nil {
-		return err
-	}
-	if ret != nil {
-		if dag, ok := ret.(*task.DagDetailDTO); ok && dag.GenericDTO != nil && dag.DagDetail != nil {
-			stdio.Printf("Task '%s' has been created successfully.", dag.Name)
-			stdio.Printf("You can view the task details by '%s/bin/obshell task show -i %s -d'.", path.AgentDir(), dag.GenericID)
-		}
-	} else {
-		stdio.Verbosef("Calling API %s OK.", uri)
-	}
-	return nil
-}
-
 func CallApi(uri string, param interface{}) (*task.DagDetailDTO, error) {
 	sendRequest := func(uri string, param interface{}, res interface{}) error {
 		return http.SendPostRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
 	}
 	return callApiHelper(sendRequest, uri, param)
-}
-
-func CallApiWithMethod(method string, uri string, param interface{}, ret interface{}) error {
-	sendRequest := func(method string, uri string, param interface{}, res interface{}) error {
-		switch method {
-		case http.GET:
-			return http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
-		case http.POST:
-			return http.SendPostRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
-		case http.PUT:
-			return http.SendPutRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
-		case http.PATCH:
-			return http.SendPatchRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
-		case http.DELETE:
-			return http.SendDeleteRequestViaUnixSocket(path.ObshellSocketPath(), uri, param, res)
-		}
-		return errors.Occur(errors.ErrRequestMethodNotSupport, method)
-	}
-	return CallApiWithMethodHelper(sendRequest, method, uri, param, ret)
 }
 
 func GetFailedDagLastLog(currentDag *task.DagDetailDTO) (res []string) {

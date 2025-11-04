@@ -169,7 +169,6 @@ func compareRequestUri(c *gin.Context, maskUri string) bool {
 	return true
 }
 
-// TODO: delete this maybe?
 func readRequestBodyMaskPassword(c *gin.Context) string {
 	bodyBytes, _ := io.ReadAll(c.Request.Body)
 	bodyInterface := make(map[string]interface{})

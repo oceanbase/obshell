@@ -136,7 +136,7 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 		info.CreatedTime = &createTime
 	}
 	info.Status = getObserverStatus()
-	info.DatabaseCount, err = tenantService.GetDatabaseCount() // TODO: except inner database
+	info.DatabaseCount, err = tenantService.GetDatabaseCount()
 	if err != nil {
 		log.Warnf("Failed to get database count: %v", err)
 	}
