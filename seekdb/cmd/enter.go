@@ -64,6 +64,8 @@ func SeekdbMain() {
 	cmds.PersistentFlags().IntVar(&port, clientconst.FLAG_OBSHELL_PORT, 2886, "Specify the port of the obshell, or specify it by environment variable OBSHELL_PORT_FOR_SEEKDB")
 	var isForSeekdb bool
 	cmds.PersistentFlags().BoolVar(&isForSeekdb, "seekdb", true, "Specify if the command is for seekdb")
+	var useIPv6 bool
+	cmds.PersistentFlags().BoolVarP(&useIPv6, "use-ipv6", "6", false, "Specify if the command should use IPv6, only used for seekdb")
 
 	agentcmd.PreHandler()
 

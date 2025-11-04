@@ -18,6 +18,7 @@ package observer
 
 import (
 	"bufio"
+	"fmt"
 	"os"
 	"regexp"
 	"strconv"
@@ -32,6 +33,7 @@ import (
 const (
 	ETC_KEY_MYSQL_PORT      = "mysql_port"
 	ETC_KEY_IP              = "local_ip"
+	ETC_KEY_USE_IPV6        = "use_ipv6"
 	ETC_KEY_ALL_SERVER_LIST = "all_server_list"
 )
 
@@ -91,8 +93,9 @@ func GetConfFromObConfFile() (ip string, mysqlPort int) {
 	if err = scanner.Err(); err != nil {
 		return
 	}
-	re := regexp.MustCompile("\x00*([_a-zA-Z]+)=(.*)")
+	re := regexp.MustCompile("\x00*([_a-zA-Z0-9]+)=(.*)")
 
+	var useIPv6 bool
 	for scanner.Scan() {
 		if ip != "" && mysqlPort != 0 {
 			break
@@ -100,16 +103,21 @@ func GetConfFromObConfFile() (ip string, mysqlPort int) {
 		line := scanner.Text()
 		match := re.FindStringSubmatch(line)
 
+		fmt.Println(match)
 		if len(match) != 3 {
 			continue
 		}
 
 		switch match[1] {
-		case ETC_KEY_IP:
-			ip = match[2]
+		case ETC_KEY_USE_IPV6:
+			useIPv6, _ = strconv.ParseBool(match[2])
 		case ETC_KEY_MYSQL_PORT:
 			mysqlPort, _ = strconv.Atoi(match[2])
 		}
+	}
+	ip = constant.LOCAL_IP
+	if useIPv6 {
+		ip = constant.LOCAL_IP_V6
 	}
 	log.Infof("get conf from ob conf file, ip: %s, mysqlPort: %d", ip, mysqlPort)
 	return

@@ -27,6 +27,7 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
+	"github.com/oceanbase/obshell/seekdb/agent/meta"
 )
 
 var mypath string
@@ -132,6 +133,7 @@ func getMyPathByArgs() (string, error) {
 			return os.Getwd()
 		}
 	} else {
+		var useIPv6 bool
 		for i := 1; i < len(os.Args); i++ {
 			arg := os.Args[i]
 			if strings.HasPrefix(arg, "--port=") {
@@ -151,6 +153,8 @@ func getMyPathByArgs() (string, error) {
 				}
 				os.Args = append(os.Args[:i], os.Args[i+2:]...)
 				break
+			} else if arg == "--use-ipv6" || arg == "-6" {
+				useIPv6 = true
 			}
 		}
 		if obshellPort == 0 { // read from env
@@ -173,7 +177,14 @@ func getMyPathByArgs() (string, error) {
 			} `json:"data"`
 		}{}
 
-		resp, err := resty.New().R().Get(fmt.Sprintf("http://127.0.0.1:%d/api/v1/info", obshellPort))
+		ip := constant.LOCAL_IP
+		if useIPv6 {
+			ip = constant.LOCAL_IP_V6
+		}
+		var agentInfo meta.AgentInfo
+		agentInfo.Ip = ip
+		agentInfo.Port = obshellPort
+		resp, err := resty.New().R().Get(fmt.Sprintf("http://%s/api/v1/info", agentInfo.String()))
 		if err != nil {
 			return "", err
 		}
