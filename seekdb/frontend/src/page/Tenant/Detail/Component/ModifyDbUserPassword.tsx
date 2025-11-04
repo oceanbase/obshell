@@ -80,7 +80,7 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
           user: dbUser?.user_name || '',
         },
         {
-          new_password: newPassword,
+          password: newPassword,
         }
       );
     });

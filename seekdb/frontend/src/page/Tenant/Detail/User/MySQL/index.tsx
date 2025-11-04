@@ -257,7 +257,7 @@ const Index: React.FC<IndexProps> = () => {
       render: (text: string, record: API.DbUser) => {
         return (
           <Space size="middle">
-            {!isDesktopMode && record.username !== 'root' && (
+            {!isDesktopMode && (
               <>
                 <a
                   onClick={() => {

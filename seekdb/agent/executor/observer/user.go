@@ -22,12 +22,14 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/oceanbase/obshell/seekdb/agent/config"
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/bo"
 	obmodel "github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/secure"
 	"github.com/oceanbase/obshell/seekdb/param"
 	"github.com/oceanbase/obshell/seekdb/utils"
 )
@@ -158,6 +160,13 @@ func ListUsers(queryParam *param.ListUsersQueryParam) ([]bo.ObUser, error) {
 }
 
 func ChangeUserPassword(userName string, p *param.ChangeUserPasswordParam) error {
+	// check current password is correct
+	dsConfig := config.NewObMysqlDataSourceConfig().SetPassword(meta.GetOceanbasePwd()).SetParseTime(true)
+	if userName == "root" {
+		if err := oceanbasedb.LoadOceanbaseInstanceForTest(dsConfig); err != nil {
+			return errors.Wrapf(err, "Failed to check if current root password is correct")
+		}
+	}
 	exist, err := userService.IsUserExist(userName)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to check if user %s exists", userName)
@@ -168,6 +177,11 @@ func ChangeUserPassword(userName string, p *param.ChangeUserPasswordParam) error
 	err = userService.ChangeUserPassword(userName, p.Password)
 	if err != nil {
 		return errors.Wrapf(err, "Failed to change password of user %s", userName)
+	}
+	if userName == "root" {
+		if err := secure.VerifyOceanbasePassword(p.Password); err != nil {
+			return err
+		}
 	}
 	return nil
 }
