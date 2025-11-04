@@ -185,7 +185,7 @@ const Detail: React.FC<NewProps> = ({}) => {
         Modal.success({
           title: formatMessage({
             id: 'ocp-v2.Cluster.Overview.TheTaskToStartThe',
-            defaultMessage: '启动集群的任务提交成功',
+            defaultMessage: '启动实例的任务提交成功',
           }),
 
           content: (
@@ -219,7 +219,7 @@ const Detail: React.FC<NewProps> = ({}) => {
         Modal.success({
           title: formatMessage({
             id: 'ocp-v2.Cluster.Overview.TheTaskOfStoppingThe',
-            defaultMessage: '停止集群的任务提交成功',
+            defaultMessage: '停止实例的任务提交成功',
           }),
 
           content: (
@@ -253,7 +253,7 @@ const Detail: React.FC<NewProps> = ({}) => {
         Modal.success({
           title: formatMessage({
             id: 'SeekDB.Detail.Overview.TheTaskOfRestartingThe',
-            defaultMessage: '重启集群的任务提交成功',
+            defaultMessage: '重启实例的任务提交成功',
           }),
 
           content: (
@@ -651,7 +651,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                     tooltip={{
                       title: formatMessage({
                         id: 'ocp-express.Tenant.Detail.ListOfAddressesThatCan',
-                        defaultMessage: '能够连接到租户的地址列表',
+                        defaultMessage: '能够连接到实例的地址列表',
                       }),
                     }}
                   />

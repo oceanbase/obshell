@@ -100,6 +100,11 @@ export default [
                 component: 'Alert/Rules',
                 name: '告警规则',
               },
+              {
+                path: '*',
+                component: 'Error/404',
+                name: '404 页面不存在',
+              },
             ],
           },
           {
@@ -122,11 +127,17 @@ export default [
               },
             ],
           },
+          {
+            path: '*',
+            component: 'Error/404',
+            name: '404 页面不存在',
+          },
         ],
       },
       {
         // 前面的路径都没有匹配到，说明是 404 页面
         // 使用 Error/404 覆盖默认的 404 路径
+        path: '/*',
         component: 'Error/404',
         name: '404 页面不存在',
       },

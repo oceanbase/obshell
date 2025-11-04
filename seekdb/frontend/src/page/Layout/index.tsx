@@ -50,6 +50,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const query = location?.query;
   const { mode, uiMode, window } = query || {};
   const isPasswordFreeLogin = mode === 'passwordFreeLogin';
+  const pathname = location?.pathname;
 
   const locale = getLocale();
   const localeMap = {
@@ -71,7 +72,10 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     }
     // 只在 obInfoData 为空或未定义时才获取数据，避免重复请求
     // 这样可以利用登录时已经获取到的数据
-    if (!obInfoData || Object.keys(obInfoData).length === 0) {
+    if (
+      !['/login', '/instance'].includes(pathname || '') &&
+      (!obInfoData || Object.keys(obInfoData).length === 0)
+    ) {
       dispatch({
         type: 'global/getObInfoData',
         payload: {},
@@ -94,11 +98,6 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
         });
       }
     },
-  });
-
-  // 用来触发非免密场景下空密码 401 跳到登录页
-  useRequest(obService.getObInfo, {
-    ready: !isPasswordFreeLogin,
   });
 
   const telemetryTime = getEncryptLocalStorage('telemetryTime');

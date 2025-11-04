@@ -79,7 +79,7 @@ const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({
         style={{ marginBottom: 24 }}
         message={formatMessage({
           id: 'ocp-express.Detail.Component.ModifyWhitelistModal.OnlyIpAddressesThatHave',
-          defaultMessage: '只有已添加到白名单中的 IP 地址才可以访问该租户',
+          defaultMessage: '只有已添加到白名单中的 IP 地址才可以访问该实例',
         })}
         description={
           <ul>
