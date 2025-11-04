@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Button,
   Card,
@@ -79,17 +79,29 @@ const Index: React.FC<IndexProps> = ({}) => {
 
   const loading = getParametersLoading || getVariablesLoading;
 
-  const parameterList = [
-    ...(parametersData?.data?.contents?.map(item => ({
-      ...item,
-      itemType: PARAMETER,
-      read_only: item?.edit_level === 'READONLY',
-    })) || []),
-    ...(variablesData?.data?.contents?.map(item => ({
-      ...item,
-      itemType: VARIABLE,
-    })) || []),
-  ];
+  const parameterList = useMemo(() => {
+    return [
+      ...(parametersData?.data?.contents?.map(item => ({
+        ...item,
+        itemType: PARAMETER,
+        read_only: item?.edit_level === 'READONLY',
+      })) || []),
+      ...(variablesData?.data?.contents?.map(item => ({
+        ...item,
+        itemType: VARIABLE,
+      })) || []),
+    ].sort((a, b) => {
+      const aStartsWithUnderscore = a.name?.startsWith('_');
+      const bStartsWithUnderscore = b.name?.startsWith('_');
+
+      // 如果一个以_开头，另一个不以_开头，将_开头的放后面
+      if (aStartsWithUnderscore && !bStartsWithUnderscore) return 1;
+      if (!aStartsWithUnderscore && bStartsWithUnderscore) return -1;
+
+      // 否则按字母排序
+      return (a.name || '').localeCompare(b.name || '');
+    });
+  }, [parametersData?.data?.contents, variablesData?.data?.contents]);
 
   const { run: modifyTenantParameter, loading: modifyTenantParameterLoading } = useRequest(
     setParameters,
