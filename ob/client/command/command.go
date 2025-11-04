@@ -258,6 +258,10 @@ func (c *Command) printUseMessage() {
 	}
 }
 
+func (c *Command) printSeekdbHelpMessage() {
+	stdio.Print("\nIf you want to know more information about obshell used in seekdb, please use --seekdb option.")
+}
+
 func (c *Command) PrintUsageFunc(cmd *cobra.Command) error {
 	c.PrintHelpFunc(cmd, nil)
 	return nil
@@ -295,6 +299,7 @@ func (c *Command) PrintHelpFunc(cmd *cobra.Command, args []string) {
 	c.printFlags()
 	c.printUseMessage()
 	c.printExample()
+	c.printSeekdbHelpMessage()
 }
 
 func (cmd *Command) initFlagsUsage() {

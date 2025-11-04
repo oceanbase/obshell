@@ -42,13 +42,22 @@ var (
 )
 
 func PreHandler() {
-	// Check whether is oceanbase seekdb
 	if len(os.Args) >= 2 {
 		arg := strings.ToLower(os.Args[1])
 		if arg != "version" && arg != "info-ip" && arg != "-v" && arg != "--versoin" && ob.IsOceanBaseSeekdb() {
-			process.ExitWithErrorWithoutLog(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, errors.Occur(errors.ErrAgentStartForOceanbaseSeekdbIncorrectly))
+			var isHelp bool
+			for _, arg := range os.Args {
+				if arg == "--help" || arg == "-h" {
+					isHelp = true
+					break
+				}
+			}
+			if !isHelp {
+				process.ExitWithErrorWithoutLog(constant.EXIT_CODE_ERROR_AGENT_START_FAILED, errors.Occur(errors.ErrAgentStartForOceanbaseSeekdbIncorrectly))
+			}
 		}
 	}
+
 	if len(os.Args) >= 2 {
 		switch strings.ToLower(os.Args[1]) {
 		case CMD_ADMIN:
