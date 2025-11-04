@@ -113,17 +113,15 @@ func (obclusterService *ObclusterService) GetObVersion() (version string, err er
 	if err != nil {
 		return version, err
 	}
-	err = oceanbaseDb.Raw("select ob_version()").Scan(&version).Error
-	return
-}
-
-func (obclusterService *ObclusterService) GetObBuildVersion() (revision string, err error) {
-	oceanbaseDb, err := oceanbasedb.GetInstance()
+	err = oceanbaseDb.Raw("select version()").Scan(&version).Error
 	if err != nil {
-		return revision, err
+		return version, err
 	}
-	err = oceanbaseDb.Raw("select ob_build_version()").Scan(&revision).Error
-	return
+	items := strings.Split(version, "-")
+	if len(items) != 3 {
+		return version, errors.Occur(errors.ErrObBinaryVersionUnexpected, "version is not in the expected format: %s", version)
+	}
+	return strings.TrimPrefix(items[2], "v"), nil
 }
 
 func (obclusterService *ObclusterService) GetOBServer() (observer *oceanbase.OBServer, err error) {
