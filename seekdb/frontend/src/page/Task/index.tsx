@@ -166,27 +166,6 @@ const Task: React.FC<TaskProps> = ({
     },
 
     {
-      title: formatMessage({ id: 'ocp-express.page.Task.Type', defaultMessage: '类型' }),
-      dataIndex: 'id',
-      render: (text: string, record: API.DagDetailDTO) => {
-        const statusItem = findByValue(TASK_TYPE_LIST, text[0]);
-        return <span>{statusItem.label}</span>;
-      },
-    },
-
-    {
-      title: formatMessage({
-        id: 'ocp-express.page.Task.Maintenance',
-        defaultMessage: '运维类型',
-      }),
-      dataIndex: 'maintenance_type',
-      render: (text: number) => {
-        const statusItem = findByValue(TASK_MAINTENANCE_LIST, String(text));
-        return <span>{statusItem.label}</span>;
-      },
-    },
-
-    {
       title: formatMessage({
         id: 'ocp-express.page.Task.ExecutionProgress',
         defaultMessage: '执行进度',
