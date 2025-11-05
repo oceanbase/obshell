@@ -91,6 +91,7 @@ const Detail: React.FC<NewProps> = ({}) => {
   const obInfoStatusInfo = OB_INFO_STATUS_LIST.find(item => item.value === obInfoStatus);
   const obInfoStatusName = obInfoStatusInfo?.label;
   const availableFlag = getInstanceAvailableFlag(obInfoStatus);
+  const systemdUnit = obInfoData?.systemd_unit || '';
 
   const obInfoPolling = ['STARTING', 'STOPPING', 'RESTARTING'].includes(obInfoStatus);
   useInterval(
@@ -359,12 +360,12 @@ const Detail: React.FC<NewProps> = ({}) => {
   const menu = (
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       {/* <Menu.Item key="upgrade">
-       <span>
-         {formatMessage({
-           id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
-           defaultMessage: '升级版本',
-         })}
-       </span>
+      <span>
+        {formatMessage({
+          id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
+          defaultMessage: '升级版本',
+        })}
+      </span>
       </Menu.Item> */}
       <Menu.Item key="upgradeAgent" disabled={obInfoStatus !== 'AVAILABLE'}>
         <Tooltip placement="left" title={obInfoStatus !== 'AVAILABLE' && tooltipTitle}>
@@ -419,9 +420,19 @@ const Detail: React.FC<NewProps> = ({}) => {
           <Space>
             {!isDesktopMode &&
               ['AVAILABLE', 'UNAVAILABLE', 'STOPPING', 'RESTARTING'].includes(obInfoStatus) && (
-                <Tooltip title={['STOPPING', 'RESTARTING'].includes(obInfoStatus) && tooltipTitle}>
+                <Tooltip
+                  title={
+                    (['STOPPING', 'RESTARTING'].includes(obInfoStatus) && tooltipTitle) ||
+                    (!!systemdUnit &&
+                      formatMessage({
+                        id: 'SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning',
+                        defaultMessage:
+                          '当前 SeekDB 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。',
+                      }))
+                  }
+                >
                   <Button
-                    disabled={['STOPPING', 'RESTARTING'].includes(obInfoStatus)}
+                    disabled={['STOPPING', 'RESTARTING'].includes(obInfoStatus) || !!systemdUnit}
                     onClick={() => handleMenuClick('stop')}
                   >
                     {formatMessage({ id: 'SeekDB.Detail.Overview.Stop', defaultMessage: '停止' })}
@@ -492,8 +503,14 @@ const Detail: React.FC<NewProps> = ({}) => {
                   status={obInfoStatusInfo?.badgeStatus as BadgeProps['status']}
                   text={obInfoStatusName}
                 />
+
                 {['STARTING', 'STOPPING', 'RESTARTING'].includes(obInfoStatus) && (
-                  <Tooltip title="可进入任务中心查看">
+                  <Tooltip
+                    title={formatMessage({
+                      id: 'SeekDB.Detail.Overview.CanEnterTheTaskCenter',
+                      defaultMessage: '可进入任务中心查看',
+                    })}
+                  >
                     <QuestionCircleOutlined style={{ marginLeft: 8, cursor: 'pointer' }} />
                   </Tooltip>
                 )}
@@ -779,12 +796,12 @@ const Detail: React.FC<NewProps> = ({}) => {
       />
 
       {/* <UpgradeDrawer
-         visible={upgradeVisible}
-         onCancel={() => setUpgradeVisible(false)}
-         onSuccess={() => {
-           setUpgradeVisible(false);
-         }}
-        /> */}
+          visible={upgradeVisible}
+          onCancel={() => setUpgradeVisible(false)}
+          onSuccess={() => {
+            setUpgradeVisible(false);
+          }}
+         /> */}
 
       <UpgradeAgentDrawer
         visible={upgradeAgentVisible}

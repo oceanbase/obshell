@@ -2859,5 +2859,7 @@
   "SeekDB.Detail.Overview.DataDiskPath": "data disk path",
   "SeekDB.Detail.Overview.LogDiskPath": "Log disk path",
   "SeekDB.Detail.Overview.LogDirectory": "Log Directory",
-  "SeekDB.Detail.Overview.WorkingDirectory": "Working Directory"
+  "SeekDB.Detail.Overview.WorkingDirectory": "Working Directory",
+  "SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning": "The SeekDB instance is running under systemd management. To stop the service, run the systemctl stop seekdb command.",
+  "SeekDB.Detail.Overview.CanEnterTheTaskCenter": "Can enter the task center to view"
 }
