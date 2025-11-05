@@ -218,7 +218,7 @@ func ObserverBinPath() string {
 }
 
 func ObserverClusterIdFilePath() string {
-	return filepath.Join(RunDir(), "id")
+	return filepath.Join(RunDir(), "telemetry.json")
 }
 
 func BinDir() string {

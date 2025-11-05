@@ -17,11 +17,11 @@
 package binary
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
-	"strings"
 
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
@@ -62,5 +62,17 @@ func GetClusterId() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(string(content)), nil
+
+	type Content struct {
+		ClusterId string `json:"clusterId"`
+	}
+	type Response struct {
+		Content Content `json:"content"`
+	}
+	response := Response{}
+	err = json.Unmarshal(content, &response)
+	if err != nil {
+		return "", err
+	}
+	return response.Content.ClusterId, nil
 }
