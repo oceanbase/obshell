@@ -47,6 +47,8 @@ const (
 	// stop ob retry times
 	STOP_OB_MAX_RETRY_TIME     = 15
 	STOP_OB_MAX_RETRY_INTERVAL = 5
+
+	PARAM_OBSERVER_PID = "observerPid"
 )
 
 var (

@@ -38,6 +38,7 @@ type ObserverInfo struct {
 	Whitelist        string `json:"whitelist"`
 	DatabaseCount    int    `json:"database_count,omitempty"`
 	UserCount        int    `json:"user_count,omitempty"`
+	SystemdUnit      string `json:"systemd_unit"`
 }
 
 type ObserverDirInfo struct {

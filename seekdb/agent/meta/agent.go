@@ -140,6 +140,7 @@ type AgentStatus struct {
 	AgentInstance
 	Security      bool     `json:"security"`
 	SupportedAuth []string `json:"supportedAuth"`
+	SystemdUnit   string   `json:"systemdUnit"`
 }
 
 func (agent *ZoneDTO) GetZone() string {

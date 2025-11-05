@@ -17,6 +17,8 @@
 package process
 
 import (
+	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -26,6 +28,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/coreos/go-systemd/v22/dbus"
 	"github.com/shirou/gopsutil/v3/net"
 	log "github.com/sirupsen/logrus"
 
@@ -148,12 +151,20 @@ func CheckProcessExist(pid int32) (bool, error) {
 	}
 }
 
+func GetObserverProcess() (*ProcessInfo, error) {
+	return getObserverProcess()
+}
+
 func GetObserverPid() (string, error) {
 	process, err := getObserverProcess()
 	if err != nil {
 		return "", err
 	}
 	return process.Pid()
+}
+
+func GetObserverPidInt() (int32, error) {
+	return getPid(filepath.Join(path.RunDir(), "observer.pid"))
 }
 
 func GetObserverBinPath() (string, error) {
@@ -258,4 +269,36 @@ func FindPIDByPort(port uint32) (int32, error) {
 		}
 	}
 	return 0, errors.Occurf(errors.ErrCommonUnexpected, "no process found on port %d", port)
+}
+
+func GetSystemdUnit(pid int) (string, error) {
+	ctx := context.Background()
+	if conn, err := dbus.NewSystemdConnectionContext(ctx); err == nil && conn != nil {
+		defer conn.Close()
+		unitName, _ := conn.GetUnitNameByPID(ctx, uint32(pid))
+		// ignore error
+		if unitName != "" {
+			return unitName, nil
+		}
+	}
+
+	// get unit name from /proc/pid/cgroup
+	cgroupPath := fmt.Sprintf("/proc/%d/cgroup", pid)
+	file, err := os.Open(cgroupPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	if scanner != nil {
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.Contains(line, "seekdb.service") {
+				return "seekdb.service", nil
+			}
+		}
+	}
+
+	return "", nil
 }

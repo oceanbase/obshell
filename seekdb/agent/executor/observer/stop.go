@@ -17,6 +17,8 @@
 package observer
 
 import (
+	"fmt"
+	"os"
 	"os/exec"
 	"time"
 
@@ -58,10 +60,24 @@ func CreateStopDag(p param.ObStopParam) (*task.DagDetailDTO, error) {
 			return nil, errors.Occur(errors.ErrAgentOceanbaseUesless) // when stop with terminate, the ob state must be available
 		}
 	}
+
 	if exist, err := process.CheckObserverProcess(); err != nil {
 		log.Warnf("Check observer process failed: %v", err)
 	} else if !exist {
 		return nil, nil // when observer process not exist, return nil directly
+	}
+
+	pid, err := process.GetObserverPidInt()
+	if err != nil {
+		return nil, err
+	}
+	// check if the pid is managed by systemd
+	systemdUnit, err := process.GetSystemdUnit(int(pid))
+	if err != nil {
+		log.Warnf("Failed to get systemd unit: %v", err)
+	}
+	if systemdUnit != "" {
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "observer is managed by systemd, please stop it manually via systemctl")
 	}
 
 	builder := task.NewTemplateBuilder(DAG_STOP_OBSERVER)
@@ -70,7 +86,7 @@ func CreateStopDag(p param.ObStopParam) (*task.DagDetailDTO, error) {
 	}
 
 	builder.AddTask(newStopObserverTask(), false).SetMaintenance(task.GlobalMaintenance())
-	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true))
+	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true).SetParam(PARAM_OBSERVER_PID, fmt.Sprint(pid)))
 	if err != nil {
 		return nil, err
 	}
@@ -82,15 +98,26 @@ func (t *StopObserverTask) Execute() error {
 }
 
 func stopObserver(t task.ExecutableTask) error {
-	t.ExecuteLog("Get observer Pid")
-	pid, err := process.GetObserverPid()
+	var pid string
+	if err := t.GetContext().GetParamWithValue(PARAM_OBSERVER_PID, &pid); err != nil {
+		return err
+	}
+	t.ExecuteLogf("Expected observer pid is: %s", pid)
+
+	t.ExecuteLog("Get current observer Pid")
+	currentPid, err := process.GetObserverPid()
 	if err != nil {
 		return err
 	}
-	if pid == "" {
+	if currentPid == "" {
 		t.ExecuteLog("Observer is not running")
 		return nil
 	}
+	if currentPid != pid {
+		t.ExecuteLogf("Observer has been restarted by other, new pid: %s", currentPid)
+		return nil
+	}
+
 	for i := 0; i < STOP_OB_MAX_RETRY_TIME; i++ {
 		t.ExecuteLogf("Kill observer process %s", pid)
 		res := exec.Command("kill", "-9", pid)
@@ -101,23 +128,13 @@ func stopObserver(t task.ExecutableTask) error {
 		time.Sleep(time.Second * STOP_OB_MAX_RETRY_INTERVAL)
 		t.TimeoutCheck()
 
-		// get observer pid to avoid observer has been restarted by other
-
-		pidNow, err := process.GetObserverPid()
-		if err != nil {
-			log.Warnf("Get observer pid failed: %v", err)
-		} else if pidNow != "" && pidNow != pid {
-			t.ExecuteLogf("Observer has been restarted by other, new pid: %s", pidNow)
-			return nil
-		}
-
 		t.ExecuteLog("Check observer process")
-		exist, err := process.CheckObserverProcess()
-		if err != nil {
+		if _, err := os.Stat(fmt.Sprintf("/proc/%s", pid)); err != nil {
+			if os.IsNotExist(err) {
+				t.ExecuteLog("Successfully killed the observer process")
+				return nil
+			}
 			log.Warnf("Check observer process failed: %v", err)
-		} else if !exist {
-			t.ExecuteLog("Successfully killed the observer process")
-			return nil
 		}
 	}
 	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "kill observer process")

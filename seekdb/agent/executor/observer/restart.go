@@ -40,6 +40,7 @@ func CreateRestartDag(p param.ObRestartParam) (*task.DagDetailDTO, error) {
 		}
 	}
 
+	ctx := task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
 	builder := task.NewTemplateBuilder(DAG_RESTART_OBSERVER).SetMaintenance(task.GlobalMaintenance())
 	if p.Terminate {
 		builder.AddTask(newMinorFreezeTask(), false)
@@ -47,12 +48,17 @@ func CreateRestartDag(p param.ObRestartParam) (*task.DagDetailDTO, error) {
 	if exist, err := process.CheckObserverProcess(); err != nil {
 		log.Warnf("Check observer process failed: %v", err)
 	} else if exist {
+		pid, err := process.GetObserverPid()
+		if err != nil {
+			return nil, err
+		}
+		ctx.SetParam(PARAM_OBSERVER_PID, pid)
 		// when observer process is exists, should stop it first
 		builder.AddTask(newStopObserverTask(), false)
 	}
 
 	builder.AddTask(newStartObServerTask(), false)
-	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true))
+	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), ctx)
 	if err != nil {
 		return nil, err
 	}

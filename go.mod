@@ -9,6 +9,7 @@ require (
 	github.com/briandowns/spinner v1.23.0
 	github.com/cavaliergopher/cpio v1.0.1
 	github.com/cavaliergopher/rpm v1.2.0
+	github.com/coreos/go-systemd/v22 v22.6.0
 	github.com/deckarep/golang-set v1.8.0
 	github.com/gin-contrib/static v1.1.1
 	github.com/gin-gonic/gin v1.10.0
@@ -91,6 +92,7 @@ require (
 	github.com/go-playground/validator/v10 v10.20.0 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
+	github.com/godbus/dbus/v5 v5.1.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.2.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
