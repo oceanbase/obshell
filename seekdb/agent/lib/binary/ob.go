@@ -64,7 +64,7 @@ func GetClusterId() (string, error) {
 	}
 
 	type Content struct {
-		ClusterId string `json:"clusterId"`
+		ClusterId string `json:"id"`
 	}
 	type Response struct {
 		Content Content `json:"content"`
