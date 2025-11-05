@@ -76,10 +76,11 @@ const LoginPage: React.FC<LoginPageProps> = ({
         }
       } else {
         message.error(
-          formatMessage({
-            id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
-            defaultMessage: '密码错误',
-          })
+          res.error?.message ||
+            formatMessage({
+              id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
+              defaultMessage: '密码错误',
+            })
         );
       }
     },
