@@ -32,6 +32,7 @@ import { telemetryReport } from '@/service/custom';
 import * as obService from '@/service/obshell/observer';
 import moment from 'moment';
 import { DESKTOP_UI_MODE, DESKTOP_WINDOW } from '@/constant';
+import useObInfo from '@/hook/useObInfo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,7 +47,8 @@ interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ children, location }) => {
-  const { themeMode, obInfoData } = useSelector((state: DefaultRootState) => state.global);
+  const { themeMode } = useSelector((state: DefaultRootState) => state.global);
+  const { isObInfoDataLoaded } = useObInfo();
   const query = location?.query;
   const { mode, uiMode, window } = query || {};
   const isPasswordFreeLogin = mode === 'passwordFreeLogin';
@@ -70,12 +72,9 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       localStorage.setItem(DESKTOP_UI_MODE, uiMode);
       localStorage.setItem(DESKTOP_WINDOW, window);
     }
-    // 只在 obInfoData 为空或未定义时才获取数据，避免重复请求
+    // 只在 obInfoData 未加载时才获取数据，避免重复请求
     // 这样可以利用登录时已经获取到的数据
-    if (
-      !['/login', '/instance'].includes(pathname || '') &&
-      (!obInfoData || Object.keys(obInfoData).length === 0)
-    ) {
+    if (!['/login', '/instance'].includes(pathname || '') && !isObInfoDataLoaded) {
       dispatch({
         type: 'global/getObInfoData',
         payload: {},

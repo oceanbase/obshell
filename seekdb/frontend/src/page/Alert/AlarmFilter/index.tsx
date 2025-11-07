@@ -7,7 +7,7 @@ import type { FormInstance } from 'antd';
 import { Button, Col, DatePicker, Form, Input, Row, Select, Tag } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Space } from '@oceanbase/design';
-import { useSelector } from 'umi';
+import useObInfo from '@/hook/useObInfo';
 
 interface AlarmFilterProps {
   form: FormInstance<any>;
@@ -23,7 +23,7 @@ const DEFAULT_VISIBLE_CONFIG = {
 };
 
 export default function AlarmFilter({ form, type, depend }: AlarmFilterProps) {
-  const { obInfoData } = useSelector((state: DefaultRootState) => state.global);
+  const { obInfoData } = useObInfo();
   const [visibleConfig, setVisibleConfig] = useState(DEFAULT_VISIBLE_CONFIG);
 
   const { run: debounceDepend } = useDebounceFn(depend, { wait: 500 });

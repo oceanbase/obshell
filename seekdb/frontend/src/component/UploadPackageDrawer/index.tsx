@@ -6,7 +6,6 @@ import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
 import CryptoJS from 'crypto-js';
 import { newPkgUpload } from '@/service/obshell/package';
-import { useCluster } from '@/hook/useCluster';
 import './index.less';
 
 interface UploadPackageDrawerProps {
@@ -32,9 +31,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   useEffect(() => {
     setFileList([]);
   }, [open]);
-
-  // 用于中断 fetch 请求
-  const [abortControl, setAbortControl] = useState(new AbortController());
 
   const normFile = (e: any) => {
     if (Array.isArray(e)) {
@@ -289,7 +285,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
         defaultMessage: '上传软件包',
       })}
       open={open}
-      width={800}
+      width={1000}
       destroyOnClose={true}
       maskClosable={false}
       okText={formatMessage({

@@ -1,7 +1,6 @@
 import { formatMessage } from '@/util/intl';
 import MonitorDetail from '@/component/MonitorDetail';
 import { PageContainer } from '@oceanbase/ui';
-import { useSelector } from 'umi';
 import { useDeepCompareEffect } from 'ahooks';
 import { useState } from 'react';
 
@@ -9,6 +8,7 @@ import React from 'react';
 import { MonitorScope } from '@/page/Monitor';
 import useReload from '@/hook/useReload';
 import ContentWithReload from '@/component/ContentWithReload';
+import useObInfo from '@/hook/useObInfo';
 
 export interface ClusterMonitorProps {
   monitorScope: MonitorScope;
@@ -16,7 +16,7 @@ export interface ClusterMonitorProps {
 
 const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ monitorScope }) => {
   const [reloading, reload] = useReload(false);
-  const { obInfoData } = useSelector((state: DefaultRootState) => state.global);
+  const { obInfoData } = useObInfo();
   const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
     {
       key: 'ob_cluster_name',

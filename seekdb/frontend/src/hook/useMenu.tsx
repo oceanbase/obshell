@@ -17,7 +17,6 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
-import { useSelector } from 'umi';
 import Icon from '@oceanbase/icons';
 import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
 import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
@@ -34,10 +33,12 @@ import { ReactComponent as UserSelectedSvg } from '@/asset/user_selected.svg';
 import { ReactComponent as ParameterSvg } from '@/asset/parameter.svg';
 import { ReactComponent as ParameterSelectedSvg } from '@/asset/parameter_selected.svg';
 import { getInstanceAvailableFlag } from '@/util/instance';
+import useUiMode from './useUiMode';
+import useObInfo from './useObInfo';
 
 export const useBasicMenu = (): MenuItem[] => {
-  const { obInfoData } = useSelector((state: DefaultRootState) => state.global);
-
+  const { obInfoData } = useObInfo();
+  const { isDesktopMode } = useUiMode();
   const availableFlag = getInstanceAvailableFlag(obInfoData?.status || '');
 
   return [
@@ -77,7 +78,7 @@ export const useBasicMenu = (): MenuItem[] => {
         id: 'OBShell.src.hook.useMenu.AlarmCenter',
         defaultMessage: '告警中心',
       }),
-      accessible: availableFlag,
+      accessible: !isDesktopMode && availableFlag,
       icon: <Icon component={AlarmSvg} />,
       selectedIcon: <Icon component={AlarmSelectedSvg} />,
     },
@@ -88,7 +89,7 @@ export const useBasicMenu = (): MenuItem[] => {
         id: 'OBShell.src.hook.useMenu.PerformanceMonitoring',
         defaultMessage: '性能监控',
       }),
-      accessible: availableFlag,
+      accessible: !isDesktopMode && availableFlag,
       icon: <Icon component={MonitorSvg} />,
       selectedIcon: <Icon component={MonitorSelectedSvg} />,
     },

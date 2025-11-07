@@ -6,7 +6,6 @@ import InputLabelComp from '@/component/InputLabelComp';
 import { VALIDATE_DEBOUNCE, LABEL_NAME_RULE } from '@/constant/alert';
 import { DATE_TIME_FORMAT } from '@/constant/datetime';
 import { Alert } from '@/typing/env/alert';
-import { useSelector } from 'umi';
 import { useRequest } from 'ahooks';
 import type { DrawerProps } from 'antd';
 import {
@@ -24,6 +23,7 @@ import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { getInstancesFromRes, validateLabelValues } from '../helper';
 import { getEncryptLocalStorage } from '@/util';
+import useObInfo from '@/hook/useObInfo';
 
 interface ShieldDrawerProps extends DrawerProps {
   id?: string;
@@ -42,7 +42,7 @@ export default function ShieldDrawerForm({
   ...props
 }: ShieldDrawerProps) {
   const [form] = Form.useForm<Alert.ShieldDrawerForm>();
-  const { obInfoData } = useSelector((state: DefaultRootState) => state.global);
+  const { obInfoData } = useObInfo();
   const isEdit = !!id;
 
   const newInitialValues = {

@@ -57,11 +57,12 @@ import UpgradeAgentDrawer from '@/page/Cluster/Overview/UpgradeAgentDrawer';
 import { OB_INFO_STATUS_LIST } from '@/constant/tenant';
 import useUiMode from '@/hook/useUiMode';
 import { getInstanceAvailableFlag } from '@/util/instance';
+import useObInfo from '@/hook/useObInfo';
 interface NewProps {}
 
 const Detail: React.FC<NewProps> = ({}) => {
   const dispatch = useDispatch();
-  const { obInfoData: obInfo } = useSelector((state: DefaultRootState) => state.global);
+  const { obInfoData: obInfo } = useObInfo();
   const loading = useSelector(
     (state: DefaultRootState) => state.loading.effects['global/getObInfoData']
   );

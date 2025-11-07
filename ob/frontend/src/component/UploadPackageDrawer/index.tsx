@@ -291,7 +291,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
         defaultMessage: '上传软件包',
       })}
       open={open}
-      width={800}
+      width={1000}
       destroyOnClose={true}
       maskClosable={false}
       okText={formatMessage({

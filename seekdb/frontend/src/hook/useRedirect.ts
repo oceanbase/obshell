@@ -5,6 +5,7 @@ import { flatten, isArray } from 'lodash';
 import type { TabPaneProps } from '@oceanbase/design/es/tabs';
 import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
 import { match } from 'path-to-regexp';
+import useObInfo from './useObInfo';
 
 // 根据根路由或 Tab 的权限进行重定向
 // 若当前路由为根路由，则重定向到第一个有权限的子路由
@@ -18,6 +19,7 @@ const useRedirectRoute = (
   menus: (MenuItem | (TabPaneProps & { accessible: boolean; link: string }))[]
 ) => {
   const { pathname } = useLocation() || {};
+  const { isObInfoDataLoaded } = useObInfo();
 
   const matchFn = match(getFullPath(rootPath));
   const isRootPath = matchFn(pathname);
@@ -26,14 +28,14 @@ const useRedirectRoute = (
   const fullMenus = flatten(
     menus.map(item => [item, ...(isArray(item?.children) ? item?.children : [])])
   );
-
   const accessibleMenus = fullMenus.filter(item => item.accessible);
-
   // 若当前路由为根路由，则重定向到第一个有权限的子路由
   useEffect(() => {
-    if (!isRootPath) return;
+    if (!isRootPath || !isObInfoDataLoaded) return;
 
     const firstAccessiblePath = accessibleMenus && accessibleMenus[0]?.link;
+
+    // obInfoData 已加载，进行正常的权限判断
     if (!firstAccessiblePath) {
       history.push('/error/403');
       return;
@@ -42,17 +44,15 @@ const useRedirectRoute = (
     if (firstAccessiblePath !== pathname) {
       history.replace(firstAccessiblePath);
     }
-  }, [pathname, isRootPath]);
+  }, [pathname, isRootPath, isObInfoDataLoaded, accessibleMenus]);
 
   // 若当前路由为非根路由，并且没有访问权限，则重定向到 403 页面
   useEffect(() => {
-    if (isRootPath || !fullMenus?.length) return;
+    if (isRootPath || !fullMenus?.length || !isObInfoDataLoaded) return;
 
     const relatedMenus = fullMenus.filter(menu => pathname.startsWith(menu.link));
-
     const sortMenus = relatedMenus.sort((a, b) => b?.link.length - a?.link.length);
     if (relatedMenus?.length && !sortMenus[0]?.accessible) history.push('/error/403');
-  }, [pathname, isRootPath]);
+  }, [pathname, isRootPath, isObInfoDataLoaded]);
 };
-
 export default useRedirectRoute;
