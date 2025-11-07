@@ -4,7 +4,7 @@ import SelectDropdownRender from '@/component/SelectDropdownRender';
 // import { PACKAGE_TYPE_LIST } from '@/constant/package';
 // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { buildVersionCompare, versionCompare } from '@/util/package';
-import { formatMessage } from 'umi';
+import { formatMessage } from '@/util/intl';
 import React, { useImperativeHandle, useState } from 'react';
 import { uniqBy } from 'lodash';
 import { Space, Tooltip } from '@oceanbase/design';
