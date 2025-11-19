@@ -145,14 +145,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     }
   );
 
-  useEffect(() => {
-    // 预先获取集群列表
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-    });
-  }, []);
-
   const failedTaskList = (clusterTaskListData?.data?.contents || [])
     .filter(item => item.state === 'FAILED')
     .concat((agentTaskListData?.data?.contents || []).filter(item => item.state === 'FAILED'));

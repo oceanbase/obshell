@@ -100,7 +100,11 @@ const Detail: React.FC<DetailProps> = ({
     formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
   );
 
-  const { data: obclusterInfoRes, refresh } = useRequest(
+  const {
+    data: obclusterInfoRes,
+    refresh,
+    loading: obclusterInfoLoading,
+  } = useRequest(
     () =>
       obclusterInfo({
         HIDE_ERROR_MESSAGE: true,
@@ -564,7 +568,7 @@ const Detail: React.FC<DetailProps> = ({
 
   return (
     <PageContainer
-      loading={reloading}
+      loading={reloading || obclusterInfoLoading}
       ghost={true}
       header={{
         title: (
