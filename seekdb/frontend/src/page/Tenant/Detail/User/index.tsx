@@ -17,24 +17,10 @@
 import React from 'react';
 import MySQL from './MySQL';
 
-export interface IndexProps {
-  match: {
-    params: {
-      tenantName: string;
-    };
-  };
-}
+export interface IndexProps {}
 
-const Index: React.FC<IndexProps> = ({
-  match: {
-    params: { tenantName },
-  },
-}) => {
-  return (
-    <>
-      <MySQL tenantName={tenantName} />
-    </>
-  );
+const Index: React.FC<IndexProps> = ({}) => {
+  return <MySQL />;
 };
 
 export default Index;

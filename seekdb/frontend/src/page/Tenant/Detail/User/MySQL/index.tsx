@@ -15,7 +15,6 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { useSelector } from 'umi';
 import React, { useState } from 'react';
 import {
   Table,
@@ -40,7 +39,6 @@ import DeleteUserModal from '../Component/DeleteUserModal';
 import OBProxyAndConnectionStringModal from '../../Component/OBProxyAndConnectionStringModal';
 import RenderConnectionString from '@/component/RenderConnectionString';
 import { listUsers, lockUser, unlockUser, getStats } from '@/service/obshell/user';
-import useUiMode from '@/hook/useUiMode';
 
 export interface IndexProps {}
 
@@ -56,8 +54,6 @@ const Index: React.FC<IndexProps> = () => {
   const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   // 删除Modal
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-
-  const { isDesktopMode } = useUiMode();
 
   const {
     data: dbUserListData,
@@ -257,20 +253,16 @@ const Index: React.FC<IndexProps> = () => {
       render: (text: string, record: API.DbUser) => {
         return (
           <Space size="middle">
-            {!isDesktopMode && (
-              <>
-                <a
-                  onClick={() => {
-                    modifyPassword(record);
-                  }}
-                >
-                  {formatMessage({
-                    id: 'ocp-express.User.MySQL.ChangePassword',
-                    defaultMessage: '修改密码',
-                  })}
-                </a>
-              </>
-            )}
+            <a
+              onClick={() => {
+                modifyPassword(record);
+              }}
+            >
+              {formatMessage({
+                id: 'ocp-express.User.MySQL.ChangePassword',
+                defaultMessage: '修改密码',
+              })}
+            </a>
             {record.username !== 'root' && (
               <>
                 <a
