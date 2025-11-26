@@ -27,6 +27,7 @@ import (
 	"github.com/cavaliergopher/rpm"
 	"gorm.io/gorm"
 
+	obdriver "github.com/oceanbase/go-oceanbase-driver"
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/meta"
@@ -914,6 +915,11 @@ func (obclusterService *ObclusterService) GetOBType() (obType modelob.OBType, er
 	}
 	err = oceanbaseDb.Raw("SELECT COUNT(*) FROM oceanbase.DBA_OB_LICENSE").Scan(&count).Error
 	if err != nil {
+		if obErr, ok := err.(*obdriver.MySQLError); ok {
+			if obErr.Number == 1146 { // table not found
+				return modelob.OBTypeBusiness, nil
+			}
+		}
 		return
 	}
 	if count > 0 {
