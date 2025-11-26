@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js';
 import { toNumber } from 'lodash';
+import CryptoJS from 'crypto-js';
 
 /**
  * 支持的比较操作符
@@ -129,3 +130,53 @@ export function supportStandbyCluster(version?: string): boolean {
 export function isGte4(version?: string): boolean {
   return buildVersionCompare(version, '4.0', 'gte');
 }
+
+/**
+ * 分片计算文件的 SHA256 哈希值
+ * 避免一次性加载大文件到内存导致 RangeError
+ * @param file 要计算哈希的文件
+ * @param chunkSize 每次读取的分片大小（默认 50MB）
+ * @returns SHA256 哈希值的十六进制字符串
+ */
+export const calculateFileSHA256 = (
+  file: File,
+  chunkSize: number = 50 * 1024 * 1024
+): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const sha256 = CryptoJS.algo.SHA256.create();
+    let offset = 0;
+
+    const readNextChunk = () => {
+      const reader = new FileReader();
+      const slice = file.slice(offset, offset + chunkSize);
+
+      reader.onload = e => {
+        if (e.target?.result) {
+          const arrayBuffer = e.target.result as ArrayBuffer;
+          const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
+          sha256.update(wordArray);
+
+          offset += chunkSize;
+
+          if (offset < file.size) {
+            // 继续读取下一个分片
+            readNextChunk();
+          } else {
+            // 所有分片读取完成，生成最终哈希值
+            const hash = sha256.finalize();
+            const hashHex = CryptoJS.enc.Hex.stringify(hash);
+            resolve(hashHex);
+          }
+        }
+      };
+
+      reader.onerror = error => {
+        reject(error);
+      };
+
+      reader.readAsArrayBuffer(slice);
+    };
+
+    readNextChunk();
+  });
+};

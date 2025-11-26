@@ -4,15 +4,24 @@ import React, { useState, useEffect } from 'react';
 import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@oceanbase/design';
 import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
-import CryptoJS from 'crypto-js';
 import { newPkgUpload } from '@/service/obshell/package';
 import { useCluster } from '@/hook/useCluster';
+import { calculateFileSHA256 } from '@/util/package';
 import './index.less';
 
 interface UploadPackageDrawerProps {
   open: boolean;
   onCancel: () => void;
   onSuccess: () => void;
+}
+
+// 扩展 UploadFile 类型，添加自定义属性
+interface ExtendedUploadFile extends UploadFile {
+  key?: string;
+  id?: string;
+  md5?: string;
+  description?: string;
+  checkResult?: string;
 }
 
 const formItemLayout = {
@@ -29,14 +38,11 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
 }) => {
   const { isStandalone } = useCluster();
 
-  const [fileList, setFileList] = useState<UploadFile[]>([]);
+  const [fileList, setFileList] = useState<ExtendedUploadFile[]>([]);
 
   useEffect(() => {
     setFileList([]);
   }, [open]);
-
-  // 用于中断 fetch 请求
-  const [abortControl, setAbortControl] = useState(new AbortController());
 
   const normFile = (e: any) => {
     if (Array.isArray(e)) {
@@ -45,7 +51,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     return e && e.fileList;
   };
 
-  const beforeUpload = file => {
+  const beforeUpload = (file: File) => {
     const isFileExists = fileList.some(f => f.name === file.name);
     if (isFileExists) {
       message.warning(
@@ -175,7 +181,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       }),
       dataIndex: 'name',
       ellipsis: true,
-      render: (text: string, record) => (
+      render: (text: string, record: any) => (
         <div style={{ maxWidth: '460px' }}>
           <div>{text}</div>
           <div style={{ color: '#8592ad', fontSize: '12px', lineHeight: '20px' }}>
@@ -192,7 +198,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       }),
       dataIndex: 'percent',
       width: 110,
-      render: (text, record) => {
+      render: (text: any, record: any) => {
         return !record.percent || record.percent === 0 ? (
           '-'
         ) : (
@@ -405,9 +411,11 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
             // action={`${window?.location?.hash}/api/v2/software-packages`}
             beforeUpload={beforeUpload}
             customRequest={async options => {
-              const file = options.file;
+              const file = options.file as File;
+              // 从原始文件中获取 uid（Ant Design Upload 会为每个文件生成 uid）
+              const fileUid = (options.file as any).uid;
 
-              // 400 MB 等于 180 秒，一秒约等于 2 MB
+              // 计算文件大小
               const totalMB = file.size / 1024 / 1024;
               let uploadedMb = 2;
 
@@ -421,16 +429,16 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                   return;
                 }
 
-                options.onProgress({
+                options.onProgress?.({
                   percent,
                 });
               }, 1000);
 
-              // 1. 将 Blob 转换为 ArrayBuffer
-              const arrayBuffer = await file.arrayBuffer();
               try {
-                const wordArray = CryptoJS.lib.WordArray.create(arrayBuffer);
-                const sha256 = CryptoJS.enc.Hex.stringify(CryptoJS.SHA256(wordArray));
+                // 使用分片方式计算 SHA256，避免大文件内存溢出
+                const sha256 = await calculateFileSHA256(file);
+
+                // 上传文件
                 newPkgUpload({}, file, {
                   sha256sum: sha256,
                 }).then(res => {
@@ -438,7 +446,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                     // timer 中有更新 percent 的逻辑，避免和 options.onSuccess 影响，加一个 delay 处理
                     clearInterval(timer);
                     setTimeout(() => {
-                      options.onSuccess(res.data);
+                      options.onSuccess?.(res.data);
                       message.success(
                         formatMessage(
                           {
@@ -464,20 +472,23 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                     setTimeout(() => {
                       setFileList(
                         fileList.filter(item => {
-                          item.uid !== file.uid;
+                          return item.uid !== fileUid;
                         })
                       );
                     }, 500);
                   }
                 });
               } catch (error) {
-                console.error('file error: ', error);
-                message.warning(
-                  formatMessage({
-                    id: 'ocp-v2.component.UploadPackageDrawer.TheUploadedFileIsToo',
-                    defaultMessage: '上传文件过大，请联系技术同学使用 SDK 上传',
-                  })
-                );
+                clearInterval(timer);
+                console.error('File processing error:', error);
+
+                // 根据错误类型显示不同的提示
+                const errorMessage =
+                  error instanceof RangeError
+                    ? '文件过大，浏览器无法处理，请联系技术同学使用 SDK 上传'
+                    : '文件处理失败，请重试或联系技术同学';
+
+                message.error(errorMessage);
               }
             }}
             withCredentials={true}
