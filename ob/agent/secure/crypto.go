@@ -42,6 +42,9 @@ func Init() (err error) {
 			return New()
 		}
 	}
+	if err = initSessionManager(); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -128,7 +131,7 @@ func LoadOceanbasePassword(password *string) error {
 
 	// clear root password, avoid to cover sqlite when agent restart
 	syscall.Unsetenv(constant.OB_ROOT_PASSWORD)
-	meta.SetOceanbasePwd(*password)
+	setOceanbasePwd(*password)
 	go dumpTempObPassword(*password)
 	return nil
 }
@@ -150,7 +153,7 @@ func LoadAgentPassword() error {
 			return err
 		}
 	}
-	meta.AGENT_PWD.SetPassword(pwd)
+	setAgentPassword(pwd)
 	return nil
 
 }
@@ -190,7 +193,7 @@ func CheckObPasswordInSqlite() error {
 			return err
 		}
 	}
-	meta.SetOceanbasePwd(password)
+	setOceanbasePwd(password)
 	return nil
 }
 

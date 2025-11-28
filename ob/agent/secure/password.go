@@ -14,16 +14,20 @@
  * limitations under the License.
  */
 
-package constant
+package secure
 
-const (
-	LANGUAGE_EN_US = "en-US"
-	LANGUAGE_ZH_CN = "zh-CN"
+import "github.com/oceanbase/obshell/ob/agent/meta"
 
-	LOCAL_ROUTE_KEY        = "localRoute"
-	API_ROUTE_KEY          = "apiRoute"
-	ORIGINAL_BODY          = "ORIGINAL_BODY"
-	ACCEPT_LANGUAGE        = "Accept-Language"
-	HTTP_HEADER_AES_KEY    = "AES_KEY"
-	HTTP_HEADER_SESSION_ID = "SESSION_ID"
-)
+func setOceanbasePwd(pwd string) {
+	if pwd != meta.OCEANBASE_PWD {
+		InvalidateAllSessions()
+	}
+	meta.SetOceanbasePwd(pwd)
+}
+
+func setAgentPassword(pwd string) {
+	if pwd != meta.AGENT_PWD.GetPassword() {
+		InvalidateAllSessions()
+	}
+	meta.AGENT_PWD.SetPassword(pwd)
+}

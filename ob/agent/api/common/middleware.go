@@ -59,7 +59,8 @@ const (
 
 	originalBody = constant.ORIGINAL_BODY
 
-	ACCEPT_LANGUAGE = constant.ACCEPT_LANGUAGE
+	ACCEPT_LANGUAGE        = constant.ACCEPT_LANGUAGE
+	AES_KEY_IN_HTTP_HEADER = constant.HTTP_HEADER_AES_KEY
 )
 
 var (
@@ -445,6 +446,8 @@ func BodyDecrypt(skipRoutes ...string) func(*gin.Context) {
 			return
 		}
 
+		c.Set(AES_KEY_IN_HTTP_HEADER, header.Keys)
+
 		// Decrypts the request body on routes where encryption is expected.
 		encryptedBody, err := io.ReadAll(c.Request.Body)
 		if err != nil {
@@ -617,6 +620,19 @@ func VerifyTaskRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, pa
 	}
 }
 
+func VerifySession(c *gin.Context, curTs int64, header *secure.HttpHeader) {
+	if secure.VerifyTimeStamp(header.Ts, curTs) != nil {
+		c.Abort()
+		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationTimestampInvalid, header.Ts, curTs))
+		return
+	}
+	if err := secure.ValidateSession(header.SessionID); err != nil {
+		c.Abort()
+		SendResponse(c, nil, err)
+		return
+	}
+}
+
 func calculateSHA256(reader io.Reader) string {
 	hash := sha256.New()
 
@@ -718,14 +734,26 @@ func Verify(routeType ...secure.RouteType) func(*gin.Context) {
 
 		if c.Request.RequestURI == constant.URI_AGENT_API_PREFIX+constant.URI_PASSWORD {
 			VerifyForSetAgentPassword(c, curTs, &header, passwordType)
-		} else if len(routeType) != 0 && routeType[0] == secure.ROUTE_OBPROXY {
+			c.Next()
+			return
+		}
+		if !(len(routeType) != 0 && routeType[0] == secure.ROUTE_LOGIN) &&
+			header.SessionID != "" &&
+			meta.OCS_AGENT.GetIdentity() == meta.CLUSTER_AGENT {
+			// login could not varified by session id
+			VerifySession(c, curTs, &header)
+			// record session id for logout check
+			c.Set(constant.HTTP_HEADER_SESSION_ID, header.SessionID)
+			c.Next()
+			return
+		}
+		if len(routeType) != 0 && routeType[0] == secure.ROUTE_OBPROXY {
 			VerifyAgentRoutes(c, curTs, &header, passwordType)
 		} else if len(routeType) != 0 && routeType[0] == secure.ROUTE_TASK {
 			VerifyTaskRoutes(c, curTs, &header, passwordType)
 		} else {
 			VerifyObRouters(c, curTs, &header, passwordType)
 		}
-		// Verification succeeded, continue to the next middleware.
 		c.Next()
 	}
 }

@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package constant
+package param
 
-const (
-	LANGUAGE_EN_US = "en-US"
-	LANGUAGE_ZH_CN = "zh-CN"
-
-	LOCAL_ROUTE_KEY        = "localRoute"
-	API_ROUTE_KEY          = "apiRoute"
-	ORIGINAL_BODY          = "ORIGINAL_BODY"
-	ACCEPT_LANGUAGE        = "Accept-Language"
-	HTTP_HEADER_AES_KEY    = "AES_KEY"
-	HTTP_HEADER_SESSION_ID = "SESSION_ID"
-)
+type LogoutSessionParam struct {
+	SessionID string `json:"session_id" binding:"required"`
+}

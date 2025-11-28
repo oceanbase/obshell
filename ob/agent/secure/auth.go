@@ -36,6 +36,7 @@ const (
 	ROUTE_OCEANBASE RouteType = iota
 	ROUTE_OBPROXY
 	ROUTE_TASK
+	ROUTE_LOGIN
 
 	OCEANBASE_PASSWORD VerifyType = iota
 	AGENT_PASSWORD
@@ -95,7 +96,7 @@ func VerifyOceanbasePassword(password string) error {
 		log.WithError(err).Error("unexpected db error")
 		return nil
 	}
-	meta.SetOceanbasePwd(password)
+	setOceanbasePwd(password)
 	if err := oceanbase.LoadOceanbaseInstance(); err != nil {
 		log.WithError(err).Error("unexpected db error")
 		return err

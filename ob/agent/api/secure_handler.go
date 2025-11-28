@@ -20,7 +20,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/oceanbase/obshell/ob/agent/api/common"
+	"github.com/oceanbase/obshell/ob/agent/executor/session"
 	"github.com/oceanbase/obshell/ob/agent/secure"
+	"github.com/oceanbase/obshell/ob/param"
 )
 
 // @ID getSecret
@@ -35,4 +37,50 @@ func secretHandler(c *gin.Context) {
 	ctx := common.NewContextWithTraceId(c)
 	data := secure.GetSecret(ctx)
 	common.SendResponse(c, data, nil)
+}
+
+// @ID login
+// @Summary login
+// @Description login
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/login [post]
+func loginHandler(c *gin.Context) {
+	data, err := session.Login(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, data, nil)
+}
+
+// @ID logout
+// @Summary logout
+// @Description logout
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Param body body param.LogoutSessionParam true "logout session param"
+// @Router /api/v1/logout [post]
+func logoutHandler(c *gin.Context) {
+	var param param.LogoutSessionParam
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err := session.Logout(c, param.SessionID)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, nil, nil)
 }

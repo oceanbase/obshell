@@ -127,5 +127,6 @@ func (s *AgentService) SetAgentPassword(password string) error {
 	}
 
 	meta.AGENT_PWD.SetPassword(password)
+	secure.InvalidateAllSessions()
 	return nil
 }

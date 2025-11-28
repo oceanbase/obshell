@@ -36,6 +36,7 @@ const (
 )
 
 type HttpHeader struct {
+	SessionID    string `json:"session_id"`
 	Auth         string
 	Ts           string
 	Token        string

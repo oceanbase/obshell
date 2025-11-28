@@ -116,6 +116,15 @@ func EncryptBodyWithAes(body interface{}) (encryptedBody interface{}, key []byte
 	return
 }
 
+func EncryptWithAesKeys(body []byte, keys string) (encrypted string, err error) {
+	key, iv, err := transferKeys(keys)
+	if err != nil {
+		return "", err
+	}
+	encrypted, err = crypto.AESEncrypt(body, key, iv)
+	return encrypted, err
+}
+
 func bodyDecryptWithRsa(ciphertext string) ([]byte, error) {
 	plaintext, err := Crypter.DecryptAndReturnBytes(ciphertext)
 	if err != nil {

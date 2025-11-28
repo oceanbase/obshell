@@ -305,6 +305,7 @@ var (
 	ErrRequestQueryParamEmpty                    = NewErrorCode("Request.Query.Param.Empty", badRequest, "err.request.query.param.empty")
 	ErrRequestQueryParamIllegal                  = NewErrorCode("Request.Query.Param.Illegal", badRequest, "err.request.query.param.illegal")
 	ErrRequestHeaderNotFound                     = NewErrorCode("Request.Header.NotFound", badRequest, "err.request.header.not.found")
+	ErrRequestAESKeyNotFound                     = NewErrorCode("Request.AESKey.NotFound", badRequest, "err.request.aes.key.not.found")
 
 	// Ob.OBProxy
 	ErrOBProxyAlreadyManaged                = NewErrorCode("OBProxy.AlreadyManaged", illegalArgument, "err.obproxy.already.managed")
@@ -339,6 +340,8 @@ var (
 	ErrSecurityAuthenticationIncorrectToken              = NewErrorCode("Security.Authentication.IncorrectToken", unauthorized, "err.security.authentication.incorrect.token", 10008)
 	ErrSecurityAuthenticationWithOceanBasePassword       = NewErrorCode("Security.Authentication.WithOceanBasePassword", unauthorized, "err.security.authentication.with.oceanbase.password", 10008)
 	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", unauthorized, "err.security.authentication.agent.password.not.initialized", 10008)
+	ErrSecurityAuthenticationSessionInvalid              = NewErrorCode("Security.Authentication.SessionInvalid", unauthorized, "err.security.authentication.session.invalid", 10008)
+	ErrSecurityAuthenticationSessionExpired              = NewErrorCode("Security.Authentication.SessionExpired", unauthorized, "err.security.authentication.session.expired", 10008)
 
 	// Task
 	ErrTaskExpired                         = NewErrorCode("Task.Expired", known, "err.task.expired")

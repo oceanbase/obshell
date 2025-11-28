@@ -47,6 +47,8 @@ const (
 	URI_HOST_INFO = "/host-info"
 	URI_STATUS    = "/status"
 	URI_SECRET    = "secret"
+	URI_LOGIN     = "/login"
+	URI_LOGOUT    = "/logout"
 
 	URI_JOIN     = "/join"
 	URI_REMOVE   = "/remove"

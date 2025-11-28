@@ -155,7 +155,7 @@ func UpdateObPasswordInTransaction(tx *gorm.DB, password string) (err error) {
 	if err = updateOBConifgInTransaction(tx, constant.CONFIG_ROOT_PWD, password); err != nil {
 		return
 	}
-	meta.SetOceanbasePwd(val)
+	setOceanbasePwd(val)
 	return
 }
 

@@ -24,6 +24,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	http2 "github.com/oceanbase/obshell/ob/agent/lib/http"
+	"github.com/oceanbase/obshell/ob/agent/secure"
 )
 
 // @title			obshell API
@@ -104,6 +105,15 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	v1.GET(constant.URI_STATUS, StatusHandler(s))
 	v1.POST(constant.URI_STATUS, StatusHandler(s))
 	v1.GET(constant.URI_SECRET, secretHandler)
+
+	// session routes of login/logout
+	if !isLocalRoute {
+		v1.POST(constant.URI_LOGIN, common.Verify(secure.ROUTE_LOGIN), loginHandler)
+		v1.POST(constant.URI_LOGOUT, common.Verify(), logoutHandler)
+	} else {
+		v1.POST(constant.URI_LOGIN, loginHandler)
+		v1.POST(constant.URI_LOGOUT, logoutHandler)
+	}
 
 	InitTaskRoutes(v1, isLocalRoute)
 	InitTenantRoutes(v1, isLocalRoute)
