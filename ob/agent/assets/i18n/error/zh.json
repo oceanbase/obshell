@@ -172,6 +172,7 @@
   "err.ob.tenant.resource.not.enough": "observer %s %s 资源不足",
   "err.ob.tenant.root.password.incorrect": "租户 root 密码错误",
   "err.ob.tenant.scenario.not.supported": "不支持的参数模版 '%s'，仅支持 '%s'",
+  "err.ob.tenant.session.not.exist": "租户会话 '%s' 不存在",
   "err.ob.tenant.set.scenario.not.supported": "当前 observer 不支持设置参数模版",
   "err.ob.tenant.status.not.normal": "租户 '%s' 状态为 '%s'",
   "err.ob.tenant.sys.operation.not.allowed": "不允许对系统租户执行此操作",

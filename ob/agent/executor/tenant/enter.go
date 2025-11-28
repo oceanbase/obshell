@@ -31,6 +31,7 @@ import (
 var (
 	tenantService      tenant.TenantService
 	obclusterService   obcluster.ObclusterService
+	observerService    obcluster.ObserverService
 	clusterTaskService = taskservice.NewClusterTaskService()
 	unitService        unit.UnitService
 	agentService       agent.AgentService

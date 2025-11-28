@@ -120,12 +120,13 @@ type ClusterInfo struct {
 }
 
 type ClusterBasicInfo struct {
-	ClusterName        string `json:"cluster_name"`
-	ClusterId          int    `json:"cluster_id"`
-	Status             string `json:"status"`
-	IsCommunityEdition bool   `json:"is_community_edition"`
-	IsStandalone       bool   `json:"is_standalone"`
-	ObVersion          string `json:"ob_version"`
+	ClusterName              string `json:"cluster_name"`
+	ClusterId                int    `json:"cluster_id"`
+	Status                   string `json:"status"`
+	IsCommunityEdition       bool   `json:"is_community_edition"`
+	IsStandalone             bool   `json:"is_standalone"`
+	ObVersion                string `json:"ob_version"`
+	DeadLockDetectionEnabled bool   `json:"dead_lock_detection_enabled"`
 }
 
 type TenantResourceStat struct {

@@ -131,6 +131,7 @@ var (
 	ErrObTenantVariableInvalid                   = NewErrorCode("OB.Tenant.Variable.Invalid", illegalArgument, "err.ob.tenant.variable.invalid")                                          // "tenant variable '%s' is invalid: %s"
 	ErrObTenantVariableNotExist                  = NewErrorCode("OB.Tenant.Variable.NotExist", notFound, "err.ob.tenant.variable.not.exist")                                              // "tenant variable '%s' is not exist"
 	ErrObTenantVariableNameEmpty                 = NewErrorCode("OB.Tenant.Variable.Name.Empty", illegalArgument, "err.ob.tenant.variable.name.empty")                                    // "tenant variable name is empty"
+	ErrObTenantSessionNotExist                   = NewErrorCode("OB.Tenant.Session.NotExist", badRequest, "err.ob.tenant.session.not.exist")                                              // "tenant session '%s' is not exist"
 
 	// OB.Recyclebin
 	ErrObRecyclebinTenantNotExist = NewErrorCode("OB.Recyclebin.Tenant.NotExist", badRequest, "err.ob.recyclebin.tenant.not.exist")
@@ -194,6 +195,7 @@ var (
 	ErrObClusterForceStopRequired                = NewErrorCode("OB.Cluster.ForceStopRequired", illegalArgument, "err.ob.cluster.force.stop.required")
 	ErrObClusterForceStopOrTerminateRequired     = NewErrorCode("OB.Cluster.ForceStopOrTerminateRequired", illegalArgument, "err.ob.cluster.force.stop.or.terminate.required")
 	ErrObClusterPasswordIncorrect                = NewErrorCode("OB.Cluster.Password.Incorrect", illegalArgument, "err.ob.cluster.password.incorrect") // "password incorrect"
+
 	// OB.Server
 	ErrObServerDeleteSelf         = NewErrorCode("OB.Server.DeleteSelf", illegalArgument, "err.ob.server.delete.self")
 	ErrObServerProcessCheckFailed = NewErrorCode("OB.Server.Process.CheckFailed", unexpected, "err.ob.server.process.check.failed")      // "check observer process exist: %s."

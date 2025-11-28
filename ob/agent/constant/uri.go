@@ -129,21 +129,26 @@ const (
 	URI_PRECHECK          = "/precheck"
 	URI_ROLES             = "/roles"
 	URI_SUPPORT_TEMPLATES = "/support-templates"
+	URI_SESSIONS          = "/sessions"
+	URI_QUERIES           = "/queries"
+	URI_DEADLOCKS         = "/deadlocks"
 
 	URI_UNIT_CONFIG_LIMIT = "/unit-config-limit"
 
-	URI_PARAM_NAME          = "name"
-	URI_PATH_PARAM_NAME     = "/:" + URI_PARAM_NAME
-	URI_PARAM_ROLE          = "role"
-	URI_PATH_PARAM_ROLE     = "/:" + URI_PARAM_ROLE
-	URI_PARAM_VAR           = "variable"
-	URI_PATH_PARAM_VAR      = "/:" + URI_PARAM_VAR
-	URI_PARAM_PARA          = "parameter"
-	URI_PATH_PARAM_PARA     = "/:" + URI_PARAM_PARA
-	URI_PARAM_USER          = "user"
-	URI_PATH_PARAM_USER     = "/:" + URI_PARAM_USER
-	URI_PARAM_DATABASE      = "database"
-	URI_PATH_PARAM_DATABASE = "/:" + URI_PARAM_DATABASE
+	URI_PARAM_NAME            = "name"
+	URI_PATH_PARAM_NAME       = "/:" + URI_PARAM_NAME
+	URI_PARAM_ROLE            = "role"
+	URI_PATH_PARAM_ROLE       = "/:" + URI_PARAM_ROLE
+	URI_PARAM_VAR             = "variable"
+	URI_PATH_PARAM_VAR        = "/:" + URI_PARAM_VAR
+	URI_PARAM_PARA            = "parameter"
+	URI_PATH_PARAM_PARA       = "/:" + URI_PARAM_PARA
+	URI_PARAM_USER            = "user"
+	URI_PATH_PARAM_USER       = "/:" + URI_PARAM_USER
+	URI_PARAM_DATABASE        = "database"
+	URI_PATH_PARAM_DATABASE   = "/:" + URI_PARAM_DATABASE
+	URI_PARAM_SESSION_ID      = "session_id"
+	URI_PATH_PARAM_SESSION_ID = "/:" + URI_PARAM_SESSION_ID
 
 	// Used for backup
 	URI_ARCHIVE = "/log"

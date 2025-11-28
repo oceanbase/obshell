@@ -492,6 +492,19 @@ func (t *TenantService) GetTenantActiveServer(tenantName string) (server *oceanb
 	return
 }
 
+func (t *TenantService) GetTenantObserverList(tenantId int) (servers []oceanbase.OBServer, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	sql := "SELECT s.svr_ip, s.svr_port FROM oceanbase.DBA_OB_UNITS u " +
+		"JOIN oceanbase.DBA_OB_SERVERS s ON u.svr_ip = s.svr_ip AND u.svr_port = s.svr_port " +
+		"WHERE u.tenant_id = ? "
+
+	err = db.Raw(sql, tenantId).Scan(&servers).Error
+	return
+}
+
 func (t *TenantService) IsTenantActiveAgent(tenantName string, ip string, rpcPort int) (bool, error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

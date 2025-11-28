@@ -188,6 +188,7 @@
   "err.ob.tenant.resource.not.enough": "Server %s %s resource not enough.",
   "err.ob.tenant.root.password.incorrect": "The provided password is unable to connect to the tenant",
   "err.ob.tenant.scenario.not.supported": "Tenant scenario '%s' is not supported, only '%s' is supported.",
+  "err.ob.tenant.session.not.exist": "Tenant session '%s' does not exist.",
   "err.ob.tenant.set.scenario.not.supported": "Current observer does not support scenario",
   "err.ob.tenant.status.not.normal": "Tenant '%s' status is '%s'.",
   "err.ob.tenant.sys.operation.not.allowed": "System tenant is not allowed to perform this operation",

@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
+	oceanbasedb "github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	model "github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
 )
 
@@ -84,6 +85,16 @@ func (t *TenantService) GetTenantResourcePool(tenantId int) (pools []model.DbaOb
 		return nil, err
 	}
 	err = db.Table(DBA_OB_RESOURCE_POOLS).Where("TENANT_ID = (?)", tenantId).Scan(&pools).Error
+	return
+}
+
+func (t *TenantService) GetTenantResourcePoolServers(resourcePoolId int) (servers []model.OBServer, err error) {
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	sql := "SELECT SVR_IP, SVR_PORT FROM oceanbase.DBA_OB_UNITS where resource_pool_id = ? "
+	err = db.Raw(sql, resourcePoolId).Scan(&servers).Error
 	return
 }
 

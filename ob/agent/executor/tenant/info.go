@@ -19,6 +19,7 @@ package tenant
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
@@ -84,12 +85,21 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		observers, err := tenantService.GetTenantResourcePoolServers(poolInfo.ResourcePoolID)
+		if err != nil {
+			return nil, err
+		}
+		observerList := make([]string, 0)
+		for _, observer := range observers {
+			observerList = append(observerList, fmt.Sprintf("%s:%d", observer.SvrIp, observer.SvrPort))
+		}
 		poolWithUnit := bo.ResourcePoolWithUnit{
-			Name:     poolInfo.Name,
-			Id:       poolInfo.ResourcePoolID,
-			ZoneList: poolInfo.ZoneList,
-			UnitNum:  poolInfo.UnitNum,
-			Unit:     oceanbase.ConvertDbaObUnitConfigToObUnit(unitConfig),
+			Name:       poolInfo.Name,
+			Id:         poolInfo.ResourcePoolID,
+			ZoneList:   poolInfo.ZoneList,
+			ServerList: strings.Join(observerList, ","),
+			UnitNum:    poolInfo.UnitNum,
+			Unit:       oceanbase.ConvertDbaObUnitConfigToObUnit(unitConfig),
 		}
 		pools = append(pools, &poolWithUnit)
 	}
@@ -106,6 +116,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 
 	timeZone, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_TIME_ZONE)
 	if err != nil {
+		return nil, err
+	}
+
+	var lclOpInterval string
+	if err := observerService.GetOBParatemerByName("_lcl_op_interval", &lclOpInterval); err != nil {
 		return nil, err
 	}
 
@@ -160,6 +175,9 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	}
 	if lowerCaseTableNames != nil {
 		tenantInfo.LowercaseTableNames = lowerCaseTableNames.Value
+	}
+	if lclOpInterval != "0ms" && lclOpInterval != "0" {
+		tenantInfo.DeadLockDetectionEnabled = true
 	}
 	return tenantInfo, nil
 }

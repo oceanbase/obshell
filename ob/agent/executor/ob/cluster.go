@@ -48,6 +48,11 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	if err := observerService.GetOBParatemerByName("cluster_id", &info.ClusterId); err != nil {
 		return nil, err
 	}
+	var lclOpInterval string
+	if err := observerService.GetOBParatemerByName("_lcl_op_interval", &lclOpInterval); err != nil {
+		return nil, err
+	}
+	info.DeadLockDetectionEnabled = (lclOpInterval != "0ms" && lclOpInterval != "0")
 	obType, err := obclusterService.GetOBType()
 	if err != nil {
 		return nil, err

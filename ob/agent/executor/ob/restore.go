@@ -25,6 +25,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
+	"github.com/oceanbase/obshell/ob/agent/executor/common"
 	"github.com/oceanbase/obshell/ob/agent/executor/pool"
 	"github.com/oceanbase/obshell/ob/agent/executor/zone"
 	"github.com/oceanbase/obshell/ob/agent/lib/path"
@@ -593,7 +594,7 @@ func GetAllRestoreTasks(p *param.QueryRestoreTasksParam) (res *bo.PaginatedResto
 	res.Page = bo.CustomPage{
 		Number:        p.Page,
 		Size:          p.Size,
-		TotalPages:    calculateTotalPages(uint64(len(res.Contents)), p.Size),
+		TotalPages:    common.CalculateTotalPages(uint64(len(res.Contents)), p.Size),
 		TotalElements: uint64(len(res.Contents)),
 	}
 	return res, nil

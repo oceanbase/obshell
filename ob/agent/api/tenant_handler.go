@@ -110,6 +110,14 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	// for slow sql
 	tenant.GET(constant.URI_TOP_SLOW_SQLS, getTenantTopSlowSqlRankHandler)
 
+	// for session management
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS, tenantHandlerWrapper(getTenantSessions))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS+constant.URI_PATH_PARAM_SESSION_ID, tenantHandlerWrapper(getTenantSession))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS+constant.URI_STATS, tenantHandlerWrapper(getTenantSessionsStats))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS, tenantHandlerWrapper(killTenantSessionsHandler))
+	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS+constant.URI_QUERIES, tenantHandlerWrapper(killTenantSessionQueryHandler))
+	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DEADLOCKS, tenantHandlerWrapper(ListTenantDeadlocksHandler))
+
 	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
 }
 
@@ -1642,4 +1650,163 @@ func listParameterTemplatesHandler(c *gin.Context) {
 	language := c.GetHeader(constant.ACCEPT_LANGUAGE)
 	templates := tenant.GetAllSupportedScenarios(language)
 	common.SendResponse(c, templates, nil)
+}
+
+// @ID getTenantSessions
+// @Summary get tenant sessions
+// @Description get tenant sessions
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param page query uint64 false "page"
+// @Param size query uint64 false "size"
+// @Param user query string false "db user"
+// @Param db query string false "db name"
+// @Param client_ip query string false "client ip"
+// @Param id query string false "session id"
+// @Param active_only query boolean false "active only"
+// @Param svr_ip query string false "server ip"
+// @Param sort query string false "sort"
+// @Success 200 object http.OcsAgentResponse{data=bo.PaginatedTenantSessions}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/sessions [get]
+func getTenantSessions(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	p := &param.QueryTenantSessionParam{}
+	if err := c.BindQuery(p); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	p.Format()
+	sessions, err := tenant.GetTenantSessions(name, p)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	} else {
+		common.SendResponse(c, sessions, nil)
+	}
+}
+
+// @ID getTenantSession
+// @Summary get tenant session
+// @Description get tenant session
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param sessionId path string true "session id"
+// @Success 200 object http.OcsAgentResponse{data=bo.TenantSession}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/sessions/{sessionId} [get]
+func getTenantSession(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	sessionId := c.Param(constant.URI_PARAM_SESSION_ID)
+	session, err := tenant.GetTenantSession(name, sessionId)
+	common.SendResponse(c, session, err)
+}
+
+// @ID getTenantSessionsStats
+// @Summary get tenant sessions stats
+// @Description get tenant sessions stats
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Success 200 object http.OcsAgentResponse{data=bo.TenantSessionStats}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/sessions/stats [get]
+func getTenantSessionsStats(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	stats, err := tenant.GetTenantSessionStats(name)
+	common.SendResponse(c, stats, err)
+}
+
+// @ID killTenantSessions
+// @Summary kill tenant sessions
+// @Description kill tenant sessions
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param body body param.KillTenantSessionsParam true "kill tenant sessions param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/sessions [delete]
+func killTenantSessionsHandler(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	p := param.KillTenantSessionsParam{}
+	err := c.BindJSON(&p)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.KillTenantSessions(name, p.SessionIds)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID killTenantSessionQuery
+// @Summary kill tenant session query
+// @Description kill tenant session query
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param body body param.KillTenantSessionQueryParam true "kill tenant session query param"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/sessions/queries [delete]
+func killTenantSessionQueryHandler(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	p := param.KillTenantSessionsParam{}
+	err := c.BindJSON(&p)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	err = tenant.KillTenantSessionQueries(name, p.SessionIds)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID listTenantDeadlocks
+// @Summary list tenant deadlocks
+// @Description list tenant deadlocks
+// @Tags tenant
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param name path string true "tenant name"
+// @Param page query uint64 false "page"
+// @Param size query uint64 false "size"
+// @Success 200 object http.OcsAgentResponse{data=bo.PaginatedDeadLocks}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/tenant/{name}/deadlocks [get]
+func ListTenantDeadlocksHandler(c *gin.Context) {
+	name := c.Param(constant.URI_PARAM_NAME)
+	p := &param.QueryTenantDeadLocksParam{}
+	err := c.BindQuery(p)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	p.Format()
+	deadlocks, err := tenant.ListTenantDeadLocks(name, p)
+	common.SendResponse(c, deadlocks, err)
 }

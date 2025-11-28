@@ -17,24 +17,15 @@
 package ob
 
 import (
-	"math"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
+	"github.com/oceanbase/obshell/ob/agent/executor/common"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/ob/param"
 )
-
-// calculateTotalPages calculates the total number of pages
-func calculateTotalPages(totalElements uint64, pageSize uint64) uint64 {
-	if pageSize == 0 {
-		return 0
-	}
-	return uint64(math.Ceil(float64(totalElements) / float64(pageSize)))
-}
 
 func PatchObclusterBackup(p *param.BackupStatusParam) error {
 	if err := p.Check(); err != nil {
@@ -300,7 +291,7 @@ func GetTenantBackupTasks(name string, p *param.QueryBackupTasksParam) (*bo.Pagi
 		Page: bo.CustomPage{
 			Number:        p.Page,
 			Size:          p.Size,
-			TotalPages:    calculateTotalPages(count, p.Size),
+			TotalPages:    common.CalculateTotalPages(count, p.Size),
 			TotalElements: count,
 		},
 	}, nil
