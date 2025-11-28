@@ -18,7 +18,7 @@ export async function newPkgUpload(body: {}, file?: File, options?: { [key: stri
         if (item instanceof Array) {
           item.forEach(f => formData.append(ele, f || ''));
         } else {
-          formData.append(ele, JSON.stringify(item));
+          formData.append(ele, new Blob([JSON.stringify(item)], { type: 'application/json' }));
         }
       } else {
         formData.append(ele, item);
@@ -30,6 +30,21 @@ export async function newPkgUpload(body: {}, file?: File, options?: { [key: stri
     method: 'POST',
     data: formData,
     requestType: 'form',
+    ...(options || {}),
+  });
+}
+
+/** delete package in ocs delete package in ocs DELETE /api/v1/upgrade/package */
+export async function deletePackage(
+  body: API.DeletePackageParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse>('/api/v1/upgrade/package', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
     ...(options || {}),
   });
 }

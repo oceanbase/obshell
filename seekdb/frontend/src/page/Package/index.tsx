@@ -82,18 +82,27 @@ const PackagePage: React.FC<PackageProps> = ({
       okType: 'danger',
       onOk: async () => {
         try {
-          await deleteUpgradePackage({
+          const res = await deleteUpgradePackage({
             name: record.name || '',
             version: record.version || '',
             release_distribution: record.release_distribution || '',
             architecture: record.architecture || '',
           });
-          message.success(
-            formatMessage({
-              id: 'ocp-v2.page.Package.DeletePackageSuccess',
-              defaultMessage: '删除软件包成功',
-            })
-          );
+          if (res.successful) {
+            message.success(
+              formatMessage({
+                id: 'ocp-v2.page.Package.DeletePackageSuccess',
+                defaultMessage: '删除软件包成功',
+              })
+            );
+          } else {
+            message.error(
+              formatMessage({
+                id: 'ocp-v2.page.Package.DeletePackageError',
+                defaultMessage: '删除软件包失败',
+              })
+            );
+          }
           refresh();
         } catch (error) {
           message.error(

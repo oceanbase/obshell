@@ -15,9 +15,8 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { connect, useDispatch } from 'umi';
-import React, { useState, useEffect } from 'react';
-import { Card, Table, Tooltip, Typography, Form, Tag, Modal } from '@oceanbase/design';
+import React, { useState } from 'react';
+import { Card, message, Modal, Table, Tooltip } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { sortByString, sortByMoment, byte2MB } from '@oceanbase/util';
 import { PAGINATION_OPTION_10 } from '@/constant';
@@ -26,16 +25,12 @@ import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
 import MyInput from '@/component/MyInput';
 import ContentWithReload from '@/component/ContentWithReload';
-import ContentWithQuestion from '@/component/ContentWithQuestion';
 import { useRequest } from 'ahooks';
 import { upgradePkgInfo } from '@/service/obshell/upgrade';
 import { Button } from 'antd';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import { uniq } from 'lodash';
-
-const FormItem = Form.Item;
-
-const { Paragraph } = Typography;
+import { deletePackage } from '@/service/obshell/package';
 
 export interface PackageProps {
   location: {
@@ -62,24 +57,36 @@ const PackagePage: React.FC<PackageProps> = ({
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
   const packageList = data?.data?.contents || [];
 
-  // architecture?: string;
-  // chunkCount?: number;
-  // distribution?: string;
-  // gmtModify?: string;
-  // md5?: string;
-  // name?: string;
-  // payloadSize?: number;
-  // pkgId?: number;
-  // release?: string;
-  // releaseDistribution?: string;
-  // size?: number;
-  // upgradeDepYaml?: string;
-  // version?: string;
-
-  // 更新 Package 要求具有 Package:*:UPDATE 的权限，而不仅仅是单个 Package 的更新权限
-  const [form] = Form.useForm();
   const [keyword, setKeyword] = useState(defaultKeyword);
   const [visible, setVisible] = useState(false);
+
+  const handleDeletePackage = (record: API.UpgradePkgInfo) => {
+    Modal.confirm({
+      title: '确认删除软件包',
+      content: `确认删除软件包 ${record.name} 吗？此操作不可撤销。`,
+      okText: '确认',
+      cancelText: '取消',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const res = await deletePackage({
+            name: record.name || '',
+            version: record.version || '',
+            release_distribution: record.release_distribution || '',
+            architecture: record.architecture || '',
+          });
+          if (res.successful) {
+            message.success('删除软件包成功');
+          } else {
+            message.error('删除软件包失败');
+          }
+          refresh();
+        } catch (error) {
+          message.error('删除软件包失败');
+        }
+      },
+    });
+  };
 
   const columns = [
     {
@@ -92,20 +99,6 @@ const PackagePage: React.FC<PackageProps> = ({
       sorter: (a, b) => sortByString(a, b, 'name'),
       render: (text: string) => <div style={{ wordBreak: 'break-all' }}>{text}</div>,
     },
-
-    // {
-    //   title: formatMessage({
-    //     id: "ocp-express.page.Package.Type",
-    //     defaultMessage: "类型",
-    //   }),
-    //   dataIndex: "type",
-    //   // filters: PACKAGE_TYPE_LIST.map(item => ({
-    //   //   text: item.label,
-    //   //   value: item.value,
-    //   // })),
-
-    //   // render: (text: string) => findByValue(PACKAGE_TYPE_LIST, text)?.label || '-',
-    // },
 
     {
       title: formatMessage({
@@ -123,18 +116,6 @@ const PackagePage: React.FC<PackageProps> = ({
         return `${record?.version}-${record.release_distribution}`;
       },
     },
-
-    // {
-    //   title: formatMessage({
-    //     id: "ocp-express.page.Package.System",
-    //     defaultMessage: "系统",
-    //   }),
-    //   dataIndex: "operatingSystem",
-    //   filters: (data?.data?.operatingSystems || []).map((item) => ({
-    //     text: item,
-    //     value: item,
-    //   })),
-    // },
 
     {
       title: formatMessage({
@@ -174,6 +155,15 @@ const PackagePage: React.FC<PackageProps> = ({
       width: 250,
       sorter: (a, b) => sortByMoment(a, b, 'gmt_modify'),
       render: (text: string) => formatTime(text),
+    },
+    {
+      title: '操作',
+      width: 100,
+      render: (text: string, record: API.UpgradePkgInfo) => (
+        <Button type="link" danger onClick={() => handleDeletePackage(record)}>
+          删除
+        </Button>
+      ),
     },
   ];
 

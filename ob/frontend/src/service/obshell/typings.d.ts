@@ -52,6 +52,23 @@ declare namespace API {
   };
 
   type AgentStatus = {
+    agent?: AgentInfoWithIdentity;
+    obState?: number;
+    /** service pid */
+    pid?: number;
+    /** Ports process occupied ports */
+    port?: number;
+    sqlPort?: number;
+    /** timestamp when service started */
+    startAt?: number;
+    /** service state */
+    state?: number;
+    underMaintenance?: boolean;
+    /** service version */
+    version?: string;
+  };
+
+  type AgentStatus = {
     architecture?: string;
     homePath?: string;
     identity: AgentIdentity;
@@ -259,6 +276,7 @@ declare namespace API {
     cluster_id?: number;
     cluster_name?: string;
     is_community_edition?: boolean;
+    is_standalone?: boolean;
     ob_version?: string;
     stats?: BaseResourceStats;
     status?: string;
@@ -519,6 +537,17 @@ declare namespace API {
     database: string;
   };
 
+  type DeletePackageParam = {
+    /** rpm package architecture */
+    architecture: string;
+    /** rpm package name */
+    name: string;
+    /** rpm package release distribution */
+    release_distribution: string;
+    /** rpm package version */
+    version: string;
+  };
+
   type DeleteSilencerParams = {
     /** silencer id */
     id: string;
@@ -572,6 +601,14 @@ declare namespace API {
   };
 
   type GetAgentUnfinishDagsParams = {
+    show_details?: boolean;
+  };
+
+  type getAllAgentDagsParams = {
+    show_details?: boolean;
+  };
+
+  type getAllClusterDagsParams = {
     show_details?: boolean;
   };
 
@@ -1025,6 +1062,7 @@ declare namespace API {
     obshellVersion?: string;
     reportTime?: number;
     reporter?: string;
+    telemetryEnabled?: boolean;
     telemetryVersion?: number;
   };
 
@@ -1217,6 +1255,11 @@ declare namespace API {
     page?: CustomPage;
   };
 
+  type ParameterTemplate = {
+    description?: string;
+    scenario?: string;
+  };
+
   type patchRoleObjectPrivilegeParams = {
     /** tenant name */
     name: string;
@@ -1339,6 +1382,7 @@ declare namespace API {
     primary_zone?: string;
     restore_tenant_name: string;
     scn?: number;
+    /** time_format does not cause precision loss */
     timestamp?: string;
     /** Tenant zone list with unit config. */
     zone_list: ZoneParam[];
@@ -1575,11 +1619,17 @@ declare namespace API {
     scope: Scope;
   };
 
+  type State = 'active' | 'unprocessed' | 'suppressed';
+
   type State = 'active' | 'expired' | 'pending';
 
   type Status = {
     inhibited_by: string[];
     silenced_by: string[];
+    state: State;
+  };
+
+  type Status = {
     state: State;
   };
 
@@ -1823,6 +1873,37 @@ declare namespace API {
     release_distribution?: string;
     size?: number;
     upgrade_dep_yaml?: string;
+    version?: string;
+  };
+
+  type UpgradePkgInfo = {
+    architecture?: string;
+    chunkCount?: number;
+    distribution?: string;
+    gmtModify?: string;
+    md5?: string;
+    name?: string;
+    payloadSize?: number;
+    pkgId?: number;
+    release?: string;
+    releaseDistribution?: string;
+    size?: number;
+    upgradeDepYaml?: string;
+    version?: string;
+  };
+
+  type UpgradePkgInfo = {
+    architecture?: string;
+    chunkCount?: number;
+    distribution?: string;
+    gmtModify?: string;
+    md5?: string;
+    name?: string;
+    payloadSize?: number;
+    pkgId?: number;
+    release?: string;
+    releaseDistribution?: string;
+    size?: number;
     version?: string;
   };
 
