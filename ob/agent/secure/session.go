@@ -225,6 +225,9 @@ func (sm *SessionManager) IsValid(sessionID string) bool {
 }
 
 func ValidateSession(sessionID string) error {
+	if sessionMgr == nil {
+		return errors.Occur(errors.ErrSecurityAuthenticationSessionInvalid)
+	}
 	_, err := sessionMgr.GetSession(sessionID)
 	return err
 }
@@ -238,9 +241,15 @@ func CreateSession() (string, error) {
 }
 
 func InvalidateSession(sessionID string) {
+	if sessionMgr == nil {
+		return
+	}
 	sessionMgr.DeleteSession(sessionID)
 }
 
 func InvalidateAllSessions() error {
+	if sessionMgr == nil {
+		return nil
+	}
 	return sessionMgr.InvalidateAllSessions()
 }

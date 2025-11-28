@@ -37,13 +37,13 @@ var (
 
 // Init will initialize secure module.
 func Init() (err error) {
+	if err = initSessionManager(); err != nil {
+		return err
+	}
 	if Crypter == nil {
 		if err = RestoreKey(); err != nil {
 			return New()
 		}
-	}
-	if err = initSessionManager(); err != nil {
-		return err
 	}
 	return nil
 }
