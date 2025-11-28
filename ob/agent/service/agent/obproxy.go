@@ -34,7 +34,7 @@ func (*AgentService) DeleteObproxy() error {
 		return err
 	}
 	return db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Exec("DELETE FROM obproxy_info").Error; err != nil {
+		if err := tx.Exec("DELETE FROM obproxy_info WHERE name != ?", constant.OBPROXY_INFO_STATUS).Error; err != nil {
 			return err
 		}
 		meta.OBPROXY_HOME_PATH = ""

@@ -217,8 +217,9 @@ func checkProxyroPasswordAndGetClusterName(rsListStr string, password string) (c
 			oceanbaseDB.Close()
 		}
 	}()
+	var observerInfo *meta.AgentInfo
 	for _, rs := range rsList {
-		observerInfo, err := meta.ConvertAddressToAgentInfo(rs)
+		observerInfo, err = meta.ConvertAddressToAgentInfo(rs)
 		if err != nil {
 			err = errors.Wrap(err, "invalid observer info")
 			continue
@@ -231,6 +232,7 @@ func checkProxyroPasswordAndGetClusterName(rsListStr string, password string) (c
 		}
 		clusterName, err = obproxyService.GetObclusterName(tempDb)
 		if err != nil {
+			err = errors.Wrap(err, "get obcluster name failed")
 			continue
 		}
 

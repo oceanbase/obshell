@@ -17,7 +17,6 @@
 package obproxy
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"regexp"
@@ -40,10 +39,16 @@ func getObproxyVersion(homepath string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`\(OceanBase (\d+\.\d+\.\d+\.\d+) (\d+)\)`)
+	re := regexp.MustCompile(`\(OceanBase (\d+\.\d+\.\d+\.\d+) (\d+(?:\.[\w]+)?)\)`)
 	matches := re.FindStringSubmatch(string(output))
 	if len(matches) < 3 {
-		return "", errors.Occur(errors.ErrOBProxyVersionOutputUnexpected, fmt.Sprintf("version not found in output: %s", output))
+		return "", errors.Occur(errors.ErrOBProxyVersionOutputUnexpected, string(output))
 	}
-	return strings.Join(matches[1:], "-"), nil
+	version := matches[1]
+	buildNum := matches[2]
+	// Remove suffix like .el7 from build number
+	if idx := strings.Index(buildNum, "."); idx != -1 {
+		buildNum = buildNum[:idx]
+	}
+	return strings.Join([]string{version, buildNum}, "-"), nil
 }
