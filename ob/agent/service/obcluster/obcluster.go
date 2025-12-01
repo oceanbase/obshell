@@ -1002,3 +1002,15 @@ func (obclusterService *ObclusterService) GetTenantMutilSysStat(tenantId int, St
 	}
 	return sysStatMap, nil
 }
+
+func (obclusterService *ObclusterService) GetObLicense() (license *oceanbase.ObLicense, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Model(&oceanbase.ObLicense{}).First(&license).Error
+	if err != nil {
+		return nil, err
+	}
+	return
+}

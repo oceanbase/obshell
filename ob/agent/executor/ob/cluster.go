@@ -17,6 +17,7 @@
 package ob
 
 import (
+	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/executor/tenant"
 	"github.com/oceanbase/obshell/ob/agent/meta"
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
@@ -169,4 +170,22 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 		info.TenantStats = append(info.TenantStats, tenantResourceStat)
 	}
 	return &info, nil
+}
+
+func GetObclusterLicense() (license *bo.ObLicense, err error) {
+	obType, err := obclusterService.GetOBType()
+	if err != nil {
+		return nil, err
+	}
+	if obType != modelob.OBTypeStandalone {
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "Not a standalone cluster")
+	}
+	oblicense, err := obclusterService.GetObLicense()
+	if err != nil {
+		return nil, err
+	}
+	if oblicense != nil {
+		return oblicense.ToBO(), nil
+	}
+	return
 }

@@ -727,3 +727,12 @@ func getUnitConfigLimitHandler(c *gin.Context) {
 	unit := ob.GetClusterUnitSpecLimit()
 	common.SendResponse(c, unit, nil)
 }
+
+func getObclusterLicenseHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+	license, err := ob.GetObclusterLicense()
+	common.SendResponse(c, license, err)
+}

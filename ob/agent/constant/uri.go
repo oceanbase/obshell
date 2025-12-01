@@ -134,6 +134,7 @@ const (
 	URI_DEADLOCKS         = "/deadlocks"
 
 	URI_UNIT_CONFIG_LIMIT = "/unit-config-limit"
+	URI_LICENSE           = "/license"
 
 	URI_PARAM_NAME            = "name"
 	URI_PATH_PARAM_NAME       = "/:" + URI_PARAM_NAME
