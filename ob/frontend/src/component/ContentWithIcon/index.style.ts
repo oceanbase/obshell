@@ -14,6 +14,7 @@ const useStyles = createStyles(() => {
     },
     affix: {
       marginLeft: '8px',
+      lineHeight: '10px',
     },
     pointable: {
       cursor: 'pointer',

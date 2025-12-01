@@ -26,6 +26,26 @@ export async function getAgentInfo(options?: { [key: string]: any }) {
   });
 }
 
+/** login POST /api/v1/login */
+export async function login(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse>('/api/v1/login', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
+/** logout POST /api/v1/logout */
+export async function logout(body: API.LogoutSessionParam, options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse>('/api/v1/logout', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** get secret get secret GET /api/v1/secret */
 export async function getSecret(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.AgentSecret }>('/api/v1/secret', {

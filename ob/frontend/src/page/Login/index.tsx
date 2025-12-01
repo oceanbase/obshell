@@ -20,9 +20,10 @@ import React from 'react';
 import { message } from '@oceanbase/design';
 import { Login } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import * as obService from '@/service/obshell/ob';
 import useDocumentTitle from '@/hook/useDocumentTitle';
-import { isEnglish, setEncryptLocalStorage } from '@/util';
+import { setEncryptLocalStorage } from '@/util';
+import { handleLoginSuccess } from '@/util/login';
+import * as v1Service from '@/service/obshell/v1';
 
 interface LoginPageProps {
   location: {
@@ -43,7 +44,6 @@ const LoginPage: React.FC<LoginPageProps> = ({
   },
 }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
-
   const dispatch = useDispatch();
 
   useDocumentTitle(formatMessage({ id: 'ocp-express.page.Login.Login', defaultMessage: '登录' }));
@@ -56,12 +56,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
     }
   };
 
-  // use obService.getObInfo to simulate login
-  const { run: getObInfo, loading } = useRequest(obService.getObInfo, {
+  const { run: runLogin, loading } = useRequest(v1Service.login, {
     manual: true,
-    defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
+        handleLoginSuccess(res.data);
+
         if (callback) {
           handleCallback();
         } else {
@@ -69,10 +69,11 @@ const LoginPage: React.FC<LoginPageProps> = ({
         }
       } else {
         message.error(
-          res.error?.message ||formatMessage({
-            id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
-            defaultMessage: '密码错误',
-          })
+          res.error?.message ||
+            formatMessage({
+              id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
+              defaultMessage: '密码错误',
+            })
         );
       }
     },
@@ -88,10 +89,9 @@ const LoginPage: React.FC<LoginPageProps> = ({
       },
     });
 
-    setEncryptLocalStorage('password', password);
     setEncryptLocalStorage('username', username);
     setEncryptLocalStorage('login', 'true');
-    getObInfo();
+    runLogin();
   };
 
   const logoUrl = '/assets/logo/obshell_dashboard_logo.svg';

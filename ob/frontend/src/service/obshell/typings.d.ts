@@ -938,6 +938,10 @@ declare namespace API {
     user: string;
   };
 
+  type LogoutSessionParam = {
+    session_id: string;
+  };
+
   type Matcher = {
     is_regex?: boolean;
     name?: string;

@@ -19,8 +19,10 @@ import { history } from 'umi';
 import { message } from '@oceanbase/design';
 import * as ProfileService from '@/service/ocp-express/ProfileController';
 import { DEFAULT_LIST_DATA } from '@/constant';
-import { isURL, setEncryptLocalStorage } from '@/util';
+import { getEncryptLocalStorage, isURL, setEncryptLocalStorage } from '@/util';
 import tracert from '@/util/tracert';
+import { SESSION_ID } from '@/constant/login';
+import * as v1Service from '@/service/obshell/v1';
 
 export const namespace = 'profile';
 
@@ -54,17 +56,23 @@ const model = {
       }
     },
 
-    *logout({}, { put }) {
-      yield put({
-        type: 'update',
-        payload: {
-          password: null,
-        },
+    *logout({}, { put, call }) {
+      const res = yield call(v1Service.logout, {
+        session_id: getEncryptLocalStorage(SESSION_ID)
       });
+      if (res.successful) {
+        setEncryptLocalStorage(SESSION_ID, '');
+        yield put({
+          type: 'update',
+          payload: {
+            password: null,
+          },
+        });
 
-      setEncryptLocalStorage('password', '');
-      setEncryptLocalStorage('login', 'false');
-      history.push('/login');
+        setEncryptLocalStorage('login', 'false');
+        history.push('/login');
+      }
+
     },
   },
 

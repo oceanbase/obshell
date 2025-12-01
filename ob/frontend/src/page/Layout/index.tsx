@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getLocale, history, useSelector, useDispatch, setLocale } from 'umi';
+import { getLocale, history, useSelector, useDispatch } from 'umi';
 import React, { useEffect } from 'react';
 import { ConfigProvider, Spin, theme } from '@oceanbase/design';
 import { ChartProvider } from '@oceanbase/charts';
@@ -27,6 +27,7 @@ import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
 import GlobalStyle from './GlobalStyle';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
+import { handleLoginSuccess } from '@/util/login';
 import { getStatistics } from '@/service/obshell/ob';
 import { telemetryReport } from '@/service/custom';
 import * as obService from '@/service/obshell/ob';
@@ -91,6 +92,17 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const isTelemetryOutdated = !telemetryTime || moment().diff(moment(telemetryTime), 'hours') >= 1;
   const isLogin = getEncryptLocalStorage('login') === 'true';
 
+  // 免密登录场景下，获取到 secret 后在手动调用 v1Service.login 接口进行登录
+  const { loading: loginLoading } = useRequest(v1Service.login, {
+    ready: isPasswordFreeLogin && !loading,
+    defaultParams: [{}],
+    onSuccess: res => {
+      if (res.successful) {
+        handleLoginSuccess(res.data);
+      }
+    },
+  });
+
   useRequest(
     () =>
       getStatistics({
@@ -100,7 +112,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       ready:
         isTelemetryOutdated &&
         // 如果是免密登录场景，获取到 secret 后在进行 statistics 请求，避免 401 错误
-        (isPasswordFreeLogin ? !loading : isLogin),
+        (isPasswordFreeLogin ? !loading && !loginLoading : isLogin),
       // 登录状态变化后，重新发起请求，避免首次失败后不再发起请求
       refreshDeps: [isLogin],
       // 一小时 + 5秒 轮训一次。5s 是为了避免请求 telemetry 接口时 ，时间差(telemetryTime 判断)导致的请求失败
@@ -125,26 +137,6 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       refresh();
     }
   }, [location?.pathname]);
-
-  useEffect(() => {
-    // Example: 发送消息到子应用，要注意子应用是否加载完成
-    // const iframe = document.getElementById('child-iframe');
-    // iframe.contentWindow.postMessage(
-    //   { locale: 'en-US'},
-    //   '*' // 子应用的源（origin）
-    // );
-    console.log('obshell starting...');
-
-    // 子应用作为 iframe 嵌入其他应用，通过 message 需要获取 locale 进行同步切换语言
-    window.addEventListener('message', event => {
-      // console.log('obshell receive message', event);
-      if (event.data && event.data.locale) {
-        setLocale(event.data.locale, true);
-
-        event?.source?.postMessage({ changedLocale: true }, '*');
-      }
-    });
-  }, []);
 
   // 登录页不需要 publicKey loading
   if (loading && location?.pathname !== '/login') {

@@ -25,12 +25,12 @@ import CryptoJS from 'crypto-js';
  */
 import { extend } from 'umi-request';
 import Cookies from 'js-cookie';
-// import tracert from '@/util/tracert';
 import encrypt from '@/util/encrypt';
-import { aesEncrypt } from '@/util/aes';
+import { aesEncrypt, wordArrayToHex } from '@/util/aes';
 import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
+import { LOGIN_KEY, LOGIN_SECRET_KEY, LOGIN_IV, SESSION_ID } from '@/constant/login';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -174,10 +174,6 @@ const errorHandler = ({ request, response, data }) => {
   if (status === 401) {
     setEncryptLocalStorage('login', 'false');
 
-    // 未登录状态，清空 tracert 的用户标识
-    // tracert.set({
-    //   roleId: null,
-    // });
     if (window.location.pathname !== '/login') {
       // 将当前的 pathname 和 search 记录在 state 中，以便登录后能跳转到之前访问的页面
       // 如果当前已经是登录页了，则没必要跳转
@@ -264,6 +260,7 @@ function base64Encode(key, iv) {
   }
 }
 
+
 // 测试环境不进行加密
 const isTestEnv = process.env.ENV === 'tester';
 
@@ -279,19 +276,31 @@ request.interceptors.request.use((url, options) => {
     options.headers.Accept = '*/*';
   }
 
+
   const dvaApp = getDvaApp();
   const { profile } = dvaApp?._store?.getState?.() || {};
-  const { password: profilePassword, publicKey: profilePublicKey } = profile || {};
+  const { password, publicKey: profilePublicKey } = profile || {};
 
   // 兼容页面刷新
-  const password = profilePassword || getEncryptLocalStorage('password');
   const publicKey = profilePublicKey || getEncryptLocalStorage('publicKey');
+  const sessionId = getEncryptLocalStorage(SESSION_ID);
   const isFormData = options.data instanceof FormData;
+  const isLoginApi = url.includes('/api/v1/login');
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */
-  const { encryptedContent, secretKey, iv } = aesEncrypt(isFormData ? undefined : options.data);
+  // 对于登录接口，即使 options.data 为空，也要生成 secretKey 和 iv
+  const { encryptedContent, secretKey, iv } = aesEncrypt(isFormData ? undefined : options.data, isLoginApi);
 
   const keys = base64Encode(secretKey, iv);
+
+  // 对于登录接口，保存 secretKey 和 iv 到 localStorage，用于后续解密响应
+  if (isLoginApi && secretKey && iv) {
+    // 同时保存十六进制字符串格式，方便直接用于解密
+    const secretKeyHex = wordArrayToHex(secretKey);
+    const ivHex = wordArrayToHex(iv);
+    setEncryptLocalStorage(LOGIN_SECRET_KEY, secretKeyHex);
+    setEncryptLocalStorage(LOGIN_IV, ivHex);
+  }
 
   const X_OCS_File_SHA256 = encrypt(options.sha256sum, publicKey);
 
@@ -307,6 +316,7 @@ request.interceptors.request.use((url, options) => {
             ? `?${queryString.stringify(options.params, { sort: false })}`
             : ''
         }`,
+        session_id: sessionId,
       })
     : Base64.decode(
         Base64.encode(
@@ -324,7 +334,9 @@ request.interceptors.request.use((url, options) => {
               }`,
 
               // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
-              ...(options.data ? { Keys: keys } : {}),
+              // 对于登录接口，即使 options.data 为空，也要返回 Keys
+              ...(options.data || isLoginApi ? { Keys: keys } : {}),
+              session_id: sessionId,
             }),
             publicKey
           )
