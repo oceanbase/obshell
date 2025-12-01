@@ -197,6 +197,25 @@ export async function deleteDatabase(
   });
 }
 
+/** list tenant deadlocks list tenant deadlocks GET /api/v1/tenant/${param0}/deadlocks */
+export async function listTenantDeadlocks(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.listTenantDeadlocksParams,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.PaginatedDeadLocks }>(
+    `/api/v1/tenant/${param0}/deadlocks`,
+    {
+      method: 'GET',
+      params: {
+        ...queryParams,
+      },
+      ...(options || {}),
+    }
+  );
+}
+
 /** lock tenant lock tenant POST /api/v1/tenant/${param0}/lock */
 export async function tenantLock(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
@@ -641,6 +660,97 @@ export async function listRoles(
     params: { ...queryParams },
     ...(options || {}),
   });
+}
+
+/** get tenant sessions get tenant sessions GET /api/v1/tenant/${param0}/sessions */
+export async function getTenantSessions(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getTenantSessionsParams,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.PaginatedTenantSessions }>(
+    `/api/v1/tenant/${param0}/sessions`,
+    {
+      method: 'GET',
+      params: {
+        ...queryParams,
+      },
+      ...(options || {}),
+    }
+  );
+}
+
+/** kill tenant sessions kill tenant sessions DELETE /api/v1/tenant/${param0}/sessions */
+export async function killTenantSessions(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.killTenantSessionsParams,
+  body: API.KillTenantSessionsParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/sessions`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: { ...queryParams },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** get tenant session get tenant session GET /api/v1/tenant/${param0}/sessions/${param1} */
+export async function getTenantSession(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getTenantSessionParams,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, sessionId: param1, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.TenantSession }>(
+    `/api/v1/tenant/${param0}/sessions/${param1}`,
+    {
+      method: 'GET',
+      params: { ...queryParams },
+      ...(options || {}),
+    }
+  );
+}
+
+/** kill tenant session query kill tenant session query DELETE /api/v1/tenant/${param0}/sessions/queries */
+export async function killTenantSessionQuery(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.killTenantSessionQueryParams,
+  body: API.KillTenantSessionQueryParam,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/tenant/${param0}/sessions/queries`, {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    params: { ...queryParams },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** get tenant sessions stats get tenant sessions stats GET /api/v1/tenant/${param0}/sessions/stats */
+export async function getTenantSessionsStats(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getTenantSessionsStatsParams,
+  options?: { [key: string]: any }
+) {
+  const { name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.TenantSessionStats }>(
+    `/api/v1/tenant/${param0}/sessions/stats`,
+    {
+      method: 'GET',
+      params: { ...queryParams },
+      ...(options || {}),
+    }
+  );
 }
 
 /** list users list users from a tenant GET /api/v1/tenant/${param0}/user */

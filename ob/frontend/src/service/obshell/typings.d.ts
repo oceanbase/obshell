@@ -530,6 +530,23 @@ declare namespace API {
     privileges: string[];
   };
 
+  type DeadLock = {
+    event_id?: string;
+    nodes?: DeadLockNode[];
+    report_time?: string;
+    size?: number;
+  };
+
+  type DeadLockNode = {
+    idx?: number;
+    resource?: string;
+    roll_backed?: boolean;
+    sql?: string;
+    svr_ip?: string;
+    svr_port?: number;
+    transaction_hash?: string;
+  };
+
   type deleteDatabaseParams = {
     /** tenant name */
     name: string;
@@ -719,6 +736,41 @@ declare namespace API {
     filter?: string;
   };
 
+  type getTenantSessionParams = {
+    /** tenant name */
+    name: string;
+    /** session id */
+    sessionId: string;
+  };
+
+  type getTenantSessionsParams = {
+    /** tenant name */
+    name: string;
+    /** page */
+    page?: number;
+    /** size */
+    size?: number;
+    /** db user */
+    user?: string;
+    /** db name */
+    db?: string;
+    /** client ip */
+    client_ip?: string;
+    /** session id */
+    id?: string;
+    /** active only */
+    active_only?: boolean;
+    /** server ip */
+    svr_ip?: string;
+    /** sort */
+    sort?: string;
+  };
+
+  type getTenantSessionsStatsParams = {
+    /** tenant name */
+    name: string;
+  };
+
   type getTenantTopCompactionParams = {
     /** top n */
     limit?: string;
@@ -812,6 +864,24 @@ declare namespace API {
     zoneName: string;
   };
 
+  type KillTenantSessionQueryParam = {
+    session_ids?: number[];
+  };
+
+  type killTenantSessionQueryParams = {
+    /** tenant name */
+    name: string;
+  };
+
+  type KillTenantSessionsParam = {
+    session_ids?: number[];
+  };
+
+  type killTenantSessionsParams = {
+    /** tenant name */
+    name: string;
+  };
+
   type KVPair = {
     key?: string;
     value?: string;
@@ -845,6 +915,15 @@ declare namespace API {
   type listTenantBackupTasksParams = {
     /** Tenant name */
     name: string;
+  };
+
+  type listTenantDeadlocksParams = {
+    /** tenant name */
+    name: string;
+    /** page */
+    page?: number;
+    /** size */
+    size?: number;
   };
 
   type listUsersParams = {
@@ -1250,8 +1329,18 @@ declare namespace API {
     page?: CustomPage;
   };
 
+  type PaginatedDeadLocks = {
+    contents?: DeadLock[];
+    page?: CustomPage;
+  };
+
   type PaginatedRestoreTaskResponse = {
     contents?: RestoreTask[];
+    page?: CustomPage;
+  };
+
+  type PaginatedTenantSessions = {
+    contents?: TenantSession[];
     page?: CustomPage;
   };
 
@@ -1330,6 +1419,7 @@ declare namespace API {
   };
 
   type ResourcePoolWithUnit = {
+    observer_list?: string;
     pool_id?: number;
     pool_name?: string;
     unit_config?: ObUnitConfig;
@@ -1789,6 +1879,60 @@ declare namespace API {
 
   type TenantRootPasswordParam = {
     root_password?: string;
+  };
+
+  type TenantSession = {
+    action?: string;
+    client_info?: string;
+    command?: string;
+    db?: string;
+    host?: string;
+    id?: number;
+    info?: string;
+    level?: number;
+    memory_usage?: number;
+    module?: string;
+    /** parse from host when ProxySessId is not null */
+    proxy_ip?: string;
+    proxy_sess_id?: number;
+    record_policy?: string;
+    sample_percentage?: number;
+    sql_id?: string;
+    sql_port?: number;
+    state?: string;
+    svr_ip?: string;
+    svr_port?: number;
+    tenant?: string;
+    time?: number;
+    total_cpu_time?: number;
+    user?: string;
+  };
+
+  type TenantSessionClientStats = {
+    active_count?: number;
+    client_ip?: string;
+    total_count?: number;
+  };
+
+  type TenantSessionDbStats = {
+    active_count?: number;
+    db_name?: string;
+    total_count?: number;
+  };
+
+  type TenantSessionStats = {
+    active_count?: number;
+    client_stats?: TenantSessionClientStats[];
+    db_stats?: TenantSessionDbStats[];
+    max_active_time?: number;
+    total_count?: number;
+    user_stats?: TenantSessionUserStats[];
+  };
+
+  type TenantSessionUserStats = {
+    active_count?: number;
+    total_count?: number;
+    user_name?: string;
   };
 
   type tenantSetParametersParams = {

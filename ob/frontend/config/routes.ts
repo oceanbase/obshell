@@ -19,26 +19,22 @@ export default [
     path: '/',
     component: 'Layout',
     name: '系统布局',
-    spmb: 'b55539',
     routes: [
       {
         path: 'login',
         component: 'Login',
         name: '登录页',
-        spmb: 'b55540',
       },
       {
         path: 'tenant/result/:taskId',
         component: 'Tenant/Result/Success',
         name: '新建租户任务提交成功',
-        spmb: 'b55555',
       },
       {
         // 避免与租户详情冲突
         path: 'tenantCreate/new',
         component: 'Tenant/New',
         name: '新建租户',
-        spmb: 'b55554',
       },
       {
         // 单个租户管理
@@ -53,55 +49,56 @@ export default [
             path: 'overview',
             component: 'Tenant/Detail/Overview',
             name: '租户详情',
-            spmb: 'b55541',
           },
           {
             path: 'monitor',
             component: 'Tenant/Detail/Monitor',
             name: '租户性能监控',
-            spmb: 'b55575',
           },
           {
             path: 'database',
             component: 'Tenant/Detail/Database',
             name: '租户数据库',
-            spmb: 'b55542',
           },
           {
             path: 'user',
             component: 'Tenant/Detail/User',
             name: '租户用户',
-            spmb: 'b55543',
           },
           {
             path: 'user/role',
             component: 'Tenant/Detail/User',
             name: 'Oracle 租户角色',
-            spmb: 'b55544',
           },
           {
             path: 'user/:username',
             component: 'Tenant/Detail/User/Oracle/UserOrRoleDetail',
             name: 'Oracle 租户用户详情',
-            spmb: 'b55545',
           },
           {
             path: 'user/role/:roleName',
             component: 'Tenant/Detail/User/Oracle/UserOrRoleDetail',
             name: 'Oracle 租户角色详情',
-            spmb: 'b55546',
           },
           {
             path: 'parameter',
             component: 'Tenant/Detail/Parameter',
             name: '租户参数',
-            spmb: 'b55547',
+          },
+          {
+            path: 'session',
+            component: 'Tenant/Detail/Session',
+            name: '租户会话',
+          },
+          {
+            path: 'session',
+            component: 'Tenant/Detail/Session',
+            name: '租户会话',
           },
           {
             path: 'backup',
             component: 'Tenant/Detail/Backup',
             name: '租户备份恢复',
-            spmBPos: 'b50371',
           },
           // {
           //   path: 'backup/addBackupStrategy',
@@ -115,13 +112,11 @@ export default [
             path: 'backup/restoreNow',
             component: 'Tenant/Detail/Backup/RestoreNow',
             name: '租户发起恢复',
-            spmBPos: 'b50372',
           },
           {
             path: 'backup/nowBackupTenant',
             component: 'Backup/Backup/NowBackupTenant',
             name: '立即备份', // 租户
-            spmBPos: '',
           },
           // {
           //   path: 'backup/copy',
@@ -143,65 +138,48 @@ export default [
             path: 'overview',
             component: 'Cluster/Overview',
             name: '集群详情',
-            spmb: 'b55548',
           },
           {
             path: 'overview/server/:ip/:serverPort',
             component: 'Cluster/Host',
             name: 'OBServer 详情',
-            spmb: 'b55549',
           },
           {
             path: 'overview/unit',
             component: 'Cluster/Unit',
             name: 'Unit 分布',
-            spmb: 'b55550',
           },
           {
             path: 'overview/parameter',
             component: 'Cluster/Parameter',
             name: '参数管理',
-            spmb: 'b55551',
           },
           {
             path: 'tenant/result/:taskId',
             component: 'Tenant/Result/Success',
             name: '新建租户任务提交成功',
-            spmb: 'b55555',
           },
           {
             // 避免与租户详情冲突
             path: 'tenantCreate/new',
             component: 'Tenant/New',
             name: '新建租户',
-            spmb: 'b55554',
           },
           {
             path: 'tenant',
             component: 'Tenant',
             name: '租户列表',
-            spmb: 'b55552',
           },
           {
             path: 'tenant/restore',
             component: 'Tenant/Detail/Backup/RestoreNow',
             name: '租户发起恢复',
-            spmBPos: 'b50372',
           },
-          // {
-          //   path: 'monitor',
-          //   component: 'Monitor',
-          //   name: '集群监控',
-          //   spmb: 'b55553',
-          //   ignoreMergeRoute: true,
-          //   queryTitle: 'scope',
-          // },
           // 创建租户改为异步任务 结果页
           {
             path: 'diagnosis/session',
             component: 'Diagnosis/Session',
             name: '会话诊断',
-            spmb: 'b55576',
             ignoreMergeRoute: true,
             queryTitle: 'tab',
           },
@@ -209,7 +187,6 @@ export default [
             path: 'diagnosis/sql',
             component: 'Diagnosis/SQLDiagnosis',
             name: 'SQL 诊断',
-            spmb: 'b55577',
             ignoreMergeRoute: true,
             queryTitle: 'tab',
           },
@@ -217,13 +194,11 @@ export default [
             path: 'task',
             component: 'Task',
             name: '任务中心',
-            spmb: 'b55556',
           },
           {
             path: 'task/:taskId',
             component: 'Task/Detail',
             name: '任务详情',
-            spmb: 'b55557',
           },
           {
             path: 'package',
@@ -234,13 +209,11 @@ export default [
             path: 'property',
             component: 'Property',
             name: '系统管理',
-            spmb: 'b55558',
           },
           {
             path: 'log',
             component: 'Log',
             name: '日志服务',
-            spmb: 'b55559',
           },
           // 性能监控
           {
@@ -293,7 +266,6 @@ export default [
           {
             path: 'error',
             name: '错误页',
-            spmb: 'b55560',
             routes: [
               {
                 path: '/error',
@@ -303,13 +275,11 @@ export default [
                 path: '403',
                 component: 'Error/403',
                 name: '403 错误',
-                spmb: 'b55561',
               },
               {
                 path: '404',
                 component: 'Error/404',
                 name: '404 错误',
-                spmb: 'b55562',
               },
             ],
           },
@@ -320,7 +290,6 @@ export default [
         // 使用 Error/404 覆盖默认的 404 路径
         component: 'Error/404',
         name: '404 页面不存在',
-        spmb: 'b55563',
       },
     ],
   },

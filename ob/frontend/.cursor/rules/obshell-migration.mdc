@@ -1,0 +1,277 @@
+---
+alwaysApply: false
+---
+
+# OCP 到 OBShell 代码迁移规范
+
+本规范用于指导将现有的 OCP（OceanBase Control Platform）代码迁移适配到 OBShell 项目中。
+
+## API 服务迁移
+
+### 1. API 导入路径替换
+
+**迁移前 (OCP 风格)**:
+
+```typescript
+import * as ArbitrationController from '@/services/ocp-all-in-one/ArbitrationController';
+import * as ComputeController from '@/services/ocp-all-in-one/ComputeController';
+import * as ObClusterParameterController from '@/services/ocp-all-in-one/ObClusterParameterController';
+```
+
+**迁移后 (OBShell 风格)**:
+
+```typescript
+import * as ArbitrationController from '@/service/obshell/alarm';
+import * as ComputeController from '@/service/obshell/system';
+import * as ObClusterParameterController from '@/service/obshell/obcluster';
+```
+
+**重要**: 保持 `as` 后面的重命名与之前一致，只修改导入路径。
+
+### 2. 通用导入路径替换
+
+**国际化函数导入**:
+
+```typescript
+// 迁移前
+import { formatMessage } from '@/i18n';
+
+// 迁移后
+import { formatMessage } from '@/util/intl';
+```
+
+**框架和工具库导入**:
+
+```typescript
+// 迁移前
+import { history, useDispatch, useSelector } from '@alipay/bigfish';
+import React, { useEffect, useRef, useState } from '@alipay/bigfish/react';
+import { debounce, filter, find } from '@alipay/bigfish/utils/lodash';
+
+// 迁移后
+import { history, useDispatch, useSelector } from 'umi';
+import React, { useEffect, useRef, useState } from 'react';
+import { debounce, filter, find } from 'lodash';
+```
+
+### 3. API 函数调用保持不变
+
+**迁移原则**:
+
+- **保持原有的 API 函数调用格式不变**
+- 只需要更改导入路径，调用方式保持一致
+- 确保 OBShell 服务端提供兼容的 API 接口
+
+**示例**:
+
+```typescript
+// 只需要修改导入路径
+import * as ObClusterParameterController from '@/service/obshell/obcluster';
+
+// API调用方式保持不变
+const response = await ObClusterParameterController.getParameters({
+  clusterId: clusterInfo.clusterId,
+});
+```
+
+## 组件和业务逻辑迁移
+
+### 1. 多集群管理简化
+
+**迁移原则**:
+
+- OBShell 主要面向单集群管理，移除多集群选择逻辑
+- 简化集群上下文管理
+- 移除 OCP 集群相关的状态和组件
+
+**需要移除的组件**:
+
+```typescript
+// 移除这些OCP特有组件
+import OcpClusterSelect from '@/component/OcpClusterSelect';
+import ClusterSelect from '@/component/common/ClusterSelect';
+import OBProxyClusterSelect from '@/component/common/OBProxyClusterSelect';
+```
+
+### 2. 权限控制简化
+
+**迁移前**:
+
+```typescript
+const { canCreateCluster, canListHost } = useSelector(
+  (state: DefaultRootState) => state.auth.authData
+);
+const createCluster = canCreateCluster();
+const listHosts = canListHost();
+```
+
+**迁移后**:
+
+```typescript
+// OBShell通常有更简单的权限模型
+// 根据实际需要保留或简化权限检查
+```
+
+### 3. 状态管理迁移
+
+**DVA Model 适配**:
+
+```typescript
+// 迁移前 - OCP风格
+const addClusterLoading = useSelector(
+  (state: DefaultRootState) => state.loading.effects['cluster/addCluster']
+);
+
+// 迁移后 - 适配OBShell的状态结构
+const addClusterLoading = useSelector(
+  (state: DefaultRootState) => state.loading.effects['obshell/createCluster']
+);
+```
+
+## 国际化文本迁移
+
+### 1. 文本键值保持不变
+
+**迁移原则**:
+
+- **保持现有的国际化文本 id 不变**，避免破坏现有的国际化体系
+- 只在必要时更新 defaultMessage 中的业务术语
+- 重点关注功能逻辑的迁移，而非文本键值的修改
+
+**示例**:
+
+```typescript
+// 迁移前后保持一致
+formatMessage({
+  id: 'ocp-v2.Cluster.New.CreateACluster',
+  defaultMessage: '创建集群',
+});
+
+// 如果需要更新业务术语，只修改 defaultMessage
+formatMessage({
+  id: 'ocp-v2.Cluster.New.CreateACluster',
+  defaultMessage: '创建 OBShell 集群',
+});
+```
+
+## 功能特性适配
+
+### 1. 移除 OCP 特有功能
+
+**需要移除的功能**:
+
+- OCP 集群管理和选择
+- 复杂的多租户管理界面
+- OCP 特有的监控和告警配置
+- 企业版特有的高级功能
+
+### 2. 简化业务流程
+
+**迁移原则**:
+
+- 简化复杂的集群创建流程
+- 减少不必要的配置步骤
+- 专注于 OBShell 核心功能
+
+### 3. 组件依赖清理
+
+**移除不需要的组件导入**:
+
+```typescript
+// 移除这些OCP特有的组件
+import ArchitectureAndVpcAlert from '@/component/ArchitectureAndVpcAlert';
+import VpcItem from '@/component/VpcItem';
+import VpcSelect from '@/component/VpcSelect';
+```
+
+## 样式和 UI 适配
+
+### 1. 主题适配
+
+**迁移原则**:
+
+- 适配 OBShell 的设计系统
+- 更新品牌色彩和视觉元素
+- 简化复杂的 UI 布局
+
+### 2. 响应式设计
+
+**保持响应式设计**:
+
+```typescript
+// 继续使用Ant Design的响应式系统
+import { Col, Row } from '@oceanbase/design';
+```
+
+## 测试迁移
+
+### 1. 更新测试用例
+
+**迁移原则**:
+
+- 更新 API Mock 数据以匹配 OBShell 响应格式
+- 调整组件测试以反映简化的业务逻辑
+- 移除 OCP 特有功能的测试用例
+
+### 2. 集成测试适配
+
+**更新端到端测试**:
+
+- 适配新的 API 端点
+- 更新用户交互流程测试
+- 验证简化后的业务流程
+
+## 迁移检查清单
+
+### API 层面
+
+- [ ] 替换所有 OCP API 导入为 OBShell API (保持 as 重命名一致)
+- [ ] 更新国际化函数导入: `@/i18n` → `@/util/intl`
+- [ ] 更新框架导入: `@alipay/bigfish` → `umi`
+- [ ] 更新 React 导入: `@alipay/bigfish/react` → `react`
+- [ ] 更新 lodash 导入: `@alipay/bigfish/utils/lodash` → `lodash`
+- [ ] ~~适配 API 函数调用格式~~ (保持原有格式不变)
+- [ ] 验证 OBShell 服务端 API 兼容性
+- [ ] 测试所有 API 调用
+
+### 组件层面
+
+- [ ] 移除 OCP 特有组件引用
+- [ ] 简化多集群管理逻辑
+- [ ] 更新权限控制逻辑
+- [ ] 适配状态管理结构
+
+### 业务逻辑
+
+- [ ] 简化复杂业务流程
+- [ ] 移除不适用的功能特性
+- [ ] 更新业务规则和验证逻辑
+- [ ] 测试核心业务功能
+
+### UI/UX
+
+- [ ] 适配 OBShell 设计系统
+- [ ] ~~更新国际化文本~~ (保持原有 id 不变)
+- [ ] 简化用户界面
+- [ ] 测试用户体验流程
+
+## 最佳实践
+
+1. **渐进式迁移**: 按模块逐步迁移，确保每个模块完全适配后再进行下一个
+2. **最小化修改**: 只修改导入路径，保持原有 API 调用格式和函数名不变
+3. **功能对等**: 确保核心功能在迁移后保持完整性
+4. **代码清理**: 移除所有不需要的代码和依赖
+5. **文档更新**: 同步更新相关技术文档
+6. **充分测试**: 对迁移后的代码进行全面测试
+
+## 常见问题处理
+
+### 1. 状态管理冲突
+
+- 重新设计状态结构以适应 OBShell 架构
+- 保持数据流的单向性和可预测性
+
+### 2. 组件依赖问题
+
+- 创建 OBShell 特有的组件来替换 OCP 组件
+- 保持组件接口的一致性以减少迁移工作量

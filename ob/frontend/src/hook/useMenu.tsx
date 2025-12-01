@@ -132,6 +132,12 @@ export const useTenantMenu = (tenantName: string, tenantMode: API.TenantMode): M
       }),
       hidden: isDesktopMode,
     },
+
+    {
+      link: `/cluster/tenant/${tenantName}/session`,
+      title: '会话管理',
+      key: 'SESSION',
+    },
     {
       link: `/cluster/tenant/${tenantName}/backup`,
       title: formatMessage({

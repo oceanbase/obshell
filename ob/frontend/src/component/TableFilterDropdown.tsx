@@ -34,6 +34,7 @@ const TableFilterDropdown: React.FC<TableFilterDropdownProps> = ({
   onConfirm,
 }) => {
   const [value, setValue] = useState('');
+  const defaultValue = selectedKeys?.[0];
 
   const confirmFilter = () => {
     confirm();
@@ -41,6 +42,10 @@ const TableFilterDropdown: React.FC<TableFilterDropdownProps> = ({
       onConfirm(selectedKeys && selectedKeys[0]);
     }
   };
+
+  useEffect(() => {
+    if (defaultValue) setValue(defaultValue);
+  }, [defaultValue]);
 
   useEffect(() => {
     if (!visible) {

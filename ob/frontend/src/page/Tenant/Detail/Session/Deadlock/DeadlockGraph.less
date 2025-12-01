@@ -1,0 +1,15 @@
+// DeadlockGraph 样式文件 - 使用 CSS Modules
+
+// 图表容器的局部样式
+.graphContainer {
+  // 设置定位上下文，但不影响图表的正常渲染
+  position: relative;
+
+  // 只在容器内影响全局 G6 元素的 tooltip
+  :global {
+    .g6-component-tooltip,
+    .g6-tooltip {
+      z-index: 100000 !important;
+    }
+  }
+}

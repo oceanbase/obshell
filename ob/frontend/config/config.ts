@@ -81,6 +81,8 @@ export default defineConfig({
   },
   // 开启运行时 publicPath
   runtimePublicPath: true,
+  // 配置 PostCSS 插件，用于处理 Tailwind CSS
+  extraPostCSSPlugins: [require('tailwindcss'), require('autoprefixer')],
   chainWebpack: (config, { env }) => {
     if (env === 'production') {
       config.optimization.delete('noEmitOnErrors');
@@ -97,6 +99,7 @@ export default defineConfig({
         disableDayjsAlias: true,
       },
     ]);
+
     // 静态资源的文件限制调整为 1GB，避免视频等大文件资源阻塞项目启动
     config.performance.maxAssetSize(1000000000);
     return config;

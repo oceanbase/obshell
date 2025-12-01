@@ -15,8 +15,8 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history, useDispatch } from 'umi';
-import React, { useEffect, useRef, useState } from 'react';
+import { history } from 'umi';
+import React, { useRef, useState } from 'react';
 import {
   Space,
   Tag,
@@ -30,7 +30,6 @@ import {
   Modal,
 } from '@oceanbase/design';
 import { flatten, isEmpty, reduce } from 'lodash';
-import { useSelector } from 'umi';
 import { PageContainer } from '@oceanbase/ui';
 import scrollIntoView from 'scroll-into-view';
 import useReload from '@/hook/useReload';
@@ -39,7 +38,6 @@ import ContentWithReload from '@/component/ContentWithReload';
 import MyCard from '@/component/MyCard';
 import ClusterInfo from './ClusterInfo';
 import CompactionTimeTop3 from './CompactionTimeTop3';
-import SlowSQLTop3 from './SlowSQLTop3';
 import TenantResourceTop3 from './TenantResourceTop3';
 import type { ZoneListOrTopoRef } from './ZoneListOrTopo';
 import ZoneListOrTopo from './ZoneListOrTopo';
@@ -47,10 +45,8 @@ import { EllipsisOutlined } from '@oceanbase/icons';
 import UpgradeDrawer from './UpgradeDrawer';
 import { useRafInterval, useRequest } from 'ahooks';
 import { obStart, obStop } from '@/service/obshell/ob';
-import { obclusterInfo } from '@/service/obshell/obcluster';
+import { obclusterInfo, obclusterSetParameters } from '@/service/obshell/obcluster';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
-import { directTo } from '@oceanbase/util';
-import { getAllAgentsStatus, getStatus } from '@/service/obshell/v1';
 import moment from 'moment';
 import { getAgentMainDags } from '@/service/obshell/task';
 import { message } from 'antd';
@@ -74,22 +70,9 @@ export const getServerStatus = (server: API.Observer) => {
   return status;
 };
 
-export interface DetailProps {
-  match: {
-    params: {
-      clusterId: number;
-    };
-  };
-  loading: boolean;
-  clusterData: API.ClusterInfo;
-}
+export interface DetailProps {}
 
-const Detail: React.FC<DetailProps> = ({
-  match: {
-    params: {},
-  },
-  loading,
-}) => {
+const Detail: React.FC<DetailProps> = ({}) => {
   const { token } = theme.useToken();
   const [clusterStatus, setClusterStatus] = useState<'normal' | 'abnormal'>('normal');
 
@@ -123,10 +106,6 @@ const Detail: React.FC<DetailProps> = ({
     }
   );
 
-  useRequest(getStatus, {
-    manual: false,
-  });
-
   useRafInterval(
     () => {
       refresh();
@@ -141,6 +120,7 @@ const Detail: React.FC<DetailProps> = ({
 
   // 使用空字符串兜底，避免文案拼接时出现 undefined
   const obVersion = clusterData.ob_version || '';
+  const deadLockDetectionEnabled = clusterData.dead_lock_detection_enabled;
 
   const scrollToZoneTable = () => {
     const zoneTable = document.getElementById('ocp-zone-table');
@@ -159,8 +139,6 @@ const Detail: React.FC<DetailProps> = ({
       }
     }, 0);
   };
-
-  const { data } = useRequest(getAllAgentsStatus);
 
   // clusterData zones 中的 servers 不存在 status 属性，单独调个接口请求
   // const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
@@ -427,6 +405,20 @@ const Detail: React.FC<DetailProps> = ({
     },
   });
 
+  const { run: updateClusterParameter } = useRequest(obclusterSetParameters, {
+    manual: true,
+    onSuccess: (res, params) => {
+      if (res?.successful) {
+        refresh();
+        if (params[0]?.params[0]?.value === '30ms') {
+          message.success('死锁自动检测已开启');
+        } else {
+          message.success('死锁自动检测已关闭');
+        }
+      }
+    },
+  });
+
   function handleMenuClick(key: string) {
     if (key === 'upgrade') {
       setUpgradeVisible(true);
@@ -526,6 +518,39 @@ const Detail: React.FC<DetailProps> = ({
           });
         }
       });
+    } else if (key === 'openAutoDeadlockDetection') {
+      Modal.confirm({
+        title: formatMessage({
+          id: 'ocp-v2.Detail.Overview.AreYouSureYouWantOpenDeadlockDetection',
+          defaultMessage: '确认要开启死锁自动检测吗？',
+        }),
+
+        content:
+          '本操作会自动检测并解决死锁，并保存 7 天的死锁记录。本操作为集群级别行为，其他租户也将同步开启，本功能对集群有 2% 左右的性能损耗，请谨慎操作。',
+
+        onOk: () => {
+          return updateClusterParameter({
+            params: [{ name: '_lcl_op_interval', value: '30ms', scope: 'CLUSTER' }],
+          });
+        },
+      });
+    } else if (key === 'closeAutoDeadlockDetection') {
+      Modal.confirm({
+        title: formatMessage({
+          id: 'ocp-v2.Detail.Overview.AreYouSureYouWantCloseDeadlockDetection',
+          defaultMessage: '确认要关闭死锁自动检测吗？',
+        }),
+        content: formatMessage({
+          id: 'ocp-v2.Detail.Overview.AfterTheAutomaticDetectionOf',
+          defaultMessage: '关闭死锁自动检测后，不再自动检测和解决死锁。',
+        }),
+
+        onOk: () => {
+          return updateClusterParameter({
+            params: [{ name: '_lcl_op_interval', value: '0ms', scope: 'CLUSTER' }],
+          });
+        },
+      });
     }
   }
 
@@ -547,6 +572,27 @@ const Detail: React.FC<DetailProps> = ({
           })}
         </span>
       </Menu.Item>
+
+      {deadLockDetectionEnabled === true && (
+        <Menu.Item key="closeAutoDeadlockDetection">
+          <span>
+            {formatMessage({
+              id: 'ocp-v2.Detail.Overview.DisableAutomaticDeadlockDetection',
+              defaultMessage: '关闭死锁自动检测',
+            })}
+          </span>
+        </Menu.Item>
+      )}
+      {deadLockDetectionEnabled === false && (
+        <Menu.Item key="openAutoDeadlockDetection">
+          <span>
+            {formatMessage({
+              id: 'ocp-v2.Detail.Overview.EnableAutomaticDeadlockDetection',
+              defaultMessage: '开启死锁自动检测',
+            })}
+          </span>
+        </Menu.Item>
+      )}
       {/*
       {(clusterData.status === 'RUNNING' ||
       clusterData.status === 'UNAVAILABLE' ||
@@ -608,7 +654,7 @@ const Detail: React.FC<DetailProps> = ({
                       )}
                 </Tag>
               }
-              spin={loading || reloading}
+              spin={reloading}
               onClick={() => {
                 refresh();
                 reload();

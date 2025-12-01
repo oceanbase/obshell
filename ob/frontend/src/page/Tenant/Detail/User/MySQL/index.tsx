@@ -299,8 +299,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
       render: (text: string, record: API.DbUser) => {
         return (
           <Space size="middle">
-            {(!isDesktopMode ||
-              (record.username !== 'root' && tenantData?.tenant_name !== 'sys')) && (
+            {!isDesktopMode && record.username !== 'root' && tenantData?.tenant_name !== 'sys' && (
               <>
                 <a
                   data-aspm-click="c304264.d308787"

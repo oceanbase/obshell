@@ -313,6 +313,8 @@ export type Operation = {
   popconfirm?: PopconfirmProps;
   // 是否增加一个 divider
   divider?: boolean;
+  disabled?: boolean;
+  style?: React.CSSProperties;
 };
 
 export function getOperationComponent<T>({
@@ -342,16 +344,23 @@ export function getOperationComponent<T>({
   return (
     // link 和 button 模式的间距做差异化处理
     <Space size={mode === 'link' ? 16 : 8}>
-      {operations1.map(({ value, label, buttonProps, tooltip, popconfirm }, index) => {
+      {operations1.map(({ value, label, buttonProps, tooltip, disabled, popconfirm }, index) => {
         return (
           <Tooltip key={value} title={tooltip?.title} {...tooltip}>
             {mode === 'link' ? (
               popconfirm ? (
                 <Popconfirm placement="bottomLeft" {...popconfirm}>
-                  <a>{label}</a>
+                  <Button size="small">{label}</Button>
                 </Popconfirm>
               ) : (
-                <a onClick={() => handleOperation(value, record, operations)}>{label}</a>
+                <Button
+                  size="small"
+                  {...(buttonProps || {})}
+                  disabled={disabled}
+                  onClick={() => handleOperation(value, record, operations)}
+                >
+                  {label}
+                </Button>
               )
             ) : (
               <Button
@@ -376,12 +385,12 @@ export function getOperationComponent<T>({
                 handleOperation(key, record, operations);
               }}
             >
-              {operations2.map(({ value, label, divider, tooltip }) => {
+              {operations2.map(({ value, label, divider, tooltip, disabled, style }) => {
                 return (
                   <>
-                    <Menu.Item key={value}>
+                    <Menu.Item key={value} disabled={disabled} style={style}>
                       <Tooltip title={tooltip?.title} {...tooltip}>
-                        <div>{label}</div>
+                        <span>{label}</span>
                       </Tooltip>
                     </Menu.Item>
                     {divider && <Menu.Divider />}
@@ -391,15 +400,7 @@ export function getOperationComponent<T>({
             </Menu>
           }
         >
-          {mode === 'link' ? (
-            <a>
-              <Button icon={<EllipsisOutlined />} size="small" />
-            </a>
-          ) : (
-            <Button>
-              <EllipsisOutlined />
-            </Button>
-          )}
+          <Button icon={<EllipsisOutlined />} size={mode === 'link' ? 'small' : 'middle'} />
         </Dropdown>
       )}
     </Space>
