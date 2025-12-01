@@ -71,44 +71,6 @@ export const useBasicMenu = (): MenuItem[] => {
       icon: <Icon component={AlarmSvg} />,
       selectedIcon: <Icon component={AlarmSelectedSvg} />,
     },
-
-    // {
-    //   link: '/diagnosis',
-    //   title: formatMessage({
-    //     id: 'ocp-express.src.hook.useMenu.DiagnosticAnalysis',
-    //     defaultMessage: '诊断分析',
-    //   }),
-    //   icon: <Icon component={DiagnosisSvg} />,
-    //   selectedIcon: <Lottie path="/lottie/diagnosis.json" mode="icon" speed={3} loop={false} />,
-    //   children: [
-    //     {
-    //       link: `/diagnosis/session`,
-    //       title: formatMessage({
-    //         id: 'ocp-express.Diagnosis.Session.SessionManagement',
-    //         defaultMessage: '会话诊断',
-    //       }),
-    //     },
-    //     {
-    //       link: `/diagnosis/sql`,
-    //       title: formatMessage({
-    //         id: 'ocp-express.src.hook.useMenu.SqlDiagnosis',
-    //         defaultMessage: 'SQL 诊断',
-    //       }),
-    //     },
-    //   ],
-    // },
-
-    // {
-    //   link: '/log',
-    //   title: formatMessage({
-    //     id: 'ocp-express.page.Log.LogQuery',
-    //     defaultMessage: '日志查询',
-    //   }),
-    //   icon: <IconFont type="log" />,
-    //   selectedIcon: <Lottie path="/lottie/log.json" mode="icon" speed={3} loop={false} />,
-    //   divider: true,
-    // },
-
     {
       link: '/system',
       title: formatMessage({
@@ -137,11 +99,7 @@ export const useBasicMenu = (): MenuItem[] => {
   ];
 };
 
-export const useTenantMenu = (
-  tenantName: string,
-  tenantMode: API.TenantMode,
-  oraclePrivilegeManagementSupported: boolean
-): MenuItem[] => {
+export const useTenantMenu = (tenantName: string, tenantMode: API.TenantMode): MenuItem[] => {
   const { isDesktopMode } = useUiMode();
   const menus = [
     {

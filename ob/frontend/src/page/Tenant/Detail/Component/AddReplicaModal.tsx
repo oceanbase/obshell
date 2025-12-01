@@ -173,7 +173,7 @@ const AddReplicaModal: React.FC<AddReplicaModalProps> = ({
             defaultMessage: '租户',
           })}
         >
-          {tenantData.name}
+          {tenantData?.tenant_name}
         </Descriptions.Item>
       </Descriptions>
       <Form form={form} preserve={false} layout="vertical" hideRequiredMark={true}>

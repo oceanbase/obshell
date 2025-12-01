@@ -57,22 +57,13 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     location: { pathname },
   } = restProps;
 
-  const {
-    systemInfo: { monitorInfo: { collectInterval } = {} },
-    showTenantAdminPasswordModal,
-    tenantAdminPasswordErrorData,
-  } = useSelector((state: DefaultRootState) => state.global);
+  const { showTenantAdminPasswordModal, tenantAdminPasswordErrorData } = useSelector(
+    (state: DefaultRootState) => state.global
+  );
 
   const dispatch = useDispatch();
 
-  // 集群详情里面，会返回 oraclePrivilegeManagementSupprted，只对Oracle租户有效
-  // 租户详情里面，Oracle租户有oraclePrivilegeManagementSupprted字段，MySQL租户没有这个字段
-  const menus = useTenantMenu(
-    tenantName,
-    tenantData?.mode,
-    tenantData?.oraclePrivilegeManagementSupported,
-    tenantData?.obVersion
-  );
+  const menus = useTenantMenu(tenantName, tenantData?.mode);
 
   const subSideMenus = useBasicMenu();
 
@@ -98,7 +89,7 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
     };
   }, [tenantName]);
 
-  useDocumentTitle(tenantData?.name && `${tenantData.name} | ${tenantData.clusterName}`);
+  useDocumentTitle(tenantData?.tenant_name);
 
   const statusItem = findByValue(TENANT_STATUS_LIST, tenantData.status);
 

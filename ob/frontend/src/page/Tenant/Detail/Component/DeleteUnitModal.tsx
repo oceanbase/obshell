@@ -82,7 +82,7 @@ class DeleteUnitModal extends React.PureComponent<DeleteUnitModalProps> {
               defaultMessage: '所属租户',
             })}
           >
-            {tenantData.name}
+            {tenantData?.tenant_name}
           </FormItem>
           <FormItem
             label={formatMessage({

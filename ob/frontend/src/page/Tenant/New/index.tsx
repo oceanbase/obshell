@@ -40,7 +40,6 @@ import { uniq, uniqueId, uniqWith } from 'lodash';
 import { findBy, isNullValue } from '@oceanbase/util';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import * as ObshellTenantController from '@/service/obshell/tenant';
 import { NAME_RULE, PASSWORD_REGEX } from '@/constant';
 import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
@@ -67,7 +66,6 @@ import { getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import { TIMEZONE_LIST, filterTimezonesByMode } from '@/constant/timezone';
-import Item from 'antd/es/list/Item';
 
 const { Option } = MySelect;
 const { Text } = Typography;
@@ -77,25 +75,13 @@ interface collation {
   name: string;
 }
 
-interface NewProps {
-  location: {
-    query: {
-      tenantId?: number;
-    };
-  };
-}
+interface NewProps {}
 
-const New: React.FC<NewProps> = ({
-  location: {
-    query: { tenantId: defaultTenantId },
-  },
-}) => {
+const New: React.FC<NewProps> = ({}) => {
   const { styles } = useStyles();
 
   const [form] = Form.useForm();
   const { getFieldValue, validateFields, setFieldsValue } = form;
-  // 是否在指定集群下复制租户
-  const isClone = !isNullValue(defaultTenantId);
 
   const [passed, setPassed] = useState(true);
   const [currentMode, setCurrentMode] = useState('MYSQL');
@@ -111,15 +97,10 @@ const New: React.FC<NewProps> = ({
 
   // 推荐
   useDocumentTitle(
-    isClone
-      ? formatMessage({
-          id: 'ocp-express.Tenant.New.CopyTenant',
-          defaultMessage: '复制租户',
-        })
-      : formatMessage({
-          id: 'ocp-express.Tenant.New.CreateATenant',
-          defaultMessage: '新建租户',
-        })
+    formatMessage({
+      id: 'ocp-express.Tenant.New.CreateATenant',
+      defaultMessage: '新建租户',
+    })
   );
 
   const {
@@ -127,7 +108,7 @@ const New: React.FC<NewProps> = ({
     loading: clusterDataLoading,
     runAsync: getClusterData,
   } = useRequest(obclusterInfo, {
-    manual: isClone,
+    manual: false,
   });
 
   const zones = obclusterInfoRes?.data?.zones || [];
@@ -175,91 +156,23 @@ const New: React.FC<NewProps> = ({
         handleCharsetChange('utf8mb4', charsetRes.data?.contents || []);
       });
       getLoadTypeData();
-      if (isClone) {
-        getTenantData({
-          tenantId: defaultTenantId,
-        });
-      }
     });
   }, []);
 
   useEffect(() => {
-    if (!isClone) {
-      setFieldsValue({
-        zones: (zones || []).map(item => ({
-          checked: true,
-          name: item.name,
-          replicaType: 'FULL',
-          unitCount: 1,
-        })),
+    setFieldsValue({
+      zones: (zones || []).map(item => ({
+        checked: true,
+        name: item.name,
+        replicaType: 'FULL',
+        unitCount: 1,
+      })),
 
-        mode: 'MYSQL',
-        charset: 'utf8mb4',
-        primaryZone: '',
-      });
-    }
+      mode: 'MYSQL',
+      charset: 'utf8mb4',
+      primaryZone: '',
+    });
   }, [clusterData]);
-
-  // 获取租户数据: 仅在复制租户时调用
-  const { data: tenantInfo, run: getTenantData } = useRequest(ObTenantController.getTenant, {
-    manual: true,
-    onSuccess: res => {
-      if (res.successful) {
-        const sourceTenantData = res?.data || {};
-
-        const sourceZones = (sourceTenantData?.zones || []).map(item => ({
-          name: item.name,
-          replicaType: item.replicaType,
-          unitCount: item.resourcePool?.unitCount,
-          unitConfig: item.resourcePool?.unitConfig,
-          ...item?.unitSpec,
-        }));
-
-        const charset = sourceTenantData.charset || 'utf8mb4';
-        setFieldsValue({
-          name: `${sourceTenantData.name}_clone`,
-          zonesUnitCount: tenantData.zones?.map(item => item.units?.length)?.[0] || 1,
-          zones: (clusterData.zones || []).map(zone => {
-            const replicaZone = sourceZones.find(item => item.name === zone.name);
-
-            return {
-              name: zone.name,
-              cpuCore: replicaZone?.unitConfig?.maxCpuCoreCount,
-              memorySize: replicaZone?.unitConfig?.maxMemorySize,
-              ...(replicaZone
-                ? {
-                    // 已分布副本的 Zone，已勾选
-                    checked: true,
-                    ...replicaZone,
-                  }
-                : {
-                    // 未分布副本的 Zone，未勾选
-                    checked: false,
-                    replicaType: 'FULL',
-                  }),
-            };
-          }),
-          mode: sourceTenantData.mode,
-          charset,
-          collation: sourceTenantData.collation || 'utf8mb4_general_ci',
-          primaryZone: sourceTenantData.primaryZone,
-          comment: sourceTenantData.comment,
-          whitelist: sourceTenantData.whitelist,
-        });
-
-        // 获取字符集列表后再设置 collation 列表，因为两者有先后依赖关系
-        listCharsets({
-          tenant_mode: sourceTenantData.mode,
-        }).then(charsetRes => {
-          // 需要从 charsetRes 获取最新的字符集列表
-          const newChartsetList = charsetRes.data?.contents || [];
-          setCollations(findBy(newChartsetList, 'name', charset)?.collations || []);
-        });
-      }
-    },
-  });
-
-  const tenantData = tenantInfo?.data || {};
 
   // 创建租户更改为异步
   const { run: addTenant, loading: createTenantLoading } = useRequest(tenantCreate, {
@@ -374,15 +287,10 @@ const New: React.FC<NewProps> = ({
     },
 
     {
-      breadcrumbName: isClone
-        ? formatMessage({
-            id: 'ocp-express.Tenant.New.CopyTenant',
-            defaultMessage: '复制租户',
-          })
-        : formatMessage({
-            id: 'ocp-express.Tenant.New.CreateATenant',
-            defaultMessage: '新建租户',
-          }),
+      breadcrumbName: formatMessage({
+        id: 'ocp-express.Tenant.New.CreateATenant',
+        defaultMessage: '新建租户',
+      }),
     },
   ];
 
@@ -437,15 +345,10 @@ const New: React.FC<NewProps> = ({
       className={styles.container}
       ghost={true}
       header={{
-        title: isClone
-          ? formatMessage({
-              id: 'ocp-express.Tenant.New.ReplicationTenant',
-              defaultMessage: '复制租户',
-            })
-          : formatMessage({
-              id: 'ocp-express.Tenant.New.NewTenant',
-              defaultMessage: '新建租户',
-            }),
+        title: formatMessage({
+          id: 'ocp-express.Tenant.New.NewTenant',
+          defaultMessage: '新建租户',
+        }),
         breadcrumb: { routes, itemRender: breadcrumbItemRender },
         onBack: () => {
           history.push('/tenant');
@@ -1354,7 +1257,6 @@ const New: React.FC<NewProps> = ({
                   <Form.Item
                     style={{ marginBottom: 0 }}
                     name="whitelist"
-                    initialValue={tenantData.whitelist}
                     rules={[
                       {
                         validator: WhitelistInput.validate,

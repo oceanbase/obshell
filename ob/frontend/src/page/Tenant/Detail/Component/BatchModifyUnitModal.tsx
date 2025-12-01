@@ -15,7 +15,6 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { useDispatch } from 'umi';
 import React, { useEffect, useState } from 'react';
 import { Form, InputNumber, Row, Col, Descriptions, Modal } from '@oceanbase/design';
 import { isEqual, minBy, find, uniqueId } from 'lodash';
@@ -48,7 +47,6 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
   visible,
   ...restProps
 }) => {
-  const dispatch = useDispatch();
   const [form] = Form.useForm();
   const { validateFields } = form;
 
@@ -126,30 +124,27 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
     const minCpuCoreAssignedZone = minBy(
       clusterZones?.map(zone => zone?.servers?.length > 0 && zone?.servers[0]?.stats),
 
-      'cpuCoreAssigned'
+      'cpu_core_assigned'
     )?.zone;
-
     const minMemoryInBytesAssignedZone = minBy(
       clusterZones?.map(zone => zone?.servers?.length > 0 && zone?.servers[0]?.stats),
 
-      'memoryInBytesAssigned'
+      'memory_in_bytes_assigned'
     )?.zone;
 
     const minCpuZone = find(tenantZones, item => item.name === minCpuCoreAssignedZone);
-
     const minMemoryZone = find(tenantZones, item => item.name === minMemoryInBytesAssignedZone);
 
     // 修改 unit 时，CUP可配置范围上限，当前 unit 已分配CUP + 剩余空闲CUP
     if (minIdleCpuZone && minCpuZone) {
       idleCpuCore =
-        minIdleCpuZone?.idleCpuCoreTotal + minCpuZone?.resourcePool?.unitConfig?.maxCpuCoreCount;
+        minIdleCpuZone?.idleCpuCoreTotal + minCpuZone?.resourcePool?.unitConfig?.max_cpu;
     }
-
     // 修改 unit 时，可配置范围上限，当前 unit 已分配内存 + 剩余空闲内存
     if (minIdleMemoryZone && minMemoryZone) {
       idleMemoryInBytes =
         minIdleMemoryZone?.idleMemoryInBytesTotal +
-        minMemoryZone?.resourcePool?.unitConfig?.maxMemorySize;
+        minMemoryZone?.resourcePool?.unitConfig?.memorySize;
     }
   }
 

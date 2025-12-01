@@ -154,7 +154,7 @@ const Backup: React.FC<BackupProps> = ({
             id: 'ocp-v2.Detail.Backup.BackupIsNotSupportedBy',
             defaultMessage: '备集群下的租户不支持备份',
           })) ||
-        (tenantData.name === 'sys' &&
+        (tenantData?.tenant_name === 'sys' &&
           formatMessage({
             id: 'ocp-v2.Detail.Backup.SysTenantsDoNotSupport',
             defaultMessage: 'sys 租户不支持备份',
@@ -193,7 +193,7 @@ const Backup: React.FC<BackupProps> = ({
             id: 'ocp-v2.Detail.Backup.AreYouSureYouWantToStartThe',
             defaultMessage: '确定启动租户 {tenantDataName} 的备份调度吗？',
           },
-          { tenantDataName: tenantData.name }
+          { tenantDataName: tenantData?.tenant_name }
         ),
         content: formatMessage({
           id: 'ocp-v2.Detail.Backup.StartingABackupPolicyRequires',
@@ -214,7 +214,7 @@ const Backup: React.FC<BackupProps> = ({
             id: 'ocp-v2.Detail.Backup.AreYouSureYouWantToSuspendBackup',
             defaultMessage: '确定暂停租户 {tenantDataName} 的备份调度吗？',
           },
-          { tenantDataName: tenantData.name }
+          { tenantDataName: tenantData?.tenant_name }
         ),
         content: formatMessage({
           id: 'ocp-v2.Detail.Backup.TheBackupWillNotBeAutomaticallyBackedUp',
@@ -246,7 +246,7 @@ const Backup: React.FC<BackupProps> = ({
             id: 'ocp-v2.Detail.Backup.AreYouSureYouWantToDeleteThe',
             defaultMessage: '确定删除租户 {tenantDataName} 的备份策略吗？',
           },
-          { tenantDataName: tenantData.name }
+          { tenantDataName: tenantData?.tenant_name }
         ),
         content: formatMessage({
           id: 'ocp-v2.Detail.Backup.AfterDeletionTheTenantDoesNotHaveA',
@@ -273,7 +273,7 @@ const Backup: React.FC<BackupProps> = ({
             id: 'ocp-v2.Detail.Backup.TheStandbyTenantDoesNotSupportCreatingA',
             defaultMessage: '备租户不支持新建备份策略',
           })) ||
-        (tenantData.name === 'sys' &&
+        (tenantData?.tenant_name === 'sys' &&
           formatMessage({
             id: 'ocp-v2.Detail.Backup.SysTenantsDoNotSupportNewBackupPolicies',
             defaultMessage: 'sys 租户不支持新建备份策略',
@@ -282,7 +282,7 @@ const Backup: React.FC<BackupProps> = ({
     >
       <Button
         type={type}
-        disabled={backupTenant.obClusterType === 'STANDBY' || tenantData.name === 'sys'}
+        disabled={backupTenant.obClusterType === 'STANDBY' || tenantData?.tenant_name === 'sys'}
         onClick={() => {
           // history.push(`/cluster/${clusterId}/tenant/${tenantName}/backup/addBackupStrategy`);
         }}

@@ -19,9 +19,7 @@ import { history, useDispatch } from 'umi';
 import {
   Button,
   Col,
-  Dropdown,
   Form,
-  Menu,
   Row,
   Badge,
   Space,
@@ -34,20 +32,18 @@ import {
   message,
 } from '@oceanbase/design';
 import { QuestionCircleOutlined } from '@oceanbase/icons';
-import React, { memo, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { uniqueId, find } from 'lodash';
-import { byte2GB, directTo, findByValue, jsonParse } from '@oceanbase/util';
+import { byte2GB, findByValue } from '@oceanbase/util';
 import moment from 'moment';
 import { PageContainer } from '@oceanbase/ui';
 import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
 import { TENANT_MODE_LIST } from '@/constant/tenant';
-import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
 import { getCompactionStatusV4 } from '@/util/cluster';
 import { getTextLengthRule } from '@/util';
 import { taskSuccess } from '@/util/task';
 import { formatTime } from '@/util/datetime';
-import tracert from '@/util/tracert';
 import { useRequest, useInterval } from 'ahooks';
 import MyCard from '@/component/MyCard';
 import MyInput from '@/component/MyInput';
@@ -171,18 +167,6 @@ const Detail: React.FC<NewProps> = ({
       getTenantData({ name: tenantName });
     }
   }, [tenantName]);
-
-  // 获取副本模式，即 3F、2F1L、2F1L1R 的简写形式
-  const replicaMode = REPLICA_TYPE_LIST.map(item => ({
-    count: (tenantData?.zones || []).filter(tenantZone => tenantZone.replicaType === item.value)
-      .length,
-    shortLabel: item.shortLabel,
-  }))
-    .filter(item => item.count > 0)
-    .map(item => `${item.count}${item.shortLabel}`)
-    .join('');
-
-  const allZoneHasReplica = clusterZones.length === (tenantData?.zones || []).length;
 
   // 修改副本
   const { runAsync: modifyReplica, loading: modifyUnitLoading } = useRequest(tenantModifyReplicas, {
@@ -308,7 +292,7 @@ const Detail: React.FC<NewProps> = ({
     () => {
       getTenantCompactionRefresh();
     },
-    polling ? 3000 : null
+    polling ? 3000 : undefined
   );
 
   // 发起合并
@@ -348,47 +332,6 @@ const Detail: React.FC<NewProps> = ({
     }
   );
 
-  const handleMenuClick = (key: 'clone' | 'modifyPassword') => {
-    if (key === 'clone') {
-      directTo(`/cluster/tenant/new?tenantName=${tenantData.tenant_name}`);
-    } else if (key === 'modifyPassword') {
-      setModifyPasswordVisible(true);
-    }
-  };
-
-  const menu = (
-    <Menu onClick={({ key }) => handleMenuClick(key)}>
-      <Menu.Item key="modifyPassword">
-        <span
-          data-aspm-click="c304245.d308738"
-          data-aspm-desc="租户详情-修改密码"
-          data-aspm-param={``}
-          data-aspm-expo
-        >
-          {formatMessage({
-            id: 'ocp-express.Tenant.Detail.ChangePassword',
-            defaultMessage: '修改密码',
-          })}
-        </span>
-      </Menu.Item>
-
-      {/* 需要有所属集群的新建租户权限 */}
-      <Menu.Item key="clone">
-        <span
-          data-aspm-click="c304245.d308741"
-          data-aspm-desc="租户详情-复制租户"
-          data-aspm-param={``}
-          data-aspm-expo
-        >
-          {formatMessage({
-            id: 'ocp-express.Tenant.Detail.ReplicationTenant',
-            defaultMessage: '复制租户',
-          })}
-        </span>
-      </Menu.Item>
-    </Menu>
-  );
-
   const { runAsync: unitConfigCreateFn } = useRequest(unitConfigCreate, {
     manual: true,
   });
@@ -425,12 +368,12 @@ const Detail: React.FC<NewProps> = ({
     }
     modifyReplica(
       {
-        name: tenantData.tenant_name,
+        name: tenantData.tenant_name!,
       },
       {
         zone_list: [
           {
-            zone_name: name,
+            zone_name: name!,
             replica_type: replicaType,
             unit_num: resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
             unit_config_name: unitName,
@@ -491,10 +434,6 @@ const Detail: React.FC<NewProps> = ({
               }
             >
               <Button
-                data-aspm-click="c304245.d308734"
-                data-aspm-desc="租户详情-删除租户"
-                data-aspm-param={``}
-                data-aspm-expo
                 disabled={tenantData.tenant_name === 'sys'}
                 onClick={() => {
                   setShowDeleteTenantModal(true);
@@ -507,38 +446,17 @@ const Detail: React.FC<NewProps> = ({
               </Button>
             </Tooltip>
 
-            <Tooltip
-              placement="topRight"
-              title={
-                allZoneHasReplica &&
-                formatMessage({
-                  id: 'ocp-express.Tenant.Detail.TheCurrentTenantHasSet',
-                  defaultMessage: '当前租户在所属集群的全部 Zone 上均已设置副本',
-                })
-              }
+            <Button
+              type="primary"
+              onClick={() => {
+                setShowAddReplicaModal(true);
+              }}
             >
-              <Button
-                data-aspm-click="c304245.d308737"
-                data-aspm-desc="租户详情-新增副本"
-                data-aspm-param={``}
-                data-aspm-expo
-                disabled={allZoneHasReplica}
-                type="primary"
-                onClick={() => {
-                  setShowAddReplicaModal(true);
-                }}
-              >
-                {formatMessage({
-                  id: 'ocp-express.Tenant.Detail.NewCopy',
-                  defaultMessage: '新增副本',
-                })}
-              </Button>
-            </Tooltip>
-            {/* <Dropdown overlay={menu}>
-             <Button>
-               <EllipsisOutlined />
-             </Button>
-            </Dropdown> */}
+              {formatMessage({
+                id: 'ocp-express.Tenant.Detail.NewCopy',
+                defaultMessage: '新增副本',
+              })}
+            </Button>
           </Space>
         ),
       }}
@@ -555,28 +473,7 @@ const Detail: React.FC<NewProps> = ({
               </span>
             }
           >
-            <div
-              data-aspm="c304177"
-              data-aspm-desc="租户信息"
-              data-aspm-expo
-              // 扩展参数
-              data-aspm-param={tracert.stringify({
-                // 租户模式
-                tenantMode: tenantData.mode,
-                // 租户 OB 版本
-                tenantObVersion: clusterData?.ob_version,
-                // 租户字符集
-                tenantCharset: tenantData.charset,
-                // 租户 collation
-                tenantCollation: tenantData.collation,
-                // 租户 Zone 优先级
-                tenantPrimaryZone: tenantData.primary_zone,
-                // 租户副本分布
-                tenantLocality: tenantData.locality,
-                // 租户副本模式，即 3F、2F1L、2F1L1R 的简写形式
-                tenantReplicaMode: replicaMode,
-              })}
-            >
+            <div>
               <Descriptions column={4}>
                 <Descriptions.Item
                   label={formatMessage({
@@ -761,10 +658,6 @@ const Detail: React.FC<NewProps> = ({
             })}
             extra={
               <Button
-                data-aspm-click="c304245.d308733"
-                data-aspm-desc="租户详情-修改 Unit"
-                data-aspm-param={``}
-                data-aspm-expo
                 onClick={() => {
                   setShowBatchModifyUnitModal(true);
                 }}
@@ -803,10 +696,6 @@ const Detail: React.FC<NewProps> = ({
                 actions={[
                   <Button
                     key="batch-delete"
-                    data-aspm-click="c304245.d308736"
-                    data-aspm-desc="租户详情-批量删除副本"
-                    data-aspm-param={``}
-                    data-aspm-expo
                     danger={true}
                     ghost={true}
                     onClick={() => {
@@ -843,10 +732,6 @@ const Detail: React.FC<NewProps> = ({
             }
             extra={
               <Button
-                data-aspm-click="c304245.d308739"
-                data-aspm-desc="租户详情-修改 Zone 优先级"
-                data-aspm-param={``}
-                data-aspm-expo
                 onClick={() => {
                   setShowModifyPrimaryZoneDrawer(true);
                 }}
@@ -883,10 +768,6 @@ const Detail: React.FC<NewProps> = ({
             }
             extra={
               <Button
-                data-aspm-click="c304245.d308740"
-                data-aspm-desc="租户详情-修改白名单"
-                data-aspm-param={``}
-                data-aspm-expo
                 onClick={() => {
                   setShowWhitelistModal(true);
                 }}
@@ -940,10 +821,6 @@ const Detail: React.FC<NewProps> = ({
                     })}
                   >
                     <Button
-                      data-aspm-click="c304245.d308735"
-                      data-aspm-desc="租户详情-清除合并异常"
-                      data-aspm-param={``}
-                      data-aspm-expo
                       type="link"
                       loading={clearLoading}
                       onClick={() => {
@@ -963,10 +840,6 @@ const Detail: React.FC<NewProps> = ({
                 {/* 合并状态为空(说明从未发起过合并)，或者空闲状态，才能发起合并 */}
                 {statusItem.value === 'IDLE' && (
                   <a
-                    data-aspm-click="c304245.d308731"
-                    data-aspm-desc="租户详情-发起合并"
-                    data-aspm-param={``}
-                    data-aspm-expo
                     onClick={() => {
                       Modal.confirm({
                         title: formatMessage({
