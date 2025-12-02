@@ -128,7 +128,7 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
 
       {withRanger && (
         <Form form={form}>
-          <FormItem name="range" style={{ width: '450px', marginRight: 0, marginBottom: 0 }}>
+          <FormItem name="range" style={{ width: '460px', marginRight: 0, marginBottom: 0 }}>
             <DateRanger
               selects={[
                 DateRanger.NEAR_30_MINUTES,

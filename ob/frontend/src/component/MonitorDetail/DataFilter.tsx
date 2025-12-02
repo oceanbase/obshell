@@ -3,7 +3,7 @@ import { POINT_NUMBER } from '@/constant/monitor';
 import { useUpdateEffect } from 'ahooks';
 import { Card, Select } from 'antd';
 import React, { useEffect, useState } from 'react';
-import { caculateStep } from './helper';
+import { caculateStep, deduplicateServersByIp } from './helper';
 import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';
 import dayjs from 'dayjs';
 import { useSelector } from 'umi';
@@ -11,21 +11,19 @@ import { getZonesFromTenant } from '@/util/tenant';
 
 interface DataFilterProps {
   isRefresh: boolean;
-  realTime: string;
   filterData: Monitor.FilterDataType;
   filterLabel: Monitor.LabelType[];
   queryRange: Monitor.QueryRangeType;
   setQueryRange: React.Dispatch<React.SetStateAction<Monitor.QueryRangeType>>;
   setIsRefresh: React.Dispatch<React.SetStateAction<boolean>>;
   setFilterLabel: React.Dispatch<React.SetStateAction<Monitor.LabelType[]>>;
-  setFilterData: React.Dispatch<React.SetStateAction<Monitor.FilterDataType>>;
   serverOption: Monitor.OptionType[];
   setServerOption: React.Dispatch<React.SetStateAction<Monitor.OptionType[]>>;
+  isHostPerformanceTab?: boolean; // 是否为主机性能 tab
 }
 
 export default function DataFilter({
   isRefresh,
-  realTime,
   filterData,
   filterLabel, //发送请求的label
   queryRange: initialQueryRange, //defaultVAlue
@@ -34,6 +32,7 @@ export default function DataFilter({
   setQueryRange,
   serverOption,
   setServerOption,
+  isHostPerformanceTab = false,
 }: DataFilterProps) {
   const [zoneOption, setZoneOption] = useState<Monitor.OptionType[]>([]);
   const [tenantOption, setTenantOption] = useState<Monitor.OptionType[]>([]);
@@ -83,11 +82,17 @@ export default function DataFilter({
     const isClear: boolean = !val;
     let currentLabel = [...filterLabel];
     if (isClear) {
-      //clear obzone&svr_ip
-      currentLabel = clearLabel(clearLabel(filterLabel, 'obzone'), 'svr_ip');
+      //clear obzone&svr_ip&svr_port
+      currentLabel = clearLabel(
+        clearLabel(clearLabel(filterLabel, 'obzone'), 'svr_ip'),
+        'svr_port'
+      );
     } else {
       //clear the server after updating the zone
-      currentLabel = clearLabel(updateLabel(filterLabel, 'obzone', val!), 'svr_ip');
+      currentLabel = clearLabel(
+        clearLabel(updateLabel(filterLabel, 'obzone', val!), 'svr_ip'),
+        'svr_port'
+      );
     }
     return currentLabel;
   };
@@ -105,25 +110,28 @@ export default function DataFilter({
     setFilterLabel(handleLabel(val));
     //clear
     if (filterData.serverList) {
+      let serversList: Monitor.OptionType[] = [];
+
       if (typeof val === 'undefined') {
         if (selectTenant) {
           const tenant = tenantListData.find(
             (tenant: API.TenantInfo) => tenant.tenant_name === selectTenant
           );
           const zonesName = getZonesFromTenant(tenant).map(zone => zone.name) || [];
-          const serversList = filterData.serverList.filter(server =>
+          serversList = filterData.serverList.filter(server =>
             zonesName.includes(server.zone as string)
           );
-          setServerOption(serversList);
         } else {
-          setServerOption(filterData.serverList);
+          serversList = filterData.serverList;
         }
-        return;
+      } else {
+        serversList = filterData.serverList.filter((server: Monitor.OptionType) => {
+          return server.zone === val;
+        });
       }
-      const filterServers = filterData.serverList.filter((server: Monitor.OptionType) => {
-        return server.zone === val;
-      });
-      setServerOption(filterServers);
+
+      // 如果是主机性能 tab，对服务器列表按 IP 去重
+      setServerOption(isHostPerformanceTab ? deduplicateServersByIp(serversList) : serversList);
     }
   };
 
@@ -131,9 +139,22 @@ export default function DataFilter({
     const isClear: boolean = !val;
     let label: Monitor.LabelType[] = [...filterLabel];
     if (isClear) {
-      label = clearLabel(label, 'svr_ip');
+      // 清除时同时清除 svr_ip 和 svr_port
+      label = clearLabel(clearLabel(label, 'svr_ip'), 'svr_port');
     } else {
-      label = updateLabel(label, 'svr_ip', val!);
+      if (isHostPerformanceTab) {
+        // 主机性能 tab：val 就是 IP，不需要拆分
+        label = updateLabel(label, 'svr_ip', val!);
+        // 清除可能存在的 svr_port
+        label = clearLabel(label, 'svr_port');
+      } else {
+        // 将组合值拆分为 svr_ip 和 svr_port
+        const [svrIp, svrPort] = val!.split(':');
+        if (svrIp && svrPort) {
+          label = updateLabel(label, 'svr_ip', svrIp);
+          label = updateLabel(label, 'svr_port', svrPort);
+        }
+      }
     }
     setFilterLabel(label);
     setSelectServer(val);
@@ -192,12 +213,15 @@ export default function DataFilter({
       setZoneOption(filterData.zoneList);
     }
     if (filterData?.serverList?.length) {
-      setServerOption(filterData.serverList);
+      // 如果是主机性能 tab，对 serverList 按 IP 去重
+      setServerOption(
+        isHostPerformanceTab ? deduplicateServersByIp(filterData.serverList) : filterData.serverList
+      );
     }
     if (filterData?.tenantList?.length) {
       setTenantOption(filterData.tenantList);
     }
-  }, [filterData]);
+  }, [filterData, isHostPerformanceTab]);
 
   // 同步 filterLabel 中的 tenant_name 到 selectTenant 状态
   useEffect(() => {
@@ -221,10 +245,22 @@ export default function DataFilter({
         const serversList = filterData.serverList.filter(server =>
           zonesName.includes(server.zone as string)
         );
-        setServerOption(serversList);
+
+        // 如果是主机性能 tab，对服务器列表按 IP 去重
+        setServerOption(isHostPerformanceTab ? deduplicateServersByIp(serversList) : serversList);
       }
     }
-  }, [selectTenant]);
+  }, [selectTenant, isHostPerformanceTab]);
+
+  // 当 tab 切换时（isHostPerformanceTab 变化），清空选中的 OBServer
+  useEffect(() => {
+    if (selectServer) {
+      setSelectServer(undefined);
+      // 清除 filterLabel 中的 svr_ip 和 svr_port
+      let label = clearLabel(clearLabel([...filterLabel], 'svr_ip'), 'svr_port');
+      setFilterLabel(label);
+    }
+  }, [isHostPerformanceTab]);
 
   useEffect(() => {
     if (queryRangeState?.length === 2 && !isExternalUpdate) {

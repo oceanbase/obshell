@@ -33,6 +33,7 @@ interface MonitorCompProps {
   filterData?: any[];
   filterQueryMetric?: Monitor.MetricsLabels;
   serverOption: Monitor.OptionType[];
+  onTabChange?: (isHostPerformanceTab: boolean) => void;
 }
 
 export default function MonitorComp({
@@ -46,6 +47,7 @@ export default function MonitorComp({
   filterData,
   filterQueryMetric,
   serverOption,
+  onTabChange,
 }: MonitorCompProps) {
   const [activeTabKey, setActiveTabKey] = useState<string>('0');
   const [activeDimension, setActiveDimension] = useState<string>('');
@@ -58,30 +60,41 @@ export default function MonitorComp({
   });
   const allMetrics: API.MetricClass[] = listAllMetricsRes?.data?.contents || [];
 
+  // 判断当前是否为"主机性能" tab
+  const currentContainer = allMetrics?.[parseInt(activeTabKey)];
+  const isHostPerformanceTab = useMemo(() => {
+    return currentContainer?.name === '主机性能';
+  }, [currentContainer?.name]);
+
   // 根据 filterLabel 过滤 serverOption
   const filteredServerOption = useMemo(() => {
-    if (!filterLabel?.length) {
-      return serverOption;
-    }
-
     let filteredServers = [...serverOption];
 
-    // 查找 obzone 筛选条件
-    const zoneFilter = filterLabel.find(label => label.key === 'obzone');
-    if (zoneFilter) {
-      filteredServers = filteredServers.filter(server => server.zone === zoneFilter.value);
-    }
+    if (filterLabel?.length) {
+      // 查找 obzone 筛选条件
+      const zoneFilter = filterLabel.find(label => label.key === 'obzone');
+      if (zoneFilter) {
+        filteredServers = filteredServers.filter(server => server.zone === zoneFilter.value);
+      }
 
-    // 查找 svr_ip 筛选条件
-    const serverFilter = filterLabel.find(label => label.key === 'svr_ip');
-    if (serverFilter) {
-      filteredServers = filteredServers.filter(server => server.value === serverFilter.value);
+      // 查找 svr_ip 和 svr_port 筛选条件
+      const serverIpFilter = filterLabel.find(label => label.key === 'svr_ip');
+      const serverPortFilter = filterLabel.find(label => label.key === 'svr_port');
+
+      if (serverIpFilter || serverPortFilter) {
+        filteredServers = filteredServers.filter(server => {
+          // server.value 是组合值，格式为 "ip:port"
+          const [serverIp, serverPort] = String(server.value).split(':');
+          const ipMatch = !serverIpFilter || serverIp === serverIpFilter.value;
+          const portMatch = !serverPortFilter || serverPort === serverPortFilter.value;
+          return ipMatch && portMatch;
+        });
+      }
     }
 
     return filteredServers;
   }, [serverOption, filterLabel]);
 
-  const currentContainer = allMetrics?.[parseInt(activeTabKey)];
   const dimension = useMemo(() => {
     return Dimension[currentContainer?.name as keyof typeof Dimension]?.filter(item =>
       isSingleMachine ? item.singleMachineFlag : true
@@ -103,6 +116,11 @@ export default function MonitorComp({
     setActiveDimension(dimension[0]?.value || '');
   }, [dimension]);
 
+  // 当 isHostPerformanceTab 变化时，通知父组件
+  useEffect(() => {
+    onTabChange?.(isHostPerformanceTab);
+  }, [isHostPerformanceTab]);
+
   // 当筛选条件变化时，检查当前选中的 unit 是否仍在过滤后的列表中
   useEffect(() => {
     if (selectedUnit && filteredServerOption.length > 0) {
@@ -120,10 +138,11 @@ export default function MonitorComp({
   // 当 DataFilter 中选择了特定 OBServer 时，自动在 MonitorUnitSelect 中选中
   useEffect(() => {
     if (activeDimension === 'unit' && filterLabel?.length) {
-      const serverFilter = filterLabel.find(label => label.key === 'svr_ip');
+      const serverIpFilter = filterLabel.find(label => label.key === 'svr_ip');
+      const serverPortFilter = filterLabel.find(label => label.key === 'svr_port');
 
-      if (serverFilter && filteredServerOption.length === 1) {
-        // 如果有 svr_ip 筛选且过滤后只有一个服务器，自动选中
+      if ((serverIpFilter || serverPortFilter) && filteredServerOption.length === 1) {
+        // 如果有 svr_ip 或 svr_port 筛选且过滤后只有一个服务器，自动选中
         const targetServer = filteredServerOption[0];
         if (!selectedUnit || selectedUnit.value !== targetServer.value) {
           setSelectedUnit(targetServer);
@@ -132,33 +151,67 @@ export default function MonitorComp({
     }
   }, [activeDimension, filterLabel, filteredServerOption, selectedUnit]);
 
-  // 根据 activeDimension 动态生成 groupLabels
+  // // 根据 activeDimension 动态生成 groupLabels
   const dynamicGroupLabels: Monitor.LabelKeys[] = useMemo(() => {
+    let labels: Monitor.LabelKeys[] = [];
+
     if (activeDimension === 'unit') {
-      return ['svr_ip', 'tenant_name'];
+      labels = ['svr_ip', 'svr_port', 'tenant_name'];
+    } else if (activeDimension === 'svr_ip') {
+      // 主机性能 tab：只包含 svr_ip，不包含 svr_port
+      if (isHostPerformanceTab) {
+        labels = ['svr_ip'];
+      } else {
+        labels = ['svr_ip', 'svr_port'];
+      }
+    } else {
+      labels = activeDimension ? [activeDimension as Monitor.LabelKeys] : groupLabels;
     }
 
-    return activeDimension ? [activeDimension as Monitor.LabelKeys] : groupLabels;
-  }, [activeDimension, groupLabels]);
+    // 如果 filterLabel 中包含 svr_ip 或 svr_port，确保它们在 groupLabels 中
+    // 但主机性能 tab 不包含 svr_port
+    const hasSvrIp = filterLabel?.some(label => label.key === 'svr_ip');
+    const hasSvrPort = filterLabel?.some(label => label.key === 'svr_port');
+
+    if (hasSvrIp && !labels.includes('svr_ip')) {
+      labels.push('svr_ip');
+    }
+    if (hasSvrPort && !labels.includes('svr_port') && !isHostPerformanceTab) {
+      labels.push('svr_port');
+    }
+
+    return labels;
+  }, [activeDimension, groupLabels, filterLabel, isHostPerformanceTab]);
 
   // 根据选中的 unit 生成筛选条件
   const unitFilterQueryMetric: Monitor.MetricsLabels | undefined = useMemo(() => {
     // 对于 unit 维度，需要特殊处理
     if (activeDimension === 'unit') {
-      // 对于 unit 维度，只需要传递 key 为 svr_ip 的 querymetric
+      // 对于 unit 维度，需要传递 svr_ip 和 svr_port 的 querymetric
       if (selectedUnit?.value) {
-        return [{ key: 'svr_ip', value: String(selectedUnit.value) }];
+        const filters: Monitor.MetricsLabels = [];
+        // selectedUnit.value 是组合值，格式为 "ip:port"
+        const [svrIp, svrPort] = String(selectedUnit.value).split(':');
+        if (svrIp) {
+          filters.push({ key: 'svr_ip', value: svrIp });
+        }
+        if (svrPort) {
+          filters.push({ key: 'svr_port', value: svrPort });
+        }
+        return filters.length > 0 ? filters : undefined;
       }
 
-      // 如果没有选中 unit，检查是否有来自其他地方的 svr_ip 筛选条件
+      // 如果没有选中 unit，检查是否有来自其他地方的 svr_ip 或 svr_port 筛选条件
       const baseFilters = [
         ...(filterQueryMetric || []),
         ...(filterLabel || []).map(label => ({ key: label.key, value: label.value })),
       ];
 
-      // 只保留 svr_ip 相关的筛选条件
-      const svrIpFilters = baseFilters.filter(filter => filter.key === 'svr_ip');
-      return svrIpFilters.length > 0 ? svrIpFilters : undefined;
+      // 只保留 svr_ip 和 svr_port 相关的筛选条件
+      const svrFilters = baseFilters.filter(
+        filter => filter.key === 'svr_ip' || filter.key === 'svr_port'
+      );
+      return svrFilters.length > 0 ? svrFilters : undefined;
     }
 
     // 对于其他维度（租户维度、OBServer维度等），只使用原始的 filterQueryMetric

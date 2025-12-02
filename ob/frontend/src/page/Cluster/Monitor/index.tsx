@@ -50,7 +50,6 @@ const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ monitorScope }) => {
     return (
       <MonitorDetail
         filterData={filterData}
-        setFilterData={setFilterData}
         filterLabel={filterLabel}
         setFilterLabel={setFilterLabel}
         groupLabels={['ob_cluster_name']}

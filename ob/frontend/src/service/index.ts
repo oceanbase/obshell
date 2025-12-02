@@ -119,7 +119,8 @@ export async function queryMetricsReq({
       metricsData = metricsData.filter((item: MetricDataItem) => {
         const labels: Monitor.MetricsLabels = item.metric?.labels as Monitor.MetricsLabels;
         if (!labels || !labels.length) return false;
-        return filterQueryMetric.some((queryMetric: { key: string; value: string }) =>
+        // 必须满足 filterQueryMetric 中的所有条件
+        return filterQueryMetric.every((queryMetric: { key: string; value: string }) =>
           labels.some(
             (label: LabelType) => label.key === queryMetric.key && label.value === queryMetric.value
           )
@@ -157,10 +158,28 @@ export async function queryMetricsReq({
               )?.value || '';
           }
         } else {
-          const tenantLabel = metric.metric?.labels
-            ?.sort((a: LabelType, b: LabelType) => a.key.localeCompare(b.key))
-            .map((label: LabelType) => label.value)
-            .join('，');
+          // 处理标签：如果同时存在 svr_ip 和 svr_port，拼接为 ip:port
+          const labels = metric.metric?.labels || [];
+          const svrIpLabel = labels.find((label: LabelType) => label.key === 'svr_ip');
+          const svrPortLabel = labels.find((label: LabelType) => label.key === 'svr_port');
+
+          let processedLabels = labels
+            .filter((label: LabelType) => label.key !== 'svr_ip' && label.key !== 'svr_port')
+            .sort((a: LabelType, b: LabelType) => a.key.localeCompare(b.key));
+
+          // 如果同时存在 svr_ip 和 svr_port，添加拼接后的服务器地址
+          if (svrIpLabel && svrPortLabel) {
+            processedLabels = [
+              ...processedLabels,
+              { key: 'server', value: `${svrIpLabel.value}:${svrPortLabel.value}` },
+            ];
+          } else {
+            // 如果只有其中一个，保留原标签
+            if (svrIpLabel) processedLabels.push(svrIpLabel);
+            if (svrPortLabel) processedLabels.push(svrPortLabel);
+          }
+
+          const tenantLabel = processedLabels.map((label: LabelType) => label.value).join('，');
           const tenantName = tenantLabel || '';
           const metricName = findBy(metrics, 'key', metric.metric?.name)?.name || '';
           item.name = `${metricName} (${tenantName})`;

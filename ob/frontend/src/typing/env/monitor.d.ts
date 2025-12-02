@@ -5,6 +5,7 @@ declare namespace Monitor {
     | 'tenant_name'
     | 'tenant_id'
     | 'svr_ip'
+    | 'svr_port'
     | 'obzone'
     | 'cluster';
 
@@ -45,6 +46,7 @@ declare namespace Monitor {
     | 'tenant_name'
     | 'tenant_id'
     | 'svr_ip'
+    | 'svr_port'
     | 'obzone'
     | 'cluster';
 
