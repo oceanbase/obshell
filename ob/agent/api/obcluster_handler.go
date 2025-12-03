@@ -728,6 +728,17 @@ func getUnitConfigLimitHandler(c *gin.Context) {
 	common.SendResponse(c, unit, nil)
 }
 
+// @ID getObclusterLicense
+// @Summary get license of standalone cluster
+// @Description get license of standalone cluster
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=bo.ObLicense}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/license [get]
 func getObclusterLicenseHandler(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))

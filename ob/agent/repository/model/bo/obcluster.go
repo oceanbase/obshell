@@ -117,6 +117,7 @@ type ClusterInfo struct {
 	Zones       []Zone               `json:"zones"`
 	Tenants     []TenantInfo         `json:"tenants"`
 	TenantStats []TenantResourceStat `json:"tenant_stats"`
+	License     *ObLicense           `json:"license,omitempty"` // only for standalone cluster
 }
 
 type ClusterBasicInfo struct {

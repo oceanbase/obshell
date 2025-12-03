@@ -169,6 +169,17 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 		tenantResourceStat.DataDiskUsage = tenantDataDiskUsageMap[tenant.Id]
 		info.TenantStats = append(info.TenantStats, tenantResourceStat)
 	}
+
+	if info.IsStandalone {
+		oblicense, err := obclusterService.GetObLicense()
+		if err != nil {
+			return nil, err
+		}
+		if oblicense != nil {
+			info.License = oblicense.ToBO()
+		}
+	}
+
 	return &info, nil
 }
 
