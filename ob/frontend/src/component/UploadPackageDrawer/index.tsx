@@ -36,7 +36,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   onSuccess,
   ...restProps
 }) => {
-  const { isStandalone } = useCluster();
+  const { isStandalone, isDistributedBusiness } = useCluster();
 
   const [fileList, setFileList] = useState<ExtendedUploadFile[]>([]);
 
@@ -383,6 +383,12 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
                 defaultMessage:
                   '只支持 oceanbase-standalone、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
+              })
+            ) : isDistributedBusiness ? (
+              formatMessage({
+                id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseAreSupported',
+                defaultMessage:
+                  '只支持 oceanbase 开头的包 ，同时后缀名为 .rpm 的文件。',
               })
             ) : (
               <div>

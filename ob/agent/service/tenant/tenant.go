@@ -427,6 +427,16 @@ func (t *TenantService) GetTenantParameter(tenantId int, parameterName string) (
 	return
 }
 
+func (s *TenantService) GetDinstinctParameterValue(parameterName string) ([]string, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var values []string
+	err = oceanbaseDb.Model(oceanbase.GvObParameter{}).Where("NAME = ?", parameterName).Distinct().Pluck("VALUE", &values).Error
+	return values, err
+}
+
 func (t *TenantService) GetTenantVariables(tenantName string, filter string) (variables []oceanbase.CdbObSysVariable, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -830,4 +840,30 @@ func (s *TenantService) GetTenantMode(tenantName string) (string, error) {
 	var mode string
 	err = oceanbaseDb.Table(DBA_OB_TENANTS).Select("COMPATIBILITY_MODE").Where("tenant_name = ?", tenantName).Scan(&mode).Error
 	return mode, err
+}
+
+func (s *TenantService) GetUnfreshedTenants() ([]string, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	sql := "SELECT DISTINCT tenant_name FROM (SELECT tenant_id, tenant_name, svr_ip, svr_port FROM oceanbase.DBA_OB_TENANTS, oceanbase.DBA_OB_SERVERS) AS ts" +
+		" LEFT JOIN oceanbase.GV$OB_SERVER_SCHEMA_INFO AS os ON ts.tenant_id = os.tenant_id AND ts.svr_ip = os.svr_ip AND ts.svr_port = os.svr_port" +
+		" WHERE refreshed_schema_version IS NULL OR refreshed_schema_version <= 1 OR refreshed_schema_version % 8 != 0"
+	var tenants []string
+	err = oceanbaseDb.Raw(sql).Scan(&tenants).Error
+	if err != nil {
+		return nil, err
+	}
+	return tenants, nil
+}
+
+func (s *TenantService) GetMajorCompactionTenantCount() (int, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return 0, errors.Wrap(err, "Get major compaction tenant count failed")
+	}
+	var count int64
+	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Where("STATUS != 'IDLE'").Count(&count).Error
+	return int(count), err
 }

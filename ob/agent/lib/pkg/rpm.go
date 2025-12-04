@@ -17,18 +17,20 @@
 package pkg
 
 import (
+	"bufio"
 	"io"
 	"mime/multipart"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
+	"github.com/ulikunitz/xz"
 
 	"github.com/cavaliergopher/cpio"
 	"github.com/cavaliergopher/rpm"
 	"github.com/oceanbase/obshell/ob/agent/errors"
-	"github.com/ulikunitz/xz"
 )
 
 func ReadRpm(input multipart.File) (pkg *rpm.Package, err error) {
@@ -56,6 +58,8 @@ func SplitRelease(release string) (buildNumber, distribution string, err error) 
 
 func InstallRpmPkgInPlace(path string) (err error) {
 	log.Infof("InstallRpmPkg: %s", path)
+	installPath := filepath.Dir(path)
+
 	f, err := os.Open(path)
 	if err != nil {
 		return
@@ -70,12 +74,33 @@ func InstallRpmPkgInPlace(path string) (err error) {
 		return
 	}
 
-	xzReader, err := xz.NewReader(f)
+	// Get payload start position
+	// After rpm.Read(), the file position is already at the payload start
+	// Get current position as payload start
+	payloadStart, err := f.Seek(0, io.SeekCurrent)
 	if err != nil {
-		return
+		return errors.Wrapf(err, "get payload position")
 	}
-	installPath := filepath.Dir(path)
-	cpioReader := cpio.NewReader(xzReader)
+
+	var bufferedReader *bufio.Reader
+	// Try to use system command for xz decompression (faster)
+	if reader, cleanup, err := NewXzSystemReader(f, payloadStart); err == nil {
+		defer cleanup()
+		bufferedReader = bufio.NewReaderSize(reader, 256*1024)
+	} else {
+		// Fallback to pure Go xz implementation
+		// Reset file position since NewXzSystemReader may have changed it
+		if _, err := f.Seek(payloadStart, io.SeekStart); err != nil {
+			return errors.Wrapf(err, "seek to payload")
+		}
+		reader, err := xz.NewReader(f)
+		if err != nil {
+			return errors.Wrapf(err, "create xz reader")
+		}
+		bufferedReader = bufio.NewReaderSize(reader, 256*1024)
+	}
+
+	cpioReader := cpio.NewReader(bufferedReader)
 
 	for {
 		hdr, err := cpioReader.Next()
@@ -148,4 +173,67 @@ func CheckCompressAndFormat(pkg *rpm.Package) error {
 		return errors.Occur(errors.ErrPackageFormatInvalid, pkg.PayloadFormat())
 	}
 	return nil
+}
+
+// newXzSystemReader tries to use system xzcat/unxz command for faster decompression
+func NewXzSystemReader(rpmFile multipart.File, payloadStart int64) (io.Reader, func(), error) {
+	// Try xzcat first, then unxz -c
+	var cmd *exec.Cmd
+	var cmdName string
+
+	if _, err := exec.LookPath("xzcat"); err == nil {
+		cmdName = "xzcat"
+	} else if _, err := exec.LookPath("unxz"); err == nil {
+		cmdName = "unxz"
+	} else {
+		return nil, nil, errors.Occur(errors.ErrEmpty, "xzcat/unxz not available")
+	}
+
+	// Check if multipart.File is *os.File to get the file path
+	// If not, we cannot use system command and should return error to fallback
+	osFile, ok := rpmFile.(*os.File)
+	if !ok {
+		return nil, nil, errors.Occur(errors.ErrEmpty, "multipart.File is not *os.File, cannot use system command")
+	}
+
+	// Get the file path from *os.File
+	rpmPath := osFile.Name()
+
+	// Open a new file handle for the command (system commands need a file path)
+	// We need a separate file handle because the command reads from stdin
+	f, err := os.Open(rpmPath)
+	if err != nil {
+		return nil, nil, errors.Wrapf(err, "open rpm")
+	}
+
+	// Seek to payload start position
+	if _, err := f.Seek(payloadStart, io.SeekStart); err != nil {
+		f.Close()
+		return nil, nil, errors.Wrapf(err, "seek to payload")
+	}
+
+	if cmdName == "xzcat" {
+		cmd = exec.Command("xzcat")
+	} else {
+		cmd = exec.Command("unxz", "-c")
+	}
+
+	cmd.Stdin = f
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		f.Close()
+		return nil, nil, errors.Wrapf(err, "create stdout pipe")
+	}
+
+	if err := cmd.Start(); err != nil {
+		f.Close()
+		stdout.Close()
+		return nil, nil, errors.Wrapf(err, "start %s", cmdName)
+	}
+	return bufio.NewReaderSize(stdout, 256*1024), func() {
+		stdout.Close()
+		cmd.Process.Kill()
+		cmd.Wait()
+		f.Close()
+	}, nil
 }

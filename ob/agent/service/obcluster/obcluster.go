@@ -1003,6 +1003,27 @@ func (obclusterService *ObclusterService) GetTenantMutilSysStat(tenantId int, St
 	return sysStatMap, nil
 }
 
+func (*ObclusterService) GetTabletInMergingCount() (count int, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return 0, err
+	}
+	// There is no view in oceanbase, so we need to use the table directly.
+	sql := "select count(1) from oceanbase.__all_virtual_tablet_compaction_info where max_received_scn > finished_scn and max_received_scn > 0"
+	err = oceanbaseDb.Raw(sql).Scan(&count).Error
+	return count, err
+}
+
+func (*ObclusterService) GetRunningBackupTaskCount() (count int, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return 0, err
+	}
+	sql := "select count(1) from oceanbase.CDB_OB_BACKUP_JOBS"
+	err = oceanbaseDb.Raw(sql).Scan(&count).Error
+	return count, err
+}
+
 func (obclusterService *ObclusterService) GetObLicense() (license *oceanbase.ObLicense, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {

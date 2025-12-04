@@ -47,6 +47,7 @@ type obUpgradeParams struct {
 	currentVersion  string
 	targetVersion   string
 	rollingUpgrade  bool
+	freezeServer    bool
 	upgradeRoute    []RouteNode
 	dbaObZones      []oceanbase.DbaObZones
 	allAgents       []meta.AgentInfo
@@ -72,7 +73,7 @@ func CheckAndUpgradeOb(param param.ObUpgradeParam) (*task.DagDetailDTO, error) {
 		return nil, e
 	}
 
-	checkAndUpgradeObTemplate := buildCheckAndUpgradeObTemplate(p)
+	checkAndUpgradeObTemplate := buildCheckAndUpgradeObTemplate(p, obType)
 	checkAndUpgradeObTaskContext := buildCheckAndUpgradeObTaskContext(p, obType)
 	checkAndUpgradeObDag, e := taskService.CreateDagInstanceByTemplate(checkAndUpgradeObTemplate, checkAndUpgradeObTaskContext)
 	if e != nil {
@@ -99,18 +100,26 @@ func buildCheckAndUpgradeObTaskContext(p *obUpgradeParams, obType modelob.OBType
 	return ctx
 }
 
-func buildCheckAndUpgradeObTemplate(p *obUpgradeParams) *task.Template {
+func buildCheckAndUpgradeObTemplate(p *obUpgradeParams, obType modelob.OBType) *task.Template {
 	if p.rollingUpgrade {
-		return buildObClusterCrossVeriosnRollingUpgradeTemplate(p)
+		return buildObClusterCrossVeriosnRollingUpgradeTemplate(p, obType)
 	} else {
-		return buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p)
+		return buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p, obType)
 	}
 }
 
-func buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p *obUpgradeParams) *task.Template {
+func buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p *obUpgradeParams, obType modelob.OBType) *task.Template {
 	name := fmt.Sprintf("%s %s-%s", DAG_OB_STOP_SVC_UPGRADE, p.RequestParam.Version, p.RequestParam.Release)
-	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance()).
-		AddTemplate(newCheckAndUpgradeAgentTemplate())
+	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance())
+	if obType == modelob.OBTypeBusiness {
+		builder.AddTask(newCheckEnvTask(), true).
+			AddTask(newCreateUpgradeDirTask(), true).
+			AddTask(newGetAllRequiredPkgsTask(), true).
+			AddTask(newCheckAllRequiredPkgsTask(), true).
+			AddTask(newInstallAllRequiredPkgsTask(), true)
+	} else {
+		builder.AddTemplate(newCheckAndUpgradeAgentTemplate())
+	}
 	for i := 0; i < len(p.upgradeRoute); i++ {
 		builder.AddTemplate(newStopServiceUpgradeProcessTemplate(i, p))
 	}
@@ -120,16 +129,19 @@ func buildObClusterCrossVeriosnStopServiceUpgradeTemplate(p *obUpgradeParams) *t
 
 func newStopServiceUpgradeProcessTemplate(idx int, p *obUpgradeParams) *task.Template {
 	name := fmt.Sprintf("Upgrade process %d", idx)
-	return task.NewTemplateBuilder(name).
+	templateBuilder := task.NewTemplateBuilder(name).
 		AddTask(newBackupParametersTask(), false).
-		AddNode(newExecUpgradeCheckerNode("", idx)).
-		AddNode(newExecPreScriptNode("", idx)).
+		AddNode(newExecUpgradeCheckerNode("", idx))
+	if p.freezeServer {
+		templateBuilder.AddNode(task.NewNodeWithContext(newMinorFreezeTask(), false, task.NewTaskContext().SetParam(PARAM_SCOPE, param.Scope{Type: SCOPE_GLOBAL})))
+	}
+	templateBuilder.AddNode(newExecPreScriptNode("", idx)).
 		AddNode(newExecHealthCheckerNode("", idx)).
 		AddNode(newReinstallAndRestartObNode("", p.allAgents, idx)).
 		AddNode(newExecHealthCheckerNode("", idx)).
 		AddNode(newExecPostScriptNode("", idx)).
-		AddTask(newRestoreParametersTask(), false).
-		Build()
+		AddTask(newRestoreParametersTask(), false)
+	return templateBuilder.Build()
 }
 
 func newCheckAndUpgradeAgentTemplate() *task.Template {
@@ -139,10 +151,18 @@ func newCheckAndUpgradeAgentTemplate() *task.Template {
 		Build()
 }
 
-func buildObClusterCrossVeriosnRollingUpgradeTemplate(p *obUpgradeParams) *task.Template {
+func buildObClusterCrossVeriosnRollingUpgradeTemplate(p *obUpgradeParams, obType modelob.OBType) *task.Template {
 	name := fmt.Sprintf("%s %s-%s", DAG_OB_ROLLING_UPGRADE, p.RequestParam.Version, p.RequestParam.Release)
-	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance()).
-		AddTemplate(newCheckAndUpgradeAgentTemplate())
+	builder := task.NewTemplateBuilder(name).SetMaintenance(task.GlobalMaintenance())
+	if obType == modelob.OBTypeBusiness {
+		builder.AddTask(newCheckEnvTask(), true).
+			AddTask(newCreateUpgradeDirTask(), true).
+			AddTask(newGetAllRequiredPkgsTask(), true).
+			AddTask(newCheckAllRequiredPkgsTask(), true).
+			AddTask(newInstallAllRequiredPkgsTask(), true)
+	} else {
+		builder.AddTemplate(newCheckAndUpgradeAgentTemplate())
+	}
 	for i := 0; i < len(p.upgradeRoute); i++ {
 		builder.AddTemplate(newRollingUpgradeProcessTemplate(i, p))
 	}
@@ -161,8 +181,14 @@ func newRollingUpgradeProcessTemplate(idx int, p *obUpgradeParams) *task.Templat
 		agents := p.agentsInZoneMap[dbaObZone.Zone]
 		builder.
 			AddNode(newExecHealthCheckerNode("", idx)).
-			AddNode(newStopZoneNode(dbaObZone.Zone)).
-			AddNode(newReinstallAndRestartObNode(dbaObZone.Zone, agents, idx)).
+			AddNode(newStopZoneNode(dbaObZone.Zone))
+		if p.freezeServer {
+			builder.AddNode(task.NewNodeWithContext(newMinorFreezeTask(),
+				false,
+				task.NewTaskContext().
+					SetParam(PARAM_SCOPE, param.Scope{Type: SCOPE_ZONE, Target: []string{dbaObZone.Zone}})))
+		}
+		builder.AddNode(newReinstallAndRestartObNode(dbaObZone.Zone, agents, idx)).
 			AddNode(newExecZoneHealthCheckerNode(dbaObZone.Zone, idx)).
 			AddNode(newStartZoneNode(dbaObZone.Zone))
 	}
@@ -236,6 +262,7 @@ func (p *obUpgradeParams) initParamsForObUpgrade() (err error) {
 	log.Info("init params for ob upgrade")
 	p.targetVersion = p.RequestParam.Version
 	p.rollingUpgrade = p.RequestParam.Mode == PARAM_ROLLING_UPGRADE
+	p.freezeServer = p.RequestParam.FreezeServer
 	p.agentsInZoneMap = make(map[string][]meta.AgentInfo, 0)
 	p.dbaObZones, err = obclusterService.GetAllZone()
 	if err != nil {
@@ -308,10 +335,36 @@ func preCheckForObUpgrade(param param.ObUpgradeParam, obType modelob.OBType) (p 
 		return nil, err
 	}
 
+	// Check if there are any tenants in the cluster with unsynchronized schema
+	if err = checkAllTenantsSchemaInSync(); err != nil {
+		return nil, err
+	}
+
+	// Check if there are any tablet is merging
+	if err = checkTabletNotInMerging(); err != nil {
+		return nil, err
+	}
+
+	// Check if there are any tenants in major compaction
+	if err = checkTenantNotInMajorCompaction(); err != nil {
+		return nil, err
+	}
+
+	// Check if data version is sync
+	if err = checkDataVersionSync(); err != nil {
+		return nil, err
+	}
+
+	// Check if there are any running backup tasks
+	if err = checkNoRunningBackupTask(); err != nil {
+		return nil, err
+	}
+
 	p.upgradeRoute, err = checkForAllRequiredPkgs(param.Version, param.Release, obType)
 	if err != nil {
 		return nil, err
 	}
+	log.Infof("upgrade route: %v", p.upgradeRoute)
 	p.agents, err = agentService.GetAllAgentsInfoFromOB()
 	if err != nil {
 		return nil, err
@@ -340,6 +393,64 @@ func checkUpgradeMode(param *param.ObUpgradeParam) error {
 	}
 	if zoneCount < 3 {
 		return errors.Occur(errors.ErrObUpgradeUnableToRollingUpgrade)
+	}
+	return nil
+}
+
+func checkAllTenantsSchemaInSync() error {
+	if tenants, err := tenantService.GetUnfreshedTenants(); err != nil {
+		return err
+	} else if len(tenants) > 0 {
+		return errors.Occur(errors.ErrObUpgradeTenantsSchemaNotRefreshed, strings.Join(tenants, ","))
+	}
+	return nil
+}
+
+func checkTabletNotInMerging() error {
+	if count, err := obclusterService.GetTabletInMergingCount(); err != nil {
+		return err
+	} else if count > 0 {
+		return errors.Occur(errors.ErrObUpgradeTabletInMerging, count)
+	}
+	return nil
+}
+
+func checkTenantNotInMajorCompaction() error {
+	if count, err := tenantService.GetMajorCompactionTenantCount(); err != nil {
+		return err
+	} else if count > 0 {
+		return errors.Occur(errors.ErrObUpgradeTenantInMajorCompaction, count)
+	}
+	return nil
+}
+
+func checkDataVersionSync() error {
+	minObserverVersions, err := tenantService.GetDinstinctParameterValue("min_observer_version")
+	if err != nil {
+		return err
+	}
+	if len(minObserverVersions) > 1 {
+		return errors.Occur(errors.ErrObUpgradeMinObserverVersionNotSync)
+	}
+	if strings.Compare(minObserverVersions[0], "4.3.3.0") < 0 {
+		tenantCompatibles, err := tenantService.GetDinstinctParameterValue("compatible")
+		if err != nil {
+			return err
+		}
+		if len(tenantCompatibles) > 1 {
+			return errors.Occur(errors.ErrObUpgradeTenantCompatibleNotSync)
+		}
+	}
+	return nil
+}
+
+func checkNoRunningBackupTask() error {
+	count, err := obclusterService.GetRunningBackupTaskCount()
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return errors.Occur(errors.ErrObUpgradeHasRunningBackupTask, count)
 	}
 	return nil
 }

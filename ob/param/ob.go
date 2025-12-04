@@ -109,7 +109,8 @@ type UpgradeCheckParam struct {
 
 type ObUpgradeParam struct {
 	UpgradeCheckParam
-	Mode string `json:"mode" binding:"required"`
+	Mode         string `json:"mode" binding:"required"`
+	FreezeServer bool   `json:"freeze_server"`
 }
 
 type Scope struct {

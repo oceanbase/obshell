@@ -17,11 +17,13 @@
 package ob
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"mime/multipart"
 	"strings"
+	"time"
 
 	"github.com/cavaliergopher/cpio"
 	"github.com/cavaliergopher/rpm"
@@ -102,24 +104,24 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	switch r.rpmPkg.Name() {
 	case constant.PKG_OBSHELL:
 		r.isAgentPkg = true
-		err = r.fileCheck()
+		err = r.fileCheck(forUpload)
 	case constant.PKG_OCEANBASE_CE:
 		if r.obType == modelob.OBTypeCommunity {
-			err = r.fileCheck()
+			err = r.fileCheck(forUpload)
 		} else {
 			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 		}
 		log.Info("rpm dep yml is ", r.upgradeDepYml)
 	case constant.PKG_OCEANBASE:
 		if r.obType == modelob.OBTypeBusiness {
-			err = r.fileCheck()
+			err = r.fileCheck(forUpload)
 		} else {
 			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 		}
 		log.Info("rpm dep yml is ", r.upgradeDepYml)
 	case constant.PKG_OCEANBASE_STANDALONE:
 		if r.obType == modelob.OBTypeStandalone {
-			err = r.fileCheck()
+			err = r.fileCheck(forUpload)
 		} else {
 			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 		}
@@ -152,7 +154,7 @@ func (r *upgradeRpmPkgInfo) dirCheckForLibs() (err error) {
 	return errors.Occur(errors.ErrObPackageMissingFile, r.rpmPkg.Name(), "/home/admin/oceanbase/lib")
 }
 
-func (r *upgradeRpmPkgInfo) fileCheck() (err error) {
+func (r *upgradeRpmPkgInfo) fileCheck(forUpload bool) (err error) {
 	// Check for the necessary files required for the agent upgrade process.
 	if err = r.checkVersion(); err != nil {
 		return errors.Wrap(err, "failed to check version and release")
@@ -164,7 +166,7 @@ func (r *upgradeRpmPkgInfo) fileCheck() (err error) {
 	if err = r.checkFiles(); err != nil {
 		return
 	}
-	if r.needGetUpgardeDepYml {
+	if r.needGetUpgardeDepYml && forUpload {
 		log.Info("need to get upgrade dep yml")
 		return r.GetUpgradeDepYml()
 	}
@@ -185,7 +187,13 @@ func (r *upgradeRpmPkgInfo) checkVersion() (err error) {
 
 func (r *upgradeRpmPkgInfo) checkFiles() (err error) {
 	log.Infof("rpm pkg name is %s", r.rpmPkg.Name())
-	expected := append(defalutFilesForOB, defaultFilesForAgent...)
+	log.Infof("obType is %s", r.obType)
+	var expected []string
+	if r.obType == modelob.OBTypeBusiness {
+		expected = defalutFilesForOB[:]
+	} else {
+		expected = append(defalutFilesForOB, defaultFilesForAgent...)
+	}
 	obBuildVersion, err := obclusterService.GetObBuildVersion()
 	if err != nil {
 		return errors.Wrap(err, "get ob version failed")
@@ -231,11 +239,45 @@ func (r *upgradeRpmPkgInfo) GetUpgradeDepYml() (err error) {
 	if err = pkg.CheckCompressAndFormat(r.rpmPkg); err != nil {
 		return
 	}
-	xzReader, err := xz.NewReader(r.rpmFile)
-	if err != nil {
-		return
+
+	start := time.Now()
+	var bufferedReader *bufio.Reader
+
+	// Get payload start position
+	// Since rpm.Read() positions the reader at payload start, we need to re-read the headers
+	// to get the current position, or we can seek to start and read again
+	if _, err := r.rpmFile.Seek(0, io.SeekStart); err != nil {
+		return errors.Wrapf(err, "seek to start")
 	}
-	cpioReader := cpio.NewReader(xzReader)
+
+	// Re-read headers to position at payload start (without MD5Check for performance)
+	_, err = rpm.Read(r.rpmFile)
+	if err != nil {
+		return errors.Wrapf(err, "read rpm headers")
+	}
+
+	// Get current position as payload start (after rpm.Read(), position is at payload start)
+	payloadStart, err := r.rpmFile.Seek(0, io.SeekCurrent)
+	if err != nil {
+		return errors.Wrapf(err, "get payload position")
+	}
+
+	if reader, cleanup, err := pkg.NewXzSystemReader(r.rpmFile, payloadStart); err == nil {
+		defer cleanup()
+		bufferedReader = bufio.NewReaderSize(reader, 256*1024)
+	} else {
+		// Fallback to pure Go xz implementation
+		// Reset file position since NewXzSystemReader may have changed it
+		if _, err := r.rpmFile.Seek(payloadStart, io.SeekStart); err != nil {
+			return errors.Wrapf(err, "seek to payload")
+		}
+		reader, err := xz.NewReader(r.rpmFile)
+		if err != nil {
+			return errors.Wrapf(err, "create xz reader")
+		}
+		bufferedReader = bufio.NewReaderSize(reader, 256*1024)
+	}
+	cpioReader := cpio.NewReader(bufferedReader)
 	buffer := new(bytes.Buffer)
 	for {
 		hdr, err := cpioReader.Next()
@@ -256,6 +298,8 @@ func (r *upgradeRpmPkgInfo) GetUpgradeDepYml() (err error) {
 			break
 		}
 	}
+	elapsed := time.Since(start)
+	log.Infof("time taken to get upgrade dep yml: %s", elapsed)
 	return
 }
 

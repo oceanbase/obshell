@@ -121,7 +121,8 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 				success = false
 			}
 			// If current pkg version is the target version, then get the agent version as the agent's target version.
-			if rpmPkgInfo.RpmBuildVersion == t.targetBuildVersion {
+			if rpmPkgInfo.RpmBuildVersion == t.targetBuildVersion &&
+				rpmPkgInfo.RpmName != constant.PKG_OCEANBASE { // There is no obshell binary in the oceanbase package.
 				if err = t.getAgentVersion(&rpmPkgInfo); err != nil {
 					t.ExecuteErrorLogf("get agent version failed, err: %s", err.Error())
 					success = false

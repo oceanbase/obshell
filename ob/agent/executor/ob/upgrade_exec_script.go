@@ -17,7 +17,6 @@
 package ob
 
 import (
-	"bufio"
 	"fmt"
 	"os/exec"
 	"path/filepath"
@@ -91,19 +90,10 @@ func (t *ExecScriptTask) Execute() (err error) {
 		str = fmt.Sprintf("%s -z'%s'", str, t.zone)
 	}
 	cmd := exec.Command("/bin/bash", "-c", str)
-	stderr, err := cmd.StderrPipe()
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return errors.Wrap(err, "failed to get stderrpipe")
+		return errors.Wrapf(err, "execute script '%s' error, execute logs:\n%s", t.scriptFile, string(output))
 	}
-	if err = cmd.Start(); err != nil {
-		return errors.Wrap(err, "failed to start cmd")
-	}
-	scanner := bufio.NewScanner(stderr)
-	for scanner.Scan() {
-		t.ExecuteErrorLog(errors.Occur(errors.ErrCommonUnexpected, scanner.Text()))
-	}
-	if err = cmd.Wait(); err != nil {
-		return errors.Wrapf(err, "failed to execute script '%s'", t.scriptFile)
-	}
+
 	return nil
 }

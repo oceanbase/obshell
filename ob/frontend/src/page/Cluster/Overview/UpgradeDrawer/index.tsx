@@ -49,7 +49,7 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
   const [form] = Form.useForm();
   const { getFieldsValue, validateFields } = form;
 
-  const { isStandalone } = useCluster();
+  const { isStandalone, isDistributedBusiness } = useCluster();
 
   const dispatch = useDispatch();
   const packageSelectRef = useRef<PackageSelectRef>();
@@ -150,6 +150,7 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                 mode: upgradeMode,
                 version: currentZonePackage?.version,
                 release: currentZonePackage?.release_distribution,
+                freeze_server: true,
               });
             },
           });
@@ -322,10 +323,15 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
                   id: 'ocp-v2.Overview.UpgradeDrawer.UploadRequiredDuringUpgrade',
                   defaultMessage: '升级时需要上传',
                 })}{' '}
-                {isStandalone ? (
+                { isStandalone ? (
                   formatMessage({
                     id: 'obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
                     defaultMessage: 'oceanbase-standalone 包',
+                  })
+                ) : isDistributedBusiness ? (
+                  formatMessage({
+                    id: 'obshell.Overview.UpgradeDrawer.OnlyPackagesStartingWithOceanbaseAreSupported',
+                    defaultMessage: 'oceanbase',
                   })
                 ) : (
                   <>

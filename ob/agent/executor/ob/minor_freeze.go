@@ -91,12 +91,16 @@ func (t *MinorFreezeTask) Execute() error {
 	if err != nil {
 		return errors.Wrap(err, "get server checkpoint_scn failed")
 	}
-	t.ExecuteLogf("checkpoint_scn before minor freeze: %v", checkpointScns)
+	for server, scn := range checkpointScns {
+		t.ExecuteLogf("[server: %s] checkpoint_scn before minor freeze: %d", meta.NewAgentInfo(server.SvrIp, server.SvrPort).String(), scn)
+	}
 
 	if err := obclusterService.MinorFreeze(servers); err != nil {
 		return errors.Wrap(err, "minor freeze failed")
 	}
-	t.ExecuteLogf("minor freeze servers: %v", servers)
+	for _, server := range servers {
+		t.ExecuteLogf("minor freeze server: %s", meta.NewAgentInfo(server.SvrIp, server.SvrPort).String())
+	}
 
 	checkOk := make(map[oceanbase.OBServer]bool)
 	for count := 0; count < DEFAULT_MINOR_FREEZE_TIMEOUT; count++ {

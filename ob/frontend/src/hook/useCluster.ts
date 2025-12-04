@@ -13,9 +13,14 @@ export function useCluster() {
   // 获取是否为社区版
   const isCommunityEdition = clusterData?.is_community_edition || false;
 
+  // 获取是否是分布式商业版
+  const isDistributedBusiness = !isStandalone && !isCommunityEdition;
+
   return {
     clusterData,
     isStandalone,
+    isDistributedBusiness,
     isCommunityEdition,
+
   };
 }

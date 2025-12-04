@@ -73,6 +73,10 @@ type GvObParameter struct {
 	EditLevel string `gorm:"column:EDIT_LEVEL" json:"edit_level"`
 }
 
+func (GvObParameter) TableName() string {
+	return "oceanbase.GV$OB_PARAMETERS"
+}
+
 type DbaRecyclebin struct {
 	Name         string `gorm:"column:OBJECT_NAME" json:"object_name"`
 	OriginalName string `gorm:"column:ORIGINAL_NAME" json:"original_tenant_name"`

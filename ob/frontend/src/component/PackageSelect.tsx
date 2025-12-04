@@ -82,7 +82,7 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
 
     ref
   ) => {
-    const { isStandalone } = useCluster();
+    const { isStandalone, isDistributedBusiness } = useCluster();
 
     const [visible, setVisible] = useState(false);
 
@@ -96,9 +96,13 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
 
     let packageList = (data?.data?.contents || []).filter(item => {
       if (useType === 'UPGRADE_CLUSTER') {
-        return isStandalone
-          ? item.name === 'oceanbase-standalone'
-          : item.name === 'oceanbase-ce';
+        if (isStandalone) {
+          return item.name === 'oceanbase-standalone';
+        }
+        if (isDistributedBusiness) {
+          return item.name === 'oceanbase';
+        }
+        return item.name === 'oceanbase-ce';
       }
       if (useType === 'UPGRADE_AGENT') {
         return item.name === 'obshell';
