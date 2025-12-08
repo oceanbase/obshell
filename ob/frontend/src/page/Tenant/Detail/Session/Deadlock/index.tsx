@@ -209,7 +209,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
             expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
           >
             {deadLockHistoryList.map((item, index) => {
-              const order = index + 1;
+              const order = (pageable.page - 1) * pageable.size + index + 1;
               return (
                 <Panel
                   className={`border-none bg-colorBgLayout ${

@@ -116,7 +116,7 @@ const HighlightWithLineNumbers: React.FC<HighlightWithLineNumbersProps> = ({
                       {i + 1}
                     </div>
                   )}
-                  <div>
+                  <div style={{ wordBreak: 'break-all', whiteSpace: 'pre-wrap' }}>
                     {line.map((token, key) => {
                       // 对 url 做特殊的处理，让其支持跳转
                       if (token.types.includes('url')) {
