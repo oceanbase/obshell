@@ -277,6 +277,8 @@ declare namespace API {
     cluster_name?: string;
     is_community_edition?: boolean;
     is_standalone?: boolean;
+    /** only for standalone cluster */
+    license?: ObLicense;
     ob_version?: string;
     stats?: BaseResourceStats;
     status?: string;
@@ -1175,6 +1177,20 @@ declare namespace API {
     object_type?: string;
     owner: string;
     privileges: string[];
+  };
+
+  type ObLicense = {
+    activation_time?: string;
+    cluster_ulid?: string;
+    end_user?: string;
+    expired_time?: string;
+    issuance_date?: string;
+    license_code?: string;
+    license_id?: string;
+    license_type?: string;
+    node_num?: number;
+    options?: string;
+    product_type?: string;
   };
 
   type ObParameters = {

@@ -91,15 +91,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
     });
     // 获取集群信息
     dispatch({
-      type: 'global/getClusterData',
+      type: 'cluster/getClusterData',
     });
-
-    // getFailedTaskList({
-    //   status: "FAILED",
-    // });
-    // getRunningTaskLis({
-    //   status: "RUNNING",
-    // });
   }, []);
 
   const { refresh, loading } = useRequest(getTime, {
@@ -208,12 +201,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         handleUserMenuClick(key as string);
       }}
     >
-      {/* <Menu.Item key="modifyPassword">
-        {formatMessage({
-          id: 'ocp-express.Layout.Header.ChangePassword',
-          defaultMessage: '修改密码',
-        })}
-      </Menu.Item> */}
       <Menu.Item key="logout">
         {formatMessage({
           id: 'ocp-express.Layout.Header.ExitLogin',
@@ -236,9 +223,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   return (
     <div className={layoutClassName}>
       <OBUIBasicLayout
-        data-aspm="c304179"
-        data-aspm-desc="系统信息"
-        data-aspm-expo
         location={location}
         banner={
           offsetAlertVisible && (

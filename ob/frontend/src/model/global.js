@@ -34,7 +34,6 @@ const model = {
     appInfo: {},
     // 系统配置
     systemInfo: {},
-    clusterData: {},
     showTenantAdminPasswordModal: false,
     showCredentialModal: false,
     tenantAdminPasswordErrorData: {},
@@ -85,16 +84,6 @@ const model = {
       //     systemInfo: res.data || {},
       //   },
       // });
-    },
-    // 获取集群信息
-    *getClusterData(_, { call, put }) {
-      const res = yield call(obclusterInfo);
-      yield put({
-        type: 'update',
-        payload: {
-          clusterData: res.data || {},
-        },
-      });
     },
   },
   reducers: {

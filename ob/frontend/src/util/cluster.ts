@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
+import { DATE_FORMAT } from '@/constant/datetime';
 import { toNumber } from 'lodash';
-
+import { formatTime } from '@/util/datetime';
 /* 获取 4.0 以下集群实际的合并状态
  */
 export function getCompactionStatus(
@@ -65,79 +66,6 @@ export function getCompactionStatusV4(tenantCompactionsList: API.TenantCompactio
   }
 }
 
-/* 获取 Zone 实际的合并状态 */
-export function getZoneCompactionStatus(
-  zoneCompaction?: API.ZoneCompaction,
-  clusterCompaction?: API.ClusterCompaction
-) {
-  // IDLE 状态也可能是等待合并调度中，此处前端扩展出 WAIT_MERGE 状态
-  if (
-    zoneCompaction?.status === 'IDLE' &&
-    (zoneCompaction?.version || 0) < (clusterCompaction?.freezeVersion || 0)
-  ) {
-    return 'WAIT_MERGE';
-  }
-  return zoneCompaction?.status;
-}
-
-/* 判断集群下所有租户的合并策略是否一致 */
-export function diffClusterAllTenantMergeStrategy(
-  compactionSettingsList: API.TenantCompactionSetting[]
-) {
-  // 取第一个配置作为标准，与数组里的进行比较
-  const standardCompactionSettings = compactionSettingsList[0];
-  const otherCompactionSettings = compactionSettingsList.filter(
-    item =>
-      standardCompactionSettings.majorFreezeDutyTime === item.majorFreezeDutyTime &&
-      standardCompactionSettings.majorCompactionThreadScore === item.majorCompactionThreadScore
-  );
-
-  if (
-    otherCompactionSettings.length === compactionSettingsList.length &&
-    compactionSettingsList.length !== 0
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-/* 根据 tenantCompaction，获取租户合并结果，仅适用 OB 4.0 及以上版本 */
-export function getCompactionResult(tenantCompaction?: API.TenantCompaction) {
-  // 合并出错
-  return tenantCompaction?.error
-    ? 'FAIL'
-    : // 合并中
-    tenantCompaction?.status === 'COMPACTING'
-    ? 'COMPACTING'
-    : // 合并成功
-      'SUCCESS';
-}
-
-/* 判断集群下所有租户的转储策略是否一致 */
-export function diffClusterAllTenantDumpStrategy(
-  compactionSettingsList: API.TenantCompactionSetting[]
-) {
-  // 取第一个配置作为标准，与数组里的进行比较
-  const standardCompactionSettings = compactionSettingsList[0];
-  const otherCompactionSettings = compactionSettingsList.filter(
-    item =>
-      standardCompactionSettings.majorCompactTrigger === item.majorCompactTrigger &&
-      standardCompactionSettings.minorCompactTrigger === item.minorCompactTrigger &&
-      standardCompactionSettings.miniCompactionThreadScore === item.miniCompactionThreadScore &&
-      standardCompactionSettings.freezeTriggerPercentage === item.freezeTriggerPercentage
-  );
-
-  if (
-    otherCompactionSettings.length === compactionSettingsList.length &&
-    compactionSettingsList.length !== 0
-  ) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
 /***
  * 1. unit 数量不允许超过 zone 中的 observer 数量
  * */
@@ -167,3 +95,31 @@ export function getResourcesLimit(idleUnitSpec) {
   const { idleCpuCore, idleMemoryInBytes } = idleUnitSpec;
   return idleCpuCore > 4 && idleMemoryInBytes > 8;
 }
+
+// 是否为试用 license
+export const isTrialLicense = (license: API.ObLicense) => {
+  return license?.license_type === 'Trial';
+};
+
+// 集群 license 过期时间计算
+export const getLicenseExpiredTime = (license: API.ObLicense) => {
+  return formatTime(license?.expired_time, DATE_FORMAT);
+};
+
+// 计算距离过期时间还有多少天
+export const getDaysUntilExpiry = (time: string) => {
+  const expiryDate = new Date(time);
+  const now = new Date();
+  // 一天的毫秒数
+  const millisecondsPerDay = 24 * 60 * 60 * 1000;
+  // 计算时间差（过期时间 - 当前时间）
+  const timeDiff = expiryDate - now;
+  return Math.ceil(timeDiff / millisecondsPerDay);
+};
+
+// 检查是否为有效的试用license（试用且未过期）
+export const isEffectiveTrial = (license: API.ObLicense): boolean => {
+  const expiredTime = getLicenseExpiredTime(license);
+  const effectiveDays = getDaysUntilExpiry(expiredTime) || 0;
+  return isTrialLicense(license) && effectiveDays > 0;
+};

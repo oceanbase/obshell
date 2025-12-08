@@ -102,6 +102,14 @@ export async function obclusterConfig(
   });
 }
 
+/** get license of standalone cluster get license of standalone cluster GET /api/v1/obcluster/license */
+export async function getObclusterLicense(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ObLicense }>('/api/v1/obcluster/license', {
+    method: 'GET',
+    ...(options || {}),
+  });
+}
+
 /** get statistics data get statistics data GET /api/v1/obcluster/statistics */
 export async function getStatistics(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.ObclusterStatisticInfo }>(

@@ -5,7 +5,7 @@ import { useSelector } from 'umi';
  * 用于获取集群数据并计算相关属性
  */
 export function useCluster() {
-  const { clusterData } = useSelector((state: DefaultRootState) => state.global);
+  const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
 
   // 计算是否为单机版
   const isStandalone = clusterData?.is_standalone || false;

@@ -33,13 +33,6 @@ const model = {
     zoneListData: [],
     serverListData: [],
     clusterData: {},
-    compactionLatestData: {},
-    compactionSettings: {},
-    parameterListData: DEFAULT_LIST_DATA,
-    importPreCheckResult: {},
-    importResult: {},
-    clusterConfig: {},
-    startupParameterList: [],
     isSingleMachine: false,
   },
 

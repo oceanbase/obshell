@@ -31,7 +31,6 @@ import {
 } from '@oceanbase/design';
 import { flatten, isEmpty, reduce } from 'lodash';
 import { PageContainer } from '@oceanbase/ui';
-import scrollIntoView from 'scroll-into-view';
 import useReload from '@/hook/useReload';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import ContentWithReload from '@/component/ContentWithReload';
@@ -51,6 +50,8 @@ import moment from 'moment';
 import { getAgentMainDags } from '@/service/obshell/task';
 import { message } from 'antd';
 import useUiMode from '@/hook/useUiMode';
+import LicenseDetailModal from './License/LicenseDetailModal';
+import LicenseAlert from './License/LicenseAlert';
 
 export const getServerStatus = (server: API.Observer) => {
   let status = 'OTHER';
@@ -122,33 +123,6 @@ const Detail: React.FC<DetailProps> = ({}) => {
   const obVersion = clusterData.ob_version || '';
   const deadLockDetectionEnabled = clusterData.dead_lock_detection_enabled;
 
-  const scrollToZoneTable = () => {
-    const zoneTable = document.getElementById('ocp-zone-table');
-    if (!zoneTable) {
-      zoneListOrTopoRef.current?.setType('LIST');
-    }
-    setTimeout(() => {
-      const newZoneTable = document.getElementById('ocp-zone-table');
-      if (newZoneTable) {
-        zoneListOrTopoRef.current?.expandAll();
-        scrollIntoView(newZoneTable, {
-          align: {
-            topOffset: 50,
-          },
-        });
-      }
-    }, 0);
-  };
-
-  // clusterData zones 中的 servers 不存在 status 属性，单独调个接口请求
-  // const realServerList = Object.entries(data?.data || {}).map(([ip, value]) => {
-  //   return {
-  //     ip,
-  //     ...value,
-  //     status: value.obState === 3 ? 'RUNNING' : 'UNAVAILABLE',
-  //   };
-  // });
-
   const realServerList = flatten(clusterData.zones?.map(item => item.servers || [])).map(item => {
     const status = getServerStatus(item);
 
@@ -204,12 +178,6 @@ const Detail: React.FC<DetailProps> = ({}) => {
                   },
                 });
               }
-              // TODO: 先不支持这个功能
-              // if (runningCount > 0) {
-              //   // OBServer
-              //   zoneListOrTopoRef.current?.setStatusList([runningStatus]);
-              //   scrollToZoneTable();
-              // }
             }}
             style={
               (type === 'tenant' ? normalCount : runningCount) === 0
@@ -249,10 +217,6 @@ const Detail: React.FC<DetailProps> = ({}) => {
                       status: unavailableStatus,
                     },
                   });
-                } else {
-                  // OBServer
-                  // zoneListOrTopoRef.current?.setStatusList([unavailableStatus]);
-                  // scrollToZoneTable();
                 }
               }
             }}
@@ -294,14 +258,6 @@ const Detail: React.FC<DetailProps> = ({}) => {
                       excludeStatus: [normalStatus, unavailableStatus].join(','),
                     },
                   });
-                } else {
-                  // OBServer
-                  // zoneListOrTopoRef.current?.setStatusList(
-                  //   OB_SERVER_STATUS_LIST.map(item => item.value as API.ObServerStatus).filter(
-                  //     item => ![runningStatus, unavailableStatus].includes(item)
-                  //   )
-                  // );
-                  // scrollToZoneTable();
                 }
               }
             }}
@@ -338,6 +294,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
 
   const [upgradeVisible, setUpgradeVisible] = useState<boolean>(false);
   const [upgradeAgentVisible, setUpgradeAgentVisible] = useState<boolean>(false);
+  const [licenseDetailOpen, setLicenseDetailOpen] = useState(false);
 
   const { run: startFn } = useRequest(obStart, {
     manual: true,
@@ -551,8 +508,13 @@ const Detail: React.FC<DetailProps> = ({}) => {
           });
         },
       });
+    } else if (key === 'license') {
+      setLicenseDetailOpen(true);
     }
   }
+
+  // 计算是否为单机版
+  const isStandalone = clusterData?.is_standalone || false;
 
   const menu = (
     <Menu onClick={({ key }) => handleMenuClick(key)}>
@@ -593,22 +555,20 @@ const Detail: React.FC<DetailProps> = ({}) => {
           </span>
         </Menu.Item>
       )}
-      {/*
-      {(clusterData.status === 'RUNNING' ||
-      clusterData.status === 'UNAVAILABLE' ||
-      clusterData.syncStatus === 'DISABLED_WITH_READ_ONLY') && (
-      <Menu.Item key="restart">
-        <span>启动集群</span>
-      </Menu.Item>
+      {isStandalone && (
+        <Menu.Item key="license">
+          <span>
+            {formatMessage({
+              id: 'ocp-v2.Detail.Overview.ViewLicense',
+              defaultMessage: '查看 License',
+            })}
+          </span>
+        </Menu.Item>
       )}
-      {(clusterData.status === 'RUNNING' || clusterData.status === 'UNAVAILABLE') && (
-      <Menu.Item key="stop">
-        <span>停止集群</span>
-      </Menu.Item>
-      )} */}
     </Menu>
   );
 
+  // 是否为单节点集群
   const isStandAloneCluster =
     clusterData?.zones?.length === 1 && clusterData?.zones?.[0]?.servers?.length === 1;
 
@@ -665,26 +625,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
 
         extra: (
           <Space>
-            {/* TODO: version1 先屏蔽 */}
-            {/* <Button
-            data-aspm-click="c304254.d308756"
-            data-aspm-desc="集群详情-Unit 分布跳转"
-            data-aspm-param={``}
-            data-aspm-expo
-            onClick={() => {
-              history.push('/overview/unit');
-            }}
-            >
-            {formatMessage({
-              id: 'ocp-express.Cluster.Overview.UnitDistribution',
-              defaultMessage: 'Unit 分布',
-            })}
-            </Button> */}
             <Button
-              data-aspm-click="c304254.d308757"
-              data-aspm-desc="集群详情-参数管理跳转"
-              data-aspm-param={``}
-              data-aspm-expo
               onClick={() => {
                 history.push('/overview/parameter');
               }}
@@ -734,6 +675,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
         ),
       }}
     >
+      <LicenseAlert clusterData={clusterData} />
       <Row gutter={[16, 16]}>
         <Col span={14}>
           <ClusterInfo clusterData={clusterData} />
@@ -774,9 +716,6 @@ const Detail: React.FC<DetailProps> = ({}) => {
         <Col span={24}>
           <CompactionTimeTop3 />
         </Col>
-        {/* <Col span={12}>
-           <SlowSQLTop3 />
-          </Col> */}
         <Col span={24}>
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>
@@ -790,7 +729,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
       </Row>
 
       <UpgradeDrawer
-        // 单机集群和空集群都只显示停服升级
+        // 单节点集群和空集群都只显示停服升级
         isStandAloneCluster={isStandAloneCluster || isEmpty(clusterData)}
         visible={upgradeVisible}
         clusterData={clusterData}
@@ -807,6 +746,12 @@ const Detail: React.FC<DetailProps> = ({}) => {
         onSuccess={() => {
           setUpgradeAgentVisible(false);
         }}
+      />
+
+      <LicenseDetailModal
+        clusterData={clusterData}
+        open={licenseDetailOpen}
+        onCancel={() => setLicenseDetailOpen(false)}
       />
     </PageContainer>
   );
