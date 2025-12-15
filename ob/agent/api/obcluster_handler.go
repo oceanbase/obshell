@@ -17,12 +17,14 @@
 package api
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/ob/agent/api/common"
+	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/executor/ob"
 	"github.com/oceanbase/obshell/ob/agent/lib/crypto"
@@ -594,6 +596,36 @@ func newPkgUploadHandler(c *gin.Context) {
 	}
 	bo := data.ToBO()
 	common.SendResponse(c, &bo, agentErr)
+}
+
+// @ID deletePackage
+// @Summary delete package in ocs
+// @Description delete package in ocs
+// @Tags package
+// @Accept application/json
+// @Produce application/json
+// @Param pkg_id path int true "package id"
+// @Success 200 object http.OcsAgentResponse
+// @Success 204 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/upgrade/package/{pkg_id} [delete]
+func pkgDeleteHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+	pkgIdStr := c.Param(constant.URI_PARAM_ID)
+	if pkgIdStr == "" {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestPathParamEmpty, "id"))
+		return
+	}
+	pkgId, err := strconv.Atoi(pkgIdStr)
+	if err != nil {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrRequestQueryParamIllegal, "id", err.Error()))
+		return
+	}
+	common.SendResponse(c, nil, ob.DeletePackage(pkgId))
 }
 
 // @ID ParamsBackup

@@ -171,6 +171,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	// upgrade routes
 	upgrade.POST(constant.URI_PACKAGE, pkgUploadHandler)
+	upgrade.DELETE(constant.URI_PACKAGE+constant.URI_PATH_PARAM_ID, pkgDeleteHandler)
 	upgrade.GET(constant.URI_PACKAGE+constant.URI_INFO, pkgInfoHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_BACKUP, paramsBackupHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_RESTORE, paramsRestoreHandler)

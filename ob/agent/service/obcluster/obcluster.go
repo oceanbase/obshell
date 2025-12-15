@@ -652,6 +652,25 @@ func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *r
 	return
 }
 
+func (obclusterService *ObclusterService) DeleteUpgradePkgInfoAndChunkTx(pkgId int) error {
+	if pkgId <= 0 {
+		return errors.Occur(errors.ErrRequestPathParamEmpty, "pkg_id")
+	}
+	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	if err != nil {
+		return err
+	}
+	return oceanbaseDb.Transaction(func(tx *gorm.DB) error {
+		if err = tx.Model(&oceanbase.UpgradePkgInfo{}).Where("pkg_id = ?", pkgId).Delete(&oceanbase.UpgradePkgInfo{}).Error; err != nil {
+			return err
+		}
+		if err = tx.Model(&oceanbase.UpgradePkgChunk{}).Where("pkg_id = ?", pkgId).Delete(&oceanbase.UpgradePkgChunk{}).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (obclusterService *ObclusterService) RestoreParamsForUpgrade(params []oceanbase.ObParameters) (err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
