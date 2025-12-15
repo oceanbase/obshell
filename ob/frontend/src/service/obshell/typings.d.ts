@@ -275,6 +275,7 @@ declare namespace API {
   type ClusterInfo = {
     cluster_id?: number;
     cluster_name?: string;
+    dead_lock_detection_enabled?: boolean;
     is_community_edition?: boolean;
     is_standalone?: boolean;
     /** only for standalone cluster */
@@ -556,15 +557,9 @@ declare namespace API {
     database: string;
   };
 
-  type DeletePackageParam = {
-    /** rpm package architecture */
-    architecture: string;
-    /** rpm package name */
-    name: string;
-    /** rpm package release distribution */
-    release_distribution: string;
-    /** rpm package version */
-    version: string;
+  type deletePackageParams = {
+    /** package id */
+    pkg_id: number;
   };
 
   type DeleteSilencerParams = {
@@ -1294,6 +1289,7 @@ declare namespace API {
   };
 
   type ObUpgradeParam = {
+    freeze_server?: boolean;
     mode: string;
     release: string;
     upgradeDir?: string;
@@ -1825,6 +1821,7 @@ declare namespace API {
     collation?: string;
     connection_strings?: ObproxyAndConnectionString[];
     created_time?: string;
+    dead_lock_detection_enabled?: boolean;
     in_recyclebin?: string;
     locality?: string;
     locked?: string;

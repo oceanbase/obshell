@@ -34,17 +34,16 @@ export async function newPkgUpload(body: {}, file?: File, options?: { [key: stri
   });
 }
 
-/** delete package in ocs delete package in ocs DELETE /api/v1/upgrade/package */
+/** delete package in ocs delete package in ocs DELETE /api/v1/upgrade/package/${param0} */
 export async function deletePackage(
-  body: API.DeletePackageParam,
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.deletePackageParams,
   options?: { [key: string]: any }
 ) {
-  return request<API.OcsAgentResponse>('/api/v1/upgrade/package', {
+  const { pkg_id: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/upgrade/package/${param0}`, {
     method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
+    params: { ...queryParams },
     ...(options || {}),
   });
 }

@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
-import { Card, message, Modal, Table, Tooltip } from '@oceanbase/design';
+import { Card, message, Modal, Table, TableProps, Tooltip, Button } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { sortByString, sortByMoment, byte2MB } from '@oceanbase/util';
 import { PAGINATION_OPTION_10 } from '@/constant';
@@ -27,7 +27,6 @@ import MyInput from '@/component/MyInput';
 import ContentWithReload from '@/component/ContentWithReload';
 import { useRequest } from 'ahooks';
 import { upgradePkgInfo } from '@/service/obshell/upgrade';
-import { Button } from 'antd';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import { uniq } from 'lodash';
 import { deletePackage } from '@/service/obshell/package';
@@ -38,14 +37,12 @@ export interface PackageProps {
       keyword?: string;
     };
   };
-  submitLoading: boolean;
 }
 
 const PackagePage: React.FC<PackageProps> = ({
   location: {
     query: { keyword: defaultKeyword },
   },
-  submitLoading,
 }) => {
   useDocumentTitle(
     formatMessage({
@@ -55,7 +52,7 @@ const PackagePage: React.FC<PackageProps> = ({
   );
 
   const { data, loading, refresh } = useRequest(upgradePkgInfo);
-  const packageList = data?.data?.contents || [];
+  const packageList: API.UpgradePkgInfo[] = data?.data?.contents || [];
 
   const [keyword, setKeyword] = useState(defaultKeyword);
   const [visible, setVisible] = useState(false);
@@ -69,12 +66,7 @@ const PackagePage: React.FC<PackageProps> = ({
       okType: 'danger',
       onOk: async () => {
         try {
-          const res = await deletePackage({
-            name: record.name || '',
-            version: record.version || '',
-            release_distribution: record.release_distribution || '',
-            architecture: record.architecture || '',
-          });
+          const res = await deletePackage({ pkg_id: record.pkg_id! });
           if (res.successful) {
             message.success('删除软件包成功');
           } else {
@@ -88,7 +80,7 @@ const PackagePage: React.FC<PackageProps> = ({
     });
   };
 
-  const columns = [
+  const columns: TableProps<API.UpgradePkgInfo>['columns'] = [
     {
       title: formatMessage({
         id: 'ocp-express.page.Package.PackageName',
@@ -107,7 +99,7 @@ const PackagePage: React.FC<PackageProps> = ({
       }),
       dataIndex: 'version',
       width: 270,
-      filters: uniq(packageList.map(item => item.version) || []).map(item => ({
+      filters: uniq(packageList.map(item => item.version || '')).map(item => ({
         text: item,
         value: item,
       })),
@@ -160,7 +152,7 @@ const PackagePage: React.FC<PackageProps> = ({
       title: '操作',
       width: 100,
       render: (text: string, record: API.UpgradePkgInfo) => (
-        <Button type="link" danger onClick={() => handleDeletePackage(record)}>
+        <Button type="link" onClick={() => handleDeletePackage(record)}>
           删除
         </Button>
       ),
@@ -226,7 +218,7 @@ const PackagePage: React.FC<PackageProps> = ({
       </Card>
 
       <UploadPackageDrawer
-        visible={visible}
+        open={visible}
         onCancel={() => {
           setVisible(false);
         }}
