@@ -18,6 +18,7 @@ package tenant
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
@@ -52,7 +53,13 @@ func (t *TenantService) SetVariables(variables map[string]interface{}) error {
 	variablesSql := ""
 	for k, v := range variables {
 		if val, ok := v.(string); ok {
-			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= `%v`", val)
+			if number, err := strconv.Atoi(val); err == nil {
+				variablesSql += fmt.Sprintf(", GLOBAL "+k+"= %v", number)
+			} else if float, err := strconv.ParseFloat(val, 64); err == nil {
+				variablesSql += fmt.Sprintf(", GLOBAL "+k+"= %v", float)
+			} else {
+				variablesSql += fmt.Sprintf(", GLOBAL "+k+"= `%v`", val)
+			}
 		} else {
 			variablesSql += fmt.Sprintf(", GLOBAL "+k+"= %v", v)
 		}
