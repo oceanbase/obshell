@@ -428,7 +428,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                       formatMessage({
                         id: 'SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning',
                         defaultMessage:
-                          '当前 SeekDB 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。',
+                          '当前 seekdb 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。',
                       }))
                   }
                 >
@@ -519,7 +519,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               <Descriptions.Item
                 label={formatMessage({
                   id: 'SeekDB.Detail.Overview.SeekdbVersionNumber',
-                  defaultMessage: 'SeekDB 版本号',
+                  defaultMessage: 'seekdb 版本号',
                 })}
               >
                 {obInfoData?.version || '-'}

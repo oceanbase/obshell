@@ -2845,7 +2845,7 @@
   "SeekDB.Detail.Overview.InstanceObinfostatusnameThisOperationIs": "实例{obInfoStatusName}，暂不支持此操作",
   "SeekDB.Detail.Overview.InstanceManagement": "实例管理",
   "SeekDB.Detail.Overview.Status": "状态",
-  "SeekDB.Detail.Overview.SeekdbVersionNumber": "SeekDB 版本号",
+  "SeekDB.Detail.Overview.SeekdbVersionNumber": "seekdb 版本号",
   "SeekDB.Detail.Overview.Specifications": "规格",
   "SeekDB.Detail.Overview.HardwareArchitecture": "硬件架构",
   "SeekDB.Detail.Overview.NumberOfDatabases": "数据库数",
@@ -2860,6 +2860,6 @@
   "SeekDB.Detail.Overview.LogDiskPath": "日志盘路径",
   "SeekDB.Detail.Overview.LogDirectory": "日志目录",
   "SeekDB.Detail.Overview.WorkingDirectory": "工作目录",
-  "SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning": "当前 SeekDB 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。",
+  "SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning": "当前 seekdb 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。",
   "SeekDB.Detail.Overview.CanEnterTheTaskCenter": "可进入任务中心查看"
 }

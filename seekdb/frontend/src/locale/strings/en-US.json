@@ -2845,7 +2845,7 @@
   "SeekDB.Detail.Overview.InstanceObinfostatusnameThisOperationIs": "Instance{obInfoStatusName}, this operation is not supported",
   "SeekDB.Detail.Overview.InstanceManagement": "instance management",
   "SeekDB.Detail.Overview.Status": "Status",
-  "SeekDB.Detail.Overview.SeekdbVersionNumber": "SeekDB version number",
+  "SeekDB.Detail.Overview.SeekdbVersionNumber": "seekdb version number",
   "SeekDB.Detail.Overview.Specifications": "Specifications",
   "SeekDB.Detail.Overview.HardwareArchitecture": "Hardware Architecture",
   "SeekDB.Detail.Overview.NumberOfDatabases": "Number of databases",
@@ -2860,6 +2860,6 @@
   "SeekDB.Detail.Overview.LogDiskPath": "Log disk path",
   "SeekDB.Detail.Overview.LogDirectory": "Log Directory",
   "SeekDB.Detail.Overview.WorkingDirectory": "Working Directory",
-  "SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning": "The SeekDB instance is running under systemd management. To stop the service, run the systemctl stop seekdb command.",
+  "SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning": "The seekdb instance is running under systemd management. To stop the service, run the systemctl stop seekdb command.",
   "SeekDB.Detail.Overview.CanEnterTheTaskCenter": "Can enter the task center to view"
 }
