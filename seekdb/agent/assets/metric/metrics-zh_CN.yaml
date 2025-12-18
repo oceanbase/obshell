@@ -363,7 +363,7 @@ SEEKDB:
     - description: "每秒提交的事务日志大小"
       key: clog_trans_log_total_size
       name: log_size
-      unit: byte
+      unit: byte/s
     name: "事务日志量"
   - description: "服务端处理事务日志的平均耗时"
     metrics:
@@ -565,19 +565,19 @@ SEEKDB:
     - description: "SSStore 每秒读取数据量"
       key: io_read_size
       name: ssstore_read
-      unit: byte
+      unit: byte/s
     - description: "SSStore 每秒写入数据量"
       key: io_write_size
       name: ssstore_write
-      unit: byte
+      unit: byte/s
     - description: "Clog 每秒读取数据量"
       key: clog_io_read_size
       name: clog_read
-      unit: byte
+      unit: byte/s
     - description: "Clog 每秒写入数据量"
       key: clog_io_write_size
       name: clog_write
-      unit: byte
+      unit: byte/s
     name: "物理 IO 吞吐量"
   - description: "缓存大小"
     metrics:
@@ -776,19 +776,19 @@ SEEKDB:
     - description: 使用物理内存大小
       key: memory_used
       name: used
-      unit: byte
+      unit: GB
     - description: 内核 Buffer Cache 大小
       key: memory_buffers
       name: buffers
-      unit: byte
+      unit: GB
     - description: 可用物理内存大小
       key: memory_free
       name: free
-      unit: byte
+      unit: GB
     - description: 缓存使用的内存
       key: memory_cached
       name: cached
-      unit: byte
+      unit: GB
   - description: 主机内存使用率
     name: 内存使用率
     metrics:
@@ -824,19 +824,19 @@ SEEKDB:
     - description: 每次读取数据量
       key: io_read_byte
       name: read
-      unit: byte
+      unit: MB/s
     - description: 每次写入数据量
       key: io_write_byte
       name: write
-      unit: byte
+      unit: MB/s
   - description: 网络吞吐率
     name: 网络吞吐率
     metrics:
     - description: 每秒接收数据量
       key: net_recv
       name: receive
-      unit: byte
+      unit: MB/s
     - description: 每秒发送数据量
       key: net_send
       name: send
-      unit: byte
+      unit: MB/s

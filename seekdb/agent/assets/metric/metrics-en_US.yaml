@@ -363,7 +363,7 @@ SEEKDB:
     - description: Transaction log size submitted per second
       key: clog_trans_log_total_size
       name: log_size
-      unit: byte
+      unit: byte/s
     name: Transaction log volume
   - description: Average time-consuming server processing transaction log
     metrics:
@@ -565,19 +565,19 @@ SEEKDB:
     - description: SSStore read data volume per second
       key: io_read_size
       name: ssstore_read
-      unit: byte
+      unit: byte/s
     - description: SSStore write data volume per second
       key: io_write_size
       name: ssstore_write
-      unit: byte
+      unit: byte/s
     - description: Clog read data volume per second
       key: clog_io_read_size
       name: clog_read
-      unit: byte
+      unit: byte/s
     - description: Clog write data volume per second
       key: clog_io_write_size
       name: clog_write
-      unit: byte
+      unit: byte/s
     name: I/O Throughput
   - description: Cache size
     metrics:
@@ -776,19 +776,19 @@ SEEKDB:
     - description: The size of used physical memory.
       key: memory_used
       name: used
-      unit: byte
+      unit: GB
     - description: The size of the kernel buffer cache.
       key: memory_buffers
       name: buffers
-      unit: byte
+      unit: GB
     - description: The size of available physical memory.
       key: memory_free
       name: free
-      unit: byte
+      unit: GB
     - description: Memory usage usage used by the cache
       key: memory_cached
       name: cached
-      unit: byte
+      unit: GB
   - description: The memory usage of the host.
     name: Memory usage
     metrics:
@@ -824,19 +824,19 @@ SEEKDB:
     - description: The amount of data read each time.
       key: io_read_byte
       name: read
-      unit: byte
+      unit: MB/s
     - description: The amount of data written each time.
       key: io_write_byte
       name: write
-      unit: byte
+      unit: MB/s
   - description: Network throughput
     name: Network Throughput Rate
     metrics:
     - description: The amount of data received per second.
       key: net_recv
       name: receive
-      unit: byte
+      unit: MB/s
     - description: The amount of data sent per second.
       key: net_send
       name: send
-      unit: byte
+      unit: MB/s
