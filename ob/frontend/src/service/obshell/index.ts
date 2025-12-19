@@ -15,6 +15,7 @@ import * as package from './package';
 import * as recyclebin from './recyclebin';
 import * as resourcePool from './resourcePool';
 import * as restore from './restore';
+import * as security from './security';
 import * as system from './system';
 import * as task from './task';
 import * as tenant from './tenant';
@@ -33,6 +34,7 @@ export default {
   recyclebin,
   resourcePool,
   restore,
+  security,
   system,
   task,
   tenant,

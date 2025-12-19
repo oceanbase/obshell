@@ -1,0 +1,18 @@
+.techTagRendererPopup {
+  overflow: hidden;
+  white-space: normal;
+
+  & > div > div:last-child {
+    padding-bottom: 2px;
+
+    & span {
+      max-width: 282px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    & span:last-child {
+      margin-right: 0;
+    }
+  }
+}

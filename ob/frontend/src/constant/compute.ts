@@ -59,3 +59,31 @@ export const OCP_AGENT_PROCESS_STATUS_LIST = [
     badgeStatus: 'default',
   },
 ];
+
+export const AUTHORIZE_TYPE_LIST = [
+  {
+    label: formatMessage({
+      id: 'ocp-v2.src.constant.compute.UsernamePassword',
+      defaultMessage: '密码验证',
+    }),
+    value: 'PASSWORD',
+  },
+];
+
+export const USET_TYPE_LIST = [
+  {
+    label: formatMessage({
+      id: 'ocp-v2.src.constant.compute.RootUser',
+      defaultMessage: 'root 用户',
+    }),
+    value: 'root',
+  },
+
+  {
+    label: formatMessage({
+      id: 'ocp-v2.src.constant.compute.OrdinaryUsers',
+      defaultMessage: '普通用户',
+    }),
+    value: 'normal',
+  },
+];

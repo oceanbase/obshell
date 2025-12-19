@@ -17,8 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import classNames from 'classnames';
-import useStyles from './index.style';
-
+import styles from './index.less';
 export interface BatchOperationBarProps {
   className?: string;
   style?: React.CSSProperties;
@@ -42,7 +41,6 @@ const BatchOperationBar: React.FC<BatchOperationBarProps> = ({
   onCancel,
   size = 'default',
 }) => {
-  const { styles } = useStyles();
   const realVisible = visible === undefined ? selectedCount > 0 : visible;
   return (
     <div

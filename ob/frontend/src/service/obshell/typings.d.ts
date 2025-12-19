@@ -195,6 +195,14 @@ declare namespace API {
     memory_total?: string;
   };
 
+  type BatchDeleteCredentialParam = {
+    credential_id_list: number[];
+  };
+
+  type BatchValidateCredentialParam = {
+    credential_id_list: number[];
+  };
+
   type cancelRestoreTaskParams = {
     /** Tenant name */
     tenantName: string;
@@ -325,11 +333,23 @@ declare namespace API {
     name?: string;
   };
 
+  type ConnectionResult = 'SUCCESS' | 'CONNECT_FAILED';
+
   type CpuInfo = {
     frequency?: string;
     logicalCores?: number;
     modelName?: string;
     physicalCores?: number;
+  };
+
+  type CreateCredentialParam = {
+    /** Credential description */
+    description?: string;
+    /** Credential name */
+    name: string;
+    ssh_credential_property: SshCredentialProperty;
+    /** Target type, currently only supports "HOST" */
+    target_type: string;
   };
 
   type CreateDatabaseParam = {
@@ -415,6 +435,16 @@ declare namespace API {
   type createUserParams = {
     /** tenant name */
     name: string;
+  };
+
+  type Credential = {
+    create_time?: string;
+    credential_id?: number;
+    description?: string;
+    name?: string;
+    ssh_secret?: SshSecret;
+    target_type?: string;
+    update_time?: string;
   };
 
   type CustomPage = {
@@ -550,6 +580,11 @@ declare namespace API {
     transaction_hash?: string;
   };
 
+  type deleteCredentialParams = {
+    /** Credential ID */
+    id: number;
+  };
+
   type deleteDatabaseParams = {
     /** tenant name */
     name: string;
@@ -628,6 +663,11 @@ declare namespace API {
 
   type GetClusterUnfinishDagsParams = {
     show_details?: boolean;
+  };
+
+  type getCredentialParams = {
+    /** Credential ID */
+    id: number;
   };
 
   type getDagDetailParams = {
@@ -887,6 +927,23 @@ declare namespace API {
   type ListAllMetricsParams = {
     /** metrics scope */
     scope: 'OBCLUSTER' | 'OBTENANT';
+  };
+
+  type listCredentialsParams = {
+    /** Credential ID */
+    credential_id?: number;
+    /** Target type, currently only supports HOST */
+    target_type?: string;
+    /** Keyword for searching */
+    key_word?: string;
+    /** Page number */
+    page?: number;
+    /** Page size */
+    page_size?: number;
+    /** Sort field */
+    sort?: string;
+    /** Sort order (asc/desc) */
+    sort_order?: string;
   };
 
   type listDatabasesParams = {
@@ -1345,6 +1402,11 @@ declare namespace API {
     page?: CustomPage;
   };
 
+  type PaginatedCredentialResponse = {
+    contents?: Credential[];
+    page?: CustomPage;
+  };
+
   type PaginatedDeadLocks = {
     contents?: DeadLock[];
     page?: CustomPage;
@@ -1720,6 +1782,24 @@ declare namespace API {
     updated_at: number;
   };
 
+  type SshCredentialProperty = {
+    /** Password for SSH connection (plain text, will be encrypted before storage), can be empty. */
+    passphrase: string;
+    /** Target host list, format: ip:port (e.g., '192.168.1.1:22') or ip only (default port 22, e.g., '192.168.1.1'). List cannot be empty, must contain at least one target. */
+    targets: string[];
+    /** Authentication type, currently only supports "PASSWORD" */
+    type: string;
+    /** Username for SSH connection */
+    username: string;
+  };
+
+  type SshSecret = {
+    /** Target host list, format: ip:port (e.g., '192.168.1.1:22') */
+    targets?: string[];
+    type?: string;
+    username?: string;
+  };
+
   type StartObParam = {
     forcePassDag?: ForcePassDagParam;
     scope: Scope;
@@ -2002,6 +2082,21 @@ declare namespace API {
     user: string;
   };
 
+  type UpdateCredentialEncryptSecretKeyParam = {
+    aes_key: string;
+  };
+
+  type UpdateCredentialParam = {
+    description?: string;
+    name: string;
+    ssh_credential_property: SshCredentialProperty;
+  };
+
+  type updateCredentialParams = {
+    /** Credential ID */
+    id: number;
+  };
+
   type updateDatabaseParams = {
     /** tenant name */
     name: string;
@@ -2066,6 +2161,34 @@ declare namespace API {
     releaseDistribution?: string;
     size?: number;
     version?: string;
+  };
+
+  type ValidateCredentialParam = {
+    ssh_credential_property: SshCredentialProperty;
+    /** Target type, currently only supports "HOST" */
+    target_type: string;
+  };
+
+  type ValidationDetail = {
+    /** Connection result, e.g., ConnectionResultSuccess, ConnectionResultConnectFailed, etc. (for extensibility) */
+    connection_result?: ConnectionResult;
+    /** Error message (empty string when validation succeeds) */
+    message?: string;
+    /** Target information, format: ip:port (e.g., "192.168.1.1:22") */
+    target?: string;
+  };
+
+  type ValidationResult = {
+    /** Credential ID, indicates which credential's validation result */
+    credential_id?: number;
+    /** Validation details, one detail per target */
+    details?: ValidationDetail[];
+    /** Number of failed validated targets for this credential */
+    failed_count?: number;
+    /** Number of successfully validated targets for this credential */
+    succeeded_count?: number;
+    /** Target type, e.g., "HOST", "OB" */
+    target_type?: string;
   };
 
   type Zone = {

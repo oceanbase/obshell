@@ -88,6 +88,10 @@ export const useBasicMenu = (): MenuItem[] => {
           }),
         },
         {
+          link: '/credential',
+          title: '凭据管理',
+        },
+        {
           link: `/task`,
           title: formatMessage({
             id: 'ocp-v2.src.hook.useMenu.MissionCenter',

@@ -206,6 +206,11 @@ export default [
             name: '软件包管理',
           },
           {
+            path: 'credential',
+            component: 'Credential',
+            name: '凭据管理',
+          },
+          {
             path: 'property',
             component: 'Property',
             name: '系统管理',
