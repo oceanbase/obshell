@@ -13,7 +13,6 @@ export interface FilterBarProps {
   setSelectedRowKeys?: (value: HostCredential[]) => void;
   isFilter?: boolean;
   setIsFilter?: (value: boolean) => void;
-  tab?: string;
   isClick: boolean;
   setIsClick: (value: boolean) => void;
   batchValidateCredential: (value: { credential_id_list: number[] }) => void;
@@ -27,7 +26,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
   setSelectedRowKeys,
   isFilter,
   setIsFilter,
-  tab,
   isClick,
   batchValidateCredential,
   batchValidateCredentialLoading,
@@ -42,16 +40,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       manual: true,
       onSuccess: res => {
         if (res.successful) {
-          message.success(
-            formatMessage(
-              {
-                id: 'ocp-v2.Credential.Component.FilterBar.FindbyvaluetablistDeleted',
-                defaultMessage: '{findByValueTABLIST}删除成功',
-              },
-
-              { findByValueTABLIST: findByValue(TAB_LIST, tab).label }
-            )
-          );
+          message.success('凭据删除成功');
           if (setSelectedRowKeys) {
             setSelectedRowKeys([]);
           }

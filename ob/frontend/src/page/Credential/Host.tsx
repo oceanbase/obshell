@@ -9,7 +9,7 @@ import { formatMessage } from '@/util/intl';
 import * as CredentialController from '@/service/obshell/security';
 import { isEnglish } from '@/util';
 import { getOperationComponent } from '@/util/component';
-import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { find, isEmpty, orderBy } from 'lodash';
 import {
   Button,
@@ -32,7 +32,7 @@ import AddHostCredentialDrawer from '@/component/AddHostCredentialDrawer';
 export interface HostCredential {
   credential_id: number;
   name?: string;
-  targets?: string[];
+  targets?: API.Target[];
   type?: string;
   username?: string;
   passphrase?: string;
@@ -254,22 +254,24 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
       dataIndex: 'targets',
       ellipsis: true,
       width: '20%',
-      render: (targets: string[], record) => {
+      render: (targets: API.Target[], record) => {
         return targets?.length > 0 ? (
           <TagRenderer
             tags={
               // 错误信息的靠前排列
               orderBy(
                 targets?.map(target => {
-                  const host = target.split(':')[0];
+                  const host = target.ip;
                   // 查找当前主机的错误信息
                   const errorMge =
-                    record?.details?.find(item1 => item1.target === target)?.connection_result !==
-                      'SUCCESS' && !isEmpty(record?.details);
+                    record?.details?.find(
+                      item1 =>
+                        item1.target?.ip === target?.ip && item1.target?.port === target?.port
+                    )?.connection_result !== 'SUCCESS' && !isEmpty(record?.details);
 
                   const color = errorMge ? 'red' : 'default';
                   return {
-                    text: host,
+                    text: host!,
                     color,
                   };
                 }),
@@ -399,7 +401,6 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
                 setSelectedRowKeys={setSelectedRowKeys}
                 isFilter={isFilter}
                 setIsFilter={setIsFilter}
-                tab="HOST"
                 onCancel={() => {
                   setIsFilter(false);
                   setIsClick(false);
@@ -422,7 +423,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
                   ? dataSource.filter(item =>
                       selectedRowKeys
                         .map(selected => selected?.credential_id)
-                        .includes(item.credential_id)
+                        .includes(item.credential_id!)
                     )
                   : dataSource
               }

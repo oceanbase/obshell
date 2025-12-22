@@ -1785,8 +1785,8 @@ declare namespace API {
   type SshCredentialProperty = {
     /** Password for SSH connection (plain text, will be encrypted before storage), can be empty. */
     passphrase: string;
-    /** Target host list, format: ip:port (e.g., '192.168.1.1:22') or ip only (default port 22, e.g., '192.168.1.1'). List cannot be empty, must contain at least one target. */
-    targets: string[];
+    /** Target host list, each Target contains ip and port. If port is not provided, default port is 22. List cannot be empty, must contain at least one target. */
+    targets: Target[];
     /** Authentication type, currently only supports "PASSWORD" */
     type: string;
     /** Username for SSH connection */
@@ -1794,8 +1794,8 @@ declare namespace API {
   };
 
   type SshSecret = {
-    /** Target host list, format: ip:port (e.g., '192.168.1.1:22') */
-    targets?: string[];
+    /** Target host list, each Target contains ip and port */
+    targets?: Target[];
     type?: string;
     username?: string;
   };
@@ -1817,6 +1817,20 @@ declare namespace API {
 
   type Status = {
     state: State;
+  };
+
+  type Target = {
+    /** IP address */
+    ip?: string;
+    /** Port number */
+    port?: number;
+  };
+
+  type Target = {
+    /** IP address */
+    ip: string;
+    /** Port number, default is 22 if not provided */
+    port?: number;
   };
 
   type TaskDetailDTO = {
@@ -2174,8 +2188,8 @@ declare namespace API {
     connection_result?: ConnectionResult;
     /** Error message (empty string when validation succeeds) */
     message?: string;
-    /** Target information, format: ip:port (e.g., "192.168.1.1:22") */
-    target?: string;
+    /** Target information, contains ip and port */
+    target?: Target;
   };
 
   type ValidationResult = {

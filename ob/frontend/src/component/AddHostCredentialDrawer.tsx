@@ -144,7 +144,10 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
         type: 'PASSWORD',
         username,
         passphrase,
-        targets: targets.map((target: string) => `${target}:${port}`),
+        targets: targets.map((target: string) => ({
+          ip: target,
+          port,
+        })),
       },
     };
 
@@ -154,16 +157,18 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
       updateCredential({ id: credential?.credential_id! }, param);
     } else {
       validateCredential(validateParam).then(res => {
-        const { data = {} } = res;
-        // 如果校验成功
-        if (data.failed_count === 0) {
-          addCredential(param);
-        } else {
-          const failedList =
-            data?.details?.filter(
-              (item: API.ValidationDetail) => item?.connection_result !== 'SUCCESS'
-            ) || [];
-          setFailItems(failedList);
+        if (res.successful) {
+          const { data = {} } = res;
+          // 如果校验成功
+          if (data?.failed_count === 0) {
+            addCredential(param);
+          } else {
+            const failedList =
+              data?.details?.filter(
+                (item: API.ValidationDetail) => item?.connection_result !== 'SUCCESS'
+              ) || [];
+            setFailItems(failedList);
+          }
         }
       });
     }
@@ -175,7 +180,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
   const tagRender = (props: any) => {
     const { label, closable, onClose } = props;
     let color = 'default';
-    const self = find(failItems, ({ target }) => label?.includes(target?.split(':')[0]));
+    const self = find(failItems, ({ target }) => label?.includes(target?.ip));
 
     if (self) {
       // CONNECT_FAILED 显示 red
@@ -195,7 +200,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
   const hostAlignCredential: () => HostAlignCredential[] = () => {
     return hostList?.map(host => {
       const credentialItem = find(credentialList, item =>
-        (item.ssh_secret?.targets?.map(target => target?.split(':')[0]) || [])?.includes(host)
+        (item.ssh_secret?.targets?.map(target => target?.ip) || [])?.includes(host)
       );
 
       return {
@@ -364,7 +369,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
                 message: '请输入应用主机',
               },
             ]}
-            initialValue={isEdit ? credential?.targets?.map(target => target?.split(':')[0]) : []}
+            initialValue={isEdit ? credential?.targets?.map(target => target?.ip) : []}
             help={
               failItems.length > 0 ? (
                 <Space
@@ -411,10 +416,10 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
           <FormItem
             label="ssh 端口"
             name="port"
-            initialValue={credential?.port || 22}
+            initialValue={credential?.targets?.[0]?.port || 22}
             rules={[{ required: true, message: '请输入 ssh 端口' }]}
           >
-            <InputNumber style={{ width: '100%' }} />
+            <InputNumber min={0} max={65535} style={{ width: '100%' }} />
           </FormItem>
 
           <FormItem
