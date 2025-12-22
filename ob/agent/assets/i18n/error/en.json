@@ -331,5 +331,16 @@
   "err.metric.prometheus.config.not.found": "Prometheus configuration not found",
   "err.metric.query.failed": "Query to Prometheus failed",
   "err.metric.unexpected.status": "Query to Prometheus got unexpected status: %d",
-  "err.metric.parse.value.failed": "Failed to parse metric value: %s"
+  "err.metric.parse.value.failed": "Failed to parse metric value: %s",
+  "err.credential.not.found": "Credential not found",
+  "err.credential.target.type.not.supported": "Unsupported target_type, currently only supports HOST",
+  "err.credential.auth.type.not.supported": "Unsupported authentication type, currently only supports PASSWORD",
+  "err.credential.ssh.validation.failed": "SSH connection validation failed",
+  "err.credential.encrypt.failed": "Encrypt credential passphrase failed",
+  "err.credential.decrypt.failed": "Decrypt credential passphrase failed",
+  "err.credential.secret.format.invalid": "Invalid secret format",
+  "err.credential.host.already.exists": "Host %s already has a credential",
+  "err.credential.name.already.exists": "Credential name %s already exists",
+  "err.credential.host.not.in.all.agent": "Host %s is not found in all_agent table",
+  "err.credential.ssh.invalid.port": "The SSH port '%s' is invalid, must be in [1, 65535]"
 }

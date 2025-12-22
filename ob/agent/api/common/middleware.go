@@ -180,31 +180,69 @@ func readRequestBodyMaskPassword(c *gin.Context) string {
 	}
 
 	masked := false
-	for _, key := range []string{
-		"context",
-		"data_base_uri",
-		"backup_base_uri",
-		"archive_base_uri",
-		"data_backup_uri",
-		"archive_log_uri",
-		"decryption",
-		"encryption",
-		"root_password",
-		"password",
-		"new_password",
-		"old_password",
-		"tenant_password",
-		"token",
-		"proxy_password",
-		"rootPwd",
-		"obproxy_sys_password",
-		"masterPassword",
-		"targetAgentPassword"} {
-		if _, ok := bodyInterface[key]; ok {
-			bodyInterface[key] = "******"
-			masked = true
+	// Use recursive masking for sensitive keys, including nested maps and arrays
+	sensitiveKeys := map[string]struct{}{
+		"context":              {},
+		"data_base_uri":        {},
+		"backup_base_uri":      {},
+		"archive_base_uri":     {},
+		"data_backup_uri":      {},
+		"archive_log_uri":      {},
+		"decryption":           {},
+		"encryption":           {},
+		"root_password":        {},
+		"password":             {},
+		"new_password":         {},
+		"old_password":         {},
+		"tenant_password":      {},
+		"token":                {},
+		"proxy_password":       {},
+		"rootPwd":              {},
+		"obproxy_sys_password": {},
+		"masterPassword":       {},
+		"targetAgentPassword":  {},
+		"passphrase":           {},
+		"aes_key":              {},
+	}
+
+	// Recursive mask function
+	var maskSensitive func(interface{}) (interface{}, bool)
+	maskSensitive = func(data interface{}) (interface{}, bool) {
+		maskedAny := false
+
+		switch v := data.(type) {
+		case map[string]interface{}:
+			for k, vv := range v {
+				if _, found := sensitiveKeys[k]; found {
+					v[k] = "******"
+					maskedAny = true
+					continue
+				}
+				// Recursively process nested structures
+				val, maskedChild := maskSensitive(vv)
+				if maskedChild {
+					maskedAny = true
+				}
+				v[k] = val
+			}
+			return v, maskedAny
+		case []interface{}:
+			for i, elem := range v {
+				val, maskedElem := maskSensitive(elem)
+				if maskedElem {
+					maskedAny = true
+				}
+				v[i] = val
+			}
+			return v, maskedAny
+		default:
+			return v, false
 		}
 	}
+
+	var result interface{} = bodyInterface
+	result, masked = maskSensitive(result)
+	bodyInterface = result.(map[string]interface{})
 
 	c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
 

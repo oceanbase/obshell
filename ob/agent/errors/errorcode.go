@@ -64,6 +64,7 @@ var (
 	ErrCommonIllegalArgument            = NewErrorCode("Common.IllegalArgument", illegalArgument, "err.common.illegal.argument")
 	ErrCommonIllegalArgumentWithMessage = NewErrorCode("Common.IllegalArgument", illegalArgument, "err.common.illegal.argument.with.message") // the input parameter '%s' is illegal: %s
 	ErrCommonInvalidPort                = NewErrorCode("Common.InvalidPort", illegalArgument, "err.common.invalid.port")                      // The port '%s' is invalid, must in (1024, 65535].
+	ErrCredentialInvalidSshPort         = NewErrorCode("Credential.SSH.InvalidPort", illegalArgument, "err.credential.ssh.invalid.port")      // The SSH port '%s' is invalid, must be in [1, 65535]
 	ErrCommonInvalidIp                  = NewErrorCode("Common.InvalidIp", illegalArgument, "err.common.invalid.ip")                          // "'%s' is not a valid IP address"
 	ErrCommonInvalidAddress             = NewErrorCode("Common.InvalidAddress", illegalArgument, "err.common.invalid.address")                // "'%s' is not a vaild address"
 	ErrCommonDirNotEmpty                = NewErrorCode("Common.DirNotEmpty", unexpected, "err.common.dir.not.empty")                          // "dir '%s' is not empty"
@@ -456,4 +457,16 @@ var (
 	ErrMetricQueryFailed              = NewErrorCode("Metric.QueryFailed", unexpected, "err.metric.query.failed")
 	ErrMetricUnexpectedStatus         = NewErrorCode("Metric.UnexpectedStatus", unexpected, "err.metric.unexpected.status")
 	ErrMetricParseValueFailed         = NewErrorCode("Metric.ParseValueFailed", unexpected, "err.metric.parse.value.failed")
+
+	// credential related
+	ErrCredentialNotFound               = NewErrorCode("Credential.NotFound", notFound, "err.credential.not.found")                                       // "credential not found"
+	ErrCredentialTargetTypeNotSupported = NewErrorCode("Credential.TargetType.NotSupported", illegalArgument, "err.credential.target.type.not.supported") // "unsupported target_type, currently only supports HOST"
+	ErrCredentialAuthTypeNotSupported   = NewErrorCode("Credential.AuthType.NotSupported", illegalArgument, "err.credential.auth.type.not.supported")     // "unsupported authentication type, currently only supports PASSWORD"
+	ErrCredentialSSHValidationFailed    = NewErrorCode("Credential.SSH.ValidationFailed", badRequest, "err.credential.ssh.validation.failed")             // "SSH connection validation failed"
+	ErrCredentialEncryptFailed          = NewErrorCode("Credential.EncryptFailed", unexpected, "err.credential.encrypt.failed")                           // "encrypt credential passphrase failed"
+	ErrCredentialDecryptFailed          = NewErrorCode("Credential.DecryptFailed", unexpected, "err.credential.decrypt.failed")                           // "decrypt credential passphrase failed"
+	ErrCredentialSecretFormatInvalid    = NewErrorCode("Credential.Secret.FormatInvalid", unexpected, "err.credential.secret.format.invalid")             // "invalid secret format"
+	ErrCredentialHostAlreadyExists      = NewErrorCode("Credential.Host.AlreadyExists", illegalArgument, "err.credential.host.already.exists")            // "host %s already has a credential"
+	ErrCredentialNameAlreadyExists      = NewErrorCode("Credential.Name.AlreadyExists", illegalArgument, "err.credential.name.already.exists")            // "credential name %s already exists"
+	ErrCredentialHostNotInAllAgent      = NewErrorCode("Credential.Host.NotInAllAgent", illegalArgument, "err.credential.host.not.in.all.agent")          // "host %s is not found in all_agent table"
 )

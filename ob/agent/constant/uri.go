@@ -38,6 +38,7 @@ const (
 	URI_METRIC_GROUP     = "/metrics"
 	URI_SYSTEM_GROUP     = "/system"
 	URI_EXTERNAL_GROUP   = "/external"
+	URI_SECURITY_GROUP   = "/security"
 	URI_PROMETHEUS       = "/prometheus"
 	URI_ALERTMANAGER     = "/alertmanager"
 
@@ -135,6 +136,10 @@ const (
 
 	URI_UNIT_CONFIG_LIMIT = "/unit-config-limit"
 	URI_LICENSE           = "/license"
+	URI_CREDENTIAL        = "/credential"
+	URI_CREDENTIALS       = "/credentials"
+	URI_VALIDATE          = "/validate"
+	URI_ENCRYPT_SECRETKEY = "/encrypt-secret-key"
 
 	URI_PARAM_NAME            = "name"
 	URI_PATH_PARAM_NAME       = "/:" + URI_PARAM_NAME

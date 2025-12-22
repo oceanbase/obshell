@@ -122,6 +122,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	InitObproxyRoutes(v1, isLocalRoute)
 	InitMetricRoutes(v1, isLocalRoute)
 	InitAlarmRoutes(v1, isLocalRoute)
+	InitCredentialRoutes(v1, isLocalRoute)
 
 	system := v1.Group(constant.URI_SYSTEM_GROUP)
 	InitExternalRoutes(system, isLocalRoute)

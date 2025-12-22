@@ -31,4 +31,6 @@ const (
 	CONFIG_MAX_SESSION_COUNT      = "max_session_count"
 	DEFAULT_AUTH_EXPIRED_DURATION = 10 * time.Second
 	GET_PASSWORD_RPC_TIMEOUT      = 1 * time.Second
+	CREDENTIAL_AES_KEY_CONFIG     = "credential_aes_key"
+	CAESAR_SHIFT                  = 11
 )
