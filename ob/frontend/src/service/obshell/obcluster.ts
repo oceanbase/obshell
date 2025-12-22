@@ -10,6 +10,68 @@ export async function obclusterInfo(options?: { [key: string]: any }) {
   });
 }
 
+/** trigger cluster inspection trigger cluster inspection with specified scenario (basic or performance) POST /api/v1/obcluster/inspection */
+export async function triggerInspection(
+  body: API.InspectionParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>(
+    '/api/v1/obcluster/inspection',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** get inspection report by id get detailed inspection report by report id GET /api/v1/obcluster/inspection/report/${param0} */
+export async function getInspectionReport(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getInspectionReportParams,
+  options?: { [key: string]: any }
+) {
+  const { id: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.InspectionReport }>(
+    `/api/v1/obcluster/inspection/report/${param0}`,
+    {
+      method: 'GET',
+      params: { ...queryParams },
+      ...(options || {}),
+    }
+  );
+}
+
+/** get inspection history get paginated inspection history with filters GET /api/v1/obcluster/inspection/reports */
+export async function getInspectionHistory(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.getInspectionHistoryParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse & { data?: API.PaginatedInspectionHistoryResponse }>(
+    '/api/v1/obcluster/inspection/reports',
+    {
+      method: 'GET',
+      params: {
+        // page has a default value: 1
+        page: '1',
+        // size has a default value: 10
+        size: '10',
+
+        // sort_by has a default value: start_time
+        sort_by: 'start_time',
+        // sort_order has a default value: desc
+        sort_order: 'desc',
+        ...params,
+      },
+      ...(options || {}),
+    }
+  );
+}
+
 /** get obcluster parameters get obcluster parameters GET /api/v1/obcluster/parameters */
 export async function obclusterParameters(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.ClusterParameter[] }>(

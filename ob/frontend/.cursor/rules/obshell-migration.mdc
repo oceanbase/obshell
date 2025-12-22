@@ -184,6 +184,25 @@ import VpcItem from '@/component/VpcItem';
 import VpcSelect from '@/component/VpcSelect';
 ```
 
+### 4. 未找到的组件引用处理
+
+**迁移原则**:
+
+- **如果代码中存在未找到的组件引用，先不处理**
+- 优先处理可以确认的导入路径替换和业务逻辑迁移
+- 等组件库完善后再统一处理缺失的组件
+- 在代码中添加 TODO 注释标记未找到的组件
+
+**示例**:
+
+```typescript
+// TODO: 待组件库完善后处理
+// import CustomComponent from '@/component/CustomComponent';
+
+// 暂时注释掉使用该组件的代码
+// <CustomComponent />
+```
+
 ## 样式和 UI 适配
 
 ### 1. 主题适配

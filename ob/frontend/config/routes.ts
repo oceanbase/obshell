@@ -269,6 +269,20 @@ export default [
             ],
           },
           {
+            path: 'inspection',
+            name: '巡检服务',
+            routes: [
+              {
+                path: '/inspection',
+                component: 'Inspection',
+              },
+              {
+                path: 'report/:id',
+                component: 'Inspection/Result',
+              },
+            ],
+          },
+          {
             path: 'error',
             name: '错误页',
             routes: [

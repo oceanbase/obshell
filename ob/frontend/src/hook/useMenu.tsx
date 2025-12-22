@@ -28,6 +28,8 @@ import { ReactComponent as ClusterSvg } from '@/asset/cluster.svg';
 import { ReactComponent as ClusterSelectedSvg } from '@/asset/cluster_selected.svg';
 import { ReactComponent as SystemSvg } from '@/asset/system.svg';
 import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
+import { ReactComponent as InspectionSvg } from '@/asset/inspection.svg';
+import { ReactComponent as InspectionSelectedSvg } from '@/asset/inspection_selected.svg';
 import useUiMode from './useUiMode';
 
 export const useBasicMenu = (): MenuItem[] => {
@@ -70,6 +72,12 @@ export const useBasicMenu = (): MenuItem[] => {
       }),
       icon: <Icon component={AlarmSvg} />,
       selectedIcon: <Icon component={AlarmSelectedSvg} />,
+    },
+    {
+      link: '/inspection',
+      title: '巡检服务',
+      icon: <Icon component={InspectionSvg} />,
+      selectedIcon: <Icon component={InspectionSelectedSvg} />,
     },
     {
       link: '/system',

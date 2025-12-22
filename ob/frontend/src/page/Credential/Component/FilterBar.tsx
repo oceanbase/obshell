@@ -1,10 +1,8 @@
 import BatchOperationBar from '@/component/BatchOperationBar';
-import { TAB_LIST } from '@/constant/credential';
 import { formatMessage } from '@/util/intl';
 import * as CredentialController from '@/service/obshell/security';
 import React from 'react';
 import { Button, message, Modal } from '@oceanbase/design';
-import { findByValue } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
 import { HostCredential } from '../Host';
 

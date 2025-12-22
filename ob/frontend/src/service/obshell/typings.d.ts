@@ -688,6 +688,28 @@ declare namespace API {
     id: string;
   };
 
+  type getInspectionHistoryParams = {
+    /** Page number */
+    page?: number;
+    /** Page size */
+    size?: number;
+    /** Start time filter */
+    start_time?: string;
+    /** End time filter */
+    end_time?: string;
+    /** Scenario filter (basic or performance) */
+    scenario?: string;
+    /** Sort field */
+    sort_by?: string;
+    /** Sort order (asc or desc) */
+    sort_order?: string;
+  };
+
+  type getInspectionReportParams = {
+    /** Inspection report id */
+    id: string;
+  };
+
   type getNodeDetailParams = {
     /** id */
     id: string;
@@ -893,6 +915,44 @@ declare namespace API {
     memoryInfo?: MemoryInfo;
     os?: OSInfo;
     ulimit?: UlimitInfo;
+  };
+
+  type InspectionItem = {
+    name: string;
+    results?: string[];
+  };
+
+  type InspectionParam = {
+    scenario: string;
+  };
+
+  type InspectionReport = {
+    critical_count?: number;
+    error_message?: string;
+    failed_count?: number;
+    finish_time?: string;
+    id?: number;
+    local_task_id?: string;
+    pass_count?: number;
+    result_detail?: ResultDetail;
+    scenario: string;
+    start_time?: string;
+    status?: string;
+    warning_count?: number;
+  };
+
+  type InspectionReportBriefInfo = {
+    critical_count?: number;
+    error_message?: string;
+    failed_count?: number;
+    finish_time?: string;
+    id?: number;
+    local_task_id?: string;
+    pass_count?: number;
+    scenario: string;
+    start_time?: string;
+    status?: string;
+    warning_count?: number;
   };
 
   type JoinApiParam = {
@@ -1412,6 +1472,11 @@ declare namespace API {
     page?: CustomPage;
   };
 
+  type PaginatedInspectionHistoryResponse = {
+    contents?: InspectionReportBriefInfo[];
+    page?: CustomPage;
+  };
+
   type PaginatedRestoreTaskResponse = {
     contents?: RestoreTask[];
     page?: CustomPage;
@@ -1618,6 +1683,13 @@ declare namespace API {
   type RestoreWindowsParam = {
     archive_log_uri?: string;
     data_backup_uri: string;
+  };
+
+  type ResultDetail = {
+    critical_items?: InspectionItem[];
+    failed_items?: InspectionItem[];
+    pass_items?: InspectionItem[];
+    warning_items?: InspectionItem[];
   };
 
   type RevokeObjectPrivilegeParam = {
