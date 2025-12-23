@@ -143,36 +143,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     }
   };
 
-  // const handleCancel = key => {
-  //   if (key) {
-  //     abortControl?.abort();
-  //     setAbortControl(new AbortController());
-  //     const currentFile = fileList.find(item => item.key === key);
-  //     setFileList(fileList.filter(item => item.key !== key));
-  //     if (currentFile.id) {
-  //       deleteSoftwarePackage({ id: currentFile.id }).then(res => {
-  //         if (res.successful) {
-  //           message.success('软件包删除成功');
-  //         }
-  //       });
-  //     } else {
-  //       message.success('软件包删除成功');
-  //     }
-  //   } else if (onCancel) {
-  //     fileList
-  //       .filter(item => item.status === 'done')
-  //       .forEach(item => {
-  //         deleteSoftwarePackage({ id: item.id });
-  //       });
-  //     if (fileList.filter(item => item.status === 'uploading').length > 0) {
-  //       abortControl?.abort();
-  //       setAbortControl(new AbortController());
-  //     }
-  //     setFileList([]);
-  //     onCancel();
-  //   }
-  // };
-
   const columns = [
     {
       title: formatMessage({
@@ -209,85 +179,6 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
         );
       },
     },
-
-    // {
-    //   title: '说明',
-    //   width: 110,
-    //   dataIndex: 'checkResult',
-    //   render: (text: string, record) => {
-    //     if (record?.status === 'done') {
-    //       // hasSignature = false ----> 当非正式包
-    //       // hasSignature = true 加上 signatureValid = false ----> 报错签名校验不通过
-    //       // hasSignature = true 加上 signatureValid = true ----> 没有提示
-    //       if (record.response?.data?.hasSignature) {
-    //         if (record.signatureValid) {
-    //           return '通过';
-    //         } else {
-    //           return (
-    //             <ContentWithIcon
-    //               content={<span style={{ color: '#e68800' }}>{'存在风险'}</span>}
-    //               tooltip={{
-    //                 title: record?.description,
-    //               }}
-    //               suffixIcon={<InfoCircleOutlined style={{ color: '#5c6b8a' }} />}
-    //             />
-    //           );
-    //         }
-    //       } else {
-    //         return (
-    //           <ContentWithIcon
-    //             content={<span style={{ color: '#e68800' }}>{'存在风险'}</span>}
-    //             tooltip={{
-    //               title: '此软件包为非正式包，存在一定风险，建议不要部署在正式集群环境',
-    //             }}
-    //             suffixIcon={<InfoCircleOutlined style={{ color: '#5c6b8a' }} />}
-    //           />
-    //         );
-    //       }
-    //     } else if (record?.status === 'error') {
-    //       return (
-    //         <ContentWithIcon
-    //           content={text}
-    //           tooltip={{
-    //             title: record.description,
-    //           }}
-    //           color="#132039"
-    //           suffixIcon={<InfoCircleOutlined style={{ color: '#5c6b8a' }} />}
-    //         />
-    //       );
-    //     } else {
-    //       return '-';
-    //     }
-    //   },
-    // },
-
-    // {
-    //   title: '操作',
-    //   width: 60,
-    //   dataIndex: 'operation',
-    //   render: (text, record) =>
-    //     record?.status === 'done' && (
-    //       <Popconfirm
-    //         placement="topLeft"
-    //         title={<div style={{ width: '235px' }}>确定要删除软件包 {record.name} 吗？</div>}
-    //         okText={'删除'}
-    //         cancelText={'取消'}
-    //         okButtonProps={{
-    //           danger: true,
-    //         }}
-    //         onConfirm={() => {
-    //           new Promise(resolve => {
-    //             setTimeout(() => {
-    //               handleCancel(record.key);
-    //               resolve(null);
-    //             }, 2000);
-    //           });
-    //         }}
-    //       >
-    //         <a>{'删除'}</a>
-    //       </Popconfirm>
-    //     ),
-    // },
   ];
 
   return (
@@ -331,34 +222,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       afterOpenChange={() => {
         setFileList([]);
       }}
-      footer={
-        null
-        // <Space>
-        //   <Button
-        //     onClick={() => {
-        //       message.success('软件包上传成功');
-        //       setFileList([]);
-        //       if (onSuccess) {
-        //         onSuccess();
-        //       }
-        //     }}
-        //     type="primary"
-        //     disabled={!fileList?.length || fileList.find(item => item.status === 'uploading')}
-        //   >
-        //     {'确定'}
-        //   </Button>
-        //   <Button
-        //     onClick={() => {
-        //       handleCancel(null);
-        //     }}
-        //   >
-        //     {'取消'}
-        //   </Button>
-        //   {fileList?.length > 0 && fileList.find(item => item.status === 'uploading') && (
-        //     <span style={{ color: '#8592ad' }}>{'仍有软件包在上传中，请耐心等待'}</span>
-        //   )}
-        // </Space>
-      }
+      footer={null}
       {...restProps}
     >
       <Form hideRequiredMark={true} preserve={false} {...formItemLayout}>
@@ -387,8 +251,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
             ) : isDistributedBusiness ? (
               formatMessage({
                 id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseAreSupported',
-                defaultMessage:
-                  '只支持 oceanbase 开头的包 ，同时后缀名为 .rpm 的文件。',
+                defaultMessage: '只支持 oceanbase 开头的包 ，同时后缀名为 .rpm 的文件。',
               })
             ) : (
               <div>
@@ -453,26 +316,28 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                     clearInterval(timer);
                     setTimeout(() => {
                       options.onSuccess?.(res.data);
-                      message.success(
-                        formatMessage(
+                      message.success({
+                        content: formatMessage(
                           {
                             id: 'ocp-v2.component.UploadPackageDrawer.FilenameUploadedSuccessfully',
                             defaultMessage: '{fileName} 上传成功',
                           },
                           { fileName: file.name }
-                        )
-                      );
+                        ),
+                        style: { marginTop: 30 },
+                      });
                       onSuccess();
                     }, 500);
                   } else {
                     // 网络波动导致浏览器关闭请求，此处不会返回错误值
                     if (!res) {
-                      message.error(
-                        formatMessage({
+                      message.error({
+                        content: formatMessage({
                           id: 'ocp-v2.component.UploadPackageDrawer.NetworkExceptionPleaseTryAgain',
                           defaultMessage: '网络异常，请稍后再试',
-                        })
-                      );
+                        }),
+                        style: { marginTop: 30 },
+                      });
                     }
                     clearInterval(timer);
                     setTimeout(() => {
@@ -494,7 +359,10 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                     ? '文件过大，浏览器无法处理，请联系技术同学使用 SDK 上传'
                     : '文件处理失败，请重试或联系技术同学';
 
-                message.error(errorMessage);
+                message.error({
+                  content: errorMessage,
+                  style: { marginTop: 30 },
+                });
               }
             }}
             withCredentials={true}

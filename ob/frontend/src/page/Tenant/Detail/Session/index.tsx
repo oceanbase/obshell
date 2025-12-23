@@ -62,7 +62,10 @@ const Index: React.FC<IndexProps> = ({
       header={{
         title: (
           <ContentWithReload
-            content={formatMessage({ id: 'ocp-v2.Detail.Session.Session', defaultMessage: '会话' })}
+            content={formatMessage({
+              id: 'ocp-v2.Detail.Session.Session',
+              defaultMessage: '会话管理',
+            })}
             spin={reloading}
             onClick={reload}
           />

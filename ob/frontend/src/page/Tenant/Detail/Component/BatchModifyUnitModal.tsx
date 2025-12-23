@@ -25,7 +25,7 @@ import { getUnitSpecLimit } from '@/util/cluster';
 import { getMinServerCount } from '@/util/tenant';
 import { tenantModifyReplicas } from '@/service/obshell/tenant';
 import { unitConfigCreate } from '@/service/obshell/unit';
-import { byte2GB } from '@oceanbase/util';
+import { byte2GB, isNullValue } from '@oceanbase/util';
 
 export interface BatcModifyUnitModalProps extends ModalProps {
   tenantData?: API.TenantInfo;
@@ -49,6 +49,8 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const { validateFields } = form;
+
+  const isSingleMachine = clusterZones?.length === 1 && clusterZones[0]?.servers?.length === 1;
 
   const [resourcePool, setResourcePool] = useState(undefined);
 
@@ -97,14 +99,11 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
   });
 
   let idleCpuCore, idleMemoryInBytes;
-  if (clusterZones?.length > 0) {
+  if (isSingleMachine) {
     // 修改unit  计算当前 zone 内剩余资源可调整的最大值，取最小可用资源的 zone，提示规格调整的最大最小值配置
     const minIdleCpuZone = minBy(
       clusterZones?.map(
-        zone =>
-          zone?.servers?.length > 0 &&
-          zone?.servers[0]?.stats &&
-          getUnitSpecLimit(zone?.servers[0]?.stats)
+        zone => zone?.servers?.[0]?.stats && getUnitSpecLimit(zone?.servers[0]?.stats)
       ),
 
       'idleCpuCoreTotal'
@@ -112,22 +111,19 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
 
     const minIdleMemoryZone = minBy(
       clusterZones?.map(
-        zone =>
-          zone?.servers?.length > 0 &&
-          zone?.servers[0]?.stats &&
-          getUnitSpecLimit(zone?.servers[0]?.stats)
+        zone => zone?.servers?.[0]?.stats && getUnitSpecLimit(zone?.servers[0]?.stats)
       ),
 
       'idleMemoryInBytesTotal'
     );
     // 修改unit  当前已经分配资源最小zoen
     const minCpuCoreAssignedZone = minBy(
-      clusterZones?.map(zone => zone?.servers?.length > 0 && zone?.servers[0]?.stats),
+      clusterZones?.map(zone => zone?.servers?.[0]?.stats),
 
       'cpu_core_assigned'
     )?.zone;
     const minMemoryInBytesAssignedZone = minBy(
-      clusterZones?.map(zone => zone?.servers?.length > 0 && zone?.servers[0]?.stats),
+      clusterZones?.map(zone => zone?.servers?.[0]?.stats),
 
       'memory_in_bytes_assigned'
     )?.zone;
@@ -208,7 +204,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
             defaultMessage: '操作对象',
           })}
         >
-          {tenantData?.name}
+          {tenantData?.tenant_name}
           {formatMessage({
             id: 'ocp-express.Detail.Component.BatchModifyUnitModal.AllZonesUnder',
             defaultMessage: '下的所有 Zone',
@@ -251,7 +247,9 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
               name="cpuCore"
               initialValue={resourcePool?.cpuCore}
               extra={
-                cpuLowerLimit && idleCpuCore && cpuLowerLimit < idleCpuCore
+                !isNullValue(cpuLowerLimit) &&
+                !isNullValue(idleCpuCore) &&
+                (cpuLowerLimit < idleCpuCore
                   ? formatMessage(
                       {
                         id: 'ocp-express.Detail.Component.BatchModifyUnitModal.currentConfigurableRangeValueCpulowerlimitIdlecpucore',
@@ -262,7 +260,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
                   : formatMessage({
                       id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
                       defaultMessage: '当前可配置资源不足',
-                    })
+                    }))
               }
               rules={[
                 {
@@ -280,8 +278,6 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
                   defaultMessage: '核',
                 })}
                 step={0.5}
-                min={cpuLowerLimit || 0.5}
-                max={idleCpuCore}
               />
             </Form.Item>
           </Col>
@@ -291,7 +287,9 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
               name="memorySize"
               initialValue={resourcePool?.memorySize}
               extra={
-                memoryLowerLimit && idleMemoryInBytes && memoryLowerLimit < idleMemoryInBytes
+                !isNullValue(memoryLowerLimit) &&
+                !isNullValue(idleMemoryInBytes) &&
+                (memoryLowerLimit < idleMemoryInBytes
                   ? formatMessage(
                       {
                         id: 'ocp-express.Detail.Component.BatchModifyUnitModal.currentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
@@ -302,7 +300,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
                   : formatMessage({
                       id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
                       defaultMessage: '当前可配置资源不足',
-                    })
+                    }))
               }
               rules={[
                 {
@@ -314,7 +312,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
                 },
               ]}
             >
-              <InputNumber addonAfter="GB" min={memoryLowerLimit} max={idleMemoryInBytes} />
+              <InputNumber addonAfter="GB" />
             </Form.Item>
           </Col>
         </Row>

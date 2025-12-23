@@ -1,7 +1,7 @@
 import { formatMessage } from '@/util/intl';
 import MonitorDetail from '@/component/MonitorDetail';
 import { useDeepCompareEffect } from 'ahooks';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { useSelector } from 'umi';
 import { MonitorScope } from '@/page/Monitor';
@@ -48,12 +48,12 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
     (prometheusData?.successful && prometheusData.status === 200 && !!prometheusData?.data);
 
   // 当 tenantData.tenant_name 变化时，更新 filterLabel（针对租户详情页）
-  useDeepCompareEffect(() => {
-    if (tenantData?.tenant_name && !monitorScope) {
+  useEffect(() => {
+    if (!monitorScope && clusterData.cluster_name && tenantData?.tenant_name) {
       setFilterLabel([
         {
           key: 'ob_cluster_name',
-          value: clusterData.cluster_name || '',
+          value: clusterData.cluster_name,
         },
         {
           key: 'tenant_name',
@@ -61,7 +61,8 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
         },
       ]);
     }
-  }, [tenantData?.tenant_name, monitorScope]);
+  }, [clusterData.cluster_name, tenantData?.tenant_name, monitorScope]);
+
   const [filterData, setFilterData] = useState<Monitor.FilterDataType>({
     tenantList: monitorScope ? [] : undefined,
     date: '',
@@ -111,7 +112,6 @@ const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
     ) : (
       <MonitorDetail
         filterData={filterData}
-        setFilterData={setFilterData}
         filterLabel={filterLabel}
         setFilterLabel={setFilterLabel}
         queryScope="OBTENANT"

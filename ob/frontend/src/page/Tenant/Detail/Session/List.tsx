@@ -259,6 +259,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
       dataIndex: 'time',
       sorter: true,
       sortOrder: sorter.field === 'time' && sorter.order,
+      render: (text: number) => <span>{text?.toFixed(2) || '-'}</span>,
     },
 
     {

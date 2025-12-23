@@ -24,8 +24,6 @@ import type { FormEditTableProps } from '@/component/FormEditTable';
 import FormEditTable from '@/component/FormEditTable';
 import MySelect from '@/component/MySelect';
 import UnitSpec from '@/component/UnitSpec';
-import { format } from 'crypto-js';
-import { formatSize } from '@/util';
 
 const { Option } = MySelect;
 
@@ -113,7 +111,8 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
           const zoneData = findBy(clusterData?.zones || [], 'name', record.name);
 
           let idleCpuCore, idleMemoryInBytes;
-          if (zoneData?.servers?.length > 0 && zoneData?.servers[0]?.stats) {
+          // 当前 zone 只有一个 observer，获取 observer 的剩余资源, 并展示提示
+          if (zoneData?.servers?.length === 1) {
             const { idleCpuCoreTotal, idleMemoryInBytesTotal } = getUnitSpecLimit(
               zoneData?.servers[0]?.stats
             );

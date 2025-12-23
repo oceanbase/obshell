@@ -1,8 +1,6 @@
 import MySelect from '@/component/MySelect';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import SelectDropdownRender from '@/component/SelectDropdownRender';
-// import { PACKAGE_TYPE_LIST } from '@/constant/package';
-// import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { buildVersionCompare, versionCompare } from '@/util/package';
 import { formatMessage } from '@/util/intl';
 import React, { useImperativeHandle, useState } from 'react';
@@ -18,7 +16,6 @@ const { Option } = MySelect;
 export interface PackageSelectProps extends SelectProps<string> {
   // 接口支持的筛选参数
   keyword?: string;
-  type?: API.FileType[];
   version?: string[];
   operatingSystem?: string[];
   architecture?: string[];
@@ -44,8 +41,6 @@ export interface PackageSelectProps extends SelectProps<string> {
   labelInValue?: boolean;
   // 当前 OBProxy 已有的软件包版本
   obproxyClusterOBVersions?: string[];
-  // 集群软件系统
-  packageOperatingSystem?: string;
   onSuccess?: (packageList: API.UpgradePkgInfo[]) => void;
 }
 
@@ -53,14 +48,10 @@ export interface PackageSelectRef {
   refresh: () => void;
 }
 
-const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
-  PackageSelectRef,
-  PackageSelectProps
->(
+const PackageSelect = React.forwardRef<PackageSelectRef, PackageSelectProps>(
   (
     {
       keyword,
-      type,
       version,
       useType,
       operatingSystem,
@@ -75,7 +66,6 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
       currentObVersion,
       labelInValue,
       isObproxyUpgrade,
-      packageOperatingSystem,
       onSuccess,
       ...restProps
     },
@@ -89,12 +79,14 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
     const { data, loading, refresh } = useRequest(getUpgradePkgInfo, {
       onSuccess: res => {
         if (res.successful) {
-          onSuccess(res?.data?.contents || []);
+          onSuccess?.(res?.data?.contents || []);
         }
       },
     });
 
-    let packageList = (data?.data?.contents || []).filter(item => {
+    const packageData: API.UpgradePkgInfo[] = data?.data?.contents || [];
+
+    let packageList = packageData.filter(item => {
       if (useType === 'UPGRADE_CLUSTER') {
         return isStandalone ? item.name === 'oceanbase-standalone' : item.name === 'oceanbase-ce';
       }
@@ -117,14 +109,10 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
       });
     } else if (currentObVersion) {
       packageList = packageList.filter(item =>
-        versionCompare(item.version, currentObVersion, 'gte')
+        versionCompare(item.version, currentObVersion, 'gt')
       );
     }
 
-    // ob 集群升级版本、obproxy 添加 server，仅可选择与当前集群软件系统相同的软件包
-    if (packageOperatingSystem) {
-      packageList = packageList.filter(item => item.operatingSystem === packageOperatingSystem);
-    }
     // 向组件外部暴露 refresh 属性函数，可通过 ref 引用
     useImperativeHandle(ref, () => ({
       refresh: () => {
@@ -216,7 +204,7 @@ const PackageSelect: React.FC<PackageSelectProps> = React.forwardRef<
             })}
         </MySelect>
         <UploadPackageDrawer
-          visible={visible}
+          open={visible}
           onCancel={() => {
             setVisible(false);
           }}

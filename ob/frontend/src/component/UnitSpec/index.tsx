@@ -17,7 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
 import { Col, Row, InputNumber } from '@oceanbase/design';
-import { byte2GB } from '@oceanbase/util';
+import { byte2GB, isNullValue } from '@oceanbase/util';
 
 export interface unitSpec {
   cpuCore: number;
@@ -59,19 +59,16 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
   const currentMaxCpuCoreCount = idleCpuCore + defaultUnitSpec?.max_cpu;
   // 修改 unit 时，可配置范围上限，当前 unit 已分配内存 + 剩余空闲内存
   const currentMaxMemorySize = idleMemoryInBytes + byte2GB(defaultUnitSpec?.memory_size);
-
   return (
     <Row
       gutter={8}
       style={{
         flex: 1,
-        paddingTop: 16,
+        paddingTop: !isNullValue(cpuLowerLimit) ? 4 : 10,
       }}
     >
       <Col span={12}>
         <InputNumber
-          min={cpuLowerLimit || 0.5}
-          max={currentMaxCpuCoreCount}
           step={0.5}
           addonAfter={formatMessage({
             id: 'ocp-express.component.UnitSpec.Nuclear',
@@ -84,7 +81,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
           }}
         />
 
-        {cpuLowerLimit && currentMaxCpuCoreCount && (
+        {!isNullValue(cpuLowerLimit) && !isNullValue(currentMaxCpuCoreCount) && (
           <div style={extraStyle}>
             {cpuLowerLimit < currentMaxCpuCoreCount
               ? formatMessage(
@@ -104,8 +101,6 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
       <Col span={12}>
         <InputNumber
           addonAfter="GB"
-          min={memoryLowerLimit}
-          max={currentMaxMemorySize}
           defaultValue={byte2GB(defaultUnitSpec?.memory_size)}
           onChange={(value: number) => {
             setMemorySizeValue(value);
@@ -113,7 +108,7 @@ const UnitSpec: React.FC<UnitSpecProps> = ({
           }}
         />
 
-        {memoryLowerLimit !== undefined && currentMaxMemorySize !== undefined && (
+        {!isNullValue(memoryLowerLimit) && !isNullValue(currentMaxMemorySize) && (
           <div style={extraStyle}>
             {memoryLowerLimit < currentMaxMemorySize
               ? formatMessage(

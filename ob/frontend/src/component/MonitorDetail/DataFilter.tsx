@@ -212,16 +212,10 @@ export default function DataFilter({
     if (filterData?.zoneList?.length) {
       setZoneOption(filterData.zoneList);
     }
-    if (filterData?.serverList?.length) {
-      // 如果是主机性能 tab，对 serverList 按 IP 去重
-      setServerOption(
-        isHostPerformanceTab ? deduplicateServersByIp(filterData.serverList) : filterData.serverList
-      );
-    }
     if (filterData?.tenantList?.length) {
       setTenantOption(filterData.tenantList);
     }
-  }, [filterData, isHostPerformanceTab]);
+  }, [filterData]);
 
   // 同步 filterLabel 中的 tenant_name 到 selectTenant 状态
   useEffect(() => {
@@ -232,15 +226,17 @@ export default function DataFilter({
   }, [filterLabel]);
 
   useEffect(() => {
-    if (selectTenant && filterData?.zoneList?.length) {
+    if (selectTenant) {
       const tenant = tenantListData.find(
         (tenant: API.TenantInfo) => tenant.tenant_name === selectTenant
       );
       const zonesName = getZonesFromTenant(tenant).map(zone => zone.name) || [];
-      const zonesList = filterData.zoneList.filter(zone =>
-        zonesName.includes(zone.value as string)
-      );
-      setZoneOption(zonesList);
+      if (filterData?.zoneList?.length) {
+        const zonesList = filterData.zoneList.filter(zone =>
+          zonesName.includes(zone.value as string)
+        );
+        setZoneOption(zonesList);
+      }
       if (filterData.serverList?.length) {
         const serversList = filterData.serverList.filter(server =>
           zonesName.includes(server.zone as string)
@@ -249,8 +245,17 @@ export default function DataFilter({
         // 如果是主机性能 tab，对服务器列表按 IP 去重
         setServerOption(isHostPerformanceTab ? deduplicateServersByIp(serversList) : serversList);
       }
+    } else {
+      if (filterData?.serverList?.length) {
+        // 如果是主机性能 tab，对 serverList 按 IP 去重
+        setServerOption(
+          isHostPerformanceTab
+            ? deduplicateServersByIp(filterData.serverList)
+            : filterData.serverList
+        );
+      }
     }
-  }, [selectTenant, isHostPerformanceTab]);
+  }, [selectTenant, filterData, isHostPerformanceTab]);
 
   // 当 tab 切换时（isHostPerformanceTab 变化），清空选中的 OBServer
   useEffect(() => {
@@ -288,7 +293,7 @@ export default function DataFilter({
         },
       }}
     >
-      <div style={{ display: 'flex', flexDirection: 'row', gap: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 24, flexWrap: 'wrap' }}>
         <AutoFresh
           onRefresh={handleRefresh}
           isRealtime={isRefresh}

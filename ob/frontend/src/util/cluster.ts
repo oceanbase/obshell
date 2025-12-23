@@ -17,6 +17,7 @@
 import { DATE_FORMAT } from '@/constant/datetime';
 import { toNumber } from 'lodash';
 import { formatTime } from '@/util/datetime';
+import { isNullValue } from '@oceanbase/util';
 /* 获取 4.0 以下集群实际的合并状态
  */
 export function getCompactionStatus(
@@ -71,13 +72,18 @@ export function getCompactionStatusV4(tenantCompactionsList: API.TenantCompactio
  * */
 export function getUnitSpecLimit(zoneStats: API.ServerResourceStats) {
   const {
-    cpu_core_total: cpuCoreTotal,
-    cpu_core_assigned: cpuCoreAssigned,
-    memory_in_bytes_total: memoryInBytesTotal,
-    memory_in_bytes_assigned: memoryInBytesAssigned,
+    cpu_core_total: cpuCoreTotal = 0,
+    cpu_core_assigned: cpuCoreAssigned = 0,
+    memory_in_bytes_total: memoryInBytesTotal = 0,
+    memory_in_bytes_assigned: memoryInBytesAssigned = 0,
   } = zoneStats;
   let idleCpuCoreTotal, idleMemoryInBytesTotal;
-  if (cpuCoreTotal && cpuCoreAssigned && memoryInBytesTotal && memoryInBytesAssigned) {
+  if (
+    !isNullValue(cpuCoreTotal) &&
+    !isNullValue(cpuCoreAssigned) &&
+    !isNullValue(memoryInBytesTotal) &&
+    !isNullValue(memoryInBytesAssigned)
+  ) {
     // OBServer 剩余资源
     idleCpuCoreTotal = cpuCoreTotal - cpuCoreAssigned;
     idleMemoryInBytesTotal = Math.floor(

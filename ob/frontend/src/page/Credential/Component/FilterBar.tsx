@@ -9,8 +9,8 @@ import { HostCredential } from '../Host';
 export interface FilterBarProps {
   selectedRowKeys?: HostCredential[];
   setSelectedRowKeys?: (value: HostCredential[]) => void;
-  isFilter?: boolean;
-  setIsFilter?: (value: boolean) => void;
+  isFilter: boolean;
+  setIsFilter: (value: boolean) => void;
   isClick: boolean;
   setIsClick: (value: boolean) => void;
   batchValidateCredential: (value: { credential_id_list: number[] }) => void;
@@ -50,7 +50,6 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
   return (
     <BatchOperationBar
-      Loading={batchValidateCredentialLoading && isClick}
       description={
         <Button
           type="link"
@@ -70,7 +69,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
         </Button>
       }
       style={{ marginBottom: 16 }}
-      selectedCount={selectedRowKeys.length}
+      selectedCount={selectedRowKeys?.length || 0}
       onCancel={() => {
         onCancel();
         if (setSelectedRowKeys) {
@@ -86,7 +85,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             onClick={() => {
               setIsClick(true);
               batchValidateCredential({
-                credential_id_list: selectedRowKeys?.map(item => item?.credential_id),
+                credential_id_list: selectedRowKeys?.map(item => item?.credential_id!) || [],
               });
             }}
           >
@@ -120,7 +119,8 @@ const FilterBar: React.FC<FilterBarProps> = ({
               okButtonProps: { danger: true, ghost: true },
               onOk: () => {
                 return batchDeleteCredentials({
-                  credential_id_list: selectedRowKeys.map(selected => selected?.credential_id),
+                  credential_id_list:
+                    selectedRowKeys?.map(selected => selected?.credential_id!) || [],
                 });
               },
               onCancel: () => {},

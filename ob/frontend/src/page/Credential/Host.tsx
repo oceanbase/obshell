@@ -262,12 +262,12 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
               orderBy(
                 targets?.map(target => {
                   const host = target.ip;
+                  const errorTarget = record?.details?.find(
+                    item1 => item1.target?.ip === target?.ip && item1.target?.port === target?.port
+                  );
                   // 查找当前主机的错误信息
                   const errorMge =
-                    record?.details?.find(
-                      item1 =>
-                        item1.target?.ip === target?.ip && item1.target?.port === target?.port
-                    )?.connection_result !== 'SUCCESS' && !isEmpty(record?.details);
+                    !isEmpty(errorTarget) && errorTarget?.connection_result !== 'SUCCESS';
 
                   const color = errorMge ? 'red' : 'default';
                   return {
@@ -419,7 +419,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
               loading={loading}
               pagination={PAGINATION_OPTION_10}
               dataSource={
-                isFilter
+                isFilter && selectedRowKeys.length > 0
                   ? dataSource.filter(item =>
                       selectedRowKeys
                         .map(selected => selected?.credential_id)
