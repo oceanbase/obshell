@@ -520,17 +520,20 @@ const New: React.FC<NewProps> = ({}) => {
                     </MySelect>
                   </Form.Item>
                 </Col>
-                <Col span={8}>
-                  <Form.Item label="Collation" name="collation">
-                    <MySelect>
-                      {collations?.map(item => (
-                        <Option key={item.name} value={item.name} label={item.name}>
-                          <span>{item.name}</span>
-                        </Option>
-                      ))}
-                    </MySelect>
-                  </Form.Item>
-                </Col>
+                {/* 如果是 oracle 模式，不展示 collation */}
+                {currentMode !== 'ORACLE' && (
+                  <Col span={8}>
+                    <Form.Item label="Collation" name="collation">
+                      <MySelect>
+                        {collations?.map(item => (
+                          <Option key={item.name} value={item.name} label={item.name}>
+                            <span>{item.name}</span>
+                          </Option>
+                        ))}
+                      </MySelect>
+                    </Form.Item>
+                  </Col>
+                )}
               </Row>
               <Row gutter={24}>
                 {currentMode === 'MYSQL' && (
