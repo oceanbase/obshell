@@ -7,7 +7,7 @@ import { UploadOutlined } from '@oceanbase/icons';
 import { newPkgUpload } from '@/service/obshell/package';
 import { useCluster } from '@/hook/useCluster';
 import { calculateFileSHA256 } from '@/util/package';
-import './index.less';
+import styles from './index.less';
 
 interface UploadPackageDrawerProps {
   open: boolean;
@@ -227,6 +227,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
     >
       <Form hideRequiredMark={true} preserve={false} {...formItemLayout}>
         <Form.Item
+          className={styles.uploadPackageFormItem}
           style={{
             marginBottom: 0,
           }}
@@ -254,23 +255,15 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 defaultMessage: '只支持 oceanbase 开头的包 ，同时后缀名为 .rpm 的文件。',
               })
             ) : (
-              <div>
+              <a
+                href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
+                target="_blank"
+              >
                 {formatMessage({
-                  id: 'ocp-v2.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbase',
-                  defaultMessage:
-                    '只支持 oceanbase-ce、oceanbase-ce-libs、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
+                  id: 'ocp-v2.component.UploadPackageDrawer.RpmPackageDownloadAddress',
+                  defaultMessage: 'RPM 包下载地址',
                 })}
-
-                <a
-                  href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
-                  target="_blank"
-                >
-                  {formatMessage({
-                    id: 'ocp-v2.component.UploadPackageDrawer.RpmPackageDownloadAddress',
-                    defaultMessage: 'RPM 包下载地址',
-                  })}
-                </a>
-              </div>
+              </a>
             )
           }
         >
