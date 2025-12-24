@@ -465,7 +465,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
 
             onOk: () => {
               stopFn({
-                force: true,
+                terminate: true,
                 scope: {
                   type: 'GLOBAL',
                 },
