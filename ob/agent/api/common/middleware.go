@@ -196,7 +196,7 @@ func readRequestBodyMaskPassword(c *gin.Context) string {
 		"old_password":         {},
 		"tenant_password":      {},
 		"token":                {},
-		"proxy_password":       {},
+		"proxyro_password":     {},
 		"rootPwd":              {},
 		"obproxy_sys_password": {},
 		"masterPassword":       {},
