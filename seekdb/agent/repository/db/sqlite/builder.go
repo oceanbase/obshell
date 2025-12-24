@@ -46,6 +46,8 @@ func createGormDbByConfig(datasourceConfig config.SqliteDataSourceConfig) (*gorm
 		log.WithError(err).Info("check sqlite data dir failed")
 		return nil, err
 	}
+
+	// Try to open with enhanced DSN (WAL mode + busy_timeout) first
 	dsn := GenerateSqliteDsn(datasourceConfig)
 	db, err := gorm.Open(sqliteDriver.Open(dsn), &gorm.Config{
 		Logger: logger.Default.LogMode(datasourceConfig.GetLoggerLevel()),
@@ -53,9 +55,24 @@ func createGormDbByConfig(datasourceConfig config.SqliteDataSourceConfig) (*gorm
 			SingularTable: constant.DB_SINGULAR_TABLE,
 		},
 	})
+
+	// Fallback to legacy DSN if enhanced DSN fails (e.g., old SQLite version, unsupported features)
 	if err != nil {
-		log.WithError(err).Info("open sqlite failed")
-		return nil, err
+		log.WithError(err).Warn("open sqlite with enhanced DSN failed, fallback to legacy DSN")
+		legacyDsn := GenerateLegacySqliteDsn(datasourceConfig)
+		db, err = gorm.Open(sqliteDriver.Open(legacyDsn), &gorm.Config{
+			Logger: logger.Default.LogMode(datasourceConfig.GetLoggerLevel()),
+			NamingStrategy: schema.NamingStrategy{
+				SingularTable: constant.DB_SINGULAR_TABLE,
+			},
+		})
+		if err != nil {
+			log.WithError(err).Info("open sqlite with legacy DSN also failed")
+			return nil, err
+		}
+		log.Info("open sqlite with legacy DSN succeed (WAL mode and busy_timeout not available)")
+	} else {
+		log.Info("open sqlite with enhanced DSN succeed (WAL mode enabled)")
 	}
 	sqliteDb, err := db.DB()
 	if err != nil {
@@ -64,7 +81,25 @@ func createGormDbByConfig(datasourceConfig config.SqliteDataSourceConfig) (*gorm
 	sqliteDb.SetMaxIdleConns(datasourceConfig.MaxIdleConns)
 	sqliteDb.SetMaxOpenConns(datasourceConfig.MaxOpenConns)
 	sqliteDb.SetConnMaxLifetime(time.Duration(datasourceConfig.ConnMaxLifetime))
-	log.Info("open sqlite succeed")
+
+	// Configure WAL mode settings to prevent infinite growth (only if WAL mode is enabled)
+	// Check if WAL mode is actually enabled before setting WAL-specific pragmas
+	var journalMode string
+	if err := db.Raw("PRAGMA journal_mode").Scan(&journalMode).Error; err == nil && journalMode == "wal" {
+		// Set journal_size_limit to 32MB (0 means no limit, -1 means use default)
+		// This limits the maximum size of WAL file to prevent disk space issues
+		if err := db.Exec("PRAGMA journal_size_limit = 33554432").Error; err != nil {
+			log.WithError(err).Warn("failed to set journal_size_limit, WAL file may grow larger")
+		}
+
+		// Ensure automatic checkpoint is enabled (default is enabled, but we make it explicit)
+		// WAL_AUTOCHECKPOINT sets the number of pages in the WAL file that triggers an automatic checkpoint
+		// Default is 1000 pages (~4MB), we keep the default
+		if err := db.Exec("PRAGMA wal_autocheckpoint = 1000").Error; err != nil {
+			log.WithError(err).Warn("failed to set wal_autocheckpoint")
+		}
+	}
+
 	return db, nil
 }
 
@@ -109,6 +144,18 @@ func InitSqliteDataSourceConfig(dsConfig config.SqliteDataSourceConfig) (config.
 
 func GenerateSqliteDsn(datasourceConfig config.SqliteDataSourceConfig) string {
 	return fmt.Sprintf(datasourceConfig.DsnTemplate,
+		datasourceConfig.DataDir,
+		datasourceConfig.Cache,
+		datasourceConfig.FK,
+		config.BUSY_TIMEOUT_MS,
+		config.JOURNAL_MODE_WAL,
+	)
+}
+
+// GenerateLegacySqliteDsn generates a legacy DSN without WAL mode and busy_timeout
+// This is used as a fallback when enhanced DSN fails
+func GenerateLegacySqliteDsn(datasourceConfig config.SqliteDataSourceConfig) string {
+	return fmt.Sprintf(config.SQLITE_DSN_TEMPLATE_LEGACY,
 		datasourceConfig.DataDir,
 		datasourceConfig.Cache,
 		datasourceConfig.FK,

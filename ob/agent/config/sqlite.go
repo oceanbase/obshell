@@ -19,9 +19,12 @@ package config
 import "github.com/oceanbase/obshell/ob/agent/constant"
 
 const (
-	SQLITE_DSN_TEMPLATE = "%s?parseTime=true&cache=%s&_fk=%d"
-	CACHE_SHARED        = "shared"
-	FK_1                = 1
+	SQLITE_DSN_TEMPLATE        = "%s?parseTime=true&cache=%s&_fk=%d&_busy_timeout=%d&_journal_mode=%s"
+	SQLITE_DSN_TEMPLATE_LEGACY = "%s?parseTime=true&cache=%s&_fk=%d" // Legacy DSN without WAL and busy_timeout for fallback
+	CACHE_SHARED               = "shared"
+	FK_1                       = 1
+	BUSY_TIMEOUT_MS            = 5000  // 5 seconds
+	JOURNAL_MODE_WAL           = "WAL" // Write-Ahead Logging for better concurrency
 )
 
 type SqliteDataSourceConfig struct {
