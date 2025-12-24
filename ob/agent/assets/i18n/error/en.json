@@ -211,7 +211,7 @@
   "err.ob.upgrade.to.lower.version": "Target version %s is not greater than current version %s. Please verify if the parameters have been filled out correctly",
   "err.ob.upgrade.unable.to.rolling.upgrade": "Rolling upgrade is not supported when zone number is lower than 3",
   "err.ob.upgrade.tenants.schema.not.refreshed": "There are tenants with unfreshed schema: %s",
-  "err.ob.upgrade.tablet.in.merging": "There are %s tablets merging",
+  "err.ob.upgrade.tablet.in.merging": "There are %d tablets merging",
   "err.ob.upgrade.tenant.in.major.compaction": "There are %s tenants merging",
   "err.ob.upgrade.min.observer.version.not.sync": "min_observer_version is not sync",
   "err.ob.upgrade.tenant.compatible.not.sync": "Tenant compatible is not sync",
