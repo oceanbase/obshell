@@ -19,6 +19,7 @@ import { getLocale, history, getDvaApp } from 'umi';
 import { message } from '@oceanbase/design';
 import { Base64 } from 'js-base64';
 import CryptoJS from 'crypto-js';
+import React from 'react';
 /**
  * request 网络请求工具
  * 提供诸如参数序列号, 缓存, 超时, 字符编码处理, 错误处理等常用功能,
@@ -91,59 +92,23 @@ const statusCodeMessage = {
     defaultMessage: '网关超时。',
   }),
 };
-const messageMap = {
-  'Unexpected error: failed to start maintenance: cluster is under maintenance': formatMessage({
-    id: 'ocp-v2.src.util.request.ClusterInOMState',
-    defaultMessage: '集群处于运维状态中',
-  }),
 
-  'Unexpected error: failed to start maintenance: agent is under maintenance': formatMessage({
-    id: 'ocp-v2.src.util.request.TheCurrentNodeIsIn',
-    defaultMessage: '当前节点处于运维状态中',
-  }),
-
-  'Known error: Tenant has been locked.': formatMessage({
-    id: 'ocp-v2.src.util.request.TenantIsLocked',
-    defaultMessage: '租户已被锁定',
-  }),
-  'Verification failed: access denied': formatMessage({
-    id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
-    defaultMessage: '验证失败：访问被拒绝',
-  }),
-};
-
-const getMsg = (errorMessage = '') => {
-  if (messageMap[errorMessage]) {
-    return messageMap[errorMessage];
-  }
-
-  if (errorMessage?.includes('observer process not exist')) {
-    return formatMessage({
-      id: 'ocp-v2.src.util.request.ObserverProcessDoesNotExist',
-      defaultMessage: 'observer 进程不存在',
-    });
-  }
-
-  if (errorMessage?.includes('oceanbase db is nil')) {
-    return formatMessage({
-      id: 'ocp-v2.src.util.request.OceanbaseDbIsNil',
-      defaultMessage: '未获得集群连接',
-    });
-  }
-
-  const reg = /failed to start maintenance: (.*?) is under maintenance/;
-  const [, name] = errorMessage?.match(reg) || [];
-
-  if (name) {
-    return name
-      ? formatMessage(
-          {
-            id: 'ocp-v2.src.util.request.NameIsInOperationAnd',
-            defaultMessage: '{name} 处于运维状态中',
-          },
-          { name: name }
-        )
-      : undefined;
+// 根据错误码和错误信息生成错误提示
+const getErrorDescription = ({ errorMessage, errCode }) => {
+  if(errCode?.includes('Environment.Obdiag.NotAvailable')) {
+    return (
+      <span>
+        {errorMessage}，前往
+        <a
+          onClick={() => {
+            history.push('/package');
+          }}
+          style={{ marginLeft: 4 }}
+        >
+          软件包管理
+        </a>
+      </span>
+    );
   }
 };
 
@@ -186,55 +151,26 @@ const errorHandler = ({ request, response, data }) => {
     }
   } else {
     const { error = {} } = data || {};
-    const { code, message: errorMessage } = error;
+    const { errCode, message: errorMessage } = error;
     // 错误展示一定要在 throw err 之前执行，否则抛错之后就无法展示了
     // 优先展示后端返回的错误信息，如果没有，则根据 status 进行展示
-    const msg = errorMessage ? getMsg(errorMessage) || errorMessage : statusCodeMessage[status];
+    const msg = errorMessage ? getErrorDescription({ errorMessage, errCode }) || errorMessage : statusCodeMessage[status];
 
     // 是否隐藏错误信息
     const hideErrorMessage =
       HIDE_ERROR_MESSAGE ||
-      (HIDE_ERROR_MESSAGE_CODE_LIST && HIDE_ERROR_MESSAGE_CODE_LIST.includes(code));
+      (HIDE_ERROR_MESSAGE_CODE_LIST && HIDE_ERROR_MESSAGE_CODE_LIST.includes(errCode));
     // 是否展示错误信息
     const showErrorMessage = !hideErrorMessage;
     // 有对应的错误信息才进行展示，避免遇到 204 等状态码(退出登录) 时，报一个空错误
-    if (msg && code !== 60017 && code !== 60018 && showErrorMessage) {
+    if (msg && errCode !== 60017 && errCode !== 60018 && showErrorMessage) {
       message.error(msg, 3);
     }
     // 403 状态为无权限情况，跳转到 403 页面
     if (status === 403 && SHOULD_ERROR_PAGE) {
       history.push('/error/403');
     } else if (status === 404 && SHOULD_ERROR_PAGE) {
-      if (code === 60018) {
-        // 60018 租户密码不存在，提示录入租户管理员密码密码。
-        // return dispatch({
-        //   type: 'global/update',
-        //   payload: {
-        //     showTenantAdminPasswordModal: true,
-        //     tenantAdminPasswordErrorData: {
-        //       type: 'ADD',
-        //       errorMessage: msg,
-        //       ...(error?.target || {}),
-        //     },
-        //   },
-        // });
-      } else {
         history.push('/error/404');
-      }
-    } else if (status === 500) {
-      // if (code === 60017) {
-      //   return dispatch({
-      //     type: 'global/update',
-      //     payload: {
-      //       showTenantAdminPasswordModal: true,
-      //       tenantAdminPasswordErrorData: {
-      //         type: 'EDIT',
-      //         errorMessage: msg,
-      //         ...(error?.target || {}),
-      //       },
-      //     },
-      //   });
-      // }
     }
   } // 一定要返回 data，否则就会在错误处理这一层断掉，后续无法获取响应的数据
   return data;
