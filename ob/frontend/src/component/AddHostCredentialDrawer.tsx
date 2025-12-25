@@ -95,7 +95,12 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
       manual: true,
       onSuccess: res => {
         if (res?.successful) {
-          message.success('主机凭据创建成功');
+          message.success(
+            formatMessage({
+              id: 'OBShell.src.component.AddHostCredentialDrawer.HostCredentialsSuccessfullyCreated',
+              defaultMessage: '主机凭据创建成功',
+            })
+          );
           resetFields();
           onSuccess();
         }
@@ -110,7 +115,12 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
       manual: true,
       onSuccess: res => {
         if (res?.successful) {
-          message.success('主机凭据更新成功');
+          message.success(
+            formatMessage({
+              id: 'OBShell.src.component.AddHostCredentialDrawer.HostCredentialsUpdatedSuccessfully',
+              defaultMessage: '主机凭据更新成功',
+            })
+          );
           resetFields();
           onSuccess();
         }
@@ -366,7 +376,10 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
             rules={[
               {
                 required: true,
-                message: '请输入应用主机',
+                message: formatMessage({
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterApplicationHost',
+                  defaultMessage: '请输入应用主机',
+                }),
               },
             ]}
             initialValue={isEdit ? credential?.targets?.map(target => target?.ip) : []}
@@ -414,10 +427,21 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
             </MySelect>
           </FormItem>
           <FormItem
-            label="ssh 端口"
+            label={formatMessage({
+              id: 'OBShell.src.component.AddHostCredentialDrawer.SshPort',
+              defaultMessage: 'ssh 端口',
+            })}
             name="port"
             initialValue={credential?.targets?.[0]?.port || 22}
-            rules={[{ required: true, message: '请输入 ssh 端口' }]}
+            rules={[
+              {
+                required: true,
+                message: formatMessage({
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterSshPort',
+                  defaultMessage: '请输入 ssh 端口',
+                }),
+              },
+            ]}
           >
             <InputNumber min={0} max={65535} style={{ width: '100%' }} />
           </FormItem>

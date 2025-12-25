@@ -798,7 +798,7 @@ export function formatDuration(
 ): {
   value?: number;
   unit?: 's' | 'min' | 'hour' | 'day';
-  unitLabel?: '秒' | '分钟' | '小时' | '天';
+  unitLabel?: string;
 } {
   if (isNullValue(value)) {
     return {};

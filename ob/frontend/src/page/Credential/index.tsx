@@ -25,7 +25,10 @@ const Credential: React.FC = () => {
       header={{
         title: (
           <ContentWithReload
-            content="凭据管理"
+            content={formatMessage({
+              id: 'OBShell.page.Credential.CredentialManagement',
+              defaultMessage: '凭据管理',
+            })}
             onClick={() => {
               hostRef.current?.refresh();
             }}

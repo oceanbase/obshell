@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import * as InspectionController from '@/service/obshell/obcluster';
 import { PageContainer } from '@oceanbase/ui';
 import {
@@ -53,11 +54,17 @@ const Report: React.FC = () => {
   const tabList = [
     {
       key: 'risk',
-      tab: '结果概览',
+      tab: formatMessage({
+        id: 'OBShell.page.Inspection.Result.ResultsOverview',
+        defaultMessage: '结果概览',
+      }),
     },
     {
       key: 'item',
-      tab: '全部结果',
+      tab: formatMessage({
+        id: 'OBShell.page.Inspection.Result.AllResults',
+        defaultMessage: '全部结果',
+      }),
     },
   ];
 
@@ -66,7 +73,10 @@ const Report: React.FC = () => {
   }) => {
     const columns = [
       {
-        title: '巡检项',
+        title: formatMessage({
+          id: 'OBShell.page.Inspection.Result.InspectionItem',
+          defaultMessage: '巡检项',
+        }),
         dataIndex: 'name',
         render: (text: any) => {
           return <span>{text || '-'}</span>;
@@ -74,7 +84,10 @@ const Report: React.FC = () => {
       },
 
       {
-        title: '巡检结果',
+        title: formatMessage({
+          id: 'OBShell.page.Inspection.Result.InspectionResults',
+          defaultMessage: '巡检结果',
+        }),
         dataIndex: 'results',
         render: (text: any) => {
           if (!text || !Array.isArray(text)) {
@@ -101,7 +114,14 @@ const Report: React.FC = () => {
 
     // 添加数据验证
     if (!dataSource || dataSource.length === 0) {
-      return <Empty description="暂无数据" />;
+      return (
+        <Empty
+          description={formatMessage({
+            id: 'OBShell.page.Inspection.Result.NoData',
+            defaultMessage: '暂无数据',
+          })}
+        />
+      );
     }
 
     try {
@@ -117,7 +137,14 @@ const Report: React.FC = () => {
       );
     } catch (error) {
       console.error('Table渲染错误:', error);
-      return <div>数据渲染出错，请检查数据格式</div>;
+      return (
+        <div>
+          {formatMessage({
+            id: 'OBShell.page.Inspection.Result.DataRenderingErrorPleaseCheck',
+            defaultMessage: '数据渲染出错，请检查数据格式',
+          })}
+        </div>
+      );
     }
   };
 
@@ -126,17 +153,26 @@ const Report: React.FC = () => {
     const resultList: any[] = [
       {
         key: 'critical',
-        label: '高风险',
+        label: formatMessage({
+          id: 'OBShell.page.Inspection.Result.HighRisk',
+          defaultMessage: '高风险',
+        }),
         children: critical_items,
       },
       {
         key: 'moderate',
-        label: '中风险',
+        label: formatMessage({
+          id: 'OBShell.page.Inspection.Result.MediumRisk',
+          defaultMessage: '中风险',
+        }),
         children: warning_items,
       },
       {
         key: 'failed',
-        label: '失败',
+        label: formatMessage({
+          id: 'OBShell.page.Inspection.Result.Failed',
+          defaultMessage: '失败',
+        }),
         children: failed_items,
       },
     ];
@@ -163,7 +199,17 @@ const Report: React.FC = () => {
                 ) : (
                   <Empty
                     image={Empty.PRESENTED_IMAGE_SIMPLE}
-                    description={<span>{`无${label}目标对象`}</span>}
+                    description={
+                      <span>
+                        {formatMessage(
+                          {
+                            id: 'OBShell.page.Inspection.Result.NoLabelTargetObject',
+                            defaultMessage: '无{label}目标对象',
+                          },
+                          { label: label }
+                        )}
+                      </span>
+                    }
                   />
                 )}
               </Panel>
@@ -188,7 +234,17 @@ const Report: React.FC = () => {
         {data.length > 0 ? (
           <CollapseDescriptions inspectionItem={data} />
         ) : (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={<span>无目标巡检项</span>} />
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description={
+              <span>
+                {formatMessage({
+                  id: 'OBShell.page.Inspection.Result.NoTargetInspectionItem',
+                  defaultMessage: '无目标巡检项',
+                })}
+              </span>
+            }
+          />
         )}
       </>
     );
@@ -204,7 +260,10 @@ const Report: React.FC = () => {
       ghost={true}
       loading={loading}
       header={{
-        title: '巡检报告',
+        title: formatMessage({
+          id: 'OBShell.page.Inspection.Result.PatrolInspectionReport',
+          defaultMessage: '巡检报告',
+        }),
         onBack: () => {
           history.goBack();
         },
@@ -215,19 +274,45 @@ const Report: React.FC = () => {
           <Col span={8}>
             <Card
               bordered={false}
-              title={'基本信息'}
+              title={formatMessage({
+                id: 'OBShell.page.Inspection.Result.BasicInformation',
+                defaultMessage: '基本信息',
+              })}
               style={{
                 height: '250px',
               }}
             >
               <Descriptions column={1}>
-                <Descriptions.Item label={'巡检场景'}>
-                  {reportData?.scenario === 'basic' ? '基础巡检' : '性能巡检'}
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'OBShell.page.Inspection.Result.InspectionScene',
+                    defaultMessage: '巡检场景',
+                  })}
+                >
+                  {reportData?.scenario === 'basic'
+                    ? formatMessage({
+                        id: 'OBShell.page.Inspection.Result.BasicInspection',
+                        defaultMessage: '基础巡检',
+                      })
+                    : formatMessage({
+                        id: 'OBShell.page.Inspection.Result.PerformanceInspection',
+                        defaultMessage: '性能巡检',
+                      })}
                 </Descriptions.Item>
-                <Descriptions.Item label={'开始时间'}>
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'OBShell.page.Inspection.Result.StartTime',
+                    defaultMessage: '开始时间',
+                  })}
+                >
                   {formatTime(reportData?.start_time)}
                 </Descriptions.Item>
-                <Descriptions.Item label={'结束时间'}>
+                <Descriptions.Item
+                  label={formatMessage({
+                    id: 'OBShell.page.Inspection.Result.EndTime',
+                    defaultMessage: '结束时间',
+                  })}
+                >
                   {formatTime(reportData?.finish_time)}
                 </Descriptions.Item>
               </Descriptions>
@@ -235,7 +320,10 @@ const Report: React.FC = () => {
           </Col>
           <Col span={16}>
             <Card
-              title={'巡检结果概览'}
+              title={formatMessage({
+                id: 'OBShell.page.Inspection.Result.OverviewOfInspectionResults',
+                defaultMessage: '巡检结果概览',
+              })}
               bordered={false}
               style={{
                 height: '250px',
@@ -250,7 +338,12 @@ const Report: React.FC = () => {
                 <Col span={5}>
                   <span>
                     <div>
-                      <div>总巡检结果</div>
+                      <div>
+                        {formatMessage({
+                          id: 'OBShell.page.Inspection.Result.OverallInspectionResults',
+                          defaultMessage: '总巡检结果',
+                        })}
+                      </div>
                       <div
                         style={{
                           fontSize: '38px',
@@ -272,7 +365,12 @@ const Report: React.FC = () => {
                 </Col>
                 <Col span={5}>
                   <span>
-                    <div>高风险结果</div>
+                    <div>
+                      {formatMessage({
+                        id: 'OBShell.page.Inspection.Result.HighRiskOutcome',
+                        defaultMessage: '高风险结果',
+                      })}
+                    </div>
                     <div
                       style={{
                         color: 'rgba(166,29,36,1)',
@@ -286,7 +384,12 @@ const Report: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <span>
-                    <div>中风险结果</div>
+                    <div>
+                      {formatMessage({
+                        id: 'OBShell.page.Inspection.Result.MediumRiskResults',
+                        defaultMessage: '中风险结果',
+                      })}
+                    </div>
                     <div
                       style={{
                         color: token.colorWarning,
@@ -300,7 +403,12 @@ const Report: React.FC = () => {
                 </Col>
                 <Col span={6}>
                   <span>
-                    <div>失败结果</div>
+                    <div>
+                      {formatMessage({
+                        id: 'OBShell.page.Inspection.Result.FailResult',
+                        defaultMessage: '失败结果',
+                      })}
+                    </div>
                     <div
                       style={{
                         color: token.colorError,

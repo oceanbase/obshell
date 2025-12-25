@@ -349,8 +349,14 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
                 // 根据错误类型显示不同的提示
                 const errorMessage =
                   error instanceof RangeError
-                    ? '文件过大，浏览器无法处理，请联系技术同学使用 SDK 上传'
-                    : '文件处理失败，请重试或联系技术同学';
+                    ? formatMessage({
+                        id: 'OBShell.component.UploadPackageDrawer.TheFileIsTooLarge',
+                        defaultMessage: '文件过大，浏览器无法处理，请联系技术同学使用 SDK 上传',
+                      })
+                    : formatMessage({
+                        id: 'OBShell.component.UploadPackageDrawer.FileProcessingFailedPleaseTry',
+                        defaultMessage: '文件处理失败，请重试或联系技术同学',
+                      });
 
                 message.error({
                   content: errorMessage,

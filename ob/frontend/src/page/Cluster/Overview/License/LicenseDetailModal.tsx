@@ -48,12 +48,18 @@ const LicenseDetailModal: React.FC<LicenseDetailModalProps> = ({ clusterData, op
   const formatLicenseValue = useMemo(() => {
     return [
       {
-        name: '集群 ID',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.ClusterId',
+          defaultMessage: '集群 ID',
+        }),
         value: license.cluster_ulid,
         description: LICENSE_DESCRIPTIONS.cluster_ulid.split('|'),
       },
       {
-        name: '授权用户名',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.AuthorizedUserName',
+          defaultMessage: '授权用户名',
+        }),
         value: license.end_user,
       },
       {
@@ -62,39 +68,63 @@ const LicenseDetailModal: React.FC<LicenseDetailModalProps> = ({ clusterData, op
         description: LICENSE_DESCRIPTIONS.license_id.split('|'),
       },
       {
-        name: 'License 编码',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseCoding',
+          defaultMessage: 'License 编码',
+        }),
         value: license.license_code,
         description: LICENSE_DESCRIPTIONS.license_code.split('|'),
       },
       {
-        name: 'License 类型',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseType',
+          defaultMessage: 'License 类型',
+        }),
         value: license.license_type,
         description: LICENSE_DESCRIPTIONS.license_type.split('|'),
       },
       {
-        name: '产品类型',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.ProductType',
+          defaultMessage: '产品类型',
+        }),
         value: license.product_type,
         description: LICENSE_DESCRIPTIONS.product_type.split('|'),
       },
       {
-        name: 'License 颁发时间',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseIssuedTime',
+          defaultMessage: 'License 颁发时间',
+        }),
         value: formatTime(license.issuance_date),
       },
       {
-        name: 'License 激活时间',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseActivationTime',
+          defaultMessage: 'License 激活时间',
+        }),
         value: formatTime(license.activation_time),
       },
       {
-        name: 'License 过期时间',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseExpirationTime',
+          defaultMessage: 'License 过期时间',
+        }),
         value: formatTime(license.expired_time),
       },
       {
-        name: 'License 选件',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.LicenseOptions',
+          defaultMessage: 'License 选件',
+        }),
         value: isTrial ? DEFAULT_LICENSE_OPTIONS.join('、') : license.options?.join('、'),
         description: LICENSE_DESCRIPTIONS.options.split('|'),
       },
       {
-        name: '授权节点数',
+        name: formatMessage({
+          id: 'OBShell.Overview.License.LicenseDetailModal.NumberOfAuthorizedNodes',
+          defaultMessage: '授权节点数',
+        }),
         value: license.node_num,
       },
     ];

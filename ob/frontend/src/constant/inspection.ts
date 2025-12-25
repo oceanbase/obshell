@@ -1,26 +1,33 @@
+import { formatMessage } from '@/util/intl';
 export const statusList = [
   {
-    label: '成功',
+    label: formatMessage({ id: 'OBShell.src.constant.inspection.Success', defaultMessage: '成功' }),
     color: 'success',
     value: 'SUCCEED',
   },
   {
-    label: '失败',
+    label: formatMessage({ id: 'OBShell.src.constant.inspection.Failed', defaultMessage: '失败' }),
     color: 'error',
     value: 'FAILED',
   },
   {
-    label: '运行中',
+    label: formatMessage({
+      id: 'OBShell.src.constant.inspection.InOperation',
+      defaultMessage: '运行中',
+    }),
     color: 'processing',
     value: 'RUNNING',
   },
   {
-    label: '未知',
+    label: formatMessage({ id: 'OBShell.src.constant.inspection.Unknown', defaultMessage: '未知' }),
     color: 'warning',
     value: 'UNKNOWN',
   },
   {
-    label: '已删除',
+    label: formatMessage({
+      id: 'OBShell.src.constant.inspection.Deleted',
+      defaultMessage: '已删除',
+    }),
     color: 'default',
     value: 'DELETED',
   },
@@ -29,17 +36,26 @@ export const statusList = [
 export const tabList = [
   {
     key: 'history',
-    tab: '巡检目录',
+    tab: formatMessage({
+      id: 'OBShell.src.constant.inspection.PatrolDirectory',
+      defaultMessage: '巡检目录',
+    }),
   },
 ];
 
 export const scenarioList = [
   {
     key: 'basic',
-    label: '基础巡检',
+    label: formatMessage({
+      id: 'OBShell.src.constant.inspection.BasicInspection',
+      defaultMessage: '基础巡检',
+    }),
   },
   {
     key: 'performance',
-    label: '性能巡检',
+    label: formatMessage({
+      id: 'OBShell.src.constant.inspection.PerformanceInspection',
+      defaultMessage: '性能巡检',
+    }),
   },
 ];

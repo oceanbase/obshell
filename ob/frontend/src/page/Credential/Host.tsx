@@ -156,7 +156,12 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
     {
       manual: true,
       onSuccess: () => {
-        message.success('凭据删除成功');
+        message.success(
+          formatMessage({
+            id: 'OBShell.page.Credential.Host.CredentialsDeletedSuccessfully',
+            defaultMessage: '凭据删除成功',
+          })
+        );
         refresh();
       },
     }
@@ -166,7 +171,13 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
    */
   const handleDelete = (credential: HostCredential) => {
     Modal.confirm({
-      title: `确定要删除凭据 ${credential.name} 吗`,
+      title: formatMessage(
+        {
+          id: 'OBShell.page.Credential.Host.AreYouSureYouWant',
+          defaultMessage: '确定要删除凭据 {credentialName} 吗',
+        },
+        { credentialName: credential.name }
+      ),
 
       okText: formatMessage({
         id: 'ocp-v2.Settings.Credential.Host.Delete',

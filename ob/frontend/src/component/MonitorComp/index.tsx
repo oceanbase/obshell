@@ -63,7 +63,13 @@ export default function MonitorComp({
   // 判断当前是否为"主机性能" tab
   const currentContainer = allMetrics?.[parseInt(activeTabKey)];
   const isHostPerformanceTab = useMemo(() => {
-    return currentContainer?.name === '主机性能';
+    return (
+      currentContainer?.name ===
+      formatMessage({
+        id: 'OBShell.component.MonitorComp.HostPerformance',
+        defaultMessage: '主机性能',
+      })
+    );
   }, [currentContainer?.name]);
 
   // 根据 filterLabel 过滤 serverOption

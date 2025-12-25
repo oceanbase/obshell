@@ -59,22 +59,46 @@ const PackagePage: React.FC<PackageProps> = ({
 
   const handleDeletePackage = (record: API.UpgradePkgInfo) => {
     Modal.confirm({
-      title: '确认删除软件包',
-      content: `确认删除软件包 ${record.name} 吗？此操作不可撤销。`,
-      okText: '确认',
-      cancelText: '取消',
+      title: formatMessage({
+        id: 'OBShell.page.Package.ConfirmSoftwarePackageDeletion',
+        defaultMessage: '确认删除软件包',
+      }),
+      content: formatMessage(
+        {
+          id: 'OBShell.page.Package.AreYouSureYouWant',
+          defaultMessage: '确认删除软件包 {recordName} 吗？此操作不可撤销。',
+        },
+        { recordName: record.name }
+      ),
+      okText: formatMessage({ id: 'OBShell.page.Package.Confirm', defaultMessage: '确认' }),
+      cancelText: formatMessage({ id: 'OBShell.page.Package.Cancel', defaultMessage: '取消' }),
       okType: 'danger',
       onOk: async () => {
         try {
           const res = await deletePackage({ pkg_id: record.pkg_id! });
           if (res.successful) {
-            message.success('删除软件包成功');
+            message.success(
+              formatMessage({
+                id: 'OBShell.page.Package.SoftwarePackageDeletedSuccessfully',
+                defaultMessage: '删除软件包成功',
+              })
+            );
           } else {
-            message.error('删除软件包失败');
+            message.error(
+              formatMessage({
+                id: 'OBShell.page.Package.FailedToDeletePackage',
+                defaultMessage: '删除软件包失败',
+              })
+            );
           }
           refresh();
         } catch (error) {
-          message.error('删除软件包失败');
+          message.error(
+            formatMessage({
+              id: 'OBShell.page.Package.FailedToDeletePackage',
+              defaultMessage: '删除软件包失败',
+            })
+          );
         }
       },
     });
@@ -149,11 +173,11 @@ const PackagePage: React.FC<PackageProps> = ({
       render: (text: string) => formatTime(text),
     },
     {
-      title: '操作',
+      title: formatMessage({ id: 'OBShell.page.Package.Operation', defaultMessage: '操作' }),
       width: 100,
       render: (text: string, record: API.UpgradePkgInfo) => (
         <Button type="link" onClick={() => handleDeletePackage(record)}>
-          删除
+          {formatMessage({ id: 'OBShell.page.Package.Delete', defaultMessage: '删除' })}
         </Button>
       ),
     },

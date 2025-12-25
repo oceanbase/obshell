@@ -38,7 +38,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
       manual: true,
       onSuccess: res => {
         if (res.successful) {
-          message.success('凭据删除成功');
+          message.success(
+            formatMessage({
+              id: 'OBShell.Credential.Component.FilterBar.CredentialsDeletedSuccessfully',
+              defaultMessage: '凭据删除成功',
+            })
+          );
           if (setSelectedRowKeys) {
             setSelectedRowKeys([]);
           }

@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import { formatTime } from '@/util/datetime';
 import { Button, Dropdown, message, Modal, Space, TableColumnType, theme } from '@oceanbase/design';
 import { findBy, findByValue } from '@oceanbase/util';
@@ -34,7 +35,15 @@ export default function HistoryList() {
     onSuccess: (res, params) => {
       if (res.successful) {
         const name = findBy(scenarioList, 'key', params[0]?.scenario)?.label;
-        message.success(`发起${name}成功`);
+        message.success(
+          formatMessage(
+            {
+              id: 'OBShell.page.Inspection.SuccessfullyLaunchedName',
+              defaultMessage: '发起{name}成功',
+            },
+            { name: name }
+          )
+        );
         isAutoRefresh.current = false;
         refresh();
       }
@@ -65,7 +74,10 @@ export default function HistoryList() {
       dataIndex: 'id',
     },
     {
-      title: '巡检场景',
+      title: formatMessage({
+        id: 'OBShell.page.Inspection.InspectionScene',
+        defaultMessage: '巡检场景',
+      }),
       dataIndex: 'scenario',
       filters: scenarioList.map(item => ({
         text: item.label,
@@ -73,13 +85,22 @@ export default function HistoryList() {
       })),
       render: text => {
         const color = text === 'BASIC' ? 'success' : 'processing';
-        const content = text === 'BASIC' ? '基础巡检' : '性能巡检';
+        const content =
+          text === 'BASIC'
+            ? formatMessage({
+                id: 'OBShell.page.Inspection.BasicInspection',
+                defaultMessage: '基础巡检',
+              })
+            : formatMessage({
+                id: 'OBShell.page.Inspection.PerformanceInspection',
+                defaultMessage: '性能巡检',
+              });
 
         return <Tag color={color}>{content}</Tag>;
       },
     },
     {
-      title: '开始时间',
+      title: formatMessage({ id: 'OBShell.page.Inspection.StartTime', defaultMessage: '开始时间' }),
       dataIndex: 'start_time',
       sorter: true,
       render: text => {
@@ -87,7 +108,7 @@ export default function HistoryList() {
       },
     },
     {
-      title: '结束时间',
+      title: formatMessage({ id: 'OBShell.page.Inspection.EndTime', defaultMessage: '结束时间' }),
       dataIndex: 'finish_time',
       sorter: true,
       render: text => {
@@ -95,7 +116,10 @@ export default function HistoryList() {
       },
     },
     {
-      title: '任务状态',
+      title: formatMessage({
+        id: 'OBShell.page.Inspection.TaskStatus',
+        defaultMessage: '任务状态',
+      }),
       dataIndex: 'status',
       width: 100,
       render: text => {
@@ -107,7 +131,10 @@ export default function HistoryList() {
       },
     },
     {
-      title: '巡检结果',
+      title: formatMessage({
+        id: 'OBShell.page.Inspection.InspectionResults',
+        defaultMessage: '巡检结果',
+      }),
       width: 120,
       render: (_, record) => {
         if (record?.status !== 'SUCCEED') {
@@ -125,12 +152,19 @@ export default function HistoryList() {
       },
     },
     {
-      title: '操作',
+      title: formatMessage({ id: 'OBShell.page.Inspection.Operation', defaultMessage: '操作' }),
       dataIndex: 'opeation',
       width: 130,
       render: (_, record) => {
         if (record?.status === 'SUCCEED') {
-          return <Link to={`/inspection/report/${record?.id}`}>查看报告</Link>;
+          return (
+            <Link to={`/inspection/report/${record?.id}`}>
+              {formatMessage({
+                id: 'OBShell.page.Inspection.ViewReport',
+                defaultMessage: '查看报告',
+              })}
+            </Link>
+          );
         } else if (record?.status === 'FAILED') {
           return (
             <a
@@ -138,13 +172,19 @@ export default function HistoryList() {
                 fetchReport({ id: String(record.id) }).then(res => {
                   const errorMessage = res?.data?.error_message;
                   Modal.error({
-                    title: '错误信息',
+                    title: formatMessage({
+                      id: 'OBShell.page.Inspection.ErrorMessage',
+                      defaultMessage: '错误信息',
+                    }),
                     content: errorMessage,
                   });
                 });
               }}
             >
-              错误信息
+              {formatMessage({
+                id: 'OBShell.page.Inspection.ErrorMessage',
+                defaultMessage: '错误信息',
+              })}
             </a>
           );
         }
@@ -163,7 +203,14 @@ export default function HistoryList() {
     <PageContainer
       header={{
         title: (
-          <ContentWithReload content="巡检服务" spin={showLoading} onClick={handleManualRefresh} />
+          <ContentWithReload
+            content={formatMessage({
+              id: 'OBShell.page.Inspection.InspectionService',
+              defaultMessage: '巡检服务',
+            })}
+            spin={showLoading}
+            onClick={handleManualRefresh}
+          />
         ),
       }}
       ghost={true}
@@ -178,7 +225,11 @@ export default function HistoryList() {
         >
           <Button type="primary">
             <Space>
-              发起巡检
+              {formatMessage({
+                id: 'OBShell.page.Inspection.InitiatePatrolInspection',
+                defaultMessage: '发起巡检',
+              })}
+
               <DownOutlined />
             </Space>
           </Button>

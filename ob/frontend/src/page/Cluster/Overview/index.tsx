@@ -368,9 +368,19 @@ const Detail: React.FC<DetailProps> = ({}) => {
       if (res?.successful) {
         refresh();
         if (params[0]?.params[0]?.value === '30ms') {
-          message.success('死锁自动检测已开启');
+          message.success(
+            formatMessage({
+              id: 'OBShell.Cluster.Overview.DeadlockAutoDetectionIsOn',
+              defaultMessage: '死锁自动检测已开启',
+            })
+          );
         } else {
-          message.success('死锁自动检测已关闭');
+          message.success(
+            formatMessage({
+              id: 'OBShell.Cluster.Overview.DeadlockAutoDetectionIsOff',
+              defaultMessage: '死锁自动检测已关闭',
+            })
+          );
         }
       }
     },
@@ -482,8 +492,11 @@ const Detail: React.FC<DetailProps> = ({}) => {
           defaultMessage: '确认要开启死锁自动检测吗？',
         }),
 
-        content:
-          '本操作会自动检测并解决死锁，并保存 7 天的死锁记录。本操作为集群级别行为，其他租户也将同步开启，本功能对集群有 2% 左右的性能损耗，请谨慎操作。',
+        content: formatMessage({
+          id: 'OBShell.Cluster.Overview.ThisAutomaticallyDetectsAndResolves',
+          defaultMessage:
+            '本操作会自动检测并解决死锁，并保存 7 天的死锁记录。本操作为集群级别行为，其他租户也将同步开启，本功能对集群有 2% 左右的性能损耗，请谨慎操作。',
+        }),
 
         onOk: () => {
           return updateClusterParameter({

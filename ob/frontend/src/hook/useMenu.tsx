@@ -75,7 +75,10 @@ export const useBasicMenu = (): MenuItem[] => {
     },
     {
       link: '/inspection',
-      title: '巡检服务',
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.InspectionService',
+        defaultMessage: '巡检服务',
+      }),
       icon: <Icon component={InspectionSvg} />,
       selectedIcon: <Icon component={InspectionSelectedSvg} />,
     },
@@ -97,7 +100,10 @@ export const useBasicMenu = (): MenuItem[] => {
         },
         {
           link: '/credential',
-          title: '凭据管理',
+          title: formatMessage({
+            id: 'OBShell.src.hook.useMenu.CredentialManagement',
+            defaultMessage: '凭据管理',
+          }),
         },
         {
           link: `/task`,
@@ -147,7 +153,10 @@ export const useTenantMenu = (tenantName: string, tenantMode: API.TenantMode): M
 
     {
       link: `/cluster/tenant/${tenantName}/session`,
-      title: '会话管理',
+      title: formatMessage({
+        id: 'OBShell.src.hook.useMenu.SessionManagement',
+        defaultMessage: '会话管理',
+      }),
       key: 'SESSION',
     },
     {
