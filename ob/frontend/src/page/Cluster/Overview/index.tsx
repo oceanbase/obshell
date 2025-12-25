@@ -574,7 +574,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
 
   return (
     <PageContainer
-      loading={reloading || obclusterInfoLoading}
+      loading={reloading || (!isAbnormal && obclusterInfoLoading)}
       ghost={true}
       header={{
         title: (
