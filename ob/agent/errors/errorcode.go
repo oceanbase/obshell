@@ -177,25 +177,29 @@ var (
 	ErrObRestoreTaskAlreadySucceed = NewErrorCode("OB.Restore.Task.AlreadySucceed", illegalArgument, "err.ob.restore.task.already.succeed")
 
 	// OB.Cluster
-	ErrObClusterUnderMaintenance                 = NewErrorCode("OB.Cluster.UnderMaintenance", known, "err.ob.cluster.under.maintenance")
-	ErrObClusterUnderMaintenanceWithDag          = NewErrorCode("OB.Cluster.UnderMaintenanceWithDag", known, "err.ob.cluster.under.maintenance.with.dag")
-	ErrObClusterPasswordEncrypted                = NewErrorCode("OB.Cluster.Password.Encrypted", illegalArgument, "err.ob.cluster.password.encrypted")
-	ErrObClusterIdInvalid                        = NewErrorCode("OB.Cluster.Id.Invalid", illegalArgument, "err.ob.cluster.id.invalid")
-	ErrObClusterScopeInvalid                     = NewErrorCode("OB.Cluster.Scope.Invalid", illegalArgument, "err.ob.cluster.scope.invalid")
-	ErrObClusterNameEmpty                        = NewErrorCode("OB.Cluster.Name.Empty", illegalArgument, "err.ob.cluster.name.empty")
-	ErrObClusterAlreadyInitialized               = NewErrorCode("OB.Cluster.AlreadyInitialized", illegalArgument, "err.ob.cluster.already.initialized")
-	ErrObClusterNotInitialized                   = NewErrorCode("OB.Cluster.NotInitialized", illegalArgument, "err.ob.cluster.not.initialized")
-	ErrObClusterMultiPaxosNotAlive               = NewErrorCode("OB.Cluster.MultiPaxosNotAlive", illegalArgument, "err.ob.cluster.multi.paxos.not.alive")
-	ErrObClusterMysqlPortNotInitialized          = NewErrorCode("OB.Cluster.MysqlPortNotInitialized", unexpected, "err.ob.cluster.mysql.port.not.initialized")
-	ErrObClusterScaleOutHigherVersion            = NewErrorCode("OB.Cluster.ScaleOutHigherVersion", illegalArgument, "err.ob.cluster.scale.out.higher.version")
-	ErrObClusterScaleOutLowerVersion             = NewErrorCode("OB.Cluster.ScaleOutLowerVersion", illegalArgument, "err.ob.cluster.scale.out.lower.version")
-	ErrObClusterScaleOutRetryCoordinateDagFailed = NewErrorCode("OB.Cluster.ScaleOutRetryCoordinateDagFailed", unexpected, "err.ob.cluster.scale.out.retry.coordinate.dag.failed")
-	ErrObClusterMinorFreezeTimeout               = NewErrorCode("OB.Cluster.MinorFreezeTimeout", unexpected, "err.ob.cluster.minor.freeze.timeout")
-	ErrObClusterAsyncOperationTimeout            = NewErrorCode("OB.Cluster.AsyncOperationTimeout", unexpected, "err.ob.cluster.async.operation.timeout")
-	ErrObClusterStopModeConflict                 = NewErrorCode("OB.Cluster.StopModeConflict", illegalArgument, "err.ob.cluster.stop.mode.conflict")
-	ErrObClusterForceStopRequired                = NewErrorCode("OB.Cluster.ForceStopRequired", illegalArgument, "err.ob.cluster.force.stop.required")
-	ErrObClusterForceStopOrTerminateRequired     = NewErrorCode("OB.Cluster.ForceStopOrTerminateRequired", illegalArgument, "err.ob.cluster.force.stop.or.terminate.required")
-	ErrObClusterPasswordIncorrect                = NewErrorCode("OB.Cluster.Password.Incorrect", illegalArgument, "err.ob.cluster.password.incorrect") // "password incorrect"
+	ErrObClusterUnderMaintenance                        = NewErrorCode("OB.Cluster.UnderMaintenance", known, "err.ob.cluster.under.maintenance")
+	ErrObClusterUnderMaintenanceWithDag                 = NewErrorCode("OB.Cluster.UnderMaintenanceWithDag", known, "err.ob.cluster.under.maintenance.with.dag")
+	ErrObClusterPasswordEncrypted                       = NewErrorCode("OB.Cluster.Password.Encrypted", illegalArgument, "err.ob.cluster.password.encrypted")
+	ErrObClusterIdInvalid                               = NewErrorCode("OB.Cluster.Id.Invalid", illegalArgument, "err.ob.cluster.id.invalid")
+	ErrObClusterScopeInvalid                            = NewErrorCode("OB.Cluster.Scope.Invalid", illegalArgument, "err.ob.cluster.scope.invalid")
+	ErrObClusterNameEmpty                               = NewErrorCode("OB.Cluster.Name.Empty", illegalArgument, "err.ob.cluster.name.empty")
+	ErrObClusterAlreadyInitialized                      = NewErrorCode("OB.Cluster.AlreadyInitialized", illegalArgument, "err.ob.cluster.already.initialized")
+	ErrObClusterNotInitialized                          = NewErrorCode("OB.Cluster.NotInitialized", illegalArgument, "err.ob.cluster.not.initialized")
+	ErrObClusterMultiPaxosNotAlive                      = NewErrorCode("OB.Cluster.MultiPaxosNotAlive", illegalArgument, "err.ob.cluster.multi.paxos.not.alive")
+	ErrObClusterMysqlPortNotInitialized                 = NewErrorCode("OB.Cluster.MysqlPortNotInitialized", unexpected, "err.ob.cluster.mysql.port.not.initialized")
+	ErrObClusterScaleOutHigherVersion                   = NewErrorCode("OB.Cluster.ScaleOutHigherVersion", illegalArgument, "err.ob.cluster.scale.out.higher.version")
+	ErrObClusterScaleOutLowerVersion                    = NewErrorCode("OB.Cluster.ScaleOutLowerVersion", illegalArgument, "err.ob.cluster.scale.out.lower.version")
+	ErrObClusterScaleOutRetryCoordinateDagFailed        = NewErrorCode("OB.Cluster.ScaleOutRetryCoordinateDagFailed", unexpected, "err.ob.cluster.scale.out.retry.coordinate.dag.failed")
+	ErrObClusterMinorFreezeTimeout                      = NewErrorCode("OB.Cluster.MinorFreezeTimeout", unexpected, "err.ob.cluster.minor.freeze.timeout")
+	ErrObClusterAsyncOperationTimeout                   = NewErrorCode("OB.Cluster.AsyncOperationTimeout", unexpected, "err.ob.cluster.async.operation.timeout")
+	ErrObClusterStopModeConflict                        = NewErrorCode("OB.Cluster.StopModeConflict", illegalArgument, "err.ob.cluster.stop.mode.conflict")
+	ErrObClusterForceStopRequired                       = NewErrorCode("OB.Cluster.ForceStopRequired", illegalArgument, "err.ob.cluster.force.stop.required")
+	ErrObClusterForceStopOrTerminateRequired            = NewErrorCode("OB.Cluster.ForceStopOrTerminateRequired", illegalArgument, "err.ob.cluster.force.stop.or.terminate.required")
+	ErrObClusterPasswordIncorrect                       = NewErrorCode("OB.Cluster.Password.Incorrect", illegalArgument, "err.ob.cluster.password.incorrect")                                             // "password incorrect"
+	ErrObClusterInspectionScenarioNotSupported          = NewErrorCode("OB.Cluster.Inspection.Scenario.NotSupported", illegalArgument, "err.ob.cluster.inspection.scenario.not.supported")                // "invalid inspection scenario: %s, must be %s or %s"
+	ErrObClusterInspectionObdiagVersionNotSupported     = NewErrorCode("OB.Cluster.Inspection.Obdiag.Version.NotSupported", badRequest, "err.ob.cluster.inspection.obdiag.version.not.supported")         // "obdiag version %s in OCS is not supported, must be greater than 3.7.2"
+	ErrObClusterInspectionHostPasswordlessNotConfigured = NewErrorCode("OB.Cluster.Inspection.Host.Passwordless.NotConfigured", badRequest, "err.ob.cluster.inspection.host.passwordless.not.configured") // "host passwordless login not configured and no credential found"
+	ErrObClusterInspectionHostCredentialNotFound        = NewErrorCode("OB.Cluster.Inspection.Host.Credential.NotFound", badRequest, "err.ob.cluster.inspection.host.credential.not.found")               // "host credential not found in credential management"
 
 	// OB.Server
 	ErrObServerDeleteSelf         = NewErrorCode("OB.Server.DeleteSelf", illegalArgument, "err.ob.server.delete.self")
@@ -283,6 +287,8 @@ var (
 	ErrEnvironmentWithoutPythonModule = NewErrorCode("Environment.WithoutModule", unexpected, "err.environment.without.module")
 	ErrEnvironmentDiskSpaceNotEnough  = NewErrorCode("Environment.DiskSpaceNotEnough", unexpected, "err.environment.disk.space.not.enough")
 	ErrEnvironmentWithoutObAdmin      = NewErrorCode("Environment.WithoutObAdmin", unexpected, "err.environment.without.ob.admin")
+	ErrEnvironmentWithoutObdiag       = NewErrorCode("Environment.WithoutObdiag", unexpected, "err.environment.without.obdiag")
+	ErrEnvironmentObdiagNotAvailable  = NewErrorCode("Environment.Obdiag.NotAvailable", badRequest, "err.environment.obdiag.not.available") // "no obdiag package available in ocs"
 
 	// Ob.Database
 	ErrObDatabaseNotExist    = NewErrorCode("OB.Database.NotExist", notFound, "err.ob.database.not.exist")

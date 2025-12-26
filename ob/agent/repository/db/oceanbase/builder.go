@@ -52,6 +52,7 @@ var tableList = []interface{}{
 	oceanbase.AgentBinaryInfo{},
 	oceanbase.AgentBinaryChunk{},
 	oceanbase.OcsConfig{},
+	oceanbase.InspectionReport{},
 	oceanbase.ProfileCredential{},
 }
 

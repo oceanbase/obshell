@@ -255,6 +255,19 @@ func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndRelease(n
 	return
 }
 
+func (obclusterService *ObclusterService) GetLatestUpgradePkgInfo(name, arch, distribution string) (pkgInfo oceanbase.UpgradePkgInfo, err error) {
+	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	if err != nil {
+		return
+	}
+	// The dist stored in upgrade_pkg_info is like 'el7'/'al8', we need to trim the prefix '.'.
+	err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).
+		Where("name = ? and architecture = ? and distribution = ?", name, arch, strings.TrimPrefix(distribution, ".")).
+		Order("version DESC, `release` DESC, gmt_modify DESC").
+		First(&pkgInfo).Error
+	return
+}
+
 func (obclusterService *ObclusterService) AddServer(svrInfo meta.ObserverSvrInfo, zoneName string) (err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -731,6 +744,15 @@ func (obclusterService *ObclusterService) GetParameterByName(name string) (param
 		return
 	}
 	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME = ?", name).Scan(&param).Error
+	return
+}
+
+func (obclusterService *ObclusterService) GetParametersByName(name string) (parameters []oceanbase.ObParameters, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME = ?", name).Scan(&parameters).Error
 	return
 }
 

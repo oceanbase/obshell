@@ -140,6 +140,9 @@ const (
 	URI_CREDENTIALS       = "/credentials"
 	URI_VALIDATE          = "/validate"
 	URI_ENCRYPT_SECRETKEY = "/encrypt-secret-key"
+	URI_INSPECTION        = "/inspection"
+	URI_REPORTS           = "/reports"
+	URI_REPORT            = "/report"
 
 	URI_PARAM_NAME            = "name"
 	URI_PATH_PARAM_NAME       = "/:" + URI_PARAM_NAME

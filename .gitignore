@@ -18,6 +18,9 @@ vendor
 .idea/*
 *.iml
 .vscode/*
+.cursor/*
+markdown/*
+.cursorignore
 
 # Project specific
 .OWNERS
@@ -51,6 +54,7 @@ config.local.ts
 package-lock.json
 yarn.lock
 pnpm-lock.yaml
+config.ts
 
 # Frontend specific directories
 frontend/pids

@@ -57,8 +57,12 @@ func SplitRelease(release string) (buildNumber, distribution string, err error) 
 }
 
 func InstallRpmPkgInPlace(path string) (err error) {
-	log.Infof("InstallRpmPkg: %s", path)
 	installPath := filepath.Dir(path)
+	return InstallRpmPkgToTargetDir(path, installPath)
+}
+
+func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
+	log.Infof("InstallRpmPkg: %s", path)
 
 	f, err := os.Open(path)
 	if err != nil {

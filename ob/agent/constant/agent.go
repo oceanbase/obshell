@@ -92,12 +92,13 @@ const (
 
 // upload pkg names
 const (
-	PKG_OBSHELL              = "obshell"
-	PKG_OCEANBASE_CE         = "oceanbase-ce"
-	PKG_OCEANBASE_CE_LIBS    = "oceanbase-ce-libs"
-	PKG_OCEANBASE            = "oceanbase"
-	PKG_OCEANBASE_STANDALONE = "oceanbase-standalone"
-	PKG_OBPROXY_CE           = "obproxy-ce"
+	PKG_OBSHELL                   = "obshell"
+	PKG_OCEANBASE_CE              = "oceanbase-ce"
+	PKG_OCEANBASE_CE_LIBS         = "oceanbase-ce-libs"
+	PKG_OCEANBASE_DIAGNOSTIC_TOOL = "oceanbase-diagnostic-tool"
+	PKG_OCEANBASE                 = "oceanbase"
+	PKG_OCEANBASE_STANDALONE      = "oceanbase-standalone"
+	PKG_OBPROXY_CE                = "obproxy-ce"
 )
 
 var SUPPORT_PKG_NAMES_MAP = map[oceanbase.OBType][]string{

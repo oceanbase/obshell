@@ -132,6 +132,9 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 		} else {
 			err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 		}
+	case constant.PKG_OCEANBASE_DIAGNOSTIC_TOOL:
+		// do nothing
+		return nil
 	default:
 		err = errors.Occur(errors.ErrObPackageNameNotSupport, r.rpmPkg.Name(), strings.Join(constant.SUPPORT_PKG_NAMES_MAP[r.obType], ", "))
 	}

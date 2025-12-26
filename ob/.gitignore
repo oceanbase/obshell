@@ -2,4 +2,5 @@
 bindata/
 agent/api/docs/*
 
+.cursor/
 # Note: vendor, .DS_Store, and frontend rules are handled by root .gitignore

@@ -72,6 +72,7 @@ func (t *CheckEnvTask) checkEnv() (err error) {
 		t.ExecuteLogf("Checking if python module '%s' is installed.", module)
 		cmd = exec.Command("python", "-c", "import "+module)
 		if err = cmd.Run(); err != nil {
+			t.ExecuteErrorLogf("Checking if python module '%s' is installed. %s", module, err.Error())
 			return errors.Occur(errors.ErrEnvironmentWithoutPythonModule, module)
 		}
 	}

@@ -30,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/executor/agent"
+	"github.com/oceanbase/obshell/ob/agent/executor/inspection"
 	"github.com/oceanbase/obshell/ob/agent/executor/ob"
 	"github.com/oceanbase/obshell/ob/agent/executor/obproxy"
 	"github.com/oceanbase/obshell/ob/agent/executor/pool"
@@ -252,6 +253,7 @@ func (a *Agent) initTask() {
 	task.RegisterTaskType(script.ImportScriptForTenantTask{})
 	pool.RegisterPoolTask()
 	obproxy.RegisterTaskType()
+	inspection.RegisterInspectionTask()
 }
 
 // Check if the ob config file exists.

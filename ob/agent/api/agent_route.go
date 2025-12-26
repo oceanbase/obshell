@@ -161,6 +161,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	obcluster.GET(constant.URI_STATISTICS, GetStatistics)
 	obcluster.GET(constant.URI_UNIT_CONFIG_LIMIT, checkClusterAgentWrapper(getUnitConfigLimitHandler))
 	obcluster.GET(constant.URI_LICENSE, getObclusterLicenseHandler)
+	obcluster.POST(constant.URI_INSPECTION, triggerInspectionHandler)
+	obcluster.GET(constant.URI_INSPECTION+constant.URI_REPORTS, getInspectionHistoryHandler)
+	obcluster.GET(constant.URI_INSPECTION+constant.URI_REPORT+constant.URI_PATH_PARAM_ID, getInspectionReportHandler)
 
 	// observer routes
 	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))
