@@ -32,13 +32,13 @@ func (s *TenantService) GetSessions(tenantName string, p *param.QueryTenantSessi
 	}
 	query := oceanbaseDb.Model(&oceanbase.TenantSession{}).Where("TENANT = ?", tenantName)
 	if p.User != "" {
-		query = query.Where("USER = ?", p.User)
+		query = query.Where("USER LIKE ?", "%"+p.User+"%")
 	}
 	if p.Db != "" {
-		query = query.Where("DB = ?", p.Db)
+		query = query.Where("DB LIKE ?", "%"+p.Db+"%")
 	}
 	if p.Host != "" {
-		query = query.Where("USER_CLIENT_IP = ?", p.Host)
+		query = query.Where("USER_CLIENT_IP LIKE ?", "%"+p.Host+"%")
 	}
 	if p.SessionId != 0 {
 		query = query.Where("ID = ?", p.SessionId)

@@ -181,7 +181,7 @@ func CreateCredential(p *param.CreateCredentialParam) (*bo.Credential, error) {
 			*p.SshCredentialProperty.Passphrase,
 		)
 		if err != nil {
-			return nil, errors.WrapRetain(errors.ErrCredentialSSHValidationFailed, err)
+			return nil, errors.Occur(errors.ErrCredentialSSHValidationFailed)
 		}
 	}
 
@@ -285,7 +285,7 @@ func UpdateCredential(id int64, p *param.UpdateCredentialParam) (*bo.Credential,
 			passphrase,
 		)
 		if err != nil {
-			return nil, errors.WrapRetain(errors.ErrCredentialSSHValidationFailed, err)
+			return nil, errors.Occur(errors.ErrCredentialSSHValidationFailed)
 		}
 	}
 
