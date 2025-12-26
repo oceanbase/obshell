@@ -109,7 +109,7 @@ const PackageSelect = React.forwardRef<PackageSelectRef, PackageSelectProps>(
       });
     } else if (currentObVersion) {
       packageList = packageList.filter(item =>
-        versionCompare(item.version, currentObVersion, 'gt')
+        versionCompare(item.version, currentObVersion, 'gte')
       );
     }
 
