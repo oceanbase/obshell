@@ -151,21 +151,19 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
     batchValidateCredentialData?.data?.contents || [];
 
   // 删除凭证
-  const { run: deleteCredential } = useRequest(
-    (params: API.deleteCredentialParams) => CredentialController.deleteCredential(params),
-    {
-      manual: true,
-      onSuccess: () => {
-        message.success(
-          formatMessage({
-            id: 'OBShell.page.Credential.Host.CredentialsDeletedSuccessfully',
-            defaultMessage: '凭据删除成功',
-          })
-        );
-        refresh();
-      },
-    }
-  );
+  const { run: deleteCredential } = useRequest(CredentialController.deleteCredential, {
+    manual: true,
+    onSuccess: (res, params) => {
+      setSelectedRowKeys(prev => prev.filter(item => item.credential_id !== params?.[0]?.id));
+      message.success(
+        formatMessage({
+          id: 'OBShell.page.Credential.Host.CredentialsDeletedSuccessfully',
+          defaultMessage: '凭据删除成功',
+        })
+      );
+      refresh();
+    },
+  });
   /**
    * 删除 HOST 凭据
    */

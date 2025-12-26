@@ -1,0 +1,197 @@
+---
+description: 调试日志开发规范
+globs:
+  - '**/*.ts'
+  - '**/*.tsx'
+---
+
+# 调试日志开发规范
+
+## console.log 格式规范
+
+在编写或补齐 `console.log` 代码时，必须使用以下标准格式：
+
+```typescript
+console.log('描述文字', 变量名);
+```
+
+### 规则要求
+
+1. **双参数格式**：第一个参数为描述字符串，第二个参数为变量
+2. **描述文字**：使用简洁的字符串字面量，通常为变量名或简短说明
+3. **避免拼接**：不要使用模板字符串、字符串拼接或 JSON.stringify
+
+### 正确示例
+
+```typescript
+// ✅ 推荐格式
+console.log('params', params);
+console.log('userInfo', userInfo);
+console.log('response data', response.data);
+console.log('cluster config', clusterConfig);
+console.log('error', error);
+console.log('loading state', loading);
+
+// 复杂对象
+console.log('form values', form.getFieldsValue());
+console.log(
+  'filtered list',
+  list.filter(item => item.active)
+);
+
+// 多个变量分开打印
+console.log('username', username);
+console.log('password', password);
+```
+
+### 错误示例
+
+```typescript
+// ❌ 避免使用
+console.log(params); // 缺少描述
+console.log('params: ', params); // 不必要的冒号和空格
+console.log(`params: ${params}`); // 使用模板字符串
+console.log(`params: ${JSON.stringify(params)}`); // 手动序列化
+console.log('username: ' + username); // 字符串拼接
+```
+
+## 优势说明
+
+### 1. 快速定位
+
+```typescript
+// 在控制台中清晰显示变量名
+console.log('userList', userList);
+// Console输出: userList [...]
+```
+
+### 2. 代码一致性
+
+- 整个团队使用统一的日志格式
+- 便于代码审查和维护
+- 提升代码可读性
+
+### 3. 便于清理
+
+```bash
+# 轻松搜索和删除所有调试日志
+grep -r "console.log" src/
+```
+
+## 其他调试方法
+
+### console.error / console.warn
+
+错误和警告也使用相同格式：
+
+```typescript
+console.error('API error', error);
+console.warn('deprecated method', methodName);
+```
+
+### 条件日志
+
+```typescript
+if (process.env.NODE_ENV === 'development') {
+  console.log('debug info', debugInfo);
+}
+```
+
+### 调试标记
+
+对于临时调试，可以添加特殊前缀便于后续删除：
+
+```typescript
+console.log('DEBUG: current state', state);
+console.log('TODO: check this value', value);
+```
+
+## 生产环境要求
+
+⚠️ **重要提示**：
+
+1. **开发阶段**：可以自由使用 `console.log` 进行调试
+2. **提交前**：必须删除所有调试用的 `console.log` 语句
+3. **生产环境**：使用正式的日志系统（如果需要）
+4. **代码审查**：reviewer 应检查是否有遗留的 console 语句
+
+### 自动化检查
+
+建议在 ESLint 中配置：
+
+```json
+{
+  "rules": {
+    "no-console": ["warn", { "allow": ["error", "warn"] }]
+  }
+}
+```
+
+## 最佳实践
+
+### 1. 关键节点打印
+
+```typescript
+const handleSubmit = async (values: FormValues) => {
+  console.log('form values', values);
+
+  const result = await submitAPI(values);
+  console.log('submit result', result);
+
+  if (result.success) {
+    console.log('redirect to', '/success');
+    history.push('/success');
+  }
+};
+```
+
+### 2. 异步操作追踪
+
+```typescript
+useEffect(() => {
+  console.log('fetching data', { clusterId, tenantId });
+
+  fetchData()
+    .then(data => {
+      console.log('data fetched', data);
+    })
+    .catch(error => {
+      console.error('fetch error', error);
+    });
+}, [clusterId, tenantId]);
+```
+
+### 3. 状态变化监控
+
+```typescript
+useEffect(() => {
+  console.log('loading changed', loading);
+}, [loading]);
+
+useEffect(() => {
+  console.log('data updated', data);
+}, [data]);
+```
+
+## 代码补全提示
+
+当你在代码中输入 `console.log` 时，IDE 应该自动补全为：
+
+```typescript
+console.log('');
+//           ↑   ↑
+//           |   光标在此，输入变量名
+//           先输入描述
+```
+
+建议的工作流程：
+
+1. 输入 `console.log(`
+2. 输入描述文字（通常是变量名）`'params'`
+3. 输入逗号和空格 `, `
+4. 输入实际变量 `params`
+5. 关闭括号 `)`
+
+---
+
+**记住**：调试日志是开发工具，不是生产代码的一部分。使用标准格式，便于开发和清理。

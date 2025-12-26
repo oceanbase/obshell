@@ -289,7 +289,7 @@ const Report: React.FC = () => {
                     defaultMessage: '巡检场景',
                   })}
                 >
-                  {reportData?.scenario === 'basic'
+                  {reportData?.scenario === 'BASIC'
                     ? formatMessage({
                         id: 'OBShell.page.Inspection.Result.BasicInspection',
                         defaultMessage: '基础巡检',

@@ -16,7 +16,6 @@
 
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-// import { EllipsisOutlined } from '@oceanbase/icons';
 import React from 'react';
 import { PageContainer } from '@oceanbase/ui';
 import { Badge, Button, Card, Col, Modal, Row, Space, Table, Tooltip } from '@oceanbase/design';
@@ -25,7 +24,7 @@ import useDocumentTitle from '@/hook/useDocumentTitle';
 import ContentWithReload from '@/component/ContentWithReload';
 import Empty from '@/component/Empty';
 import { getTenantOverView, tenantLock, tenantUnlock } from '@/service/obshell/tenant';
-import { directTo, findByValue, formatTime, sortByMoment } from '@oceanbase/util';
+import { findByValue, formatTime, sortByMoment } from '@oceanbase/util';
 import RenderConnectionString from '@/component/RenderConnectionString';
 import { getDateFormatDisplay } from '@/constant/datetime';
 import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
@@ -115,15 +114,6 @@ const Tenant: React.FC<TenantProps> = ({
       }
     },
   });
-
-  // const handleMenuClick = (key: string) => {
-  //   if (key === 'parameterTemplate') {
-  //     history.push('/tenant/parameterTemplate');
-  //   }
-  //   if (key === 'unitSpec') {
-  //     history.push('/tenant/unitSpec');
-  //   }
-  // };
 
   const handleLock = (record: API.DbaObTenant) => {
     // 锁定
@@ -236,11 +226,6 @@ const Tenant: React.FC<TenantProps> = ({
       }),
 
       dataIndex: 'mode',
-      // filters: TENANT_MODE_LIST.map(item => ({
-      //   text: item.label,
-      //   value: item.value,
-      // })),
-      // filteredValue: modeList,
       render: (text: API.TenantMode) => <span>{findByValue(TENANT_MODE_LIST, text).label}</span>,
     },
 
@@ -253,14 +238,7 @@ const Tenant: React.FC<TenantProps> = ({
       dataIndex: 'connection_strings',
       render: (obproxyAndConnectionStrings: API.ObproxyAndConnectionString[]) => {
         return (
-          <RenderConnectionString
-            data-aspm-click="c304184.d308808"
-            data-aspm-desc="租户列表-跳转租户详情"
-            data-aspm-param={``}
-            data-aspm-expo
-            maxWidth={360}
-            connectionStrings={obproxyAndConnectionStrings}
-          />
+          <RenderConnectionString maxWidth={360} connectionStrings={obproxyAndConnectionStrings} />
         );
       },
     },
@@ -320,61 +298,15 @@ const Tenant: React.FC<TenantProps> = ({
       render: (text: string, record: API.DbaObTenant) => {
         if (record.status === 'CREATING') {
           return (
-            <a
-              data-aspm-click="c304184.d308812"
-              data-aspm-desc="租户列表-查看创建任务"
-              data-aspm-param={``}
-              data-aspm-expo
-              onClick={() => history.push(`/task`)}
-            >
+            <Button size="small" onClick={() => history.push(`/task`)}>
               {formatMessage({
                 id: 'ocp-express.component.TenantList.ViewTasks',
                 defaultMessage: '查看任务',
               })}
-            </a>
+            </Button>
           );
         } else if (record.status === 'FAILED') {
           return null;
-          // return (
-          //   <Space size="middle">
-          //     <a
-          //       data-aspm-click="c304184.d308811"
-          //       data-aspm-desc="租户列表-查看失败任务"
-          //       data-aspm-param={``}
-          //       data-aspm-expo
-          //       onClick={() => history.push(`/task`)}
-          //     >
-          //       {formatMessage({
-          //         id: 'ocp-express.component.TenantList.ViewTasks',
-          //         defaultMessage: '查看任务',
-          //       })}
-          //     </a>
-          //     <Popconfirm
-          //       placement="topRight"
-          //       title={formatMessage({
-          //         id: 'ocp-express.component.TenantList.AreYouSureYouWantToDeleteThis',
-          //         defaultMessage: '确定要删除此租户吗？',
-          //       })}
-          //       onConfirm={() =>
-          //         ObTenantController.deleteTenant({
-          //           tenantId: record.obTenantId,
-          //         }).then(() => refresh())
-          //       }
-          //     >
-          //       <a
-          //         data-aspm-click="c304184.d308806"
-          //         data-aspm-desc="租户列表-删除失败租户"
-          //         data-aspm-param={``}
-          //         data-aspm-expo
-          //       >
-          //         {formatMessage({
-          //           id: 'ocp-express.component.TenantList.Delete',
-          //           defaultMessage: '删除',
-          //         })}
-          //       </a>
-          //     </Popconfirm>
-          //   </Space>
-          // );
         } else {
           return (
             <Space size="middle">
@@ -389,11 +321,8 @@ const Tenant: React.FC<TenantProps> = ({
                   }
                   placement="topRight"
                 >
-                  <a
-                    data-aspm-click="c304184.d308810"
-                    data-aspm-desc="租户列表-解锁租户"
-                    data-aspm-param={``}
-                    data-aspm-expo
+                  <Button
+                    size="small"
                     disabled={record.tenant_name === 'sys'}
                     onClick={() => handleUnlock(record)}
                   >
@@ -401,7 +330,7 @@ const Tenant: React.FC<TenantProps> = ({
                       id: 'ocp-express.component.TenantList.Unlock',
                       defaultMessage: '解锁',
                     })}
-                  </a>
+                  </Button>
                 </Tooltip>
               ) : (
                 <Tooltip
@@ -415,11 +344,7 @@ const Tenant: React.FC<TenantProps> = ({
                   placement="topRight"
                 >
                   <Button
-                    data-aspm-click="c304184.d308807"
-                    data-aspm-desc="租户列表-锁定租户"
-                    data-aspm-param={``}
-                    data-aspm-expo
-                    type="link"
+                    size="small"
                     disabled={record.tenant_name === 'sys' || record.status === 'RESTORE'}
                     onClick={() => handleLock(record)}
                   >
@@ -430,21 +355,6 @@ const Tenant: React.FC<TenantProps> = ({
                   </Button>
                 </Tooltip>
               )}
-
-              {/* <a
-              data-aspm-click="c304184.d308813"
-              data-aspm-desc="租户列表-复制租户"
-              data-aspm-param={``}
-              data-aspm-expo
-              onClick={() => {
-                directTo(`/tenant/new?tenantId=${record.obTenantId}`);
-              }}
-              >
-              {formatMessage({
-                id: 'ocp-express.component.TenantList.Copy',
-                defaultMessage: '复制',
-              })}
-              </a> */}
             </Space>
           );
         }
@@ -460,33 +370,7 @@ const Tenant: React.FC<TenantProps> = ({
         defaultMessage: '暂无任何数据记录，立即新建一个租户吧！',
       })}
     >
-      {/* <Button
-      style={{ marginRight: 12 }}
-      onClick={() => {
-        history.push('/tenant/unitSpec');
-      }}
-      >
-      {formatMessage({
-        id: 'ocp-express.page.Tenant.UnitSpecificationManagement',
-        defaultMessage: 'Unit 规格管理',
-      })}
-      </Button> */}
-      {/* <Button
-      style={{ marginRight: 12 }}
-      onClick={() => {
-        history.push('/tenant/parameterTemplate');
-      }}
-      >
-      {formatMessage({
-        id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-        defaultMessage: '租户参数模板管理',
-      })}
-      </Button> */}
       <Button
-        data-aspm-click="c318544.d343271"
-        data-aspm-desc="暂无租户-新建租户"
-        data-aspm-param={``}
-        data-aspm-expo
         type="primary"
         onClick={() => {
           history.push('/tenantCreate/new');
@@ -530,10 +414,6 @@ const Tenant: React.FC<TenantProps> = ({
               </Button>
             )}
             <Button
-              data-aspm-click="c304184.d308814"
-              data-aspm-desc="租户列表-新建租户"
-              data-aspm-param={``}
-              data-aspm-expo
               type="primary"
               onClick={() => {
                 history.push('/tenantCreate/new');
@@ -544,32 +424,6 @@ const Tenant: React.FC<TenantProps> = ({
                 defaultMessage: '新建租户',
               })}
             </Button>
-            {/* 二期 */}
-            {/* <Dropdown
-          overlay={
-          <Menu
-            onClick={({ key }) => {
-              handleMenuClick(key);
-            }}
-          >
-            <Menu.Item key="parameterTemplate">
-              <a>
-                {formatMessage({
-                  id: 'ocp-express.page.Tenant.TenantParameterTemplateManagement',
-                  defaultMessage: '租户参数模板管理',
-                })}
-              </a>
-            </Menu.Item>
-            <Menu.Item key="unitSpec">
-              <a>Unit 规格管理</a>
-            </Menu.Item>
-          </Menu>
-          }
-          >
-          <Button>
-          <EllipsisOutlined />
-          </Button>
-          </Dropdown> */}
           </Space>
         ),
       }}

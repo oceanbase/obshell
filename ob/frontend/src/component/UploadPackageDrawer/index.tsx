@@ -243,18 +243,8 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
             },
           ]}
           extra={
-            isStandalone ? (
-              formatMessage({
-                id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseStandaloneAreSupported',
-                defaultMessage:
-                  '只支持 oceanbase-standalone、obshell 开头的包 ，同时后缀名为 .rpm 的文件。',
-              })
-            ) : isDistributedBusiness ? (
-              formatMessage({
-                id: 'obshell.component.UploadPackageDrawer.OnlyPackagesStartingWithOceanbaseAreSupported',
-                defaultMessage: '只支持 oceanbase 开头的包 ，同时后缀名为 .rpm 的文件。',
-              })
-            ) : (
+            !isStandalone &&
+            !isDistributedBusiness && (
               <a
                 href="https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/"
                 target="_blank"

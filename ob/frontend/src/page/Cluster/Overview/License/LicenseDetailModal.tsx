@@ -117,7 +117,7 @@ const LicenseDetailModal: React.FC<LicenseDetailModalProps> = ({ clusterData, op
           id: 'OBShell.Overview.License.LicenseDetailModal.LicenseOptions',
           defaultMessage: 'License 选件',
         }),
-        value: isTrial ? DEFAULT_LICENSE_OPTIONS.join('、') : license.options?.join('、'),
+        value: isTrial ? DEFAULT_LICENSE_OPTIONS.join('、') : license?.options,
         description: LICENSE_DESCRIPTIONS.options.split('|'),
       },
       {
