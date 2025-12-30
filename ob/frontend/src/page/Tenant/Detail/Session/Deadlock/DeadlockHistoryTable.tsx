@@ -10,7 +10,7 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
   const columns = [
     {
       title: formatMessage({
-        id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.Id',
+        id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.NumberId',
         defaultMessage: '编号 ID',
       }),
       dataIndex: 'idx',
@@ -18,7 +18,7 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.TransactionHash',
+        id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.TransactionHash',
         defaultMessage: '事务 Hash',
       }),
       dataIndex: 'transaction_hash',
@@ -31,25 +31,25 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.Interrupted',
+        id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.InterruptOrNot',
         defaultMessage: '是否中断',
       }),
       dataIndex: 'roll_backed',
       render: (text: boolean) =>
         text
           ? formatMessage({
-              id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.Yes',
+              id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.Yes',
               defaultMessage: '是',
             })
           : formatMessage({
-              id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.No',
+              id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.No',
               defaultMessage: '否',
             }),
     },
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Session.Deadlock.DeadlockHistoryTable.RequestResources',
+        id: 'OBShell.Session.Deadlock.DeadlockHistoryTable.RequestResources',
         defaultMessage: '请求资源',
       }),
       dataIndex: 'resource',

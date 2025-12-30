@@ -5,7 +5,7 @@ import { Card } from '@oceanbase/design';
 import { listAllMetrics } from '@/service/obshell/metric';
 import React, { useEffect, useMemo, useState } from 'react';
 import styles from './index.less';
-import { Dimension } from '@/constant/monitor';
+import { DimensionMap } from '@/constant/monitor';
 import MySegmented from '../MySegmented';
 import { isEmpty } from 'lodash';
 import MonitorUnitSelect from '../MonitorUnitSelect';
@@ -31,7 +31,6 @@ interface MonitorCompProps {
   groupLabels: Monitor.LabelKeys[];
   useFor?: Monitor.MonitorUseFor;
   filterData?: any[];
-  filterQueryMetric?: Monitor.MetricsLabels;
   serverOption: Monitor.OptionType[];
   onTabChange?: (isHostPerformanceTab: boolean) => void;
 }
@@ -45,7 +44,6 @@ export default function MonitorComp({
   groupLabels,
   useFor = 'cluster',
   filterData,
-  filterQueryMetric,
   serverOption,
   onTabChange,
 }: MonitorCompProps) {
@@ -102,7 +100,7 @@ export default function MonitorComp({
   }, [serverOption, filterLabel]);
 
   const dimension = useMemo(() => {
-    return Dimension[currentContainer?.name as keyof typeof Dimension]?.filter(item =>
+    return DimensionMap[currentContainer?.name as keyof typeof DimensionMap]?.filter(item =>
       isSingleMachine ? item.singleMachineFlag : true
     );
   }, [currentContainer?.name, isSingleMachine]);
@@ -174,16 +172,19 @@ export default function MonitorComp({
       labels = activeDimension ? [activeDimension as Monitor.LabelKeys] : groupLabels;
     }
 
-    // 如果 filterLabel 中包含 svr_ip 或 svr_port，确保它们在 groupLabels 中
-    // 但主机性能 tab 不包含 svr_port
-    const hasSvrIp = filterLabel?.some(label => label.key === 'svr_ip');
-    const hasSvrPort = filterLabel?.some(label => label.key === 'svr_port');
+    // 如果 activeDimension 不是 ob_cluster_name 或 tenant_name，则需要确保 svr_ip 和 svr_port 在 groupLabels 中
+    if (!['ob_cluster_name', 'tenant_name'].includes(activeDimension)) {
+      // 如果 filterLabel 中包含 svr_ip 或 svr_port，确保它们在 groupLabels 中
+      // 但主机性能 tab 不包含 svr_port
+      const hasSvrIp = filterLabel?.some(label => label.key === 'svr_ip');
+      const hasSvrPort = filterLabel?.some(label => label.key === 'svr_port');
 
-    if (hasSvrIp && !labels.includes('svr_ip')) {
-      labels.push('svr_ip');
-    }
-    if (hasSvrPort && !labels.includes('svr_port') && !isHostPerformanceTab) {
-      labels.push('svr_port');
+      if (hasSvrIp && !labels.includes('svr_ip')) {
+        labels.push('svr_ip');
+      }
+      if (hasSvrPort && !labels.includes('svr_port') && !isHostPerformanceTab) {
+        labels.push('svr_port');
+      }
     }
 
     return labels;
@@ -209,7 +210,6 @@ export default function MonitorComp({
 
       // 如果没有选中 unit，检查是否有来自其他地方的 svr_ip 或 svr_port 筛选条件
       const baseFilters = [
-        ...(filterQueryMetric || []),
         ...(filterLabel || []).map(label => ({ key: label.key, value: label.value })),
       ];
 
@@ -219,11 +219,8 @@ export default function MonitorComp({
       );
       return svrFilters.length > 0 ? svrFilters : undefined;
     }
-
-    // 对于其他维度（租户维度、OBServer维度等），只使用原始的 filterQueryMetric
-    // 不合并 filterLabel，避免冲突
-    return filterQueryMetric;
-  }, [activeDimension, selectedUnit, filterQueryMetric, filterLabel]);
+    return undefined;
+  }, [activeDimension, selectedUnit, filterLabel]);
 
   // 渲染图表列表
   const renderGraphList = (metricGroups: API.MetricGroup[]) => {

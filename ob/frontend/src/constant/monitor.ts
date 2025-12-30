@@ -155,8 +155,8 @@ export const REFRESH_FREQUENCY = 15;
 
 export const POINT_NUMBER = 15;
 
-export const Dimension = {
-  数据库性能: [
+const Dimension = {
+  databasePerformance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -191,7 +191,7 @@ export const Dimension = {
     },
   ],
 
-  主机性能: [
+  hostPerformance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -210,7 +210,7 @@ export const Dimension = {
     },
   ],
 
-  OBServer性能: [
+  observerPerformance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -229,7 +229,7 @@ export const Dimension = {
     },
   ],
 
-  性能与SQL: [
+  performanceAndSQL: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -248,7 +248,7 @@ export const Dimension = {
     },
   ],
 
-  事务: [
+  transaction: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -267,7 +267,7 @@ export const Dimension = {
     },
   ],
 
-  存储与缓存: [
+  storageAndCache: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -285,4 +285,19 @@ export const Dimension = {
       singleMachineFlag: false,
     },
   ],
+};
+
+export const DimensionMap = {
+  数据库性能: Dimension['databasePerformance'],
+  主机性能: Dimension['hostPerformance'],
+  OBServer性能: Dimension['observerPerformance'],
+  性能与SQL: Dimension['performanceAndSQL'],
+  事务: Dimension['transaction'],
+  存储与缓存: Dimension['storageAndCache'],
+  'Database Performance': Dimension['databasePerformance'],
+  'Host performance': Dimension['hostPerformance'],
+  'OBServer performance': Dimension['observerPerformance'],
+  'Performance and SQL': Dimension['performanceAndSQL'],
+  Transaction: Dimension['transaction'],
+  'Storage and Cache': Dimension['storageAndCache'],
 };

@@ -37,7 +37,7 @@ G6.registerNode(
               cfg &&
               formatMessage(
                 {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.SessionIdCfglockrequesterid',
+                  id: 'OBShell.Session.Deadlock.registerNode.SessionIdCfglockrequesterid',
                   defaultMessage: '会话 ID：{cfgLockRequesterId}',
                 },
                 { cfgLockRequesterId: cfg.lockRequesterId }
@@ -52,19 +52,7 @@ G6.registerNode(
             fill: token.colorTextTertiary,
             fontSize: 12,
             // 长文本截断
-            text:
-              cfg &&
-              fittingString(
-                formatMessage(
-                  {
-                    id: 'ocp-v2.Session.Deadlock.DeadlockGraph.RowkeyCfgrowkey',
-                    defaultMessage: 'RowKey：{cfgRowKey}',
-                  },
-                  { cfgRowKey: cfg.rowKey }
-                ),
-                160,
-                12
-              ),
+            text: cfg && fittingString(`RowKey：${cfg.rowKey}`, 160, 12),
           },
         });
       } else {
@@ -78,7 +66,7 @@ G6.registerNode(
               cfg &&
               formatMessage(
                 {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.IdCfgidx',
+                  id: 'OBShell.Session.Deadlock.registerNode.NumberIdCfgidx',
                   defaultMessage: '编号 ID：{cfgIdx}',
                 },
                 { cfgIdx: cfg.idx }
@@ -101,7 +89,7 @@ G6.registerNode(
               fittingString(
                 formatMessage(
                   {
-                    id: 'ocp-v2.Session.Deadlock.DeadlockGraph.RequestResourceCfgresource',
+                    id: 'OBShell.Session.Deadlock.registerNode.RequestResourcesCfgresource',
                     defaultMessage: '请求资源：{cfgResource}',
                   },
                   { cfgResource: cfg.resource }

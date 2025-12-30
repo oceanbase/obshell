@@ -226,11 +226,11 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
         title={
           isEdit
             ? formatMessage({
-                id: 'ocp-v2.src.component.AddHostCredentialDrawer.ModifySecrets',
+                id: 'OBShell.src.component.AddHostCredentialDrawer.EditCredentials',
                 defaultMessage: '编辑凭据',
               })
             : formatMessage({
-                id: 'ocp-v2.src.component.AddHostCredentialDrawer.CreateSecret',
+                id: 'OBShell.src.component.AddHostCredentialDrawer.NewCredential',
                 defaultMessage: '新建凭据',
               })
         }
@@ -256,7 +256,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
           <FormItem
             initialValue={credential?.name}
             label={formatMessage({
-              id: 'ocp-v2.src.component.AddHostCredentialDrawer.SecretName',
+              id: 'OBShell.src.component.AddHostCredentialDrawer.CredentialName',
               defaultMessage: '凭据名',
             })}
             name="name"
@@ -264,7 +264,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
               {
                 required: true,
                 message: formatMessage({
-                  id: 'ocp-v2.src.component.AddHostCredentialDrawer.EnterASecretName',
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterACredentialName',
                   defaultMessage: '请输入凭据名',
                 }),
               },
@@ -278,7 +278,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
           <FormItem
             initialValue={credential?.username === 'root' ? 'root' : 'normal'}
             label={formatMessage({
-              id: 'ocp-v2.src.component.AddHostCredentialDrawer.UserType',
+              id: 'OBShell.src.component.AddHostCredentialDrawer.UserType',
               defaultMessage: '用户类型',
             })}
             name="userType"
@@ -286,7 +286,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
               {
                 required: true,
                 message: formatMessage({
-                  id: 'ocp-v2.src.component.AddHostCredentialDrawer.SelectAUserType',
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseSelectAUserType',
                   defaultMessage: '请选择用户类型',
                 }),
               },
@@ -312,7 +312,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
                 <FormItem
                   initialValue={credential?.username}
                   label={formatMessage({
-                    id: 'ocp-v2.src.component.AddHostCredentialDrawer.UserName',
+                    id: 'OBShell.src.component.AddHostCredentialDrawer.UserName',
                     defaultMessage: '用户名',
                   })}
                   name="username"
@@ -320,7 +320,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
                     {
                       required: true,
                       message: formatMessage({
-                        id: 'ocp-v2.src.component.AddHostCredentialDrawer.EnterAUsername',
+                        id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterAUserName',
                         defaultMessage: '请输入用户名',
                       }),
                     },
@@ -335,7 +335,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
           <FormItem
             initialValue={credential?.passphrase}
             label={formatMessage({
-              id: 'ocp-v2.src.component.AddHostCredentialDrawer.Password',
+              id: 'OBShell.src.component.AddHostCredentialDrawer.Password',
               defaultMessage: '密码',
             })}
             name="passphrase"
@@ -343,7 +343,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
               {
                 required: !isEdit,
                 message: formatMessage({
-                  id: 'ocp-v2.src.component.AddHostCredentialDrawer.EnterAPassword',
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterThePassword',
                   defaultMessage: '请输入密码',
                 }),
               },
@@ -356,11 +356,11 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
               placeholder={
                 isEdit
                   ? formatMessage({
-                      id: 'ocp-v2.src.component.AddHostCredentialDrawer.BlankForNotModifyPassword',
+                      id: 'OBShell.src.component.AddHostCredentialDrawer.EmptyIndicatesThatThePassword',
                       defaultMessage: '为空表示不修改密码',
                     })
                   : formatMessage({
-                      id: 'ocp-v2.src.component.AddHostCredentialDrawer.EnterAPassword',
+                      id: 'OBShell.src.component.AddHostCredentialDrawer.PleaseEnterThePassword',
                       defaultMessage: '请输入密码',
                     })
               }
@@ -369,7 +369,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
 
           <FormItem
             label={formatMessage({
-              id: 'ocp-v2.src.component.AddHostCredentialDrawer.ApplicationHost',
+              id: 'OBShell.src.component.AddHostCredentialDrawer.ApplicationHost',
               defaultMessage: '应用主机',
             })}
             name="targets"
@@ -397,7 +397,7 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
                   <div style={{ display: 'flex', alignItems: 'center' }}>
                     <Tag color="red" style={{ width: 12, height: 12, padding: 0 }} />
                     {formatMessage({
-                      id: 'ocp-v2.src.component.AddHostCredentialDrawer.TheSecretCannotBeConnected',
+                      id: 'OBShell.src.component.AddHostCredentialDrawer.CredentialsCannotConnect',
                       defaultMessage: '凭据无法连接',
                     })}
                   </div>
@@ -451,13 +451,13 @@ const AddHostCredentialDrawer: React.FC<AddHostCredentialDrawerProps> = ({
             label={
               <>
                 {formatMessage({
-                  id: 'ocp-v2.src.component.AddHostCredentialDrawer.Description',
+                  id: 'OBShell.src.component.AddHostCredentialDrawer.Description',
                   defaultMessage: '说明',
                 })}
 
                 <span style={{ color: token.colorTextTertiary }}>
                   {formatMessage({
-                    id: 'ocp-v2.src.component.AddHostCredentialDrawer.Optional',
+                    id: 'OBShell.src.component.AddHostCredentialDrawer.Optional',
                     defaultMessage: '（可选）',
                   })}
                 </span>

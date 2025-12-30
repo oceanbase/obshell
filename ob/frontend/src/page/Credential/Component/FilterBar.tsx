@@ -64,11 +64,11 @@ const FilterBar: React.FC<FilterBarProps> = ({
         >
           {isFilter
             ? formatMessage({
-                id: 'ocp-v2.Credential.Component.FilterBar.ReturnAll',
+                id: 'OBShell.Credential.Component.FilterBar.ReturnToAll',
                 defaultMessage: '返回全部',
               })
             : formatMessage({
-                id: 'ocp-v2.Credential.Component.FilterBar.OnlySelected',
+                id: 'OBShell.Credential.Component.FilterBar.SeeSelectedOnly',
                 defaultMessage: '仅看已选',
               })}
         </Button>
@@ -95,7 +95,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
             }}
           >
             {formatMessage({
-              id: 'ocp-v2.Credential.Component.FilterBar.BatchVerification',
+              id: 'OBShell.Credential.Component.FilterBar.BatchValidation',
               defaultMessage: '批量验证',
             })}
           </Button>
@@ -109,15 +109,14 @@ const FilterBar: React.FC<FilterBarProps> = ({
                 selectedRowKeys &&
                 formatMessage(
                   {
-                    id: 'ocp-v2.Credential.Component.FilterBar.AreYouSureYouWantToDeleteThese',
+                    id: 'OBShell.Credential.Component.FilterBar.AreYouSureYouWant',
                     defaultMessage: '确定要删除这 {selectedRowKeysLength} 个吗？',
                   },
-
                   { selectedRowKeysLength: selectedRowKeys.length }
                 ),
 
               okText: formatMessage({
-                id: 'ocp-v2.Credential.Component.FilterBar.Delete',
+                id: 'OBShell.Credential.Component.FilterBar.Delete',
                 defaultMessage: '删除',
               }),
 
@@ -133,7 +132,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
           }}
         >
           {formatMessage({
-            id: 'ocp-v2.Credential.Component.FilterBar.BatchDeletion',
+            id: 'OBShell.Credential.Component.FilterBar.BatchDelete',
             defaultMessage: '批量删除',
           })}
         </Button>,

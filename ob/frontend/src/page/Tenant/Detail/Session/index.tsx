@@ -1,7 +1,7 @@
+import { formatMessage } from '@/util/intl';
 import ContentWithReload from '@/component/ContentWithReload';
 import Empty from '@/component/Empty';
 import useReload from '@/hook/useReload';
-import { formatMessage } from '@/util/intl';
 import { history, useSelector } from 'umi';
 import React from 'react';
 import { Button, Tabs } from '@oceanbase/design';
@@ -37,9 +37,9 @@ const Index: React.FC<IndexProps> = ({
 
   return tenantData.status === 'CREATING' ? (
     <Empty
-      title={formatMessage({ id: 'ocp-v2.Detail.Session.NoData', defaultMessage: '暂无数据' })}
+      title={formatMessage({ id: 'OBShell.Detail.Session.NoData', defaultMessage: '暂无数据' })}
       description={formatMessage({
-        id: 'ocp-v2.Detail.Session.TheTenantIsBeingCreated',
+        id: 'OBShell.Detail.Session.TheTenantIsBeingCreated',
         defaultMessage: '租户正在创建中，请等待租户创建完成',
       })}
     >
@@ -50,7 +50,7 @@ const Index: React.FC<IndexProps> = ({
         }}
       >
         {formatMessage({
-          id: 'ocp-v2.Detail.Session.AccessTheOverviewPage',
+          id: 'OBShell.Detail.Session.AccessingTheOverviewPage',
           defaultMessage: '访问总览页',
         })}
       </Button>
@@ -63,7 +63,7 @@ const Index: React.FC<IndexProps> = ({
         title: (
           <ContentWithReload
             content={formatMessage({
-              id: 'ocp-v2.Detail.Session.Session',
+              id: 'OBShell.Detail.Session.SessionManagement',
               defaultMessage: '会话管理',
             })}
             spin={reloading}
@@ -86,41 +86,28 @@ const Index: React.FC<IndexProps> = ({
         <TabPane
           key="list"
           tab={formatMessage({
-            id: 'ocp-v2.Detail.Session.TenantSession',
+            id: 'OBShell.Detail.Session.TenantSession',
             defaultMessage: '租户会话',
           })}
         />
-
         <TabPane
           key="statistics"
           tab={formatMessage({
-            id: 'ocp-v2.Detail.Session.SessionStatistics',
+            id: 'OBShell.Detail.Session.SessionStatistics',
             defaultMessage: '会话统计',
           })}
         />
-
         <TabPane
           key="deadlock"
           tab={formatMessage({
-            id: 'ocp-v2.Detail.Session.ViewDeadlockHistory',
+            id: 'OBShell.Detail.Session.ViewDeadlockHistory',
             defaultMessage: '查看死锁历史',
           })}
         />
-        {/* 暂不支持 */}
-        {/* {isCommercial() && (
-          <TabPane
-            key="report"
-            tab={formatMessage({
-              id: 'ocp-v2.Detail.Session.ActiveSessionHistoryReport',
-              defaultMessage: '活跃会话历史报告',
-            })}
-          />
-        )} */}
       </Tabs>
       {tab === 'list' && <List tenantName={tenantName} />}
       {tab === 'statistics' && <Statistics tenantName={tenantName} />}
       {tab === 'deadlock' && <Deadlock tenantName={tenantName} />}
-      {/* {tab === 'report' && <Report clusterId={clusterId} tenantId={tenantId} />} */}
     </PageContainer>
   );
 };

@@ -90,13 +90,27 @@ export default function LineGraph({
   };
 
   const lineInstanceRender = (metricsData: any) => {
+    // 按时间戳排序数据,确保图表按时间顺序显示
+    const sortedMetricsData = [...metricsData].sort((a, b) => a.date - b.date);
+    const timeStampList: number[] = sortedMetricsData.map(item => item.date);
+    const minTimestamp = Math.min(...timeStampList);
+    const maxTimestamp = Math.max(...timeStampList);
+    // 时间范围是否跨天
+    const isCrossDay = dayjs(maxTimestamp).diff(dayjs(minTimestamp), 'day') > 0;
+
     const values: number[] = [];
-    for (const metric of metricsData) {
+    for (const metric of sortedMetricsData) {
       values.push(metric.value);
     }
 
+    // 统计不同的图例数量
+    const uniqueNames = new Set(sortedMetricsData.map(item => item.name));
+    const legendCount = uniqueNames.size;
+    // 图例超过5个时才启用滚动
+    const needScroll = legendCount > 5;
+
     const config = {
-      data: metricsData,
+      data: sortedMetricsData,
       xField: 'date',
       yField: 'value',
       height: height,
@@ -106,7 +120,9 @@ export default function LineGraph({
         tickCount: POINT_NUMBER,
         label: {
           formatter: (text: number) => {
-            const time = dayjs.unix(Math.ceil(text / 1000)).format('HH:mm');
+            const time = dayjs
+              .unix(Math.ceil(text / 1000))
+              .format(isCrossDay ? 'DD HH:mm' : 'HH:mm');
             return time;
           },
         },
@@ -115,6 +131,26 @@ export default function LineGraph({
         title: (value: number) => {
           return dayjs.unix(Math.ceil(value / 1000)).format(DATE_TIME_FORMAT);
         },
+        // 根据图例数量动态设置样式
+        domStyles: needScroll
+          ? {
+              'g2-tooltip': {
+                maxHeight: '100px',
+                overflowY: 'auto',
+                overflowX: 'hidden',
+                marginTop: '12px',
+              },
+            }
+          : undefined,
+        // 自动调整位置,避免超出屏幕
+        position: 'auto',
+        // 设置tooltip偏移量,让它离鼠标远一点,方便左右滑动查看数据
+        offset: needScroll ? 40 : 0,
+        // 优化显示效果
+        showCrosshairs: true,
+        shared: true,
+        // 图例超过5个时才允许鼠标进入tooltip
+        enterable: needScroll,
       },
       interactions: [{ type: 'marker-active' }],
     };

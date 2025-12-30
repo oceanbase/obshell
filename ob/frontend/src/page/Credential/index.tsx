@@ -11,7 +11,10 @@ import ContentWithReload from '@/component/ContentWithReload';
 
 const Credential: React.FC = () => {
   useDocumentTitle(
-    formatMessage({ id: 'ocp-v2.page.Credential.CredentialManagement', defaultMessage: '凭据管理' })
+    formatMessage({
+      id: 'OBShell.page.Credential.CredentialManagement',
+      defaultMessage: '凭据管理',
+    })
   );
 
   const [hostVisible, setHostVisible] = useState(false);
@@ -44,7 +47,7 @@ const Credential: React.FC = () => {
             }}
           >
             {formatMessage({
-              id: 'ocp-v2.page.Credential.CreateCredentials',
+              id: 'OBShell.page.Credential.NewCredential',
               defaultMessage: '新建凭据',
             })}
           </Button>

@@ -20,11 +20,11 @@ const ConnectTag: React.FC<ConnectTagProps> = ({ status, message }) => {
     <Tag color={status ? 'green' : 'red'} style={isEnglish() ? tagStyle : { borderRadius: 10 }}>
       {status
         ? formatMessage({
-            id: 'ocp-v2.Credential.Component.ConnectTag.VerifiedSuccessfully',
+            id: 'OBShell.Credential.Component.ConnectTag.ValidationSucceeded',
             defaultMessage: '验证成功',
           })
         : formatMessage({
-            id: 'ocp-v2.Credential.Component.ConnectTag.VerificationFailed',
+            id: 'OBShell.Credential.Component.ConnectTag.ValidationFailed',
             defaultMessage: '验证失败',
           })}
     </Tag>

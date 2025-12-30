@@ -1,8 +1,8 @@
+import { formatMessage } from '@/util/intl';
 import ContentWithInfo from '@/component/ContentWithInfo';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import Empty from '@/component/Empty';
 import { DATE_TIME_FORMAT_DISPLAY } from '@/constant/datetime';
-import { formatMessage } from '@/util/intl';
 import * as ObTenantController from '@/service/obshell/tenant';
 import * as ObTenantDeadLockController from '@/service/obshell/tenant';
 import { isZhCN } from '@/util';
@@ -87,7 +87,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
         className="mt-[15%]"
         spinning={loading}
         tip={formatMessage({
-          id: 'ocp-v2.Session.Deadlock.DeadlockQueryPleaseWaitPatiently',
+          id: 'OBShell.Session.Deadlock.DuringDeadlockQueryPleaseWait',
           defaultMessage: '死锁查询中，请耐心等待…',
         })}
       >
@@ -103,7 +103,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           bordered={false}
           bodyStyle={{ marginBottom: 0 }}
           title={formatMessage({
-            id: 'ocp-v2.Session.Deadlock.DeadlockDetails',
+            id: 'OBShell.Session.Deadlock.DeadlockDetails',
             defaultMessage: '死锁详情',
           })}
         >
@@ -111,18 +111,18 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
             style={{ height: 'calc(100vh - 313px)' }} // 使用 Tailwind CSS 替代 className，className样式会透传到Empty里应用
             mode="pageCard"
             title={formatMessage({
-              id: 'ocp-v2.Session.Deadlock.AutomaticDeadlockDetectionIsNotEnabled',
+              id: 'OBShell.Session.Deadlock.DeadlockAutomaticDetectionIsNot',
               defaultMessage: '死锁自动检测未开启',
             })}
             image={getFullPath('/assets/tenant/empty.svg')}
             description={formatMessage({
-              id: 'ocp-v2.Session.Deadlock.PleaseGoToTheClusterToEnableAutomatic',
+              id: 'OBShell.Session.Deadlock.GoToTheClusterTo',
               defaultMessage: '请前往所属集群开启死锁自动检测',
             })}
           >
             <Button type="primary" onClick={() => directTo(`/overview`)}>
               {formatMessage({
-                id: 'ocp-v2.Session.Deadlock.GoNow',
+                id: 'OBShell.Session.Deadlock.GoImmediately',
                 defaultMessage: '立即前往',
               })}
             </Button>
@@ -133,16 +133,15 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           style={{ height: 'calc(100vh - 208px)' }} // 使用 Tailwind CSS 替代 className，className样式会透传到Empty里应用
           mode="pageCard"
           title={formatMessage({
-            id: 'ocp-v2.Session.Deadlock.NoDeadlockFoundInRecent',
+            id: 'OBShell.Session.Deadlock.NoDeadlockFoundInRecent',
             defaultMessage: '近 7 天未发现死锁',
           })}
           image={getFullPath('/assets/tenant/empty.svg')}
           description={formatMessage(
             {
-              id: 'ocp-v2.Session.Deadlock.LastDetectionTimeChecktime',
+              id: 'OBShell.Session.Deadlock.LastTestTimeChecktime',
               defaultMessage: '最近检测时间: {checkTime}',
             },
-
             { checkTime: checkTime }
           )}
         >
@@ -152,10 +151,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
               refreshDeadLockHistoryList();
             }}
           >
-            {formatMessage({
-              id: 'ocp-v2.Session.Deadlock.Refresh',
-              defaultMessage: '刷新',
-            })}
+            {formatMessage({ id: 'OBShell.Session.Deadlock.Refresh', defaultMessage: '刷新' })}
           </Button>
         </Empty>
       ) : (
@@ -165,19 +161,18 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           title={
             <Space>
               {formatMessage({
-                id: 'ocp-v2.Session.Deadlock.DeadlockDetails',
+                id: 'OBShell.Session.Deadlock.DeadlockDetails',
                 defaultMessage: '死锁详情',
               })}
 
               <ContentWithInfo
                 content={formatMessage(
                   {
-                    id: 'ocp-v2.Session.Deadlock.TheClusterWhereTheTenant',
+                    id: 'OBShell.Session.Deadlock.TheClusterOfThisTenant',
                     defaultMessage:
-                      '此租户所在的集群已开启死锁自动检测，将自动检测并解决死锁，以下为近 7 天的死锁记录，死锁总数为 {renderDeadLockDataLength}',
+                      '此租户所在的集群已开启死锁自动检测，将自动检测并解决死锁，以下为近 7 天的死锁记录，死锁总数为 {deadLockHistoryTotal}',
                   },
-
-                  { renderDeadLockDataLength: deadLockHistoryTotal }
+                  { deadLockHistoryTotal: deadLockHistoryTotal }
                 )}
               />
             </Space>
@@ -219,10 +214,9 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
                     <span className="font-semibold">
                       {formatMessage(
                         {
-                          id: 'ocp-v2.Session.Deadlock.DeadlockOrder',
+                          id: 'OBShell.Session.Deadlock.DeadlockOrder',
                           defaultMessage: '死锁 {order}',
                         },
-
                         { order: order }
                       )}
                     </span>
@@ -237,7 +231,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
                             tooltip={{
                               placement: 'right',
                               title: formatMessage({
-                                id: 'ocp-v2.Session.Deadlock.EventIdIsTheUnique',
+                                id: 'OBShell.Session.Deadlock.EventIdIsTheUnique',
                                 defaultMessage: 'Event ID 是一次死锁事件的唯一标识',
                               }),
                             }}
@@ -248,7 +242,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
                       </Form.Item>
                       <Form.Item
                         label={formatMessage({
-                          id: 'ocp-v2.Session.Deadlock.OccurrenceTime',
+                          id: 'OBShell.Session.Deadlock.OccurrenceTime',
                           defaultMessage: '发生时间',
                         })}
                       >

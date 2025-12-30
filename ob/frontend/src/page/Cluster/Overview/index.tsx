@@ -488,7 +488,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
     } else if (key === 'openAutoDeadlockDetection') {
       Modal.confirm({
         title: formatMessage({
-          id: 'ocp-v2.Detail.Overview.AreYouSureYouWantOpenDeadlockDetection',
+          id: 'OBShell.Cluster.Overview.AreYouSureYouWant',
           defaultMessage: '确认要开启死锁自动检测吗？',
         }),
 
@@ -507,11 +507,11 @@ const Detail: React.FC<DetailProps> = ({}) => {
     } else if (key === 'closeAutoDeadlockDetection') {
       Modal.confirm({
         title: formatMessage({
-          id: 'ocp-v2.Detail.Overview.AreYouSureYouWantCloseDeadlockDetection',
+          id: 'OBShell.Cluster.Overview.AreYouSureYouWant.1',
           defaultMessage: '确认要关闭死锁自动检测吗？',
         }),
         content: formatMessage({
-          id: 'ocp-v2.Detail.Overview.AfterTheAutomaticDetectionOf',
+          id: 'OBShell.Cluster.Overview.AfterAutomaticDeadlockDetectionIs',
           defaultMessage: '关闭死锁自动检测后，不再自动检测和解决死锁。',
         }),
 
@@ -552,7 +552,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
         <Menu.Item key="closeAutoDeadlockDetection">
           <span>
             {formatMessage({
-              id: 'ocp-v2.Detail.Overview.DisableAutomaticDeadlockDetection',
+              id: 'OBShell.Cluster.Overview.TurnOffAutomaticDeadlockDetection',
               defaultMessage: '关闭死锁自动检测',
             })}
           </span>

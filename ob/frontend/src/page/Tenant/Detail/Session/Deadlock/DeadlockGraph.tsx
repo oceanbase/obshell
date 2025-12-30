@@ -160,37 +160,27 @@ const DeadlockGraph: React.FC<DeadlockGraphProps> = ({ id, nodeList, relationLis
             formatText: (model: any) => {
               const lockRequesterIdLabel = formatMessage(
                 {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.SessionIdModellockrequesterid',
+                  id: 'OBShell.Session.Deadlock.DeadlockGraph.SessionIdModellockrequesterid',
                   defaultMessage: '会话 ID：{modelLockRequesterId}',
                 },
-
                 { modelLockRequesterId: model.lockRequesterId }
               );
 
-              const rowKeyLabel = formatMessage(
-                {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.RowkeyModelrowkey',
-                  defaultMessage: 'RowKey：{modelRowKey}',
-                },
-
-                { modelRowKey: model.rowKey }
-              );
+              const rowKeyLabel = `RowKey：${model.rowKey}`;
 
               const idxLabel = formatMessage(
                 {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.IdModelidx',
+                  id: 'OBShell.Session.Deadlock.DeadlockGraph.NumberIdModelidx',
                   defaultMessage: '编号 ID：{modelIdx}',
                 },
-
                 { modelIdx: model.idx }
               );
 
               const resourceLabel = formatMessage(
                 {
-                  id: 'ocp-v2.Session.Deadlock.DeadlockGraph.RequestResourceModelresource',
+                  id: 'OBShell.Session.Deadlock.DeadlockGraph.RequestResourcesModelresource',
                   defaultMessage: '请求资源：{modelResource}',
                 },
-
                 { modelResource: model.resource }
               );
 
@@ -257,9 +247,10 @@ const DeadlockGraph: React.FC<DeadlockGraphProps> = ({ id, nodeList, relationLis
                 border: `1px solid ${token.colorInfoBorder}`,
               }}
             />
+
             <span className="text-xs">
               {formatMessage({
-                id: 'ocp-v2.Session.Deadlock.DeadlockGraph.NotSuspend',
+                id: 'OBShell.Session.Deadlock.DeadlockGraph.Uninterrupted',
                 defaultMessage: '未中断',
               })}
             </span>
@@ -272,9 +263,10 @@ const DeadlockGraph: React.FC<DeadlockGraphProps> = ({ id, nodeList, relationLis
                 border: `1px solid ${token.colorErrorBorder}`,
               }}
             />
+
             <span className="text-xs">
               {formatMessage({
-                id: 'ocp-v2.Session.Deadlock.DeadlockGraph.Suspend',
+                id: 'OBShell.Session.Deadlock.DeadlockGraph.Interrupted',
                 defaultMessage: '已中断',
               })}
             </span>

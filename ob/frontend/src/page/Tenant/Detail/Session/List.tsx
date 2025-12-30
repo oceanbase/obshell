@@ -1,7 +1,7 @@
-import ContentWithQuestion from '@/component/ContentWithQuestion';
 import { formatMessage } from '@/util/intl';
+import ContentWithQuestion from '@/component/ContentWithQuestion';
 import * as ObTenantSessionController from '@/service/obshell/tenant';
-import { formatSql, getTableData } from '@/util';
+import { formatSql, getTableData, isEnglish } from '@/util';
 import { getColumnSearchProps, getOperationComponent } from '@/util/component';
 import { useSelector } from 'umi';
 import React, { useEffect, useState } from 'react';
@@ -95,7 +95,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
         if (res.successful) {
           message.success(
             formatMessage({
-              id: 'ocp-v2.Detail.Session.List.TheQueryIsClosed',
+              id: 'OBShell.Detail.Session.List.QueryClosedSuccessfully',
               defaultMessage: '查询关闭成功',
             })
           );
@@ -116,7 +116,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
         if (res.successful) {
           message.success(
             formatMessage({
-              id: 'ocp-v2.Detail.Session.List.TheSessionIsClosed',
+              id: 'OBShell.Detail.Session.List.SessionClosedSuccessfully',
               defaultMessage: '会话关闭成功',
             })
           );
@@ -132,7 +132,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     if (key === 'closeSession') {
       Modal.confirm({
         title: formatMessage({
-          id: 'ocp-v2.Detail.Session.List.AreYouSureYouWant',
+          id: 'OBShell.Detail.Session.List.AreYouSureYouWant',
           defaultMessage: '确定要关闭会话吗？',
         }),
         onOk: () => {
@@ -150,7 +150,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     } else if (key === 'closeQuery') {
       Modal.confirm({
         title: formatMessage({
-          id: 'ocp-v2.Detail.Session.List.AreYouSureYouWant.2',
+          id: 'OBShell.Detail.Session.List.AreYouSureYouWant.2',
           defaultMessage: '确定要关闭查询吗？',
         }),
         onOk: () => {
@@ -174,7 +174,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
   const columns: TableColumnType<API.TenantSession>[] = [
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.List.SessionId',
+        id: 'OBShell.Detail.Session.List.SessionId',
         defaultMessage: '会话 ID',
       }),
 
@@ -215,7 +215,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     },
 
     {
-      title: formatMessage({ id: 'ocp-v2.Detail.Session.List.User', defaultMessage: '用户' }),
+      title: formatMessage({ id: 'OBShell.Detail.Session.List.User', defaultMessage: '用户' }),
       dataIndex: 'user',
       ...(user ? { defaultFilteredValue: [user] } : {}),
       ...getColumnSearchProps({
@@ -224,7 +224,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     },
 
     {
-      title: formatMessage({ id: 'ocp-v2.Detail.Session.List.Source', defaultMessage: '来源' }),
+      title: formatMessage({ id: 'OBShell.Detail.Session.List.Source', defaultMessage: '来源' }),
       dataIndex: 'host',
       ...(host ? { defaultFilteredValue: [host] } : {}),
       ...getColumnSearchProps({
@@ -234,7 +234,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.List.DatabaseName',
+        id: 'OBShell.Detail.Session.List.DatabaseName',
         defaultMessage: '数据库名',
       }),
 
@@ -246,13 +246,13 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     },
 
     {
-      title: formatMessage({ id: 'ocp-v2.Detail.Session.List.Command', defaultMessage: '命令' }),
+      title: formatMessage({ id: 'OBShell.Detail.Session.List.Command', defaultMessage: '命令' }),
       dataIndex: 'command',
     },
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.List.ExecutionTimeS',
+        id: 'OBShell.Detail.Session.List.ExecutionTimeS',
         defaultMessage: '执行时间（s）',
       }),
 
@@ -263,7 +263,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     },
 
     {
-      title: formatMessage({ id: 'ocp-v2.Detail.Session.List.State', defaultMessage: '状态' }),
+      title: formatMessage({ id: 'OBShell.Detail.Session.List.Status', defaultMessage: '状态' }),
       dataIndex: 'state',
     },
     {
@@ -284,15 +284,16 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
       title: (
         <ContentWithQuestion
           content={formatMessage({
-            id: 'ocp-v2.Detail.Session.List.Actions',
+            id: 'OBShell.Detail.Session.List.Operation',
             defaultMessage: '操作',
           })}
           tooltip={{
             title: formatMessage({
-              id: 'ocp-v2.Detail.Session.List.YouCanOnlyViewAssociated',
+              id: 'OBShell.Detail.Session.List.ForASessionThatIs',
               defaultMessage:
                 '对正在执行事务、且事务耗时超过 500ms 或者单个参与者日志生成量超过 0.5MiB 的会话，提供了查看事务的入口，便于排查',
             }),
+
             placement: 'topRight',
           }}
         />
@@ -300,19 +301,20 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
 
       dataIndex: 'operation',
       fixed: 'right',
+      width: isEnglish() ? 180 : 150,
       render: (_, record: API.TenantSession) => {
         const operations = [
           {
             value: 'closeSession',
             label: formatMessage({
-              id: 'ocp-v2.Detail.Session.List.CloseSession',
+              id: 'OBShell.Detail.Session.List.CloseSession',
               defaultMessage: '关闭会话',
             }),
           },
           {
             value: 'closeQuery',
             label: formatMessage({
-              id: 'ocp-v2.Detail.Session.List.DisableTheCurrentQuery',
+              id: 'OBShell.Detail.Session.List.CloseCurrentQuery',
               defaultMessage: '关闭当前查询',
             }),
           },
@@ -344,14 +346,14 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
               }}
             >
               {formatMessage({
-                id: 'ocp-v2.Detail.Session.List.ViewOnlyActiveSessions',
+                id: 'OBShell.Detail.Session.List.ViewOnlyActiveSessions',
                 defaultMessage: '仅查看活跃会话',
               })}
             </Checkbox>
             <Input.Search
               allowClear
               placeholder={formatMessage({
-                id: 'ocp-v2.Detail.Session.List.EnterASessionId',
+                id: 'OBShell.Detail.Session.List.PleaseEnterASessionId',
                 defaultMessage: '请输入会话 ID',
               })}
               onSearch={v => {
@@ -362,7 +364,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
             {showReload && (
               <Tooltip
                 title={formatMessage({
-                  id: 'ocp-v2.Detail.Session.List.Refresh',
+                  id: 'OBShell.Detail.Session.List.Refresh',
                   defaultMessage: '刷新',
                 })}
               >
@@ -441,11 +443,11 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
 
               <span className="ml-2">
                 {formatMessage({
-                  id: 'ocp-v2.Detail.Session.List.Selected',
+                  id: 'OBShell.Detail.Session.List.Selected',
                   defaultMessage: '已选',
-                })}{' '}
-                {selectedRowKeys && selectedRowKeys.length}{' '}
-                {formatMessage({ id: 'ocp-v2.Detail.Session.List.Item', defaultMessage: '项' })}
+                })}
+                {selectedRowKeys && selectedRowKeys.length}
+                {formatMessage({ id: 'OBShell.Detail.Session.List.Item', defaultMessage: '项' })}
               </span>
               <a
                 onClick={() => {
@@ -453,7 +455,10 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                 }}
                 className="ml-3"
               >
-                {formatMessage({ id: 'ocp-v2.Detail.Session.List.Cancel', defaultMessage: '取消' })}
+                {formatMessage({
+                  id: 'OBShell.Detail.Session.List.Cancel',
+                  defaultMessage: '取消',
+                })}
               </a>
             </div>
           }
@@ -463,7 +468,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
               onClick={() => {
                 Modal.confirm({
                   title: formatMessage({
-                    id: 'ocp-v2.Detail.Session.List.AreYouSureYouWant.2',
+                    id: 'OBShell.Detail.Session.List.AreYouSureYouWant.2',
                     defaultMessage: '确定要关闭查询吗？',
                   }),
                   onOk: () => {
@@ -481,7 +486,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
               }}
             >
               {formatMessage({
-                id: 'ocp-v2.Detail.Session.List.CloseTheCurrentQuery',
+                id: 'OBShell.Detail.Session.List.CloseCurrentQuery',
                 defaultMessage: '关闭当前查询',
               })}
             </Button>
@@ -489,7 +494,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
               onClick={() => {
                 Modal.confirm({
                   title: formatMessage({
-                    id: 'ocp-v2.Detail.Session.List.AreYouSureYouWant',
+                    id: 'OBShell.Detail.Session.List.AreYouSureYouWant',
                     defaultMessage: '确定要关闭会话吗？',
                   }),
                   onOk: () => {
@@ -507,7 +512,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
               }}
             >
               {formatMessage({
-                id: 'ocp-v2.Detail.Session.List.CloseSession',
+                id: 'OBShell.Detail.Session.List.CloseSession',
                 defaultMessage: '关闭会话',
               })}
             </Button>
@@ -518,11 +523,10 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
         width={760}
         title={formatMessage(
           {
-            id: 'ocp-v2.Detail.Session.List.SqlDetailsCurrentsessionid',
+            id: 'OBShell.Detail.Session.List.SqlDetailsCurrentsessionid',
             defaultMessage: 'SQL 详情 - {currentSessionId}',
           },
-
-          { currentSessionId }
+          { currentSessionId: currentSessionId }
         )}
         visible={visible}
         footer={
@@ -534,7 +538,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                   <Button key="copy" icon={<CopyOutlined />}>
                     <span>
                       {formatMessage({
-                        id: 'ocp-v2.Detail.Session.List.Copy',
+                        id: 'OBShell.Detail.Session.List.Copy',
                         defaultMessage: '复制',
                       })}
                     </span>
@@ -554,7 +558,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                 setCurrentRecord(null);
               }}
             >
-              {formatMessage({ id: 'ocp-v2.Detail.Session.List.Closed', defaultMessage: '关闭' })}
+              {formatMessage({ id: 'OBShell.Detail.Session.List.Close', defaultMessage: '关闭' })}
             </Button>
           </Space>
         }

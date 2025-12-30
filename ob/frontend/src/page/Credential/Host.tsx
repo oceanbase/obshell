@@ -107,11 +107,11 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
           message.success(
             singleValidate
               ? formatMessage({
-                  id: 'ocp-v2.page.Credential.Host.VerifiedSuccessfully',
+                  id: 'OBShell.page.Credential.Host.ValidationSucceeded',
                   defaultMessage: '验证成功',
                 })
               : formatMessage({
-                  id: 'ocp-v2.page.Credential.Host.VerificationCompleted',
+                  id: 'OBShell.page.Credential.Host.VerificationComplete',
                   defaultMessage: '验证完成',
                 })
           );
@@ -119,7 +119,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
           if (singleValidate) {
             message.error(
               formatMessage({
-                id: 'ocp-v2.page.Credential.Host.VerificationFailedPleaseModifyTheCredentials',
+                id: 'OBShell.page.Credential.Host.AuthenticationFailedPleaseModifyCredentials',
                 defaultMessage: '验证失败，请修改凭据',
               })
             );
@@ -127,8 +127,8 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
             message.warning(
               formatMessage(
                 {
-                  id: 'ocp-v2.page.Credential.Host.VerificationCompletedWithFailurelengthFailedCredentials',
-                  defaultMessage: '验证已完成，存在 {failureLength} 个失败凭据',
+                  id: 'OBShell.page.Credential.Host.ValidationCompletedThereFailurelengthAre',
+                  defaultMessage: "'验证已完成，存在 {failureLength} 个失败凭据",
                 },
                 { failureLength: failure.length }
               )
@@ -177,10 +177,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
         { credentialName: credential.name }
       ),
 
-      okText: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.Delete',
-        defaultMessage: '删除',
-      }),
+      okText: formatMessage({ id: 'OBShell.page.Credential.Host.Delete', defaultMessage: '删除' }),
 
       okButtonProps: { danger: true, ghost: true },
       onOk: () => {
@@ -227,7 +224,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
   const columns: TableProps<HostCredential>['columns'] = [
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.SecretName',
+        id: 'OBShell.page.Credential.Host.CredentialName',
         defaultMessage: '凭据名',
       }),
 
@@ -256,7 +253,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.ApplicationHost',
+        id: 'OBShell.page.Credential.Host.ApplicationHost',
         defaultMessage: '应用主机',
       }),
 
@@ -297,7 +294,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.AuthorizationType',
+        id: 'OBShell.page.Credential.Host.AuthorizationType',
         defaultMessage: '授权类型',
       }),
 
@@ -308,7 +305,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.UserName',
+        id: 'OBShell.page.Credential.Host.UserName',
         defaultMessage: '用户名',
       }),
 
@@ -317,7 +314,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.Description',
+        id: 'OBShell.page.Credential.Host.Description',
         defaultMessage: '说明',
       }),
 
@@ -335,7 +332,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
     },
     {
       title: formatMessage({
-        id: 'ocp-v2.Settings.Credential.Host.Operation',
+        id: 'OBShell.page.Credential.Host.Operation',
         defaultMessage: '操作',
       }),
 
@@ -358,7 +355,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
               }}
             >
               {formatMessage({
-                id: 'ocp-v2.page.Credential.Host.Verification',
+                id: 'OBShell.page.Credential.Host.Validation',
                 defaultMessage: '验证',
               })}
             </Button>
@@ -382,7 +379,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
             divided={true}
             bordered={false}
             title={formatMessage({
-              id: 'ocp-v2.Settings.Credential.Host.Secrets',
+              id: 'OBShell.page.Credential.Host.CredentialList',
               defaultMessage: '凭据列表',
             })}
             extra={
@@ -394,7 +391,7 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
                       setKeyword(value);
                     }}
                     placeholder={formatMessage({
-                      id: 'ocp-v2.Settings.Credential.Host.SearchForHostIpAddressesOrName',
+                      id: 'OBShell.page.Credential.Host.PleaseEnterCredentialNameHost',
                       defaultMessage: '请输入凭据名、主机 IP',
                     })}
                     className={isEnglish() ? 'search-input-large' : 'search-input'}

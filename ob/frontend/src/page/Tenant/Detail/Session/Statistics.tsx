@@ -1,5 +1,5 @@
-import MyDrawer from '@/component/MyDrawer';
 import { formatMessage } from '@/util/intl';
+import MyDrawer from '@/component/MyDrawer';
 import * as TenantSessionService from '@/service/obshell/tenant';
 import { getColumnSearchProps } from '@/util/component';
 import React, { useState } from 'react';
@@ -47,7 +47,10 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
   const dbUserColumns = [
     {
-      title: formatMessage({ id: 'ocp-v2.Detail.Session.Statistics.User', defaultMessage: '用户' }),
+      title: formatMessage({
+        id: 'OBShell.Detail.Session.Statistics.User',
+        defaultMessage: '用户',
+      }),
       dataIndex: 'user_name',
       ellipsis: true,
       ...getColumnSearchProps({
@@ -63,9 +66,10 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.ActiveNumber',
+        id: 'OBShell.Detail.Session.Statistics.ActiveNumber',
         defaultMessage: '活跃数',
       }),
+      ellipsis: true,
       dataIndex: 'active_count',
       sorter: (a: API.TenantSessionUserStats, b: API.TenantSessionUserStats) =>
         sortByNumber(a, b, 'active_count'),
@@ -73,7 +77,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.TotalNumber',
+        id: 'OBShell.Detail.Session.Statistics.Total',
         defaultMessage: '总数',
       }),
       dataIndex: 'total_count',
@@ -99,7 +103,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
   const clientColumns = [
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.Source',
+        id: 'OBShell.Detail.Session.Statistics.Source',
         defaultMessage: '来源',
       }),
       dataIndex: 'client_ip',
@@ -112,9 +116,10 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.ActiveNumber',
+        id: 'OBShell.Detail.Session.Statistics.ActiveNumber',
         defaultMessage: '活跃数',
       }),
+      ellipsis: true,
       dataIndex: 'active_count',
       sorter: (a: API.TenantSessionClientStats, b: API.TenantSessionClientStats) =>
         sortByNumber(a, b, 'active_count'),
@@ -122,7 +127,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.TotalNumber',
+        id: 'OBShell.Detail.Session.Statistics.Total',
         defaultMessage: '总数',
       }),
       dataIndex: 'total_count',
@@ -148,7 +153,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
   const dbNameColumns = [
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.Database',
+        id: 'OBShell.Detail.Session.Statistics.Database',
         defaultMessage: '数据库',
       }),
       dataIndex: 'db_name',
@@ -160,9 +165,10 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.ActiveNumber',
+        id: 'OBShell.Detail.Session.Statistics.ActiveNumber',
         defaultMessage: '活跃数',
       }),
+      ellipsis: true,
       dataIndex: 'active_count',
       sorter: (a: API.TenantSessionDbStats, b: API.TenantSessionDbStats) =>
         sortByNumber(a, b, 'active_count'),
@@ -170,7 +176,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
 
     {
       title: formatMessage({
-        id: 'ocp-v2.Detail.Session.Statistics.TotalNumber',
+        id: 'OBShell.Detail.Session.Statistics.Total',
         defaultMessage: '总数',
       }),
       dataIndex: 'total_count',
@@ -203,25 +209,27 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
           <StatisticCard
             statistic={{
               title: formatMessage({
-                id: 'ocp-v2.Detail.Session.Statistics.TotalNumberOfSessions',
+                id: 'OBShell.Detail.Session.Statistics.TotalSessions',
                 defaultMessage: '会话总数',
               }),
               value: total_count,
             }}
           />
+
           <StatisticCard
             statistic={{
               title: formatMessage({
-                id: 'ocp-v2.Detail.Session.Statistics.NumberOfActiveSessions',
+                id: 'OBShell.Detail.Session.Statistics.NumberOfActiveSessions',
                 defaultMessage: '活跃会话数',
               }),
               value: active_count,
             }}
           />
+
           <StatisticCard
             statistic={{
               title: formatMessage({
-                id: 'ocp-v2.Detail.Session.Statistics.MaximumActiveSessionTimeIn',
+                id: 'OBShell.Detail.Session.Statistics.MaximumActiveSessionTimeS',
                 defaultMessage: '活跃会话最长时间（s）',
               }),
               value: max_active_time,
@@ -232,7 +240,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
       <Col span={8}>
         <Card
           title={formatMessage({
-            id: 'ocp-v2.Detail.Session.Statistics.StatisticsByUser',
+            id: 'OBShell.Detail.Session.Statistics.StatisticsByUser',
             defaultMessage: '按用户统计',
           })}
           bordered={false}
@@ -252,7 +260,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
       <Col span={8}>
         <Card
           title={formatMessage({
-            id: 'ocp-v2.Detail.Session.Statistics.StatisticsByAccessSource',
+            id: 'OBShell.Detail.Session.Statistics.StatisticsByAccessSource',
             defaultMessage: '按访问来源统计',
           })}
           bordered={false}
@@ -272,7 +280,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
       <Col span={8}>
         <Card
           title={formatMessage({
-            id: 'ocp-v2.Detail.Session.Statistics.StatisticsByDatabase',
+            id: 'OBShell.Detail.Session.Statistics.StatisticsByDatabase',
             defaultMessage: '按数据库统计',
           })}
           bordered={false}
@@ -293,10 +301,10 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
         width={1232}
         title={formatMessage(
           {
-            id: 'ocp-v2.Detail.Session.Statistics.SessionDetailsForTarget',
+            id: 'OBShell.Detail.Session.Statistics.SessionDetailsForTarget',
             defaultMessage: '{target} 的会话详情',
           },
-          { target }
+          { target: target }
         )}
         visible={visible}
         destroyOnClose={true}

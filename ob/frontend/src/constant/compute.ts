@@ -63,7 +63,7 @@ export const OCP_AGENT_PROCESS_STATUS_LIST = [
 export const AUTHORIZE_TYPE_LIST = [
   {
     label: formatMessage({
-      id: 'ocp-v2.src.constant.compute.UsernamePassword',
+      id: 'OBShell.src.constant.compute.PasswordVerification',
       defaultMessage: '密码验证',
     }),
     value: 'PASSWORD',
@@ -73,7 +73,7 @@ export const AUTHORIZE_TYPE_LIST = [
 export const USET_TYPE_LIST = [
   {
     label: formatMessage({
-      id: 'ocp-v2.src.constant.compute.RootUser',
+      id: 'OBShell.src.constant.compute.RootUser',
       defaultMessage: 'root 用户',
     }),
     value: 'root',
@@ -81,7 +81,7 @@ export const USET_TYPE_LIST = [
 
   {
     label: formatMessage({
-      id: 'ocp-v2.src.constant.compute.OrdinaryUsers',
+      id: 'OBShell.src.constant.compute.OrdinaryUser',
       defaultMessage: '普通用户',
     }),
     value: 'normal',
