@@ -628,3 +628,33 @@ export function getLatestBackupRangeTime(
     </span>
   );
 }
+
+// 根据错误码和错误信息生成错误提示
+export const getErrorDescription = ({
+  errorMessage,
+  errCode,
+}: {
+  errorMessage: string;
+  errCode: string;
+}) => {
+  if (errCode?.includes('Environment.Obdiag.NotAvailable')) {
+    return (
+      <span>
+        {errorMessage}
+        {formatMessage({ id: 'OBShell.src.util.component.Heading', defaultMessage: '，前往' })}
+        <a
+          onClick={() => {
+            history.push('/package');
+          }}
+          style={{ marginLeft: 4 }}
+        >
+          {formatMessage({
+            id: 'OBShell.src.util.component.SoftwarePackageManagement',
+            defaultMessage: '软件包管理',
+          })}
+        </a>
+      </span>
+    );
+  }
+  return undefined;
+};

@@ -26,34 +26,25 @@ const LicenseAlert: React.FC<LicenseAlertProps> = ({ clusterData }) => {
     }
   };
 
-  const trialLabel = isTrial
-    ? formatMessage({ id: 'ocp-v2.Component.License.LicenseAlert.Trial', defaultMessage: '试用' })
-    : '';
-
-  return isStandalone ? (
+  return isStandalone && isTrial ? (
     <Alert
       showIcon
       type={getAlertType()}
       message={
-        <>
-          {effectiveDays <= 0
-            ? formatMessage(
-                {
-                  id: 'ocp-v2.Component.License.LicenseAlert.OceanbaseTheLicenseOfThe',
-                  defaultMessage:
-                    'OceanBase 单机版{trialLabel} License 已过期，请申请正式 License 并正确配置。',
-                },
-                { trialLabel: trialLabel }
-              )
-            : formatMessage(
-                {
-                  id: 'ocp-v2.Component.License.LicenseAlert.TheStandAloneVersionTriallabel',
-                  defaultMessage:
-                    'OceanBase 单机版{trialLabel} License 即将于 {expiredTime} 过期，请申请正式 License 并正确配置。',
-                },
-                { trialLabel: trialLabel, expiredTime: expiredTime }
-              )}
-        </>
+        effectiveDays <= 0
+          ? formatMessage({
+              id: 'OBShell.Overview.License.LicenseAlert.OceanbaseTheStandAloneTrial',
+              defaultMessage:
+                'OceanBase 单机版试用 License 已过期，请申请正式 License 并正确配置。',
+            })
+          : formatMessage(
+              {
+                id: 'OBShell.Overview.License.LicenseAlert.OceanbaseTheStandAloneTrial.1',
+                defaultMessage:
+                  'OceanBase 单机版试用 License 即将于 {expiredTime} 过期，请申请正式 License 并正确配置。',
+              },
+              { expiredTime: expiredTime }
+            )
       }
       style={{ marginBottom: 10 }}
     />

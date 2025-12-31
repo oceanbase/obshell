@@ -32,6 +32,7 @@ import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { LOGIN_KEY, LOGIN_SECRET_KEY, LOGIN_IV, SESSION_ID } from '@/constant/login';
+import { getErrorDescription } from './component';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -93,24 +94,6 @@ const statusCodeMessage = {
   }),
 };
 
-// 根据错误码和错误信息生成错误提示
-const getErrorDescription = ({ errorMessage, errCode }) => {
-  if(errCode?.includes('Environment.Obdiag.NotAvailable')) {
-    return (
-      <span>
-        {errorMessage}，前往
-        <a
-          onClick={() => {
-            history.push('/package');
-          }}
-          style={{ marginLeft: 4 }}
-        >
-          软件包管理
-        </a>
-      </span>
-    );
-  }
-};
 
 /**
  * 异常处理程序

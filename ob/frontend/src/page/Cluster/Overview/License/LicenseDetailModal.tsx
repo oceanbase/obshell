@@ -13,27 +13,27 @@ interface LicenseDetailModalProps {
 
 const LICENSE_DESCRIPTIONS = {
   cluster_ulid: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.AutomaticallyGeneratedByClusterStartup',
+    id: 'OBShell.Overview.License.LicenseDetailModal.AutomaticallyGeneratedByClusterStartup',
     defaultMessage: '由集群启动时自动生成。',
   }),
   license_id: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.GeneratedByOceanbase',
+    id: 'OBShell.Overview.License.LicenseDetailModal.GeneratedByOceanbase',
     defaultMessage: '由 OceanBase 生成。',
   }),
   license_code: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.GeneratedByContractNumber',
+    id: 'OBShell.Overview.License.LicenseDetailModal.GeneratedByContractNumber',
     defaultMessage: '由合同号生成。',
   }),
   license_type: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.CommercialBusinessEditionTrialTrial',
+    id: 'OBShell.Overview.License.LicenseDetailModal.CommercialBusinessEditionTrialTrial',
     defaultMessage: '· Commercial：商业版。|· Trial：试用版。',
   }),
   product_type: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.SeStandsForStandAlone',
+    id: 'OBShell.Overview.License.LicenseDetailModal.SeStandsForStandAlone',
     defaultMessage: '· SE：代表单机企业版。|· DE：代表分布式企业版。',
   }),
   options: formatMessage({
-    id: 'ocp-v2.Component.License.LicenseDetailModal.TheFeatureOptionsIncludedIn',
+    id: 'OBShell.Overview.License.LicenseDetailModal.TheFeatureOptionsIncludedIn',
     defaultMessage:
       'License 中所包含的功能选件。|· EE：代表 OceanBase 单机企业版基础功能。|· PS：代表 OceanBase 单机集群间复制选件。|· MT：代表 OceanBase 单机多租户选件。|· AP：代表 OceanBase 单机 OLAP 选件。',
   }),
@@ -128,12 +128,12 @@ const LicenseDetailModal: React.FC<LicenseDetailModalProps> = ({ clusterData, op
         value: license.node_num,
       },
     ];
-  }, [license]);
+  }, [license, isTrial]);
 
   return (
     <Modal
       title={formatMessage({
-        id: 'ocp-v2.Component.License.LicenseDetailModal.ViewLicense',
+        id: 'OBShell.Overview.License.LicenseDetailModal.ViewLicense',
         defaultMessage: '查看 License',
       })}
       footer={null}
