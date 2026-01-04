@@ -50,7 +50,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const isSingleMachine = clusterZones?.length === 1 && clusterZones[0]?.servers?.length === 1;
+  const isSingleServer = clusterZones?.every(zone => zone?.servers?.length === 1);
 
   const [resourcePool, setResourcePool] = useState(undefined);
 
@@ -99,7 +99,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
   });
 
   let idleCpuCore, idleMemoryInBytes;
-  if (isSingleMachine) {
+  if (isSingleServer) {
     // 修改unit  计算当前 zone 内剩余资源可调整的最大值，取最小可用资源的 zone，提示规格调整的最大最小值配置
     const minIdleCpuZone = minBy(
       clusterZones?.map(
@@ -247,6 +247,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
               name="cpuCore"
               initialValue={resourcePool?.cpuCore}
               extra={
+                isSingleServer &&
                 !isNullValue(cpuLowerLimit) &&
                 !isNullValue(idleCpuCore) &&
                 (cpuLowerLimit < idleCpuCore
@@ -287,6 +288,7 @@ const BatchModifyUnitModal: React.FC<BatcModifyUnitModalProps> = ({
               name="memorySize"
               initialValue={resourcePool?.memorySize}
               extra={
+                isSingleServer &&
                 !isNullValue(memoryLowerLimit) &&
                 !isNullValue(idleMemoryInBytes) &&
                 (memoryLowerLimit < idleMemoryInBytes

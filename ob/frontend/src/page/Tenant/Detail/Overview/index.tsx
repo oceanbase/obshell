@@ -30,6 +30,7 @@ import {
   Descriptions,
   Modal,
   message,
+  Switch,
 } from '@oceanbase/design';
 import { QuestionCircleOutlined } from '@oceanbase/icons';
 import React, { useEffect, useState } from 'react';
@@ -109,7 +110,6 @@ const Detail: React.FC<NewProps> = ({
   const [showModifyPrimaryZoneDrawer, setShowModifyPrimaryZoneDrawer] = useState(false);
   const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
-  const [ediLockStatusModal, setEdiLockStatusModal] = useState(false);
   const [ediRemarksModal, setEdiRemarksModal] = useState(false);
 
   const [currentTenantZone, setCurrentTenantZone] = useState(null);
@@ -203,7 +203,7 @@ const Detail: React.FC<NewProps> = ({
     });
   };
 
-  const { run: lockTenant, loading: lockTenantLOading } = useRequest(tenantLock, {
+  const { run: lockTenant } = useRequest(tenantLock, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -213,14 +213,13 @@ const Detail: React.FC<NewProps> = ({
             defaultMessage: '租户锁定成功',
           })
         );
-        setEdiLockStatusModal(false);
         refresh();
         updateTenant();
       }
     },
   });
 
-  const { run: unlockTenant, loading: unlockTenantLOading } = useRequest(tenantUnlock, {
+  const { run: unlockTenant } = useRequest(tenantUnlock, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
@@ -230,7 +229,6 @@ const Detail: React.FC<NewProps> = ({
             defaultMessage: '租户解锁成功',
           })
         );
-        setEdiLockStatusModal(false);
         refresh();
         updateTenant();
       }
@@ -592,29 +590,55 @@ const Detail: React.FC<NewProps> = ({
                     defaultMessage: '锁定状态',
                   })}
                 >
-                  <Text
-                    ellipsis={true}
-                    editable={
-                      tenantData.tenant_name === 'sys'
-                        ? false
-                        : {
-                            editing: false,
-                            onStart: () => {
-                              setEdiLockStatusModal(true);
-                            },
+                  <Switch
+                    size="small"
+                    disabled={tenantData?.tenant_name === 'sys'}
+                    checked={tenantData?.locked === 'YES'}
+                    onChange={() => {
+                      Modal.confirm({
+                        title: `确定要${tenantData?.locked === 'YES' ? '解锁' : '锁定'}租户 ${
+                          tenantData.tenant_name
+                        } 吗？`,
+
+                        content:
+                          tenantData?.locked === 'YES'
+                            ? formatMessage({
+                                id: 'OBShell.Detail.Overview.UnlockingTheTenantWillRestore',
+                                defaultMessage: '解锁租户将恢复用户对租户的访问',
+                              })
+                            : formatMessage({
+                                id: 'OBShell.Detail.Overview.LockingATenantWillCause',
+                                defaultMessage: '锁定租户将导致用户无法访问该租户，请谨慎操作',
+                              }),
+
+                        okText:
+                          tenantData?.locked === 'YES'
+                            ? formatMessage({
+                                id: 'OBShell.Detail.Overview.Unlock',
+                                defaultMessage: '解锁',
+                              })
+                            : formatMessage({
+                                id: 'OBShell.Detail.Overview.Lock',
+                                defaultMessage: '锁定',
+                              }),
+                        okButtonProps: {
+                          danger: true,
+                          ghost: true,
+                        },
+                        onOk: () => {
+                          if (tenantData?.locked === 'NO') {
+                            lockTenant({
+                              name: tenantData?.tenant_name!,
+                            });
+                          } else {
+                            unlockTenant({
+                              name: tenantData?.tenant_name!,
+                            });
                           }
-                    }
-                  >
-                    {tenantData?.locked === 'YES'
-                      ? formatMessage({
-                          id: 'ocp-express.Detail.Overview.Locked',
-                          defaultMessage: '已锁定',
-                        })
-                      : formatMessage({
-                          id: 'ocp-express.Detail.Overview.Unlocked',
-                          defaultMessage: '未锁定',
-                        })}
-                  </Text>
+                        },
+                      });
+                    }}
+                  />
                 </Descriptions.Item>
                 <Descriptions.Item
                   label={formatMessage({
@@ -995,62 +1019,6 @@ const Detail: React.FC<NewProps> = ({
           refresh();
         }}
       />
-
-      <Modal
-        title={formatMessage(
-          {
-            id: 'ocp-express.Detail.Overview.ModifyTheLockedStateOfTenantTenantdataname',
-            defaultMessage: '修改租户 {tenantDataName} 锁定状态',
-          },
-          { tenantDataName: tenantData.tenant_name }
-        )}
-        visible={ediLockStatusModal}
-        destroyOnClose={true}
-        confirmLoading={lockTenantLOading || unlockTenantLOading}
-        onOk={() => {
-          form2.validateFields().then(values => {
-            const { locked } = values;
-            if (locked === 'YES') {
-              lockTenant({
-                name: tenantData?.tenant_name,
-              });
-            } else {
-              unlockTenant({
-                name: tenantData?.tenant_name,
-              });
-            }
-          });
-        }}
-        onCancel={() => {
-          setEdiLockStatusModal(false);
-        }}
-      >
-        <Form form={form2} layout="vertical" hideRequiredMark={true}>
-          <Form.Item
-            label={formatMessage({
-              id: 'ocp-express.Detail.Overview.LockedState',
-              defaultMessage: '锁定状态',
-            })}
-            name="locked"
-            initialValue={tenantData?.locked}
-          >
-            <Radio.Group>
-              <Radio value={'YES'}>
-                {formatMessage({
-                  id: 'ocp-express.Detail.Overview.Lock',
-                  defaultMessage: '锁定',
-                })}
-              </Radio>
-              <Radio value={'NO'}>
-                {formatMessage({
-                  id: 'ocp-express.Detail.Overview.Unlock',
-                  defaultMessage: '解锁',
-                })}
-              </Radio>
-            </Radio.Group>
-          </Form.Item>
-        </Form>
-      </Modal>
 
       <Modal
         title={formatMessage({

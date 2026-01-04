@@ -3026,5 +3026,9 @@
   "OBShell.Overview.License.LicenseDetailModal.CommercialBusinessEditionTrialTrial": "· Commercial：商业版。|· Trial：试用版。",
   "OBShell.Overview.License.LicenseDetailModal.SeStandsForStandAlone": "· SE：代表单机企业版。|· DE：代表分布式企业版。",
   "OBShell.Overview.License.LicenseDetailModal.TheFeatureOptionsIncludedIn": "License 中所包含的功能选件。|· EE：代表 OceanBase 单机企业版基础功能。|· PS：代表 OceanBase 单机集群间复制选件。|· MT：代表 OceanBase 单机多租户选件。|· AP：代表 OceanBase 单机 OLAP 选件。",
-  "OBShell.Overview.License.LicenseDetailModal.ViewLicense": "查看 License"
+  "OBShell.Overview.License.LicenseDetailModal.ViewLicense": "查看 License",
+  "OBShell.Detail.Overview.UnlockingTheTenantWillRestore": "解锁租户将恢复用户对租户的访问",
+  "OBShell.Detail.Overview.LockingATenantWillCause": "锁定租户将导致用户无法访问该租户，请谨慎操作",
+  "OBShell.Detail.Overview.Unlock": "解锁",
+  "OBShell.Detail.Overview.Lock": "锁定"
 }

@@ -3026,5 +3026,9 @@
   "OBShell.Overview.License.LicenseDetailModal.CommercialBusinessEditionTrialTrial": "· Commercial: Business Edition. | • Trial: Trial version.",
   "OBShell.Overview.License.LicenseDetailModal.SeStandsForStandAlone": "• SE: stands for stand-alone Enterprise Edition. | • DE: stands for Distributed Enterprise Edition.",
   "OBShell.Overview.License.LicenseDetailModal.TheFeatureOptionsIncludedIn": "The feature options included in the License. | · EE: stands for OceanBase stand-alone enterprise edition base function. | · PS: Represents the OceanBase single-machine inter-cluster replication option. | · MT: stands for OceanBase stand-alone multi-tenant option. | · AP: stands for OceanBase stand-alone OLAP option.",
-  "OBShell.Overview.License.LicenseDetailModal.ViewLicense": "View License"
+  "OBShell.Overview.License.LicenseDetailModal.ViewLicense": "View License",
+  "OBShell.Detail.Overview.UnlockingTheTenantWillRestore": "Unlocking the tenant will restore user access to the tenant",
+  "OBShell.Detail.Overview.LockingATenantWillCause": "Locking a tenant will cause users to be unable to access the tenant, please exercise caution",
+  "OBShell.Detail.Overview.Unlock": "Unlock",
+  "OBShell.Detail.Overview.Lock": "Lock"
 }

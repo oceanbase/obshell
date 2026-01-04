@@ -834,10 +834,11 @@ const New: React.FC<NewProps> = ({}) => {
 
                               const currentZoneName = getFieldValue(['zones', field.name, 'name']);
                               const zoneData = findBy(zones || [], 'name', currentZoneName);
+                              const isSingleServer = zoneData?.servers?.length === 1;
 
                               let idleCpuCore = 0;
                               let idleMemoryInBytes = 0;
-                              if (zoneData?.servers?.length > 0 && zoneData?.servers[0]?.stats) {
+                              if (isSingleServer) {
                                 const { idleCpuCoreTotal, idleMemoryInBytesTotal } =
                                   getUnitSpecLimit(zoneData?.servers[0]?.stats);
                                 idleCpuCore = idleCpuCoreTotal || 0;
@@ -955,9 +956,8 @@ const New: React.FC<NewProps> = ({}) => {
                                           })
                                         }
                                         extra={
-                                          cpuLowerLimit &&
-                                          idleCpuCore &&
-                                          cpuLowerLimit < idleCpuCore
+                                          isSingleServer &&
+                                          (cpuLowerLimit < idleCpuCore!
                                             ? formatMessage(
                                                 {
                                                   id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
@@ -972,7 +972,7 @@ const New: React.FC<NewProps> = ({}) => {
                                             : formatMessage({
                                                 id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
                                                 defaultMessage: '当前可配置资源不足',
-                                              })
+                                              }))
                                         }
                                         initialValue={
                                           getResourcesLimit({
@@ -992,28 +992,32 @@ const New: React.FC<NewProps> = ({}) => {
                                               defaultMessage: '请输入 unit 规格',
                                             }),
                                           },
-                                          {
-                                            type: 'number',
-                                            min: cpuLowerLimit,
-                                            max: idleCpuCore,
-                                            message:
-                                              cpuLowerLimit < idleCpuCore
-                                                ? formatMessage(
-                                                    {
-                                                      id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                                                      defaultMessage:
-                                                        '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                                                    },
-                                                    {
-                                                      cpuLowerLimit: cpuLowerLimit,
-                                                      idleCpuCore: idleCpuCore,
-                                                    }
-                                                  )
-                                                : formatMessage({
-                                                    id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                    defaultMessage: '当前可配置资源不足',
-                                                  }),
-                                          },
+                                          ...(isSingleServer
+                                            ? [
+                                                {
+                                                  type: 'number' as const,
+                                                  min: cpuLowerLimit,
+                                                  max: idleCpuCore,
+                                                  message:
+                                                    cpuLowerLimit < idleCpuCore!
+                                                      ? formatMessage(
+                                                          {
+                                                            id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
+                                                            defaultMessage:
+                                                              '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
+                                                          },
+                                                          {
+                                                            cpuLowerLimit: cpuLowerLimit,
+                                                            idleCpuCore: idleCpuCore,
+                                                          }
+                                                        )
+                                                      : formatMessage({
+                                                          id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                          defaultMessage: '当前可配置资源不足',
+                                                        }),
+                                                },
+                                              ]
+                                            : []),
                                         ]}
                                       >
                                         <InputNumber
@@ -1034,9 +1038,8 @@ const New: React.FC<NewProps> = ({}) => {
                                         label={index === 0 && ' '}
                                         name={[field.name, 'memorySize']}
                                         extra={
-                                          memoryLowerLimit &&
-                                          idleMemoryInBytes &&
-                                          memoryLowerLimit < idleMemoryInBytes
+                                          isSingleServer &&
+                                          (memoryLowerLimit < idleMemoryInBytes!
                                             ? formatMessage(
                                                 {
                                                   id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
@@ -1051,7 +1054,7 @@ const New: React.FC<NewProps> = ({}) => {
                                             : formatMessage({
                                                 id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
                                                 defaultMessage: '当前可配置资源不足',
-                                              })
+                                              }))
                                         }
                                         initialValue={
                                           getResourcesLimit({
@@ -1070,28 +1073,32 @@ const New: React.FC<NewProps> = ({}) => {
                                               defaultMessage: '请输入 unit 规格',
                                             }),
                                           },
-                                          {
-                                            type: 'number',
-                                            min: memoryLowerLimit || 0,
-                                            max: idleMemoryInBytes || 0,
-                                            message:
-                                              memoryLowerLimit < idleMemoryInBytes
-                                                ? formatMessage(
-                                                    {
-                                                      id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                                                      defaultMessage:
-                                                        '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                                                    },
-                                                    {
-                                                      memoryLowerLimit: memoryLowerLimit,
-                                                      idleMemoryInBytes: idleMemoryInBytes,
-                                                    }
-                                                  )
-                                                : formatMessage({
-                                                    id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                    defaultMessage: '当前可配置资源不足',
-                                                  }),
-                                          },
+                                          ...(isSingleServer
+                                            ? [
+                                                {
+                                                  type: 'number' as const,
+                                                  min: memoryLowerLimit || 0,
+                                                  max: idleMemoryInBytes || 0,
+                                                  message:
+                                                    memoryLowerLimit < idleMemoryInBytes
+                                                      ? formatMessage(
+                                                          {
+                                                            id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
+                                                            defaultMessage:
+                                                              '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
+                                                          },
+                                                          {
+                                                            memoryLowerLimit: memoryLowerLimit,
+                                                            idleMemoryInBytes: idleMemoryInBytes,
+                                                          }
+                                                        )
+                                                      : formatMessage({
+                                                          id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                          defaultMessage: '当前可配置资源不足',
+                                                        }),
+                                                },
+                                              ]
+                                            : []),
                                         ]}
                                       >
                                         <InputNumber
