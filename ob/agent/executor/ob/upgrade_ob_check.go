@@ -143,6 +143,16 @@ func preCheckForObUpgradeCheck(param param.UpgradeCheckParam, obType modelob.OBT
 		return
 	}
 
+	agents, err := agentService.GetAllAgentsInfoFromOB()
+	if err != nil {
+		return nil, err
+	}
+
+	// Check python and module dependencies on real execute agents
+	if err = checkPythonEnvOnRealExecuteAgents(agents); err != nil {
+		return nil, err
+	}
+
 	return upgradeRoute, nil
 }
 

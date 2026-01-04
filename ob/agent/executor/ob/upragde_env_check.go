@@ -17,13 +17,12 @@
 package ob
 
 import (
-	"bytes"
-	"os/exec"
-	"strings"
-
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
-	"github.com/oceanbase/obshell/ob/agent/errors"
 )
+
+func CheckPythonEnvironment() error {
+	return checkPythonEnvironmentInternal(nil)
+}
 
 type CheckEnvTask struct {
 	task.Task
@@ -57,24 +56,5 @@ func (t *CheckEnvTask) Execute() (err error) {
 }
 
 func (t *CheckEnvTask) checkEnv() (err error) {
-	t.ExecuteLog("Checking if python is installed.")
-	cmd := exec.Command("python", "-c", "import sys; print(sys.version_info.major)")
-
-	var out bytes.Buffer
-	cmd.Stdout = &out
-	if err = cmd.Run(); err != nil {
-		return errors.Occur(errors.ErrEnvironmentWithoutPython)
-	}
-	output := strings.TrimSpace(out.String())
-	t.ExecuteLogf("Python major version %s", output)
-
-	for _, module := range modules {
-		t.ExecuteLogf("Checking if python module '%s' is installed.", module)
-		cmd = exec.Command("python", "-c", "import "+module)
-		if err = cmd.Run(); err != nil {
-			t.ExecuteErrorLogf("Checking if python module '%s' is installed. %s", module, err.Error())
-			return errors.Occur(errors.ErrEnvironmentWithoutPythonModule, module)
-		}
-	}
-	return nil
+	return checkPythonEnvironmentInternal(t)
 }

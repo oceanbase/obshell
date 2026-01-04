@@ -113,6 +113,7 @@ type ObUpgradeParam struct {
 	FreezeServer bool   `json:"freeze_server"`
 }
 
+
 type Scope struct {
 	Type       string   `json:"type"`
 	Target     []string `json:"target"`

@@ -779,3 +779,20 @@ func getObclusterLicenseHandler(c *gin.Context) {
 	license, err := ob.GetObclusterLicense()
 	common.SendResponse(c, license, err)
 }
+
+// @ID checkUpgradeEnvironment
+// @Summary check python environment for upgrade
+// @Description check python and module dependencies for upgrade
+// @Tags upgrade
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/upgrade/env/check [post]
+func checkUpgradeEnvironmentHandler(c *gin.Context) {
+	err := ob.CheckPythonEnvironment()
+	common.SendResponse(c, nil, err)
+}

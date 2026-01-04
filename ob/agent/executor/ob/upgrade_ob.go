@@ -17,13 +17,16 @@
 package ob
 
 import (
+	"bytes"
 	"fmt"
+	"os/exec"
 	"strconv"
 	"strings"
 	"time"
 
 	log "github.com/sirupsen/logrus"
 
+	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
@@ -331,6 +334,11 @@ func preCheckForObUpgrade(param param.ObUpgradeParam, obType modelob.OBType) (p 
 		return
 	}
 
+	// Check python and module dependencies on real execute agents
+	if err = checkPythonEnvOnRealExecuteAgents(allAgents); err != nil {
+		return nil, err
+	}
+
 	if err = checkUpgradeDir(&param.UpgradeDir); err != nil {
 		return nil, err
 	}
@@ -369,6 +377,7 @@ func preCheckForObUpgrade(param param.ObUpgradeParam, obType modelob.OBType) (p 
 	if err != nil {
 		return nil, err
 	}
+
 	return p, nil
 }
 
@@ -452,5 +461,103 @@ func checkNoRunningBackupTask() error {
 	if count > 0 {
 		return errors.Occur(errors.ErrObUpgradeHasRunningBackupTask, count)
 	}
+	return nil
+}
+
+// getRealExecuteAgentForMachine returns the real execute agent for a given machine IP.
+// For machines with multiple obshell instances, it returns the first agent in the list
+// with the same IP (consistent with isRealExecuteAgent logic).
+func getRealExecuteAgentForMachine(agents []meta.AgentInfo, machineIP string) *meta.AgentInfo {
+	for _, agent := range agents {
+		if agent.Ip == machineIP {
+			return &agent
+		}
+	}
+	return nil
+}
+
+// checkPythonEnvOnRealExecuteAgents checks python and module dependencies on real execute agents.
+// For machines with multiple obshell instances, only the real execute agent is checked.
+func checkPythonEnvOnRealExecuteAgents(agents []meta.AgentInfo) error {
+	// Group agents by IP to handle machines with multiple obshell instances
+	ipToAgents := make(map[string][]meta.AgentInfo)
+	for _, agent := range agents {
+		ipToAgents[agent.Ip] = append(ipToAgents[agent.Ip], agent)
+	}
+
+	// Check python environment on each machine's real execute agent
+	for ip := range ipToAgents {
+		realExecuteAgent := getRealExecuteAgentForMachine(agents, ip)
+		if realExecuteAgent == nil {
+			return errors.Occurf(errors.ErrCommonUnexpected, "failed to find real execute agent for machine %s", ip)
+		}
+
+		log.Infof("Checking python environment on real execute agent %s (machine %s)", realExecuteAgent.String(), ip)
+		if err := checkPythonEnvOnAgent(*realExecuteAgent); err != nil {
+			return errors.Wrapf(err, "python environment check failed on agent %s", realExecuteAgent.String())
+		}
+		log.Infof("Python environment check passed on agent %s", realExecuteAgent.String())
+	}
+
+	return nil
+}
+
+// checkPythonEnvOnAgent checks python and module dependencies on a specific agent.
+func checkPythonEnvOnAgent(agent meta.AgentInfo) error {
+	// If checking local agent, check directly
+	if agent.Equal(meta.OCS_AGENT) {
+		return checkPythonEnvironmentInternal(nil)
+	}
+
+	// For remote agents, send RPC request to check python environment
+	return checkPythonEnvRemote(agent)
+}
+
+// checkPythonEnvironmentInternal checks python and module dependencies.
+// If taskLogger is provided, it uses ExecuteLog/ExecuteLogf for logging;
+// otherwise, it uses log.Infof for logging.
+func checkPythonEnvironmentInternal(taskLogger task.TaskLogInterface) error {
+	var logFunc func(string)
+	var logFuncf func(string, ...interface{})
+
+	if taskLogger != nil {
+		logFunc = taskLogger.ExecuteLog
+		logFuncf = taskLogger.ExecuteLogf
+	} else {
+		logFunc = func(msg string) { log.Info(msg) }
+		logFuncf = log.Infof
+	}
+
+	logFunc("Checking if python is installed.")
+	cmd := exec.Command("python", "-c", "import sys; print(sys.version_info.major)")
+	var out bytes.Buffer
+	cmd.Stdout = &out
+	if err := cmd.Run(); err != nil {
+		return errors.Occur(errors.ErrEnvironmentWithoutPython)
+	}
+	pythonVersion := strings.TrimSpace(out.String())
+	logFuncf("Python major version %s", pythonVersion)
+
+	for _, module := range modules {
+		logFuncf("Checking if python module '%s' is installed.", module)
+		cmd = exec.Command("python", "-c", "import "+module)
+		if err := cmd.Run(); err != nil {
+			logFuncf("Check python module '%s' failed: %v", module, err)
+			return errors.Occur(errors.ErrEnvironmentWithoutPythonModule, module)
+		}
+	}
+
+	return nil
+}
+
+// checkPythonEnvRemote checks python and module dependencies on a remote agent via RPC.
+func checkPythonEnvRemote(agent meta.AgentInfo) error {
+	// No request body needed, just send POST request
+	err := secure.SendPostRequest(&agent, constant.URI_API_V1+constant.URI_UPGRADE+constant.URI_ENV+constant.URI_CHECK, nil, nil)
+	if err != nil {
+		return errors.Wrapf(err, "failed to check python environment on agent %s", agent.String())
+	}
+
+	log.Infof("Python environment check passed on agent %s", agent.String())
 	return nil
 }

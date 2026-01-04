@@ -179,6 +179,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	upgrade.GET(constant.URI_PACKAGE+constant.URI_INFO, pkgInfoHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_BACKUP, paramsBackupHandler)
 	upgrade.POST(constant.URI_PARAMS+constant.URI_RESTORE, paramsRestoreHandler)
+	upgrade.POST(constant.URI_ENV+constant.URI_CHECK, checkUpgradeEnvironmentHandler)
 
 	pkg.POST("", common.VerifyFile(), newPkgUploadHandler)
 

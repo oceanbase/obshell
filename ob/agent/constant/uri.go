@@ -85,15 +85,16 @@ const (
 	URI_STATISTICS  = "/statistics"
 
 	// Used for upgrade
-	URI_UPGRADE = "/upgrade"
-	URI_CHECK   = "/check"
-	URI_ROUTE   = "/route"
-	URI_PACKAGE = "/package"
-	URI_PARAMS  = "/params"
-	URI_BACKUP  = "/backup"
-	URI_RESTORE = "/restore"
-	URI_WINDOWS = "/windows"
-	URI_TASKS   = "/tasks"
+	URI_UPGRADE     = "/upgrade"
+	URI_CHECK       = "/check"
+	URI_ROUTE       = "/route"
+	URI_PACKAGE     = "/package"
+	URI_PARAMS      = "/params"
+	URI_BACKUP      = "/backup"
+	URI_RESTORE     = "/restore"
+	URI_WINDOWS     = "/windows"
+	URI_TASKS       = "/tasks"
+	URI_ENV         = "/env"
 
 	// Used for tenant
 	URI_TENANTS           = "/tenants"
