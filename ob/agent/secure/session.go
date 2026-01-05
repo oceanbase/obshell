@@ -43,12 +43,7 @@ func initSessionManager() error {
 	if err != nil {
 		sessionGCInterval = 30
 	}
-	var maxSessionCount int
-	err = getOCSConfig(constant.CONFIG_MAX_SESSION_COUNT, &maxSessionCount)
-	if err != nil {
-		maxSessionCount = 50
-	}
-	sessionMgr = NewSessionManager(time.Duration(sessionTimeout)*time.Second, time.Duration(sessionGCInterval)*time.Second, maxSessionCount)
+	sessionMgr = NewSessionManager(time.Duration(sessionTimeout)*time.Second, time.Duration(sessionGCInterval)*time.Second)
 	return nil
 }
 
@@ -63,22 +58,20 @@ type Session struct {
 
 // SessionManager manages sessions.
 type SessionManager struct {
-	sessions        map[string]*Session // Session storage
-	mutex           sync.RWMutex        // Read-write lock
-	timeout         time.Duration       // Session timeout
-	cleanupTicker   *time.Ticker        // Cleanup ticker
-	stopChan        chan bool           // Stop cleanup signal
-	maxSessionCount int                 // Max session count
+	sessions      map[string]*Session // Session storage
+	mutex         sync.RWMutex        // Read-write lock
+	timeout       time.Duration       // Session timeout
+	cleanupTicker *time.Ticker        // Cleanup ticker
+	stopChan      chan bool           // Stop cleanup signal
 }
 
 // NewSessionManager creates a new session manager.
-func NewSessionManager(timeout time.Duration, gcInterval time.Duration, maxSessionCount int) *SessionManager {
+func NewSessionManager(timeout time.Duration, gcInterval time.Duration) *SessionManager {
 	sm := &SessionManager{
-		sessions:        make(map[string]*Session),
-		timeout:         timeout,
-		cleanupTicker:   time.NewTicker(gcInterval),
-		stopChan:        make(chan bool),
-		maxSessionCount: maxSessionCount,
+		sessions:      make(map[string]*Session),
+		timeout:       timeout,
+		cleanupTicker: time.NewTicker(gcInterval),
+		stopChan:      make(chan bool),
 	}
 
 	// Start background cleanup goroutine.
@@ -118,11 +111,6 @@ func (sm *SessionManager) createSession() (*Session, error) {
 	sm.mutex.Lock()
 	sm.sessions[sessionID] = session
 	sm.mutex.Unlock()
-	// check the session count and control the session count
-	if sm.Count() > sm.maxSessionCount {
-		sm.InvalidateAllSessions()
-	}
-
 	return session, nil
 }
 
