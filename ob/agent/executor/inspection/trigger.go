@@ -537,9 +537,12 @@ func updateInspectionReportStatus(t task.ExecutableTask, status string, errorMes
 // localTaskId is the Generic ID of the task
 func getTaskStatusForInspectionReport(localTaskId string) (string, error) {
 	// Convert Generic ID to numeric ID
-	dagID, _, err := task.ConvertGenericID(localTaskId)
+	dagID, agentInfo, err := task.ConvertGenericID(localTaskId)
 	if err != nil {
 		return "", errors.Wrap(err, "failed to convert generic ID to dag ID")
+	}
+	if agentInfo != nil && !meta.OCS_AGENT.Equal(agentInfo) {
+		return constant.INSPECTION_STATUS_RUNNING, nil
 	}
 
 	dag, err := localTaskService.GetDagInstance(dagID)
