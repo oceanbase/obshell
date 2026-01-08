@@ -24,7 +24,7 @@ import (
 )
 
 type TenantSession struct {
-	Id               int64   `gorm:"column:ID"`
+	Id               uint64  `gorm:"column:ID"`
 	SvrIp            string  `gorm:"column:SVR_IP"`
 	SvrPort          int64   `gorm:"column:SVR_PORT"`
 	SqlPort          int64   `gorm:"column:SQL_PORT"`
@@ -37,7 +37,7 @@ type TenantSession struct {
 	Time             float64 `gorm:"column:TIME"`
 	State            string  `gorm:"column:STATE"`
 	Info             string  `gorm:"column:INFO"`
-	ProxySessId      int64   `gorm:"column:PROXY_SESSID"`
+	ProxySessId      uint64  `gorm:"column:PROXY_SESSID"`
 	Action           string  `gorm:"column:ACTION"`
 	Module           string  `gorm:"column:MODULE"`
 	ClientInfo       string  `gorm:"column:CLIENT_INFO"`
@@ -46,7 +46,7 @@ type TenantSession struct {
 	RecordPolicy     string  `gorm:"column:RECORD_POLICY"`
 	SqlId            string  `gorm:"column:SQL_ID"`
 	TotalCpuTime     int64   `gorm:"column:TOTAL_CPU_TIME"`
-	MemoryUsage      int64   `gorm:"column:MEMORY_USAGE"`
+	MemoryUsage      uint64  `gorm:"column:MEMORY_USAGE"`
 }
 
 func (t *TenantSession) TableName() string {

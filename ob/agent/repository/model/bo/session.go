@@ -19,7 +19,7 @@ package bo
 import "time"
 
 type TenantSession struct {
-	Id               int64   `json:"id"`
+	Id               uint64  `json:"id"`
 	SvrIp            string  `json:"svr_ip"`
 	SvrPort          int64   `json:"svr_port"`
 	SqlPort          int64   `json:"sql_port"`
@@ -31,7 +31,7 @@ type TenantSession struct {
 	Time             float64 `json:"time"`
 	State            string  `json:"state"`
 	Info             string  `json:"info"`
-	ProxySessId      int64   `json:"proxy_sess_id"`
+	ProxySessId      uint64  `json:"proxy_sess_id"`
 	ProxyIp          string  `json:"proxy_ip"` // parse from host when ProxySessId is not null
 	Action           string  `json:"action"`
 	Module           string  `json:"module"`
@@ -41,7 +41,7 @@ type TenantSession struct {
 	RecordPolicy     string  `json:"record_policy"`
 	SqlId            string  `json:"sql_id"`
 	TotalCpuTime     int64   `json:"total_cpu_time"`
-	MemoryUsage      int64   `json:"memory_usage"`
+	MemoryUsage      uint64  `json:"memory_usage"`
 }
 
 type PaginatedTenantSessions struct {
