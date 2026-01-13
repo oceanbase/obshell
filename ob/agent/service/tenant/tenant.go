@@ -458,7 +458,7 @@ func (t *TenantService) IsVariableExist(variableName string) (bool, error) {
 		return false, err
 	}
 	var count int64
-	err = db.Table(DBA_OB_SYS_VARIABLES).Where("NAME = ?", variableName).Count(&count).Error
+	err = db.Table(CDB_OB_SYS_VARIABLES).Where("NAME = ?", variableName).Where("TENANT_ID = ?", constant.TENANT_SYS_ID).Count(&count).Error
 	return count > 0, err
 }
 
