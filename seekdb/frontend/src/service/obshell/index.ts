@@ -6,10 +6,10 @@ import * as upgrade from './upgrade';
 import * as alarm from './alarm';
 import * as v1 from './v1';
 import * as metric from './metric';
-import * as observer from './observer';
+import * as package from './package';
+import * as seekdb from './seekdb';
 import * as database from './database';
 import * as user from './user';
-import * as package from './package';
 import * as system from './system';
 import * as task from './task';
 export default {
@@ -17,10 +17,10 @@ export default {
   alarm,
   v1,
   metric,
-  observer,
+  package,
+  seekdb,
   database,
   user,
-  package,
   system,
   task,
 };

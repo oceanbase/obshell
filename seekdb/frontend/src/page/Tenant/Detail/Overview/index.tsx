@@ -47,24 +47,24 @@ import {
   getCompaction,
   majorCompaction,
   clearCompactionError,
-  startObserver,
-  stopObserver,
-  restartObserver,
-} from '@/service/obshell/observer';
+  startSeekdb,
+  stopSeekdb,
+  restartSeekdb,
+} from '@/service/obshell/seekdb';
 import InstanceConnectionString from '../Component/InstanceConnectionString';
 import { EditOutlined, EllipsisOutlined, QuestionCircleOutlined } from '@oceanbase/icons';
 import UpgradeAgentDrawer from '@/page/Cluster/Overview/UpgradeAgentDrawer';
 import { OB_INFO_STATUS_LIST } from '@/constant/tenant';
 import useUiMode from '@/hook/useUiMode';
 import { getInstanceAvailableFlag } from '@/util/instance';
-import useObInfo from '@/hook/useObInfo';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
 interface NewProps {}
 
 const Detail: React.FC<NewProps> = ({}) => {
   const dispatch = useDispatch();
-  const { obInfoData: obInfo } = useObInfo();
+  const { seekdbInfoData: seekdbInfo } = useSeekdbInfo();
   const loading = useSelector(
-    (state: DefaultRootState) => state.loading.effects['global/getObInfoData']
+    (state: DefaultRootState) => state.loading.effects['global/getSeekdbInfoData']
   );
   const { isDesktopMode } = useUiMode();
   const [modal, contextHolder] = Modal.useModal();
@@ -72,34 +72,34 @@ const Detail: React.FC<NewProps> = ({}) => {
   const [upgradeVisible, setUpgradeVisible] = useState<boolean>(false);
   const [upgradeAgentVisible, setUpgradeAgentVisible] = useState<boolean>(false);
 
-  const getObInfoData = () => {
+  const getSeekdbInfoData = () => {
     dispatch({
-      type: 'global/getObInfoData',
+      type: 'global/getSeekdbInfoData',
       payload: {},
     });
   };
 
   useEffect(() => {
-    getObInfoData();
+    getSeekdbInfoData();
   }, []);
 
-  const obInfoData: API.ObserverInfo = {
-    ...(obInfo || {}),
-    name: obInfo?.cluster_name,
+  const seekdbInfoData: API.ObserverInfo = {
+    ...(seekdbInfo || {}),
+    name: seekdbInfo?.cluster_name,
   };
 
-  const obInfoStatus = obInfoData?.status || '';
-  const obInfoStatusInfo = OB_INFO_STATUS_LIST.find(item => item.value === obInfoStatus);
-  const obInfoStatusName = obInfoStatusInfo?.label;
-  const availableFlag = getInstanceAvailableFlag(obInfoStatus);
-  const systemdUnit = obInfoData?.systemd_unit || '';
+  const seekdbInfoStatus = seekdbInfoData?.status || '';
+  const seekdbInfoStatusInfo = OB_INFO_STATUS_LIST.find(item => item.value === seekdbInfoStatus);
+  const seekdbInfoStatusName = seekdbInfoStatusInfo?.label;
+  const availableFlag = getInstanceAvailableFlag(seekdbInfoStatus);
+  const systemdUnit = seekdbInfoData?.systemd_unit || '';
 
-  const obInfoPolling = ['STARTING', 'STOPPING', 'RESTARTING'].includes(obInfoStatus);
+  const seekdbInfoPolling = ['STARTING', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus);
   useInterval(
     () => {
-      getObInfoData();
+      getSeekdbInfoData();
     },
-    obInfoPolling ? 3000 : undefined
+    seekdbInfoPolling ? 3000 : undefined
   );
 
   // 格式化在线时长，去掉秒数的小数部分
@@ -179,11 +179,11 @@ const Detail: React.FC<NewProps> = ({}) => {
     },
   });
 
-  const { run: startFn } = useRequest(startObserver, {
+  const { run: startFn } = useRequest(startSeekdb, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
-        getObInfoData();
+        getSeekdbInfoData();
         Modal.success({
           title: formatMessage({
             id: 'ocp-v2.Cluster.Overview.TheTaskToStartThe',
@@ -201,7 +201,6 @@ const Detail: React.FC<NewProps> = ({}) => {
                 onClick={() => {
                   history.push(`/task/${res?.data?.id}`);
                   Modal.destroyAll();
-                  // directTo(`/task/${res?.data?.id}?backUrl=/task`);
                 }}
               >
                 {res?.data?.id}
@@ -213,11 +212,11 @@ const Detail: React.FC<NewProps> = ({}) => {
     },
   });
 
-  const { run: stopFn } = useRequest(stopObserver, {
+  const { run: stopFn } = useRequest(stopSeekdb, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {
-        getObInfoData();
+        getSeekdbInfoData();
         Modal.success({
           title: formatMessage({
             id: 'ocp-v2.Cluster.Overview.TheTaskOfStoppingThe',
@@ -247,10 +246,10 @@ const Detail: React.FC<NewProps> = ({}) => {
     },
   });
 
-  const { run: restartFn } = useRequest(restartObserver, {
+  const { run: restartFn } = useRequest(restartSeekdb, {
     manual: true,
     onSuccess: res => {
-      getObInfoData();
+      getSeekdbInfoData();
       if (res.successful) {
         Modal.success({
           title: formatMessage({
@@ -282,11 +281,11 @@ const Detail: React.FC<NewProps> = ({}) => {
   });
 
   const getUnitConfig = () => {
-    if (!obInfoData || !obInfoData?.cpu_count || !obInfoData?.memory_size) {
+    if (!seekdbInfoData || !seekdbInfoData?.cpu_count || !seekdbInfoData?.memory_size) {
       return '-';
     }
-    const cpuCount = obInfoData?.cpu_count;
-    const memorySize = obInfoData?.memory_size;
+    const cpuCount = seekdbInfoData?.cpu_count;
+    const memorySize = seekdbInfoData?.memory_size;
     // 去掉内存大小的小数部分和单位前的空格，如 12.80 GB -> 12GB
     const formattedMemorySize = memorySize.replace(/(\d+)\.\d+\s*/, '$1');
     return `${cpuCount}C ${formattedMemorySize}`;
@@ -352,24 +351,24 @@ const Detail: React.FC<NewProps> = ({}) => {
 
   const tooltipTitle = formatMessage(
     {
-      id: 'SeekDB.Detail.Overview.InstanceObinfostatusnameThisOperationIs',
-      defaultMessage: '实例{obInfoStatusName}，暂不支持此操作',
+      id: 'SeekDB.Detail.Overview.InstanceSeekdbinfostatusnameThisOperationIs',
+      defaultMessage: '实例{seekdbInfoStatusName}，暂不支持此操作',
     },
-    { obInfoStatusName: obInfoStatusName }
+    { seekdbInfoStatusName: seekdbInfoStatusName }
   );
 
   const menu = (
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       {/* <Menu.Item key="upgrade">
       <span>
-        {formatMessage({
-          id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
-          defaultMessage: '升级版本',
-        })}
+       {formatMessage({
+         id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
+         defaultMessage: '升级版本',
+       })}
       </span>
       </Menu.Item> */}
-      <Menu.Item key="upgradeAgent" disabled={obInfoStatus !== 'AVAILABLE'}>
-        <Tooltip placement="left" title={obInfoStatus !== 'AVAILABLE' && tooltipTitle}>
+      <Menu.Item key="upgradeAgent" disabled={seekdbInfoStatus !== 'AVAILABLE'}>
+        <Tooltip placement="left" title={seekdbInfoStatus !== 'AVAILABLE' && tooltipTitle}>
           <span>
             {formatMessage({
               id: 'ocp-v2.Cluster.Overview.UpgradeObshell',
@@ -411,7 +410,7 @@ const Detail: React.FC<NewProps> = ({}) => {
             })}
             spin={loading}
             onClick={() => {
-              getObInfoData();
+              getSeekdbInfoData();
               getTenantCompactionRefresh();
             }}
           />
@@ -420,10 +419,10 @@ const Detail: React.FC<NewProps> = ({}) => {
         extra: (
           <Space>
             {!isDesktopMode &&
-              ['AVAILABLE', 'UNAVAILABLE', 'STOPPING', 'RESTARTING'].includes(obInfoStatus) && (
+              ['AVAILABLE', 'UNAVAILABLE', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && (
                 <Tooltip
                   title={
-                    (['STOPPING', 'RESTARTING'].includes(obInfoStatus) && tooltipTitle) ||
+                    (['STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && tooltipTitle) ||
                     (!!systemdUnit &&
                       formatMessage({
                         id: 'SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning',
@@ -433,17 +432,19 @@ const Detail: React.FC<NewProps> = ({}) => {
                   }
                 >
                   <Button
-                    disabled={['STOPPING', 'RESTARTING'].includes(obInfoStatus) || !!systemdUnit}
+                    disabled={
+                      ['STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) || !!systemdUnit
+                    }
                     onClick={() => handleMenuClick('stop')}
                   >
                     {formatMessage({ id: 'SeekDB.Detail.Overview.Stop', defaultMessage: '停止' })}
                   </Button>
                 </Tooltip>
               )}
-            {!isDesktopMode && ['STARTING', 'STOPPED'].includes(obInfoStatus) && (
-              <Tooltip title={['STARTING'].includes(obInfoStatus) && tooltipTitle}>
+            {!isDesktopMode && ['STARTING', 'STOPPED'].includes(seekdbInfoStatus) && (
+              <Tooltip title={['STARTING'].includes(seekdbInfoStatus) && tooltipTitle}>
                 <Button
-                  disabled={['STARTING'].includes(obInfoStatus)}
+                  disabled={['STARTING'].includes(seekdbInfoStatus)}
                   onClick={() => {
                     handleMenuClick('start');
                   }}
@@ -455,13 +456,13 @@ const Detail: React.FC<NewProps> = ({}) => {
             {!isDesktopMode && (
               <Tooltip
                 title={
-                  ['RESTARTING', 'STOPPING', 'STARTING', 'STOPPED'].includes(obInfoStatus) &&
+                  ['RESTARTING', 'STOPPING', 'STARTING', 'STOPPED'].includes(seekdbInfoStatus) &&
                   tooltipTitle
                 }
               >
                 <Button
                   disabled={['RESTARTING', 'STOPPING', 'STARTING', 'STOPPED'].includes(
-                    obInfoStatus
+                    seekdbInfoStatus
                   )}
                   onClick={() => {
                     handleMenuClick('restart');
@@ -501,11 +502,11 @@ const Detail: React.FC<NewProps> = ({}) => {
                 })}
               >
                 <Badge
-                  status={obInfoStatusInfo?.badgeStatus as BadgeProps['status']}
-                  text={obInfoStatusName}
+                  status={seekdbInfoStatusInfo?.badgeStatus as BadgeProps['status']}
+                  text={seekdbInfoStatusName}
                 />
 
-                {['STARTING', 'STOPPING', 'RESTARTING'].includes(obInfoStatus) && (
+                {['STARTING', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && (
                   <Tooltip
                     title={formatMessage({
                       id: 'SeekDB.Detail.Overview.CanEnterTheTaskCenter',
@@ -522,7 +523,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: 'seekdb 版本号',
                 })}
               >
-                {obInfoData?.version || '-'}
+                {seekdbInfoData?.version || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -538,7 +539,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '硬件架构',
                 })}
               >
-                {obInfoData?.architecture}
+                {seekdbInfoData?.architecture}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -546,7 +547,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '数据库数',
                 })}
               >
-                {renderClickableCount(obInfoData?.database_count, `/database`)}
+                {renderClickableCount(seekdbInfoData?.database_count, `/database`)}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -554,7 +555,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '用户数',
                 })}
               >
-                {renderClickableCount(obInfoData?.user_count, `/user`)}
+                {renderClickableCount(seekdbInfoData?.user_count, `/user`)}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -562,7 +563,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: 'SQL 端口',
                 })}
               >
-                {obInfoData?.port}
+                {seekdbInfoData?.port}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -570,7 +571,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: 'obshell 端口',
                 })}
               >
-                {obInfoData?.obshell_port}
+                {seekdbInfoData?.obshell_port}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -578,7 +579,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '创建时间',
                 })}
               >
-                {formatTime(obInfoData.created_time)}
+                {formatTime(seekdbInfoData.created_time)}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -586,7 +587,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '创建者',
                 })}
               >
-                {obInfoData?.user}
+                {seekdbInfoData?.user}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -594,7 +595,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '启动时间',
                 })}
               >
-                {formatTime(obInfoData?.start_time)}
+                {formatTime(seekdbInfoData?.start_time)}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -602,7 +603,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '在线时长',
                 })}
               >
-                {formatLifeTime(obInfoData?.life_time)}
+                {formatLifeTime(seekdbInfoData?.life_time)}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -610,7 +611,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '工作目录',
                 })}
               >
-                {obInfoData?.base_dir || '-'}
+                {seekdbInfoData?.base_dir || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -618,7 +619,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '数据盘路径',
                 })}
               >
-                {obInfoData?.data_dir || '-'}
+                {seekdbInfoData?.data_dir || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -626,7 +627,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '日志盘路径',
                 })}
               >
-                {obInfoData?.redo_dir || '-'}
+                {seekdbInfoData?.redo_dir || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -634,7 +635,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '日志目录',
                 })}
               >
-                {obInfoData?.log_dir || '-'}
+                {seekdbInfoData?.log_dir || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -642,7 +643,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '软件安装路径',
                 })}
               >
-                {obInfoData?.bin_path || '-'}
+                {seekdbInfoData?.bin_path || '-'}
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
@@ -650,7 +651,9 @@ const Detail: React.FC<NewProps> = ({}) => {
                   defaultMessage: '连接字符串',
                 })}
               >
-                <InstanceConnectionString connectionString={obInfoData?.connection_string || '-'} />
+                <InstanceConnectionString
+                  connectionString={seekdbInfoData?.connection_string || '-'}
+                />
               </Descriptions.Item>
             </Descriptions>
           </MyCard>
@@ -676,8 +679,8 @@ const Detail: React.FC<NewProps> = ({}) => {
                 }
               >
                 <div style={{ display: 'flex', alignItems: 'center' }}>
-                  {obInfoData.whitelist &&
-                    obInfoData.whitelist.split(',').map(item => <Tag key={item}>{item}</Tag>)}
+                  {seekdbInfoData.whitelist &&
+                    seekdbInfoData.whitelist.split(',').map(item => <Tag key={item}>{item}</Tag>)}
                   <Button
                     type="link"
                     icon={<EditOutlined />}
@@ -786,27 +789,27 @@ const Detail: React.FC<NewProps> = ({}) => {
 
       <ModifyWhitelistModal
         visible={showWhitelistModal}
-        obInfoData={obInfoData}
+        seekdbInfoData={seekdbInfoData}
         onCancel={() => {
           setShowWhitelistModal(false);
         }}
         onSuccess={() => {
           setShowWhitelistModal(false);
-          getObInfoData();
+          getSeekdbInfoData();
         }}
       />
 
       {/* <UpgradeDrawer
-          visible={upgradeVisible}
-          onCancel={() => setUpgradeVisible(false)}
-          onSuccess={() => {
-            setUpgradeVisible(false);
-          }}
-         /> */}
+           visible={upgradeVisible}
+           onCancel={() => setUpgradeVisible(false)}
+           onSuccess={() => {
+             setUpgradeVisible(false);
+           }}
+          /> */}
 
       <UpgradeAgentDrawer
         visible={upgradeAgentVisible}
-        obInfoData={obInfoData}
+        seekdbInfoData={seekdbInfoData}
         onCancel={() => setUpgradeAgentVisible(false)}
         onSuccess={() => {
           setUpgradeAgentVisible(false);

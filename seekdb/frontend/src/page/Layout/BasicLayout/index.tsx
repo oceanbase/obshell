@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import { history, useDispatch, useSelector } from 'umi';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Alert, Badge, Menu, Modal, Space, Tooltip, theme } from '@oceanbase/design';
 import { BasicLayout as OBUIBasicLayout } from '@oceanbase/ui';
 import type { BasicLayoutProps as OBUIBasicLayoutProps } from '@oceanbase/ui/es/BasicLayout';
@@ -25,13 +25,11 @@ import moment from 'moment';
 import { LoadingOutlined, UnorderedListOutlined } from '@oceanbase/icons';
 import { useBasicMenu } from '@/hook/useMenu';
 import { useRequest } from 'ahooks';
-import ModifyUserPasswordModal from '@/component/ModifyUserPasswordModal';
 import { getAgentInfo, getTime } from '@/service/obshell/v1';
 import { getClusterUnfinishDags, getAgentUnfinishDags } from '@/service/obshell/task';
 import useRedirectRoute from '@/hook/useRedirect';
 import useUiMode from '@/hook/useUiMode';
-import useStyles from './index.style';
-
+import styles from './index.less';
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
   children: React.ReactNode;
   location: {
@@ -42,9 +40,7 @@ interface BasicLayoutProps extends OBUIBasicLayoutProps {
 const BasicLayout: React.FC<BasicLayoutProps> = props => {
   const { token } = theme.useToken();
   const dispatch = useDispatch();
-  const { userData } = useSelector((state: DefaultRootState) => state.profile);
   const { isDesktopMode, window } = useUiMode();
-  const { styles } = useStyles();
 
   // 全局菜单
   const basicMenus = useBasicMenu();
@@ -64,8 +60,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
   const [validating, setValidating] = useState(false);
   // 客户端与服务端的时间差 (以秒为单位)
   const [offsetSeconds, setOffsetSeconds] = useState(0);
-  // 是否展示修改密码的弹窗
-  const [passwordVisible, setPasswordVisible] = useState(false);
 
   const simpleLogoUrl = '/assets/logo/obshell_dashboard_logo.svg';
 
@@ -146,13 +140,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
       );
 
   const handleUserMenuClick = (key: string) => {
-    if (key === 'profile') {
-      history.push('/settings/profile');
-    } else if (key === 'modifyPassword') {
-      setPasswordVisible(true);
-    } else if (key === 'credential') {
-      history.push('/settings/credential');
-    } else if (key === 'logout') {
+    if (key === 'logout') {
       Modal.confirm({
         title: formatMessage({
           id: 'ocp-express.Layout.Header.ExitLogin',
@@ -178,12 +166,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         handleUserMenuClick(key as string);
       }}
     >
-      {/* <Menu.Item key="modifyPassword">
-        {formatMessage({
-          id: 'ocp-express.Layout.Header.ChangePassword',
-          defaultMessage: '修改密码',
-        })}
-      </Menu.Item> */}
       <Menu.Item key="logout">
         {formatMessage({
           id: 'ocp-express.Layout.Header.ExitLogin',
@@ -351,7 +333,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
             </div>
           ),
 
-          username: userData.username,
+          username: '',
           userMenu,
           showLocale: true,
           locales: ['zh-CN', 'en-US'],
@@ -364,18 +346,6 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         {...restProps}
       >
         {children}
-
-        <ModifyUserPasswordModal
-          visible={passwordVisible}
-          isSelf={true}
-          userData={userData}
-          onCancel={() => {
-            setPasswordVisible(false);
-          }}
-          onSuccess={() => {
-            setPasswordVisible(false);
-          }}
-        />
       </OBUIBasicLayout>
     </div>
   );

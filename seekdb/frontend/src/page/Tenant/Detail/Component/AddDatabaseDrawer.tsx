@@ -23,7 +23,7 @@ import MyInput from '@/component/MyInput';
 import MySelect from '@/component/MySelect';
 import { DATABASE_NAME_RULE } from '@/constant';
 import { createDatabase, updateDatabase } from '@/service/obshell/database';
-import { getObserverCharsets } from '@/service/obshell/observer';
+import { getCharsets } from '@/service/obshell/seekdb';
 
 const { Option } = Select;
 
@@ -46,11 +46,11 @@ const AddDatabaseDrawer: React.FC<AddDatabaseDrawerProps> = ({
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue } = form;
 
-  const [collations, setCollations] = useState<API.Collation[]>([]);
+  const [collations, setCollations] = useState<API.CharsetInfo[]>([]);
 
   // TODO
   // 获取租户字符集列表
-  const { data, loading } = useRequest(getObserverCharsets);
+  const { data, loading } = useRequest(getCharsets);
 
   const charsetList = data?.data?.contents || [];
 

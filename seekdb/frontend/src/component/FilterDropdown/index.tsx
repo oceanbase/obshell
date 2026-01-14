@@ -21,7 +21,7 @@ import type { DropDownProps } from '@oceanbase/design/es/dropdown';
 import type { InputProps } from '@oceanbase/design/es/input';
 import { CheckOutlined, FilterOutlined, SearchOutlined } from '@oceanbase/icons';
 import { findByValue } from '@oceanbase/util';
-import useStyles from './index.style';
+import styles from './index.less';
 
 const { Text } = Typography;
 
@@ -64,7 +64,6 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
   cardBodyStyle,
   ...restProps
 }) => {
-  const { styles } = useStyles();
   const [keyword, setKeyword] = useState('');
   return (
     <Dropdown

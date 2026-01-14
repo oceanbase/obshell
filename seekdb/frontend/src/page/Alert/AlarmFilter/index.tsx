@@ -7,7 +7,7 @@ import type { FormInstance } from 'antd';
 import { Button, Col, DatePicker, Form, Input, Row, Select, Tag } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { Space } from '@oceanbase/design';
-import useObInfo from '@/hook/useObInfo';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
 
 interface AlarmFilterProps {
   form: FormInstance<any>;
@@ -23,7 +23,7 @@ const DEFAULT_VISIBLE_CONFIG = {
 };
 
 export default function AlarmFilter({ form, type, depend }: AlarmFilterProps) {
-  const { obInfoData } = useObInfo();
+  const { seekdbInfoData } = useSeekdbInfo();
   const [visibleConfig, setVisibleConfig] = useState(DEFAULT_VISIBLE_CONFIG);
 
   const { run: debounceDepend } = useDebounceFn(depend, { wait: 500 });
@@ -31,15 +31,15 @@ export default function AlarmFilter({ form, type, depend }: AlarmFilterProps) {
 
   // 初始化表单默认值
   useEffect(() => {
-    if (obInfoData?.cluster_name) {
+    if (seekdbInfoData?.cluster_name) {
       form.setFieldsValue({
         instance: {
           type: 'obcluster',
-          obcluster: obInfoData?.cluster_name,
+          obcluster: seekdbInfoData?.cluster_name,
         },
       });
     }
-  }, [obInfoData?.cluster_name]);
+  }, [seekdbInfoData?.cluster_name]);
 
   useEffect(() => {
     if (type === 'event') {

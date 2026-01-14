@@ -2,17 +2,20 @@ declare namespace API {
   type AgentIdentity = 'MASTER' | 'SINGLE' | 'CLUSTER AGENT' | 'TAKE OVER MASTER' | 'UNIDENTIFIED';
 
   type AgentInfo = {
+    /** unused for agent start */
     ip: string;
     port: number;
   };
 
   type AgentInfoWithIdentity = {
     identity: AgentIdentity;
+    /** unused for agent start */
     ip: string;
     port: number;
   };
 
   type AgentSecret = {
+    /** unused for agent start */
     ip: string;
     port: number;
     public_key: string;
@@ -39,6 +42,7 @@ declare namespace API {
     architecture?: string;
     homePath?: string;
     identity: AgentIdentity;
+    /** unused for agent start */
     ip: string;
     obVersion?: string;
     pid?: number;
@@ -47,6 +51,7 @@ declare namespace API {
     startAt?: number;
     state?: number;
     supportedAuth?: string[];
+    systemdUnit?: string;
     /** "seekdb" means the agent is work for seekdb */
     type?: string;
     version?: string;
@@ -472,6 +477,7 @@ declare namespace API {
     obshellVersion?: string;
     reportTime?: number;
     reporter?: string;
+    telemetryEnabled?: boolean;
     telemetryVersion?: number;
   };
 
@@ -499,6 +505,17 @@ declare namespace API {
   };
 
   type ObserverInfo = {
+    cpuCount?: number;
+    dataFileSize?: string;
+    hostHash?: string;
+    logDiskSize?: string;
+    memoryLimit?: string;
+    revision?: string;
+    type?: string;
+    version?: string;
+  };
+
+  type ObserverInfo = {
     architecture?: string;
     base_dir?: string;
     bin_path?: string;
@@ -518,8 +535,8 @@ declare namespace API {
     port?: number;
     redo_dir?: string;
     start_time?: string;
-    /** TODO: should be sys tenant status instead of observer status */
     status?: string;
+    systemd_unit?: string;
     user?: string;
     user_count?: number;
     version?: string;
@@ -692,7 +709,6 @@ declare namespace API {
     last_scn?: number;
     start_time?: string;
     status?: string;
-    tenant_id?: number;
   };
 
   type UlimitInfo = {

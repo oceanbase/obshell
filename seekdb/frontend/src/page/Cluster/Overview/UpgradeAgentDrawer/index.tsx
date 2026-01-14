@@ -8,14 +8,14 @@ import PackageSelect from '@/component/PackageSelect';
 import { agentUpgrade } from '@/service/obshell/upgrade';
 import { getAgentInfo } from '@/service/obshell/v1';
 export interface UpgradeDrawerProps extends MyDrawerProps {
-  obInfoData: API.ObserverInfo;
+  seekdbInfoData: API.ObserverInfo;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
 const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   visible,
-  obInfoData,
+  seekdbInfoData,
   onSuccess,
   onCancel,
   ...restProps
@@ -98,7 +98,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
               defaultMessage: '硬件架构',
             })}
           >
-            {obInfoData?.architecture}
+            {seekdbInfoData?.architecture}
           </Form.Item>
           <Form.Item
             label={formatMessage({
@@ -107,7 +107,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
             })}
             style={{ marginBottom: 0 }}
           >
-            {obInfoData?.obshell_port}
+            {seekdbInfoData?.obshell_port}
           </Form.Item>
         </div>
         <Form.Item

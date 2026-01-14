@@ -17,7 +17,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import { Button, Descriptions, Space, Typography, Modal, message, theme } from '@oceanbase/design';
+import { Button, Descriptions, Space, Typography, Modal, message } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
 import { find, flatten, isFunction } from 'lodash';
 import { PageContainer } from '@oceanbase/ui';
@@ -25,17 +25,14 @@ import { isNullValue, findByValue } from '@oceanbase/util';
 import { useRequest, useInterval, useLockFn } from 'ahooks';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import { breadcrumbItemRender, getOperationComponent } from '@/util/component';
-import * as TaskController from '@/service/ocp-express/TaskController';
 import { TASK_STATUS_LIST } from '@/constant/task';
 import { delayInterfaceWithSentItTwice, isEnglish } from '@/util';
-import { download } from '@/util/export';
 import { formatTime } from '@/util/datetime';
 import { getNodes, getTaskDuration, getTaskProgress } from '@/util/task';
 import ContentWithReload from '@/component/ContentWithReload';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import Log from './Log';
 import type { TaskGraphRef } from './Log/TaskGraph';
-// import Flow from './Flow';
 import styles from './index.less';
 import { dagHandler, getDagDetail, getFullSubTaskLogs } from '@/service/obshell/task';
 
@@ -148,39 +145,12 @@ const Detail: React.FC<DetailProps> = ({
     polling ? 8000 : undefined
   );
 
-  // 子任务日志轮询
-  useInterval(
-    () => {
-      // getSubtaskLogWithLock({
-      //   taskInstanceId: taskId,
-      //   subtaskInstanceId: subtask?.id,
-      // });
-    },
-    logPolling ? 1000 : undefined
-  ); // 操作任务
   const { runAsync: dagHandlerFn } = useRequest(dagHandler, {
     manual: true,
   });
 
-  // 下载任务日志
-  const { run: startDownloadTaskLog, loading: downloadLogLoading } = useRequest(
-    TaskController.downloadTaskDiagnosis,
-    {
-      manual: true,
-      onSuccess: res => {
-        download(res, `log_task_${taskId}.zip`);
-      },
-    }
-  );
-
   const handleOperation = (key: string) => {
-    if (key === 'downloadLog') {
-      // TODO: 一期不支持下载任务日志
-      // 下载任务日志
-      // startDownloadTaskLog({
-      //   taskInstanceId: taskId,
-      // });
-    } else if (key === 'retry') {
+    if (key === 'retry') {
       // 重试任务
       Modal.confirm({
         title: formatMessage({
@@ -382,10 +352,6 @@ const Detail: React.FC<DetailProps> = ({
           <span>
             <Space>
               <Button
-                data-aspm-click="c304251.d308749"
-                data-aspm-desc="任务详情-定位当前进度"
-                data-aspm-param={``}
-                data-aspm-expo
                 onClick={() => {
                   if (isFunction(logRef?.current?.setLatestSubtask)) {
                     logRef?.current?.setLatestSubtask();
@@ -401,15 +367,6 @@ const Detail: React.FC<DetailProps> = ({
                 mode: 'button',
                 displayCount: 3,
                 operations: (stateItem.operations || []).map(item => {
-                  if (item.value === 'downloadLog') {
-                    return {
-                      ...item,
-                      buttonProps: {
-                        // 下载日志的操作按钮增加 loading 效果
-                        loading: downloadLogLoading,
-                      },
-                    };
-                  }
                   if (item.value === 'giveup' || item.value === 'retry') {
                     if (taskData.isRemote) {
                       // 如果属于远程 OCP 发起的任务，则禁止回滚和重试

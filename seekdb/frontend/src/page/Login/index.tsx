@@ -15,14 +15,14 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history, useDispatch, useSelector } from 'umi';
+import { history, useDispatch } from 'umi';
 import React from 'react';
 import { message } from '@oceanbase/design';
 import { Login } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import * as obService from '@/service/obshell/observer';
+import * as seekdbService from '@/service/obshell/seekdb';
 import useDocumentTitle from '@/hook/useDocumentTitle';
-import { isEnglish, setEncryptLocalStorage } from '@/util';
+import { setEncryptLocalStorage } from '@/util';
 
 interface LoginPageProps {
   location: {
@@ -54,17 +54,17 @@ const LoginPage: React.FC<LoginPageProps> = ({
     }
   };
 
-  // use obService.getObInfo to simulate login
-  const { run: getObInfo, loading } = useRequest(obService.getObInfo, {
+  // use seekdbService.getSeekdbInfo to simulate login
+  const { run: getSeekdbInfo, loading } = useRequest(seekdbService.getSeekdbInfo, {
     manual: true,
     defaultParams: [{}],
     onSuccess: res => {
       if (res.successful) {
-        // 先更新 global 状态的 obInfoData
+        // 先更新 global 状态的 getSeekdbInfo
         dispatch({
           type: 'global/update',
           payload: {
-            obInfoData: res.data || {},
+            seekdbInfoData: res.data || {},
           },
         });
 
@@ -99,7 +99,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
     setEncryptLocalStorage('password', password);
     setEncryptLocalStorage('username', username);
     setEncryptLocalStorage('login', 'true');
-    getObInfo();
+    getSeekdbInfo();
   };
 
   const logoUrl = '/assets/logo/obshell_dashboard_login_logo.svg';

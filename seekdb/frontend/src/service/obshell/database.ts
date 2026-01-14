@@ -2,12 +2,12 @@
 /* eslint-disable */
 import request from '@/util/request';
 
-/** create database create database POST /api/v1/observer/database */
+/** create database create database POST /api/v1/seekdb/database */
 export async function createDatabase(
   body: API.CreateDatabaseParam,
   options?: { [key: string]: any }
 ) {
-  return request<API.OcsAgentResponse>('/api/v1/observer/database', {
+  return request<API.OcsAgentResponse>('/api/v1/seekdb/database', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -17,7 +17,7 @@ export async function createDatabase(
   });
 }
 
-/** get database get database GET /api/v1/observer/database/${param0} */
+/** get database get database GET /api/v1/seekdb/database/${param0} */
 export async function getDatabase(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getDatabaseParams,
@@ -25,7 +25,7 @@ export async function getDatabase(
 ) {
   const { database: param0, ...queryParams } = params;
   return request<API.OcsAgentResponse & { data?: API.Database }>(
-    `/api/v1/observer/database/${param0}`,
+    `/api/v1/seekdb/database/${param0}`,
     {
       method: 'GET',
       params: { ...queryParams },
@@ -34,7 +34,7 @@ export async function getDatabase(
   );
 }
 
-/** update database update database PUT /api/v1/observer/database/${param0} */
+/** update database update database PUT /api/v1/seekdb/database/${param0} */
 export async function updateDatabase(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.updateDatabaseParams,
@@ -42,7 +42,7 @@ export async function updateDatabase(
   options?: { [key: string]: any }
 ) {
   const { database: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/database/${param0}`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/database/${param0}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -53,23 +53,23 @@ export async function updateDatabase(
   });
 }
 
-/** delete database delete database DELETE /api/v1/observer/database/${param0} */
+/** delete database delete database DELETE /api/v1/seekdb/database/${param0} */
 export async function deleteDatabase(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.deleteDatabaseParams,
   options?: { [key: string]: any }
 ) {
   const { database: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/database/${param0}`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/database/${param0}`, {
     method: 'DELETE',
     params: { ...queryParams },
     ...(options || {}),
   });
 }
 
-/** list databases list databases GET /api/v1/observer/databases */
+/** list databases list databases GET /api/v1/seekdb/databases */
 export async function listDatabases(options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse & { data?: API.Database[] }>('/api/v1/observer/databases', {
+  return request<API.OcsAgentResponse & { data?: API.Database[] }>('/api/v1/seekdb/databases', {
     method: 'GET',
     ...(options || {}),
   });

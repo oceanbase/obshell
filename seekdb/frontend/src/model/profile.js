@@ -14,13 +14,8 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import { message } from '@oceanbase/design';
-import * as ProfileService from '@/service/ocp-express/ProfileController';
-import { DEFAULT_LIST_DATA } from '@/constant';
-import { isURL, setEncryptLocalStorage } from '@/util';
-import tracert from '@/util/tracert';
+import {  setEncryptLocalStorage } from '@/util';
 
 export const namespace = 'profile';
 
@@ -28,31 +23,11 @@ const model = {
   namespace,
   state: {
     password: '',
+    // RSA 加密用的公钥
     publicKey: '',
-    userData: {},
-    credentialListData: DEFAULT_LIST_DATA,
   },
 
   effects: {
-    *modifyUserPassword({ payload }, { call }) {
-      const res = yield call(ProfileService.changePassword, payload);
-      if (res.successful) {
-        message.success(
-          formatMessage({
-            id: 'ocp-express.src.model.profile.PasswordModificationIsSuccessfulYou',
-            defaultMessage: '密码修改成功，需要重新登录',
-          })
-        );
-
-        const location = res.data && res.data.location;
-        if (isURL(location)) {
-          window.location.href = location;
-        } else {
-          history.push('/login');
-        }
-      }
-    },
-
     *logout({}, { put }) {
       yield put({
         type: 'update',

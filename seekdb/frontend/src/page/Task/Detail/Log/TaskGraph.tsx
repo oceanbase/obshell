@@ -413,16 +413,6 @@ const TaskGraph: React.FC<TaskGraphProps> = React.forwardRef<TaskGraphRef, TaskG
                       }
                       // 下载日志
                       if (key === 'downloadLog') {
-                        // const promise = TaskController.getSubtaskLog({
-                        //   taskInstanceId: taskData?.id,
-                        //   subtaskInstanceId: node?.id,
-                        // });
-                        // promise.then(res => {
-                        //   if (res.successful) {
-                        //     const log = res.data?.log;
-                        //     downloadLog(log, `subtask_${node?.id}.log`);
-                        //   }
-                        // });
                       } else {
                         // 其他操作
                         handleNodeOperate(key as SubtaskOperationKey, node, onOperationSuccess);

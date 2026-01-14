@@ -16,10 +16,9 @@
 
 import React from 'react';
 import { Layout } from '@oceanbase/design';
-import useStyles from './index.style';
+import styles from './index.less';
 
 const BlankLayout: React.FC = ({ children, ...restProps }) => {
-  const { styles } = useStyles();
   return (
     <div className={styles.main} {...restProps}>
       <Layout className={styles.layout}>{children}</Layout>

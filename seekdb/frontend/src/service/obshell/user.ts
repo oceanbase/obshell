@@ -2,9 +2,9 @@
 /* eslint-disable */
 import request from '@/util/request';
 
-/** create user create user POST /api/v1/observer/user */
+/** create user create user POST /api/v1/seekdb/user */
 export async function createUser(body: API.CreateUserParam, options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse>('/api/v1/observer/user', {
+  return request<API.OcsAgentResponse>('/api/v1/seekdb/user', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -14,35 +14,35 @@ export async function createUser(body: API.CreateUserParam, options?: { [key: st
   });
 }
 
-/** get user get user GET /api/v1/observer/user/${param0} */
+/** get user get user GET /api/v1/seekdb/user/${param0} */
 export async function getUser(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getUserParams,
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse & { data?: API.ObUser }>(`/api/v1/observer/user/${param0}`, {
+  return request<API.OcsAgentResponse & { data?: API.ObUser }>(`/api/v1/seekdb/user/${param0}`, {
     method: 'GET',
     params: { ...queryParams },
     ...(options || {}),
   });
 }
 
-/** drop user drop user DELETE /api/v1/observer/user/${param0} */
+/** drop user drop user DELETE /api/v1/seekdb/user/${param0} */
 export async function dropUser(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.dropUserParams,
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}`, {
     method: 'DELETE',
     params: { ...queryParams },
     ...(options || {}),
   });
 }
 
-/** modify db privilege of a user modify db privilege of a user PUT /api/v1/observer/user/${param0}/db-privileges */
+/** modify db privilege of a user modify db privilege of a user PUT /api/v1/seekdb/user/${param0}/db-privileges */
 export async function modifyDbPrivilege(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.modifyDbPrivilegeParams,
@@ -50,7 +50,7 @@ export async function modifyDbPrivilege(
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}/db-privileges`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}/db-privileges`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ export async function modifyDbPrivilege(
   });
 }
 
-/** modify global privilege of a user modify global privilege of a user PUT /api/v1/observer/user/${param0}/global-privileges */
+/** modify global privilege of a user modify global privilege of a user PUT /api/v1/seekdb/user/${param0}/global-privileges */
 export async function modifyGlobalPrivilege(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.modifyGlobalPrivilegeParams,
@@ -69,7 +69,7 @@ export async function modifyGlobalPrivilege(
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}/global-privileges`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}/global-privileges`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -80,35 +80,35 @@ export async function modifyGlobalPrivilege(
   });
 }
 
-/** lock user lock user POST /api/v1/observer/user/${param0}/lock */
+/** lock user lock user POST /api/v1/seekdb/user/${param0}/lock */
 export async function lockUser(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.lockUserParams,
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}/lock`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}/lock`, {
     method: 'POST',
     params: { ...queryParams },
     ...(options || {}),
   });
 }
 
-/** unlock user unlock user DELETE /api/v1/observer/user/${param0}/lock */
+/** unlock user unlock user DELETE /api/v1/seekdb/user/${param0}/lock */
 export async function unlockUser(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.unlockUserParams,
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}/lock`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}/lock`, {
     method: 'DELETE',
     params: { ...queryParams },
     ...(options || {}),
   });
 }
 
-/** change user password change user password PUT /api/v1/observer/user/${param0}/password */
+/** change user password change user password PUT /api/v1/seekdb/user/${param0}/password */
 export async function changePassword(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.changePasswordParams,
@@ -116,7 +116,7 @@ export async function changePassword(
   options?: { [key: string]: any }
 ) {
   const { user: param0, ...queryParams } = params;
-  return request<API.OcsAgentResponse>(`/api/v1/observer/user/${param0}/password`, {
+  return request<API.OcsAgentResponse>(`/api/v1/seekdb/user/${param0}/password`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -127,7 +127,7 @@ export async function changePassword(
   });
 }
 
-/** get user stats get user stats GET /api/v1/observer/user/${param0}/stats */
+/** get user stats get user stats GET /api/v1/seekdb/user/${param0}/stats */
 export async function getStats(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
   params: API.getStatsParams,
@@ -135,7 +135,7 @@ export async function getStats(
 ) {
   const { user: param0, ...queryParams } = params;
   return request<API.OcsAgentResponse & { data?: API.ObUserStats }>(
-    `/api/v1/observer/user/${param0}/stats`,
+    `/api/v1/seekdb/user/${param0}/stats`,
     {
       method: 'GET',
       params: { ...queryParams },
@@ -144,9 +144,9 @@ export async function getStats(
   );
 }
 
-/** list users list users GET /api/v1/observer/users */
+/** list users list users GET /api/v1/seekdb/users */
 export async function listUsers(options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse & { data?: API.ObUser[] }>('/api/v1/observer/users', {
+  return request<API.OcsAgentResponse & { data?: API.ObUser[] }>('/api/v1/seekdb/users', {
     method: 'GET',
     ...(options || {}),
   });

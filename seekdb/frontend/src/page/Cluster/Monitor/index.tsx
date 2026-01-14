@@ -8,7 +8,7 @@ import React from 'react';
 import { MonitorScope } from '@/page/Monitor';
 import useReload from '@/hook/useReload';
 import ContentWithReload from '@/component/ContentWithReload';
-import useObInfo from '@/hook/useObInfo';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
 
 export interface ClusterMonitorProps {
   monitorScope: MonitorScope;
@@ -16,25 +16,25 @@ export interface ClusterMonitorProps {
 
 const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ monitorScope }) => {
   const [reloading, reload] = useReload(false);
-  const { obInfoData } = useObInfo();
+  const { seekdbInfoData } = useSeekdbInfo();
   const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
     {
       key: 'ob_cluster_name',
-      value: obInfoData.cluster_name || '',
+      value: seekdbInfoData.cluster_name || '',
     },
   ]);
 
   // 当 clusterData.cluster_name 变化时，更新 filterLabel
   useDeepCompareEffect(() => {
-    if (obInfoData.cluster_name) {
+    if (seekdbInfoData.cluster_name) {
       setFilterLabel([
         {
           key: 'ob_cluster_name',
-          value: obInfoData.cluster_name,
+          value: seekdbInfoData.cluster_name,
         },
       ]);
     }
-  }, [obInfoData.cluster_name]);
+  }, [seekdbInfoData.cluster_name]);
 
   const renderMonitor = () => {
     return (

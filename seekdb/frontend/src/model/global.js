@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getObInfo } from '@/service/obshell/observer';
+import { getSeekdbInfo } from '@/service/obshell/seekdb';
 
 export const namespace = 'global';
 
@@ -26,7 +26,7 @@ const model = {
     themeMode: localStorage.getItem('themeMode') || 'light',
     // RSA 加密用的公钥
     publicKey: '',
-    obInfoData: {},
+    seekdbInfoData: {},
   },
   effects: {
     *setThemeMode({ payload }, { put }) {
@@ -39,13 +39,13 @@ const model = {
         },
       });
     },
-    // 获取obInfo信息
-    *getObInfoData(_, { call, put }) {
-      const res = yield call(getObInfo);
+    // 获取seekdbInfo信息
+    *getSeekdbInfoData(_, { call, put }) {
+      const res = yield call(getSeekdbInfo);
       yield put({
         type: 'update',
         payload: {
-          obInfoData: res?.data || {},
+          seekdbInfoData: res?.data || {},
         },
       });
     },

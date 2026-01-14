@@ -17,8 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React, { createElement } from 'react';
 import { Button } from '@oceanbase/design';
-import useStyles from './index.style';
-
+import styles from './index.less';
 interface AobExceptionProps {
   title?: React.ReactNode;
   desc?: React.ReactNode;
@@ -47,7 +46,6 @@ const AobException: React.FC<AobExceptionProps> = ({
   onBack,
   ...rest
 }) => {
-  const { styles } = useStyles();
   return (
     <div className={`${styles.container} ${className}`} {...rest}>
       <div className={styles.imgWrapper}>

@@ -23,7 +23,7 @@ import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { getInstancesFromRes, validateLabelValues } from '../helper';
 import { getEncryptLocalStorage } from '@/util';
-import useObInfo from '@/hook/useObInfo';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
 
 interface ShieldDrawerProps extends DrawerProps {
   id?: string;
@@ -42,7 +42,7 @@ export default function ShieldDrawerForm({
   ...props
 }: ShieldDrawerProps) {
   const [form] = Form.useForm<Alert.ShieldDrawerForm>();
-  const { obInfoData } = useObInfo();
+  const { seekdbInfoData } = useSeekdbInfo();
   const isEdit = !!id;
 
   const newInitialValues = {
@@ -79,7 +79,7 @@ export default function ShieldDrawerForm({
       instances: [
         {
           type: 'obcluster',
-          obcluster: obInfoData?.cluster_name,
+          obcluster: seekdbInfoData?.cluster_name,
         },
       ] as API.OBInstance[],
       created_by: getEncryptLocalStorage('username') || '',

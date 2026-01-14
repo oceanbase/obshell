@@ -19,17 +19,17 @@ import React from 'react';
 import { Alert, Form, Modal, message } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import WhitelistInput from '@/component/WhitelistInput';
-import { modifyWhitelist } from '@/service/obshell/observer';
+import { modifyWhitelist } from '@/service/obshell/seekdb';
 
 const FormItem = Form.Item;
 
 export interface ModifyWhitelistModalProps {
-  obInfoData: API.ObserverInfo;
+  seekdbInfoData: API.ObserverInfo;
   onSuccess: () => void;
 }
 
 const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({
-  obInfoData,
+  seekdbInfoData,
   onSuccess,
   ...restProps
 }) => {
@@ -112,7 +112,7 @@ const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({
               validator: WhitelistInput.validate,
             },
           ]}
-          initialValue={obInfoData.whitelist}
+          initialValue={seekdbInfoData.whitelist}
         >
           <WhitelistInput layout="vertical" />
         </FormItem>

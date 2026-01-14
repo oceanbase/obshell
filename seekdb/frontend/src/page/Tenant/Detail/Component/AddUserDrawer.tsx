@@ -15,7 +15,6 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { connect, useSelector } from 'umi';
 import React, { useState } from 'react';
 import { Form, message } from '@oceanbase/design';
 import Password from '@/component/Password';

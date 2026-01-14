@@ -19,7 +19,7 @@ import { Empty } from '@oceanbase/design';
 import type { EmptyProps as AntdEmptyProps } from '@oceanbase/design/es/empty';
 import { PageContainer } from '@oceanbase/ui';
 import PageCard from '@/component/PageCard';
-import useStyles from './index.style';
+import styles from './index.less';
 
 export interface EmptyProps extends AntdEmptyProps {
   image?: React.ReactNode;
@@ -43,7 +43,6 @@ export default ({
   style,
   ...restProps
 }: EmptyProps) => {
-  const { styles } = useStyles();
   const empty = (
     <Empty
       className={`${styles.empty} ${size === 'small' ? styles.small : ''}`}

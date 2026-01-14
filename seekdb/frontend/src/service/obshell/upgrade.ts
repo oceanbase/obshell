@@ -42,18 +42,3 @@ export async function getUpgradePkgInfo(options?: { [key: string]: any }) {
     }
   );
 }
-
-/** delete upgrade package delete upgrade package DELETE /api/v1/upgrade/package */
-export async function deleteUpgradePackage(
-  body: API.DeletePackageParam,
-  options?: { [key: string]: any }
-) {
-  return request<API.OcsAgentResponse>('/api/v1/upgrade/package', {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    data: body,
-    ...(options || {}),
-  });
-}

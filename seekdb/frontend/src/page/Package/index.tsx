@@ -26,10 +26,11 @@ import { formatTime } from '@/util/datetime';
 import MyInput from '@/component/MyInput';
 import ContentWithReload from '@/component/ContentWithReload';
 import { useRequest } from 'ahooks';
-import { getUpgradePkgInfo, deleteUpgradePackage } from '@/service/obshell/upgrade';
+import { getUpgradePkgInfo } from '@/service/obshell/upgrade';
 import { Button, Modal, message } from 'antd';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import { uniq } from 'lodash';
+import { deletePackage } from '@/service/obshell/package';
 
 export interface PackageProps {
   location: {
@@ -82,7 +83,7 @@ const PackagePage: React.FC<PackageProps> = ({
       okType: 'danger',
       onOk: async () => {
         try {
-          const res = await deleteUpgradePackage({
+          const res = await deletePackage({
             name: record.name || '',
             version: record.version || '',
             release_distribution: record.release_distribution || '',

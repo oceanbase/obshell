@@ -17,13 +17,12 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import { Modal, message } from '@oceanbase/design';
-import { find, flatten, groupBy, isArray, uniq, uniqueId } from 'lodash';
+import { find, flatten, groupBy, isArray, uniq } from 'lodash';
 import { history } from 'umi';
 import moment from 'moment';
 import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
-import * as TaskController from '@/service/ocp-express/TaskController';
 import { getFormateForTimes, secondToTime } from '@/util';
-import { dagHandler, nodeHandler } from '@/service/obshell/task';
+import { nodeHandler } from '@/service/obshell/task';
 
 export function getTaskProgress(task: API.DagDetailDTO) {
   return `${task?.stage || 0}/${task?.max_stage}`;

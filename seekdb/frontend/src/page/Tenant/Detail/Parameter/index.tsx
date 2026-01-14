@@ -30,12 +30,7 @@ import {
 } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import {
-  getParameters,
-  setParameters,
-  getVariables,
-  setVariables,
-} from '@/service/obshell/observer';
+import { getParameters, setParameters, getVariables, setVariables } from '@/service/obshell/seekdb';
 import { isEnglish } from '@/util';
 import { PAGINATION_OPTION_10 } from '@/constant';
 import ContentWithReload from '@/component/ContentWithReload';

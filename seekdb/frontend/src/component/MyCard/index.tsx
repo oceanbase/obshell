@@ -17,8 +17,7 @@
 import React from 'react';
 import { Card, Spin } from '@oceanbase/design';
 import type { CardProps } from '@oceanbase/design/es/card';
-import useStyles from './index.style';
-
+import styles from './index.less';
 export interface MyCardProps extends CardProps {
   children: React.ReactNode;
   title?: React.ReactNode;
@@ -38,7 +37,6 @@ const MyCard = ({
   bodyStyle,
   ...restProps
 }: MyCardProps) => {
-  const { styles } = useStyles();
   return (
     <Card
       className={`${className} ${styles.card}`}

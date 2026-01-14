@@ -34,12 +34,12 @@ import { ReactComponent as ParameterSvg } from '@/asset/parameter.svg';
 import { ReactComponent as ParameterSelectedSvg } from '@/asset/parameter_selected.svg';
 import { getInstanceAvailableFlag } from '@/util/instance';
 import useUiMode from './useUiMode';
-import useObInfo from './useObInfo';
+import useSeekdbInfo from './usSeekdbInfo';
 
 export const useBasicMenu = (): MenuItem[] => {
-  const { obInfoData } = useObInfo();
+  const { seekdbInfoData } = useSeekdbInfo();
   const { isDesktopMode } = useUiMode();
-  const availableFlag = getInstanceAvailableFlag(obInfoData?.status || '');
+  const availableFlag = getInstanceAvailableFlag(seekdbInfoData?.status || '');
 
   return [
     {
@@ -93,13 +93,6 @@ export const useBasicMenu = (): MenuItem[] => {
       icon: <Icon component={MonitorSvg} />,
       selectedIcon: <Icon component={MonitorSelectedSvg} />,
     },
-    // {
-    //   link: `/backup`,
-    //   title: formatMessage({
-    //     id: 'OBShell.src.hook.useMenu.BackupRecovery',
-    //     defaultMessage: '备份恢复',
-    //   }),
-    // },
     {
       link: `/parameter`,
       title: formatMessage({

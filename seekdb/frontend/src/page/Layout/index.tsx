@@ -20,19 +20,16 @@ import { ConfigProvider, Spin, theme } from '@oceanbase/design';
 import { ChartProvider } from '@oceanbase/charts';
 import en_US from '@oceanbase/ui/es/locale/en-US';
 import zh_CN from '@oceanbase/ui/es/locale/zh-CN';
-import { ThemeProvider } from 'antd-style';
 import { useRequest } from 'ahooks';
 import * as v1Service from '@/service/obshell/v1';
 import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
-import GlobalStyle from './GlobalStyle';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
-import { getStatistics } from '@/service/obshell/observer';
+import { getStatistics } from '@/service/obshell/seekdb';
 import { telemetryReport } from '@/service/custom';
-import * as obService from '@/service/obshell/observer';
 import moment from 'moment';
 import { DESKTOP_UI_MODE, DESKTOP_WINDOW } from '@/constant';
-import useObInfo from '@/hook/useObInfo';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -48,7 +45,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children, location }) => {
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
-  const { isObInfoDataLoaded } = useObInfo();
+  const { isSeekdbInfoDataLoaded } = useSeekdbInfo();
   const query = location?.query;
   const { mode, uiMode, window } = query || {};
   const isPasswordFreeLogin = mode === 'passwordFreeLogin';
@@ -72,11 +69,11 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
       localStorage.setItem(DESKTOP_UI_MODE, uiMode);
       localStorage.setItem(DESKTOP_WINDOW, window);
     }
-    // 只在 obInfoData 未加载时才获取数据，避免重复请求
+    // 只在 seekdbInfoData 未加载时才获取数据，避免重复请求
     // 这样可以利用登录时已经获取到的数据
-    if (!['/login', '/instance'].includes(pathname || '') && !isObInfoDataLoaded) {
+    if (!['/login', '/instance'].includes(pathname || '') && !isSeekdbInfoDataLoaded) {
       dispatch({
-        type: 'global/getObInfoData',
+        type: 'global/getSeekdbInfoData',
         payload: {},
       });
     }
@@ -156,14 +153,11 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
         algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
-      <ThemeProvider appearance={themeMode}>
-        <ChartProvider theme={themeMode}>
-          <GlobalStyle themeMode={themeMode} />
-          <ErrorBoundary>
-            <BlankLayout>{children}</BlankLayout>
-          </ErrorBoundary>
-        </ChartProvider>
-      </ThemeProvider>
+      <ChartProvider theme={themeMode}>
+        <ErrorBoundary>
+          <BlankLayout>{children}</BlankLayout>
+        </ErrorBoundary>
+      </ChartProvider>
     </ConfigProvider>
   );
 };
