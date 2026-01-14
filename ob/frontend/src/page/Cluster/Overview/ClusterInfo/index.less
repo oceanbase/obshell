@@ -1,29 +1,33 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 @import '~@oceanbase/design/es/theme/index.less';
 
-.borderRight::after {
-  position: absolute;
-  top: auto;
-  right: 0;
-  bottom: 4px;
-  left: auto;
-  width: 1px;
-  height: 86px;
-  background-color: @colorBorderSecondary;
-  content: '';
+.progressWrapper {
+  display: flex;
+  justify-content: start;
+  cursor: default;
+  width: fit-content;
+  min-width: 280px;
+  padding-right: 24px;
+}
+
+.progressText {
+  margin-left: 32px;
+  font-size: 12px;
+  color: @colorText;
+
+  .progressTitle {
+    font-size: 14px;
+    line-height: 22px;
+  }
+
+  .progressDescription {
+    width: 150px;
+    .progressDescriptionItem {
+      display: flex;
+      justify-content: space-between;
+
+      .progressDescriptionItemName {
+        color: @colorTextSecondary;
+      }
+    }
+  }
 }

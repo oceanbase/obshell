@@ -20,7 +20,6 @@ import { Alert, Descriptions, Modal, message, theme } from '@oceanbase/design';
 import type { ModalProps } from '@oceanbase/design/es/modal';
 import MyInput from '@/component/MyInput';
 import { useRequest } from 'ahooks';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { tenantDrop } from '@/service/obshell/tenant';
 
 export interface DeleteTenantModalProps extends ModalProps {

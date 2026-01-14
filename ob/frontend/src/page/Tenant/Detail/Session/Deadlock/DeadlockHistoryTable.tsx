@@ -1,6 +1,7 @@
 import { formatMessage } from '@/util/intl';
 import React from 'react';
 import { Table, Tooltip, Typography } from '@oceanbase/design';
+import styles from './Deadlock.less';
 
 export interface DeadlockHistoryTableProps {
   dataSource?: API.DeadLockNode[];
@@ -54,7 +55,7 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
       }),
       dataIndex: 'resource',
       render: (text: string) => (
-        <Typography.Text ellipsis={{ tooltip: true }} className="max-w-200">
+        <Typography.Text ellipsis={{ tooltip: true }} style={{ maxWidth: 200 }}>
           {text}
         </Typography.Text>
       ),
@@ -64,7 +65,7 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
       title: 'SQL',
       dataIndex: 'sql',
       render: (text: string) => (
-        <Typography.Text ellipsis={{ tooltip: true }} className="max-w-200">
+        <Typography.Text ellipsis={{ tooltip: true }} style={{ maxWidth: 200 }}>
           {text}
         </Typography.Text>
       ),
@@ -77,7 +78,7 @@ const DeadlockHistoryTable: React.FC<DeadlockHistoryTableProps> = ({ dataSource 
       columns={columns}
       pagination={false}
       size="small"
-      className="border border-solid border-colorBorder border-b-0"
+      className={styles.deadlockTable}
     />
   );
 };

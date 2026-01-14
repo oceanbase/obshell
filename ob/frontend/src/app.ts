@@ -16,7 +16,6 @@
 
 import { formatMessage } from '@/util/intl';
 import { message } from '@oceanbase/design';
-import './tailwind.css';
 
 export const dva = {
   config: {

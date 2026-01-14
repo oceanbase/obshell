@@ -26,8 +26,8 @@ import useDocumentTitle from '@/hook/useDocumentTitle';
 import BasicLayout from '@/page/Layout/BasicLayout';
 import TenantSelect from '@/component/common/TenantSelect';
 import TenantAdminPasswordModal from '@/component/TenantAdminPasswordModal';
-import useStyles from './index.style';
 import ModifyTenantPasswordModal from '@/page/Tenant/Detail/Component/ModifyTenantPasswordModal';
+import styles from './index.less';
 
 interface DetailProps {
   location: {
@@ -42,7 +42,6 @@ interface DetailProps {
 }
 
 const Detail: React.FC<DetailProps> = (props: DetailProps) => {
-  const { styles } = useStyles();
   const {
     children,
     match: {
@@ -277,7 +276,6 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
       {...restProps}
     >
       {children}
-      {/* <TaskBubble tenantName={tenantName} /> */}
 
       <ModifyTenantPasswordModal
         visible={showTenantPasswordModal}
@@ -302,7 +300,6 @@ const Detail: React.FC<DetailProps> = (props: DetailProps) => {
 
       <TenantAdminPasswordModal
         visible={showTenantAdminPasswordModal}
-        // visible={true}
         type={tenantAdminPasswordErrorData?.type}
         errorMessage={tenantAdminPasswordErrorData?.errorMessage}
         tenantName={tenantAdminPasswordErrorData?.tenantName}

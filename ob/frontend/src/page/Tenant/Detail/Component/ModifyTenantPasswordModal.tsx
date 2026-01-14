@@ -17,7 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import { useSelector } from 'umi';
 import React, { useState } from 'react';
-import { Form, Alert, Modal, message } from '@oceanbase/design';
+import { Form, Alert, Modal, message, ModalProps } from '@oceanbase/design';
 import { ExclamationCircleFilled } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
@@ -25,7 +25,7 @@ import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
 import { tenantModifyPassword, persistTenantRootPassword } from '@/service/obshell/tenant';
 
-export interface TenantAdminPasswordModalProps {
+export interface TenantAdminPasswordModalProps extends ModalProps {
   onSuccess: () => void;
 }
 

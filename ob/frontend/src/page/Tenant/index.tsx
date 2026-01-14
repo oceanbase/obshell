@@ -1,24 +1,21 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
 import React from 'react';
 import { PageContainer } from '@oceanbase/ui';
-import { Badge, Button, Card, Col, Modal, Row, Space, Table, Tooltip } from '@oceanbase/design';
+import {
+  Badge,
+  BadgeProps,
+  Button,
+  Card,
+  Col,
+  Modal,
+  Row,
+  Space,
+  Table,
+  TableColumnType,
+  Tooltip,
+  message,
+} from '@oceanbase/design';
 import { useInterval, useRequest } from 'ahooks';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import ContentWithReload from '@/component/ContentWithReload';
@@ -29,26 +26,9 @@ import RenderConnectionString from '@/component/RenderConnectionString';
 import { getDateFormatDisplay } from '@/constant/datetime';
 import { TENANT_MODE_LIST, TENANT_STATUS_LIST } from '@/constant/tenant';
 import { getBooleanLabel, getYESorNOLabel } from '@/util';
-import useStyles from './index.style';
-import { message } from 'antd';
 import useUiMode from '@/hook/useUiMode';
 
-interface TenantProps {
-  location: {
-    query: {
-      status?: string;
-    };
-  };
-}
-
-const Tenant: React.FC<TenantProps> = ({
-  location: {
-    query: { status },
-  },
-}: TenantProps) => {
-  const { styles } = useStyles();
-  const statusList = status?.split(',') || [];
-
+const Tenant: React.FC = () => {
   useDocumentTitle(
     formatMessage({
       id: 'ocp-express.Detail.Tenant.TenantManagement',
@@ -67,8 +47,7 @@ const Tenant: React.FC<TenantProps> = ({
     defaultParams: [{}],
   });
 
-  const tenantList = tenantListData?.data?.contents || [];
-  // const tenantList = [];
+  const tenantList: API.DbaObTenant[] = tenantListData?.data?.contents || [];
 
   // 如果存在进行中的任务
   const polling = tenantList?.some(
@@ -179,7 +158,7 @@ const Tenant: React.FC<TenantProps> = ({
     });
   };
 
-  const columns = [
+  const columns: TableColumnType<API.DbaObTenant>[] = [
     {
       title: formatMessage({
         id: 'ocp-express.component.TenantList.NameOfTheTenant',
@@ -226,7 +205,7 @@ const Tenant: React.FC<TenantProps> = ({
       }),
 
       dataIndex: 'mode',
-      render: (text: API.TenantMode) => <span>{findByValue(TENANT_MODE_LIST, text).label}</span>,
+      render: (text: string) => <span>{findByValue(TENANT_MODE_LIST, text).label}</span>,
     },
 
     {
@@ -258,7 +237,7 @@ const Tenant: React.FC<TenantProps> = ({
         defaultMessage: '锁定',
       }),
       dataIndex: 'locked',
-      render: (text: boolean) => <span>{getYESorNOLabel(text)}</span>,
+      render: text => <span>{getYESorNOLabel(text)}</span>,
     },
 
     {
@@ -271,10 +250,12 @@ const Tenant: React.FC<TenantProps> = ({
         text: item.label,
         value: item.value,
       })),
-      onFilter: (value: string, record: API.TenantStatus) => record.status === value,
-      render: (text: API.TenantStatus) => {
+      onFilter: (value, record) => record.status === value,
+      render: (text: string) => {
         const statusItem = findByValue(TENANT_STATUS_LIST, text);
-        return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
+        return (
+          <Badge status={statusItem.badgeStatus as BadgeProps['status']} text={statusItem.label} />
+        );
       },
     },
 
@@ -381,7 +362,6 @@ const Tenant: React.FC<TenantProps> = ({
     </Empty>
   ) : (
     <PageContainer
-      className={styles.container}
       ghost={true}
       header={{
         title: (
@@ -443,7 +423,7 @@ const Tenant: React.FC<TenantProps> = ({
                 loading={tenantListLoading}
                 dataSource={tenantList}
                 columns={columns}
-                rowKey={(record: API.Tenant) => record.id}
+                rowKey={(record: API.DbaObTenant) => record.tenant_id}
               />
             </div>
           </Card>

@@ -33,16 +33,6 @@ export const statusList = [
   },
 ];
 
-export const tabList = [
-  {
-    key: 'history',
-    tab: formatMessage({
-      id: 'OBShell.src.constant.inspection.PatrolDirectory',
-      defaultMessage: '巡检目录',
-    }),
-  },
-];
-
 export const scenarioList = [
   {
     key: 'basic',

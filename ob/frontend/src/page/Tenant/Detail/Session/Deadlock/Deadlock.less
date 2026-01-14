@@ -1,0 +1,18 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
+.deadLockContent {
+  height: calc(100vh - 208px);
+  background: @colorBgContainer;
+}
+
+.deadlockTable {
+  border: 1px solid @colorBorder;
+  border-bottom: none;
+
+  :global {
+    /* 表头设为白色背景 */
+    .ant-table-thead > tr > th {
+      background-color: @colorBgContainer !important;
+    }
+  }
+}

@@ -309,10 +309,6 @@ const UserList: React.FC<UserProps> = ({
           </Tooltip>
         ) : (
           <Switch
-            data-aspm-click="c304262.d308778"
-            data-aspm-desc="Oracle 用户列表-切换锁定状态"
-            data-aspm-param={``}
-            data-aspm-expo
             checked={text}
             size="small"
             onChange={() => {
@@ -331,10 +327,6 @@ const UserList: React.FC<UserProps> = ({
         return (
           <Space size="middle">
             <a
-              data-aspm-click="c304262.d308776"
-              data-aspm-desc="Oracle 用户列表-修改密码"
-              data-aspm-param={``}
-              data-aspm-expo
               onClick={() => {
                 modifyPassword(record);
               }}
@@ -346,10 +338,6 @@ const UserList: React.FC<UserProps> = ({
             </a>
             {record.user_name !== 'SYS' && (
               <a
-                data-aspm-click="c304262.d308775"
-                data-aspm-desc="Oracle 用户列表-删除用户"
-                data-aspm-param={``}
-                data-aspm-expo
                 onClick={() => {
                   getUserStats({ name: tenantName, user: record.user_name! });
                   setCurrent(record);
@@ -371,10 +359,6 @@ const UserList: React.FC<UserProps> = ({
   return (
     <>
       <Table
-        data-aspm="c304262"
-        data-aspm-desc="Oracle 用户列表"
-        data-aspm-param={``}
-        data-aspm-expo
         columns={columns}
         rowKey="id"
         loading={dbUserLoading}

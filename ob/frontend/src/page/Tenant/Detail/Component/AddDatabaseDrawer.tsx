@@ -17,7 +17,6 @@
 import { formatMessage } from '@/util/intl';
 import React, { useState, useEffect } from 'react';
 import { Select, Radio, Button, Form, message } from '@oceanbase/design';
-import * as ObClusterController from '@/service/ocp-express/ObClusterController';
 import { useRequest } from 'ahooks';
 import type { MyDrawerProps } from '@/component/MyDrawer';
 import MyDrawer from '@/component/MyDrawer';

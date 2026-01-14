@@ -1,62 +1,30 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
-import React, { useState, useImperativeHandle } from 'react';
-import { Badge } from '@oceanbase/design';
+import React, { useState } from 'react';
+import { Badge, TableColumnType } from '@oceanbase/design';
 import { Table } from '@oceanbase/design';
 import { byte2GB, findByValue } from '@oceanbase/util';
 import { isEnglish } from '@/util';
 import MyProgress from '@/component/MyProgress';
 import { ZONE_STATUS_LIST, OB_SERVER_STATUS_LIST } from '@/constant/oceanbase';
-import useStyles from './index.style';
 import { getServerStatus } from '..';
-
-export interface ZoneListRef {
-  expandAll: () => void;
-  setStatusList: (statusList: API.ObServerStatus[]) => void;
-}
+import styles from './index.less';
 
 export interface ZoneListProps {
   clusterData: API.ClusterInfo;
 }
 
-const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, ref) => {
-  const { styles } = useStyles();
+const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
   const dataSource = clusterData?.zones || [];
   const expandable =
-    clusterData?.zones?.filter(item => (item?.servers?.length || 0) > 0).length > 0;
+    (clusterData?.zones?.filter(item => (item?.servers?.length || 0) > 0).length || 0) > 0;
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>(
     // 默认展开全部 Zone
-    dataSource.map(item => item.name) || []
+    dataSource.map(item => item.name!) || []
   );
   const [statusList, setStatusList] = useState<string[]>([]);
 
-  // 向组件外部暴露 refresh 属性函数，可通过 ref 引用
-  useImperativeHandle(ref, () => ({
-    expandAll: () => {
-      setExpandedRowKeys(dataSource.map(item => item.name as string));
-    },
-    setStatusList: (newStatusList: API.ObServerStatus[]) => {
-      setStatusList(newStatusList);
-    },
-  }));
-
-  const columns = [
+  const columns: TableColumnType<API.Zone>[] = [
     {
       title: formatMessage({
         id: 'ocp-express.Component.ZoneListOrTopo.ZoneList.ZoneName',
@@ -72,17 +40,6 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
       }),
       dataIndex: 'region_name',
     },
-
-    // {
-    //   title: formatMessage({
-    //     id: 'ocp-express.Component.ZoneList.DataCenter',
-    //     defaultMessage: '所在机房',
-    //   }),
-
-    //   dataIndex: 'idcName',
-    //   render: (text: string) => <span>{text || '-'}</span>,
-    // },
-
     {
       title: formatMessage({
         id: 'ocp-express.Component.ZoneList.NumberOfMachines',
@@ -90,14 +47,14 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
       }),
       key: 'serverCount',
       dataIndex: 'servers',
-      render: (text?: API.Server[]) => <span>{text?.length || 0}</span>,
+      render: (text?: API.Observer[]) => <span>{text?.length || 0}</span>,
     },
 
     {
       title: 'Root Server',
       key: 'rootServer',
       dataIndex: 'root_server',
-      render: (text?: API.RootServer, record: API.Zone) => {
+      render: (text?: API.RootServer) => {
         const roleLabel =
           text && text.role === 'LEADER'
             ? formatMessage({
@@ -120,8 +77,8 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
         value: item.value,
         text: item.label,
       })),
-      onFilter: (value: API.ObZoneStatus, record: API.Zone) => record.status === value,
-      render: (text: API.ObZoneStatus) => {
+      onFilter: (value, record: API.Zone) => record.status === value,
+      render: (text: string) => {
         const statusItem = findByValue(ZONE_STATUS_LIST, text);
         return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
       },
@@ -130,26 +87,10 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
 
   function getExpandedRowRender(record: API.Zone) {
     const { servers } = record;
-    const expandColumns = [
+    const expandColumns: TableColumnType<API.Observer>[] = [
       {
         title: 'IP',
         dataIndex: 'ip',
-        render: (text: string, expandedRecord: API.Server) => {
-          return text;
-          // return (
-          //   <a
-          //     data-aspm-click="c304256.d308759"
-          //     data-aspm-desc="集群拓扑列表-跳转 OBServer 详情"
-          //     data-aspm-param={``}
-          //     data-aspm-expo
-          //     onClick={() => {
-          //       history.push(`/overview/server/${text}/${expandedRecord.port}`);
-          //     }}
-          //   >
-          //     {text}
-          //   </a>
-          // );
-        },
       },
 
       {
@@ -210,7 +151,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
 
                   { cpuCoreAssigned, cpuCoreTotal }
                 )}
-                affixWidth={110}
+                affixWidth={120}
                 percent={cpuCoreAssignedPercent}
               />
 
@@ -224,7 +165,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
                 affix={`${byte2GB(memoryInBytesAssigned).toFixed(1)}/${byte2GB(
                   memoryInBytesTotal
                 ).toFixed(1)} GB`}
-                affixWidth={110}
+                affixWidth={120}
                 percent={memoryAssignedPercent}
               />
 
@@ -237,7 +178,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
                 prefixWidth={prefixWidth}
                 // 磁盘使用率一般不高，已使用量和总量可能差距较大，因此这里展示时不统一单位
                 affix={`${diskUsed}/${diskTotal}`}
-                affixWidth={110}
+                affixWidth={120}
                 percent={diskUsedPercent}
               />
             </span>
@@ -257,7 +198,7 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
         // })),
         // filteredValue: statusList,
         // 这里不用设置 onFilter，dataSource 已经根据 statusList 做了筛选
-        render: (text: API.ObServerStatus, record: API.ObServer) => {
+        render: (_, record) => {
           const value = getServerStatus(record);
           const statusItem = findByValue(OB_SERVER_STATUS_LIST, value);
           return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
@@ -269,11 +210,11 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
       <Table
         columns={expandColumns}
         dataSource={(servers || []).filter(
-          item => statusList.length === 0 || statusList.includes(item.status as API.ObServerStatus)
+          item => statusList.length === 0 || statusList.includes(item.status as string)
         )}
         rowKey={item => item.id}
         pagination={false}
-        onChange={(pagination, filters) => {
+        onChange={(_, filters) => {
           setStatusList(filters.status || []);
         }}
       />
@@ -301,6 +242,6 @@ const ZoneList = React.forwardRef<ZoneListRef, ZoneListProps>(({ clusterData }, 
       className={styles.table}
     />
   );
-});
+};
 
 export default ZoneList;

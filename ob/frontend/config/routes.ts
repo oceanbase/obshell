@@ -140,21 +140,6 @@ export default [
             name: '集群详情',
           },
           {
-            path: 'overview/server/:ip/:serverPort',
-            component: 'Cluster/Host',
-            name: 'OBServer 详情',
-          },
-          {
-            path: 'overview/unit',
-            component: 'Cluster/Unit',
-            name: 'Unit 分布',
-          },
-          {
-            path: 'overview/parameter',
-            component: 'Cluster/Parameter',
-            name: '参数管理',
-          },
-          {
             path: 'tenant/result/:taskId',
             component: 'Tenant/Result/Success',
             name: '新建租户任务提交成功',
@@ -175,21 +160,6 @@ export default [
             component: 'Tenant/Detail/Backup/RestoreNow',
             name: '租户发起恢复',
           },
-          // 创建租户改为异步任务 结果页
-          {
-            path: 'diagnosis/session',
-            component: 'Diagnosis/Session',
-            name: '会话诊断',
-            ignoreMergeRoute: true,
-            queryTitle: 'tab',
-          },
-          {
-            path: 'diagnosis/sql',
-            component: 'Diagnosis/SQLDiagnosis',
-            name: 'SQL 诊断',
-            ignoreMergeRoute: true,
-            queryTitle: 'tab',
-          },
           {
             path: 'task',
             component: 'Task',
@@ -209,16 +179,6 @@ export default [
             path: 'credential',
             component: 'Credential',
             name: '凭据管理',
-          },
-          {
-            path: 'property',
-            component: 'Property',
-            name: '系统管理',
-          },
-          {
-            path: 'log',
-            component: 'Log',
-            name: '日志服务',
           },
           // 性能监控
           {

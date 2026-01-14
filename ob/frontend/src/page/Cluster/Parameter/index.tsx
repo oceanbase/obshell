@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history, useSelector } from 'umi';
+import { history } from 'umi';
 import React, { useState } from 'react';
 import { PageContainer } from '@oceanbase/ui';
 import { uniq } from 'lodash';

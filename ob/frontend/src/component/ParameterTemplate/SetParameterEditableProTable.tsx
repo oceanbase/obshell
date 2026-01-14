@@ -16,7 +16,6 @@
 
 import MyInput from '@/component/MyInput';
 import MySelect from '@/component/MySelect';
-import * as ObTenantParameterController from '@/service/ocp-express/ObTenantParameterController';
 import { formatMessage } from '@/util/intl';
 import { Alert, Form, InputNumber, Typography } from '@oceanbase/design';
 import { differenceBy, find, includes, uniqBy, uniqueId } from 'lodash';

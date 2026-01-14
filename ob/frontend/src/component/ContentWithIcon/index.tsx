@@ -21,7 +21,7 @@ import Icon from '@oceanbase/icons';
 import type { IconComponentProps } from '@oceanbase/icons/lib/components/Icon';
 import type { BadgeProps } from '@oceanbase/design/es/badge';
 import type { TooltipProps } from '@oceanbase/design/es/tooltip';
-import useStyles from './index.style';
+import styles from './index.less';
 
 interface IconConfig extends IconComponentProps {
   badge?: BadgeProps;
@@ -47,7 +47,6 @@ const ContentWithIcon: React.FC<ContentWithIconProps> = ({
   className,
   ...restProps
 }) => {
-  const { styles } = useStyles();
   return (
     <span className={`${styles.item} ${className}`} {...restProps}>
       {prefixIcon &&
@@ -70,7 +69,6 @@ const ContentWithIcon: React.FC<ContentWithIconProps> = ({
 
 function getIcon(position: IconPosition, config: IconConfig) {
   const { component, badge, tooltip, pointable = false, ...restProps } = config;
-  const { styles } = useStyles();
   return (
     config && (
       <Tooltip {...tooltip} overlayStyle={{ maxWidth: 350, ...tooltip?.overlayStyle }}>

@@ -14,19 +14,6 @@
  * limitations under the License.
  */
 
-export function getCenterPointByGraph(graph) {
-  const group = graph.get('group');
-  if (group) {
-    const { minX, minY, maxX, maxY } = group.getCanvasBBox();
-    return {
-      x: (minX + maxX) / 2,
-      y: (minY + maxY) / 2,
-    };
-  }
-  // 默认返回 undefined，这样传入 G6 时会使用默认的参数值
-  return undefined;
-}
-
 /**
  * 计算字符串的长度
  * @param {string} str 指定的字符串

@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
 import { flatten, uniq, orderBy } from 'lodash';
 
@@ -26,20 +10,6 @@ export function getRegionCountByObCluster(clusterData: API.Cluster) {
   const regionNameList =
     (clusterData.zones && clusterData.zones.map(item => item.regionName)) || [];
   return uniq(regionNameList).length;
-}
-
-export function getIdcCountByObCluster(clusterData: API.Cluster) {
-  const idcNameList = (clusterData.zones && clusterData.zones.map(item => item.idcName)) || [];
-  return uniq(idcNameList).length;
-}
-
-export function getObServerCountByObCluster(clusterData: API.Cluster) {
-  const zones = clusterData.zones || [];
-  return (
-    // reduce 方法要求数组长度大于 0
-    (zones.length > 0 && zones.map(item => item.hostCount).reduce((a, b) => (a || 0) + (b || 0))) ||
-    0
-  );
 }
 
 export function getObServersByObCluster(clusterData: API.ClusterInfo) {

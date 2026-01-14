@@ -23,7 +23,6 @@ import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
 import { useRequest } from 'ahooks';
 import { changePassword, persistTenantRootPassword } from '@/service/obshell/tenant';
-import useStyles from './ModifyPasswordModal.style';
 
 export interface ModifyDbUserPasswordProps extends ModalProps {
   tenantData: API.DbaObTenant;
@@ -37,7 +36,6 @@ const ModifyDbUserPassword: React.FC<ModifyDbUserPasswordProps> = ({
   dbUser,
   ...restProps
 }) => {
-  const { styles } = useStyles();
   const [passed, setPassed] = useState(true);
 
   const [form] = Form.useForm();

@@ -1,26 +1,6 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 
-import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import { message } from '@oceanbase/design';
-import * as ProfileService from '@/service/ocp-express/ProfileController';
-import { DEFAULT_LIST_DATA } from '@/constant';
-import { getEncryptLocalStorage, isURL, setEncryptLocalStorage } from '@/util';
-import tracert from '@/util/tracert';
+import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { SESSION_ID } from '@/constant/login';
 import * as v1Service from '@/service/obshell/v1';
 
@@ -30,32 +10,11 @@ const model = {
   namespace,
   state: {
     password: '',
+    // RSA 加密用的公钥
     publicKey: '',
-    userData: {},
-    credentialListData: DEFAULT_LIST_DATA,
   },
 
   effects: {
-    *getUserData(_, { call, put }) {},
-    *modifyUserPassword({ payload }, { call }) {
-      const res = yield call(ProfileService.changePassword, payload);
-      if (res.successful) {
-        message.success(
-          formatMessage({
-            id: 'ocp-express.src.model.profile.PasswordModificationIsSuccessfulYou',
-            defaultMessage: '密码修改成功，需要重新登录',
-          })
-        );
-
-        const location = res.data && res.data.location;
-        if (isURL(location)) {
-          window.location.href = location;
-        } else {
-          history.push('/login');
-        }
-      }
-    },
-
     *logout({}, { put, call }) {
       const res = yield call(v1Service.logout, {
         session_id: getEncryptLocalStorage(SESSION_ID)

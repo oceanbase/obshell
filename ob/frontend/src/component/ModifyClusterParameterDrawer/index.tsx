@@ -71,7 +71,6 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
   onSuccess,
   ...restProps
 }) => {
-  // const { styles } = useStyles();
   const rangeList = [
     {
       name: formatMessage({

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-import moment from 'moment';
 import {
   getNameValidateMessage,
   getChineseNameValidateMessage,
@@ -291,63 +290,6 @@ export const PAGINATION_OPTION_5 = {
   pageSizeOptions: ['5', '10', '20', '50'],
   showTotal,
 };
-
-export const EMAIL_DOMAIN_LIST = [
-  'aliyun.com',
-  '163.com',
-  '126.com',
-  'foxmail.com',
-  'gmail.com',
-  'outlook.com',
-  'msn.com',
-  'sohu.com',
-  'sina.com',
-  'hotmail.com',
-  'qq.com',
-];
-
-export function getRanges() {
-  const rangeList = [
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.Minutes', defaultMessage: '1 分钟' }),
-      value: () => [moment().subtract(1, 'minute'), moment()],
-    },
-
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.Minutes.1', defaultMessage: '5 分钟' }),
-      value: () => [moment().subtract(5, 'minute'), moment()],
-    },
-
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.Minutes.2', defaultMessage: '10 分钟' }),
-      value: () => [moment().subtract(10, 'minute'), moment()],
-    },
-
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.Minutes.3', defaultMessage: '20 分钟' }),
-      value: () => [moment().subtract(20, 'minute'), moment()],
-    },
-
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.HalfAnHour', defaultMessage: '半小时' }),
-      value: () => [moment().subtract(30, 'minute'), moment()],
-    },
-
-    {
-      label: formatMessage({ id: 'ocp-express.src.constant.AnHour', defaultMessage: '一小时' }),
-      value: () => [moment().subtract(60, 'minute'), moment()],
-    },
-  ];
-
-  const ranges = {};
-  rangeList.forEach(item => {
-    ranges[item.label] = (item.value && item.value()) || [];
-  });
-  return ranges;
-}
-
-// OCP 实时监控的刷新频率，单位为 s
-export const FREQUENCY = 5;
 
 export const TIME_UNIT_LIST = [MICROSECOND, 'ms', 's', 'min'];
 export const SIZE_UNIT_LIST = ['byte', 'KB', 'MB', 'GB', 'TB', 'PB'];

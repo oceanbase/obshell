@@ -10,7 +10,18 @@ import { formatTime } from '@/util/datetime';
 import { getFullPath } from '@/util/global';
 import React, { useEffect, useState } from 'react';
 import moment from 'moment';
-import { Button, Card, Col, Collapse, Form, Pagination, Row, Space, Spin } from '@oceanbase/design';
+import {
+  Button,
+  Card,
+  Col,
+  Collapse,
+  Form,
+  Pagination,
+  Row,
+  Space,
+  Spin,
+  theme,
+} from '@oceanbase/design';
 import { CaretRightOutlined, RedoOutlined } from '@oceanbase/icons';
 import { directTo, sortByNumber } from '@oceanbase/util';
 import { useRequest, useSetState } from 'ahooks';
@@ -24,6 +35,7 @@ export interface DeadlockProps {
 }
 
 const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
+  const { token } = theme.useToken();
   const [checkTime, setCheckTime] = useState('');
   const [pageable, setPageable] = useSetState({
     page: 1,
@@ -84,14 +96,14 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
   if (loading) {
     return (
       <Spin
-        className="mt-[15%]"
+        style={{ marginTop: '15%' }}
         spinning={loading}
         tip={formatMessage({
           id: 'OBShell.Session.Deadlock.DuringDeadlockQueryPleaseWait',
           defaultMessage: '死锁查询中，请耐心等待…',
         })}
       >
-        <div className="h-[80vh]" />
+        <div style={{ height: '80vh' }} />
       </Spin>
     );
   }
@@ -108,7 +120,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           })}
         >
           <Empty
-            style={{ height: 'calc(100vh - 313px)' }} // 使用 Tailwind CSS 替代 className，className样式会透传到Empty里应用
+            style={{ height: 'calc(100vh - 313px)' }}
             mode="pageCard"
             title={formatMessage({
               id: 'OBShell.Session.Deadlock.DeadlockAutomaticDetectionIsNot',
@@ -130,7 +142,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
         </Card>
       ) : deadLockHistoryList.length === 0 ? (
         <Empty
-          style={{ height: 'calc(100vh - 208px)' }} // 使用 Tailwind CSS 替代 className，className样式会透传到Empty里应用
+          style={{ height: 'calc(100vh - 208px)' }}
           mode="pageCard"
           title={formatMessage({
             id: 'OBShell.Session.Deadlock.NoDeadlockFoundInRecent',
@@ -190,7 +202,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
                       size: pageable.size,
                     });
                   }}
-                  className="ml-1 text-colorTextTertiary"
+                  style={{ marginLeft: 4, color: token.colorTextTertiary }}
                 />
               </Space>
             )
@@ -200,18 +212,21 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
             bordered={false}
             // 默认展开第一个死锁
             defaultActiveKey={deadLockHistoryList.map(item => item.event_id as string).slice(0, 1)}
-            className="bg-colorBgContainer"
+            style={{ backgroundColor: token.colorBgContainer }}
             expandIcon={({ isActive }) => <CaretRightOutlined rotate={isActive ? 90 : 0} />}
           >
             {deadLockHistoryList.map((item, index) => {
               const order = (pageable.page - 1) * pageable.size + index + 1;
               return (
                 <Panel
-                  className={`border-none bg-colorBgLayout ${
-                    index !== deadLockHistoryList.length - 1 ? 'mb-4' : ''
-                  }`}
+                  style={{
+                    border: 'none',
+                    backgroundColor: token.colorBgLayout,
+                    // 除最后一项外，底部增加 16px 间距
+                    marginBottom: index !== deadLockHistoryList.length - 1 ? 16 : 0,
+                  }}
                   header={
-                    <span className="font-semibold">
+                    <span style={{ fontWeight: 600 }}>
                       {formatMessage(
                         {
                           id: 'OBShell.Session.Deadlock.DeadlockOrder',
@@ -223,7 +238,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
                   }
                   key={item?.event_id as string}
                   extra={
-                    <Form layout="inline" className="text-gray-400">
+                    <Form layout="inline" style={{ color: token.colorTextTertiary }}>
                       <Form.Item
                         label={
                           <ContentWithQuestion
@@ -271,7 +286,7 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           </Collapse>
           <Pagination
             current={pageable.page}
-            className="self-end mt-4"
+            style={{ alignSelf: 'flex-end', marginTop: 16 }}
             total={deadLockHistoryTotal}
             pageSize={pageable.size}
             onChange={(page, pageSize) => {

@@ -1,42 +1,23 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import moment from 'moment';
 import {
   Col,
   Descriptions,
   Row,
   Tooltip,
   Typography,
-  Badge,
   Popover,
   theme,
+  Progress,
+  Space,
+  Divider,
 } from '@oceanbase/design';
 import { EllipsisOutlined } from '@oceanbase/icons';
-import { findByValue, isNullValue } from '@oceanbase/util';
-import { Liquid } from '@oceanbase/charts';
+import { isNullValue } from '@oceanbase/util';
 import { toPercent } from '@oceanbase/charts/es/util/number';
 import { formatSize, isEnglish } from '@/util';
-import tracert from '@/util/tracert';
-import { getObServerCountByObCluster, getIdcCountByObCluster } from '@/util/oceanbase';
 import ObClusterDeployMode from '@/component/ObClusterDeployMode';
 import MyCard from '@/component/MyCard';
-import { OB_CLUSTER_STATUS_LIST } from '@/constant/oceanbase';
 import MouseTooltip from '@/component/MouseTooltip';
 import styles from './index.less';
 
@@ -49,37 +30,16 @@ export interface DetailProps {
 const Detail: React.FC<DetailProps> = ({ clusterData }) => {
   const { token } = theme.useToken();
 
-  const statusItem = findByValue(OB_CLUSTER_STATUS_LIST, clusterData.status);
-  // 将 badge 状态映射为 color
-  const colorMap = {
-    processing: token.colorPrimary,
-    success: token.colorSuccess,
-    warning: token.colorWarning,
-    error: token.colorError,
-  };
-
-  // 部署模式
-  const deployModeString = (clusterData.zones || [])
-    .map(item => ({
-      regionName: item.region_name,
-      serverCount: (item.servers || []).length,
-    }))
-    .map(item => item.serverCount)
-    .join('-');
-
-  const stats = clusterData.stats || {};
+  const stats: API.BaseResourceStats = clusterData.stats || {};
 
   const metricList = [
     {
       key: 'cpu',
       title: 'CPU',
-      description: formatMessage({
-        id: 'ocp-express.Component.ClusterInfo.Allocation',
-        defaultMessage: '分配',
-      }),
-      percentValue: stats.cpu_core_assigned_percent,
-      totalValue: stats.cpu_core_total,
-      leftValue: stats.cpu_core_total - stats.cpu_core_assigned,
+      description: '已分配',
+      percentValue: (stats.cpu_core_assigned_percent || 0).toFixed(1),
+      totalValue: stats.cpu_core_total || 0,
+      leftValue: (stats.cpu_core_total || 0) - (stats.cpu_core_assigned || 0),
     },
     {
       key: 'memory',
@@ -87,13 +47,10 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
         id: 'ocp-express.Component.ClusterInfo.Memory',
         defaultMessage: '内存',
       }),
-      description: formatMessage({
-        id: 'ocp-express.Component.ClusterInfo.Allocation',
-        defaultMessage: '分配',
-      }),
-      percentValue: stats.memory_assigned_percent,
-      totalValue: stats.memory_total,
-      leftValue: stats.memory_in_bytes_total - stats.memory_in_bytes_assigned,
+      description: '已分配',
+      percentValue: (stats.memory_assigned_percent || 0).toFixed(1),
+      totalValue: stats.memory_total || 0,
+      leftValue: (stats.memory_in_bytes_total || 0) - (stats.memory_in_bytes_assigned || 0),
     },
     {
       key: 'disk',
@@ -101,140 +58,102 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
         id: 'ocp-express.Component.ClusterInfo.Disk',
         defaultMessage: '磁盘',
       }),
-      description: formatMessage({
-        id: 'ocp-express.Component.ClusterInfo.Use',
-        defaultMessage: '使用',
-      }),
-      percentValue: stats.disk_assigned_percent,
-      totalValue: stats.disk_total,
-      leftValue: stats.disk_in_bytes_total - stats.disk_in_bytes_assigned,
+      description: '已使用',
+      percentValue: (stats.disk_assigned_percent || 0).toFixed(1),
+      totalValue: stats.disk_total || 0,
+      leftValue: (stats.disk_in_bytes_total || 0) - (stats.disk_in_bytes_assigned || 0),
     },
   ];
 
-  // 使用空字符串兜底，避免文案拼接时出现 undefined
-  const clusterName = clusterData.cluster_name || '';
+  const getStrokeColor = (percent: number, textFlag: boolean = true) => {
+    if (percent >= 90) {
+      return token.colorError;
+    } else if (percent >= 80) {
+      return token.colorWarning;
+    } else {
+      return textFlag ? undefined : token.colorSuccess;
+    }
+  };
 
   return (
-    <div
-      data-aspm="c304183"
-      data-aspm-desc="集群信息"
-      data-aspm-expo
-      // 扩展参数
-      data-aspm-param={tracert.stringify({
-        // 集群 OB 版本
-        clusterObVersion: clusterData.obVersion,
-        // 集群部署模式
-        clusterDeployMode: deployModeString,
-        // 集群机房数
-        clusterIdcCount: getIdcCountByObCluster(clusterData),
-        // 集群 OBServer 数
-        clusterObserverCount: getObServerCountByObCluster(clusterData),
-        // 集群租户数
-        clusterTenantCount: clusterData.tenants?.length || 0,
-      })}
-    >
-      <MyCard
-        title={
-          <div>
-            <span
-              style={{
-                marginRight: 16,
-              }}
-            >
-              {formatMessage(
-                {
-                  id: 'ocp-express.Component.ClusterInfo.ClusterClustername',
-                  defaultMessage: '集群 {clusterName} 已分配资源',
-                },
-                { clusterName: clusterName }
-              )}
-            </span>
-            <Badge
-              status={statusItem.badgeStatus}
-              text={
-                <span
-                  style={{
-                    color: colorMap[statusItem.badgeStatus as string],
-                  }}
-                >
-                  {statusItem.label}
-                </span>
-              }
-            />
-          </div>
-        }
-        extra={
-          <Popover
-            placement="bottomRight"
-            arrowPointAtCenter={true}
-            overlayStyle={{
-              maxWidth: 200,
-            }}
-            content={
-              <Descriptions colon={false} column={1}>
-                <Descriptions.Item
-                  label={formatMessage({
-                    id: 'ocp-express.Component.ClusterInfo.ClusterName',
-                    defaultMessage: '集群名称',
-                  })}
-                  className="descriptions-item-with-ellipsis"
-                >
-                  <Text
-                    ellipsis={{
-                      tooltip: clusterData.cluster_name,
-                    }}
-                  >
-                    {clusterData.cluster_name}
-                  </Text>
-                </Descriptions.Item>
-                <Descriptions.Item
-                  label={formatMessage({
-                    id: 'ocp-express.Detail.Overview.DeploymentMode',
-                    defaultMessage: '部署模式',
-                  })}
-                  style={{
-                    paddingBottom: 0,
-                  }}
-                >
-                  {clusterData.zones?.length > 0 ? (
-                    <Tooltip title={<ObClusterDeployMode clusterData={clusterData} />}>
-                      <ObClusterDeployMode clusterData={clusterData} mode="text" />
-                    </Tooltip>
-                  ) : (
-                    '-'
-                  )}
-                </Descriptions.Item>
-              </Descriptions>
-            }
-            bodyStyle={{
-              padding: '16px 24px',
-            }}
-          >
-            <EllipsisOutlined
-              data-aspm-click="c304183.d308772"
-              data-aspm-desc="集群信息-查看更多"
-              data-aspm-expo
-              data-aspm-param={``}
-              className="pointable"
-              style={{
-                fontSize: 20,
-              }}
-            />
-          </Popover>
-        }
-      >
-        <MouseTooltip
-          style={{
-            maxWidth: isEnglish() ? 600 : 500,
-            padding: 16,
+    <MyCard
+      title="资源水位"
+      extra={
+        <Popover
+          placement="bottomRight"
+          arrowPointAtCenter={true}
+          overlayStyle={{
+            maxWidth: 200,
           }}
-          overlay={
-            <span>
-              <Row gutter={[48, 12]}>
-                {metricList.map(item => (
-                  <Col key={item.key} span={8}>
+          content={
+            <Descriptions colon={false} column={1}>
+              <Descriptions.Item
+                label={formatMessage({
+                  id: 'ocp-express.Component.ClusterInfo.ClusterName',
+                  defaultMessage: '集群名称',
+                })}
+                className="descriptions-item-with-ellipsis"
+              >
+                <Text
+                  ellipsis={{
+                    tooltip: clusterData.cluster_name,
+                  }}
+                >
+                  {clusterData.cluster_name}
+                </Text>
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={formatMessage({
+                  id: 'ocp-express.Detail.Overview.DeploymentMode',
+                  defaultMessage: '部署模式',
+                })}
+                style={{
+                  paddingBottom: 0,
+                }}
+              >
+                {(clusterData.zones?.length || 0) > 0 ? (
+                  <Tooltip title={<ObClusterDeployMode clusterData={clusterData} />}>
+                    <ObClusterDeployMode clusterData={clusterData} mode="text" />
+                  </Tooltip>
+                ) : (
+                  '-'
+                )}
+              </Descriptions.Item>
+            </Descriptions>
+          }
+        >
+          <EllipsisOutlined
+            className="pointable"
+            style={{
+              fontSize: 20,
+            }}
+          />
+        </Popover>
+      }
+    >
+      <Row gutter={48}>
+        {metricList.map((item, index) => (
+          <Col
+            key={item.key}
+            span={8}
+            style={index !== 2 ? { borderRight: `1px solid ${token.colorBorderSecondary}` } : {}}
+          >
+            <MouseTooltip
+              style={{
+                maxWidth: isEnglish() ? 300 : 200,
+                padding: 12,
+              }}
+              overlay={
+                <Row gutter={[48, 12]}>
+                  <Col key={item.key}>
                     <div
-                      style={{ paddingLeft: 4, fontSize: 16, fontWeight: 500, marginBottom: 12 }}
+                      style={{
+                        paddingLeft: 4,
+                        fontSize: 14,
+                        fontWeight: 500,
+                        marginBottom: 8,
+                        color: token.colorText,
+                      }}
                     >
                       {item.title}
                     </div>
@@ -242,7 +161,13 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                       size="small"
                       colon={false}
                       column={1}
-                      className={styles.borderRight}
+                      labelStyle={{
+                        width: isEnglish() ? 90 : 60,
+                        textAlign: 'justify',
+                        textAlignLast: 'justify',
+                        fontSize: 12,
+                      }}
+                      contentStyle={{ fontSize: 12 }}
                     >
                       <Descriptions.Item
                         label={formatMessage({
@@ -258,10 +183,20 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                             item.totalValue}
                       </Descriptions.Item>
                       <Descriptions.Item label={item.description}>
-                        {/* 最多保留 1 位有效小数，需要用 toPercent 处理下 */}
-                        {isNullValue(item.percentValue)
+                        {isNullValue(item.leftValue)
                           ? '-'
-                          : `${toPercent(item.percentValue / 100, 1)}%`}
+                          : item.key === 'cpu'
+                          ? `${item.leftValue} C`
+                          : // 内存和磁盘需要进行单位换算
+                            formatSize(item.leftValue)}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="消耗比">
+                        <span style={{ color: getStrokeColor(Number(item.percentValue)) }}>
+                          {/* 最多保留 1 位有效小数，需要用 toPercent 处理下 */}
+                          {isNullValue(item.percentValue)
+                            ? '-'
+                            : `${toPercent((Number(item.percentValue) || 0) / 100, 1)}%`}
+                        </span>
                       </Descriptions.Item>
                       <Descriptions.Item
                         label={formatMessage({
@@ -278,38 +213,51 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                       </Descriptions.Item>
                     </Descriptions>
                   </Col>
-                ))}
-              </Row>
-            </span>
-          }
-        >
-          <Row gutter={48}>
-            {metricList.map((item, index) => (
-              <Col
-                key={item.key}
-                span={8}
-                style={
-                  index !== 2 ? { borderRight: `1px solid ${token.colorBorderSecondary}` } : {}
-                }
-              >
-                <Liquid
-                  // 高度过小会导致图表异常刷新
-                  height={75}
-                  layout="horizontal"
-                  title={item.title}
-                  shape="rect"
-                  // Progress 的 percent 为 0 ~ 1 的值，监控返回的 percent 是 0 ~ 100 的百分比值，需要进行换算
-                  percent={item.percentValue / 100}
-                  // 最多保留 1 位有效小数
-                  decimal={1}
-                  warningPercent={0.7}
+                </Row>
+              }
+            >
+              <div className={styles.progressWrapper}>
+                <Progress
+                  type="circle"
+                  percent={Number(item.percentValue)}
+                  size={90}
+                  strokeWidth={8}
+                  strokeColor={getStrokeColor(Number(item.percentValue))}
                 />
-              </Col>
-            ))}
-          </Row>
-        </MouseTooltip>
-      </MyCard>
-    </div>
+                <Space direction="vertical" className={styles.progressText}>
+                  <div className={styles.progressTitle}>{item.title}</div>
+                  <div className={styles.progressDescription}>
+                    <div className={styles.progressDescriptionItem}>
+                      <span className={styles.progressDescriptionItemName}>{item.description}</span>
+                      <span>
+                        {isNullValue(item.leftValue)
+                          ? '-'
+                          : item.key === 'cpu'
+                          ? `${item.leftValue} C`
+                          : // 内存和磁盘需要进行单位换算
+                            formatSize(item.leftValue)}
+                      </span>
+                    </div>
+                    <Divider style={{ margin: '4px 0' }} />
+                    <div className={styles.progressDescriptionItem}>
+                      <span className={styles.progressDescriptionItemName}>总量</span>
+                      <span>
+                        {isNullValue(item.totalValue)
+                          ? '-'
+                          : item.key === 'cpu'
+                          ? `${item.totalValue} C`
+                          : // 内存和磁盘需要进行单位换算
+                            item.totalValue}
+                      </span>
+                    </div>
+                  </div>
+                </Space>
+              </div>
+            </MouseTooltip>
+          </Col>
+        ))}
+      </Row>
+    </MyCard>
   );
 };
 

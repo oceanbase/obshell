@@ -336,7 +336,8 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
     <div>
       <Card
         bordered={false}
-        className={`card-without-padding ${selectedRowKeys.length > 0 ? 'mb-14' : 'mb-0'}`}
+        className="card-without-padding"
+        style={{ marginBottom: selectedRowKeys.length > 0 ? 56 : 0 }}
         extra={
           <Space>
             <Checkbox
@@ -368,13 +369,13 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                   defaultMessage: '刷新',
                 })}
               >
-                <div className="px-2 py-1">
+                <div style={{ border: '1px solid #cdd5e4', paddingInline: 8, paddingBlock: 4 }}>
                   <SyncOutlined
                     spin={loading}
                     onClick={() => {
                       refresh();
                     }}
-                    className="cursor-pointer"
+                    style={{ cursor: 'pointer' }}
                   />
                 </div>
               </Tooltip>
@@ -414,9 +415,18 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
       </Card>
       {selectedRowKeys && selectedRowKeys.length > 0 && (
         <FooterToolbar
-          className={mode === 'component' ? 'w-[1232px] px-6 py-3 leading-normal shadow-none' : ''}
+          style={
+            mode === 'component'
+              ? { width: 1232, padding: '12px 24px', lineHeight: 'normal', boxShadow: 'none' }
+              : {}
+          }
           extra={
-            <div className="flex items-center">
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+              }}
+            >
               <Checkbox
                 // 与 antd Table 的全选逻辑保持一致，即只全选当前页的数据
                 checked={
@@ -441,7 +451,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                 }}
               />
 
-              <span className="ml-2">
+              <span style={{ marginLeft: 8 }}>
                 {formatMessage({
                   id: 'OBShell.Detail.Session.List.Selected',
                   defaultMessage: '已选',
@@ -453,7 +463,7 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                 onClick={() => {
                   setSelectedRowKeys([]);
                 }}
-                className="ml-3"
+                style={{ marginLeft: 12 }}
               >
                 {formatMessage({
                   id: 'OBShell.Detail.Session.List.Cancel',
@@ -566,7 +576,10 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
           setVisible(false);
           setCurrentRecord(null);
         }}
-        className="[&_.ant-modal-body]:max-h-[300px] [&_.ant-modal-body]:overflow-auto"
+        bodyStyle={{
+          maxHeight: 300,
+          overflow: 'auto',
+        }}
       >
         <Highlight language="sql">{formatSql(currentRecord && currentRecord.info)}</Highlight>
       </Modal>

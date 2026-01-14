@@ -1,77 +1,23 @@
 import { formatMessage } from '@/util/intl';
-import { useDispatch, useSelector } from 'umi';
-import React, { useRef, useState, useEffect } from 'react';
-import { compact, filter, find, flatten, groupBy, includes, some, sum, uniq, uniqBy } from 'lodash';
-import {
-  Alert,
-  Button,
-  Descriptions,
-  Form,
-  Modal,
-  Space,
-  Spin,
-  Steps,
-  Switch,
-  Tabs,
-  Tag,
-  token,
-  Tooltip,
-  Typography,
-} from '@oceanbase/design';
-import {
-  ExclamationCircleFilled,
-  InfoCircleFilled,
-  QuestionCircleOutlined,
-} from '@oceanbase/icons';
-import { directTo, isNullValue, joinComponent } from '@oceanbase/util';
-import { ContentWithIcon as OBUIContentWithIcon } from '@oceanbase/ui';
+import React, { useState } from 'react';
+import { flatten, uniq } from 'lodash';
+import { Form, Modal } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
-import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
-import BinlogAssociationMsg from '@/component/BinlogAssociationMsg';
-// import * as ObClusterController from '@/service/ocp-all-in-one/ObClusterController';
-import { buildVersionCompare, versionCompare } from '@/util/package';
 import { taskSuccess } from '@/util/task';
-import ContentWithIcon from '@/component/ContentWithIcon';
-import ContentWithReload from '@/component/ContentWithReload';
 import type { MyDrawerProps } from '@/component/MyDrawer';
 import MyDrawer from '@/component/MyDrawer';
-import MySelect from '@/component/MySelect';
-// import type { PackageSelectRef } from '@/component/PackageSelect';
 import PackageSelect from '@/component/PackageSelect';
-// import DraggableTable from '../DraggableTable';
-import styles from './index.less';
 import { agentUpgrade } from '@/service/obshell/upgrade';
 import { getAgentInfo } from '@/service/obshell/v1';
 
-const { Step } = Steps;
-const { TabPane } = Tabs;
-const { Option } = MySelect;
-const { Paragraph } = Typography;
-const ObClusterController = {};
 export interface UpgradeDrawerProps extends MyDrawerProps {
-  isStandAloneCluster?: boolean;
-  // 集群的架构列表
-  architectureList?: string[];
-  clusterData: API.ClusterConfig;
-  obClusterRelatedBinlogService?: API.TenantBinlogService;
+  clusterData: API.ClusterInfo;
   onSuccess: () => void;
   onCancel: () => void;
 }
 
-export type ExtendedUpgradeNode = API.UpgradeNode & {
-  isCurrent?: boolean;
-  noRpms?: API.UpgradeNode['rpms'];
-};
-
-export interface ExtendedOcpCluster extends API.OcpClusterView {
-  upgradePath?: ExtendedUpgradeNode[];
-}
-
 const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   visible,
-  obClusterRelatedBinlogService,
-  isStandAloneCluster,
-  architectureList,
   clusterData,
   onSuccess,
   onCancel,
@@ -129,8 +75,8 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
             onOk: () => {
               if (pkg) {
                 runAsync({
-                  version: pkg?.version,
-                  release: pkg.release_distribution,
+                  version: pkg?.version!,
+                  release: pkg.release_distribution!,
                 });
               }
             },

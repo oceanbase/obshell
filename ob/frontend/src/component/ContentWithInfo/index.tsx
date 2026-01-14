@@ -18,7 +18,7 @@ import React from 'react';
 import type { SpaceProps } from '@oceanbase/design';
 import { Space } from '@oceanbase/design';
 import { InfoCircleFilled } from '@oceanbase/icons';
-import useStyles from './index.style';
+import styles from './index.less';
 
 export interface ContentWithInfoProps extends SpaceProps {
   content: React.ReactNode;
@@ -27,7 +27,6 @@ export interface ContentWithInfoProps extends SpaceProps {
 }
 
 const ContentWithInfo: React.FC<ContentWithInfoProps> = ({ content, className, ...restProps }) => {
-  const { styles } = useStyles();
   return (
     <Space className={`${styles.container} ${className}`} {...restProps}>
       <InfoCircleFilled className={styles.icon} />

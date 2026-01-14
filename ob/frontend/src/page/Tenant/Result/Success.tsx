@@ -16,16 +16,14 @@
 
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Button, Card, Descriptions, Result } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
-import { isNullValue } from '@oceanbase/util';
 import { useRequest, useInterval } from 'ahooks';
-import * as TaskController from '@/service/ocp-express/TaskController';
 import { getTaskProgress } from '@/util/task';
 import PageCard from '@/component/PageCard';
 import styles from './Success.less';
-import { getDagDetail, getUnfinishedDags } from '@/service/obshell/task';
+import { getDagDetail } from '@/service/obshell/task';
 
 export interface TaskSuccessProps {
   match?: {
@@ -69,7 +67,7 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
       refresh();
     },
     // 任务处于运行态，则轮询任务进度
-    taskData?.state === 'RUNNING' ? 1000 : null
+    taskData?.state === 'RUNNING' ? 1000 : undefined
   );
 
   return (
@@ -92,10 +90,6 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
             <div>
               {!isMultipleTask && (
                 <Button
-                  data-aspm-click="c318536.d343257"
-                  data-aspm-desc="新建租户任务提交成功-返回租户列表"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   size="large"
                   style={{ marginRight: 8 }}
                   onClick={() => {
@@ -110,10 +104,6 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
               )}
 
               <Button
-                data-aspm-click="c318536.d343263"
-                data-aspm-desc="新建租户任务提交成功-查看任务详情"
-                data-aspm-param={``}
-                data-aspm-expo
                 size="large"
                 type="primary"
                 onClick={() => {

@@ -1,37 +1,20 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { getLocale, history, useSelector, useDispatch } from 'umi';
 import React, { useEffect } from 'react';
 import { ConfigProvider, Spin, theme } from '@oceanbase/design';
 import { ChartProvider } from '@oceanbase/charts';
 import en_US from '@oceanbase/ui/es/locale/en-US';
 import zh_CN from '@oceanbase/ui/es/locale/zh-CN';
-import { ThemeProvider } from 'antd-style';
 import { useRequest } from 'ahooks';
 import * as v1Service from '@/service/obshell/v1';
 import BlankLayout from './BlankLayout';
 import ErrorBoundary from '@/component/ErrorBoundary';
-import GlobalStyle from './GlobalStyle';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { handleLoginSuccess } from '@/util/login';
 import { getStatistics } from '@/service/obshell/ob';
 import { telemetryReport } from '@/service/custom';
 import * as obService from '@/service/obshell/ob';
 import moment from 'moment';
+import { PUBLIC_KEY } from '@/constant/login';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -72,7 +55,7 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
     onSuccess: res => {
       if (res.successful) {
         const publicKey = res?.data?.public_key || '';
-        setEncryptLocalStorage('publicKey', publicKey);
+        setEncryptLocalStorage(PUBLIC_KEY, publicKey);
         dispatch({
           type: 'profile/update',
           payload: {
@@ -156,14 +139,11 @@ const Layout: React.FC<LayoutProps> = ({ children, location }) => {
         algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
       }}
     >
-      <ThemeProvider appearance={themeMode}>
-        <ChartProvider theme={themeMode}>
-          <GlobalStyle themeMode={themeMode} />
-          <ErrorBoundary>
-            <BlankLayout>{children}</BlankLayout>
-          </ErrorBoundary>
-        </ChartProvider>
-      </ThemeProvider>
+      <ChartProvider theme={themeMode}>
+        <ErrorBoundary>
+          <BlankLayout>{children}</BlankLayout>
+        </ErrorBoundary>
+      </ChartProvider>
     </ConfigProvider>
   );
 };

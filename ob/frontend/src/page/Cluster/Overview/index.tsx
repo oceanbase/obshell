@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
 import { history } from 'umi';
 import React, { useRef, useState } from 'react';
@@ -28,6 +12,7 @@ import {
   Dropdown,
   Menu,
   Modal,
+  message,
 } from '@oceanbase/design';
 import { flatten, isEmpty, reduce } from 'lodash';
 import { PageContainer } from '@oceanbase/ui';
@@ -38,7 +23,6 @@ import MyCard from '@/component/MyCard';
 import ClusterInfo from './ClusterInfo';
 import CompactionTimeTop3 from './CompactionTimeTop3';
 import TenantResourceTop3 from './TenantResourceTop3';
-import type { ZoneListOrTopoRef } from './ZoneListOrTopo';
 import ZoneListOrTopo from './ZoneListOrTopo';
 import { EllipsisOutlined } from '@oceanbase/icons';
 import UpgradeDrawer from './UpgradeDrawer';
@@ -48,10 +32,11 @@ import { obclusterInfo, obclusterSetParameters } from '@/service/obshell/obclust
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
 import moment from 'moment';
 import { getAgentMainDags } from '@/service/obshell/task';
-import { message } from 'antd';
 import useUiMode from '@/hook/useUiMode';
 import LicenseDetailModal from './License/LicenseDetailModal';
 import LicenseAlert from './License/LicenseAlert';
+import BaseInfo from './BaseInfo';
+import { useDispatch } from 'umi';
 
 export const getServerStatus = (server: API.Observer) => {
   let status = 'OTHER';
@@ -71,12 +56,10 @@ export const getServerStatus = (server: API.Observer) => {
   return status;
 };
 
-export interface DetailProps {}
-
-const Detail: React.FC<DetailProps> = ({}) => {
+const Detail: React.FC = () => {
   const { token } = theme.useToken();
   const [clusterStatus, setClusterStatus] = useState<'normal' | 'abnormal'>('normal');
-
+  const dispatch = useDispatch();
   const isAbnormal = clusterStatus === 'abnormal';
   const { isDesktopMode } = useUiMode();
 
@@ -100,6 +83,12 @@ const Detail: React.FC<DetailProps> = ({}) => {
             setClusterStatus('normal');
             reload();
           }
+          dispatch({
+            type: 'cluster/update',
+            payload: {
+              clusterData: res.data,
+            },
+          });
         } else {
           setClusterStatus('abnormal');
         }
@@ -114,10 +103,9 @@ const Detail: React.FC<DetailProps> = ({}) => {
     isAbnormal ? 3000 : undefined
   );
 
-  const clusterData = obclusterInfoRes?.data || {};
+  const clusterData: API.ClusterInfo = obclusterInfoRes?.data || {};
 
   const [reloading, reload] = useReload(false);
-  const zoneListOrTopoRef = useRef<ZoneListOrTopoRef>();
 
   // 使用空字符串兜底，避免文案拼接时出现 undefined
   const obVersion = clusterData.ob_version || '';
@@ -393,7 +381,7 @@ const Detail: React.FC<DetailProps> = ({}) => {
       setUpgradeAgentVisible(true);
     } else if (key === 'start' || key === 'stop') {
       getAgentMainDags().then(res => {
-        const dagList = res.data?.contents || [];
+        const dagList: API.DagDetailDTO[] = res.data?.contents || [];
 
         if (dagList.some(item => item.state !== 'FAILED')) {
           message.warning(
@@ -690,35 +678,34 @@ const Detail: React.FC<DetailProps> = ({}) => {
     >
       <LicenseAlert clusterData={clusterData} />
       <Row gutter={[16, 16]}>
-        <Col span={14}>
-          <ClusterInfo clusterData={clusterData} />
+        <Col span={24}>
+          <BaseInfo clusterData={clusterData} />
         </Col>
         {overviewStatusType.map(item => {
           return (
-            <Col key={item.key} span={5}>
+            <Col key={item.key} span={8}>
               <MyCard
                 title={
                   <div style={{ backgroundImage: item.img }}>
                     <span>{item.title}</span>
                   </div>
                 }
-                style={{ height: '100%' }}
-                headStyle={{
-                  marginBottom: 16,
-                }}
-                bodyStyle={{
-                  padding: '16px 24px',
+                style={{
+                  height: 156,
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <div
-                    style={{
-                      fontSize: '28px',
-                      fontFamily: 'Avenir-Heavy',
-                      lineHeight: '66px',
-                    }}
-                  >
-                    {item.totalCount}
+                  <div>
+                    <div
+                      style={{
+                        fontSize: '32px',
+                        fontFamily: 'Avenir-Heavy',
+                        lineHeight: '40px',
+                      }}
+                    >
+                      {item.totalCount}
+                    </div>
+                    <div style={{ fontSize: '14px', color: token.colorTextTertiary }}>总数量</div>
                   </div>
                   {item.content}
                 </div>
@@ -726,18 +713,17 @@ const Detail: React.FC<DetailProps> = ({}) => {
             </Col>
           );
         })}
-        <Col span={24}>
+        <Col span={8}>
           <CompactionTimeTop3 />
+        </Col>
+        <Col span={24}>
+          <ClusterInfo clusterData={clusterData} />
         </Col>
         <Col span={24}>
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>
         <Col span={24}>
-          <ZoneListOrTopo
-            ref={zoneListOrTopoRef}
-            clusterData={clusterData}
-            serverList={realServerList}
-          />
+          <ZoneListOrTopo clusterData={clusterData} />
         </Col>
       </Row>
 

@@ -28,16 +28,15 @@ import ContentWithInfo from '@/component/ContentWithInfo';
 import UserList from './UserList';
 import RoleList from './RoleList';
 import AddOracleUserOrRoleDrawer from './Component/AddOracleUserOrRoleDrawer';
-import useStyles from './index.style';
 import ContentWithReload from '@/component/ContentWithReload';
+import styles from './index.less';
 
 export interface IndexProps {
   pathname?: string;
   tenantName: string;
 }
 
-const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
-  const { styles } = useStyles();
+const Index: React.FC<IndexProps> = ({ pathname, tenantName }) => {
   const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [keyword, setKeyword] = useState('');
@@ -166,10 +165,6 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
         extra: (
           <Space>
             <Button
-              data-aspm-click="c304260.d308767"
-              data-aspm-desc="Oracle 角色列表-新建角色"
-              data-aspm-param={``}
-              data-aspm-expo
               onClick={() => {
                 setAddUserVisible(true);
                 setAddIsUser('role');
@@ -181,10 +176,6 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantId, tenantName }) => {
               })}
             </Button>
             <Button
-              data-aspm-click="c304262.d308773"
-              data-aspm-desc="Oracle 用户列表-新建用户"
-              data-aspm-param={``}
-              data-aspm-expo
               type="primary"
               onClick={() => {
                 setAddUserVisible(true);

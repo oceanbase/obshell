@@ -239,32 +239,52 @@ const DeadlockGraph: React.FC<DeadlockGraphProps> = ({ id, nodeList, relationLis
       {/* 仅死锁历史存在中断节点，才需要展示图例 */}
       {nodeList && (
         <Space size={16}>
-          <div className="flex justify-center items-center">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <span
-              className="w-4 h-4 mr-1 inline-block rounded-sm"
               style={{
+                width: 16,
+                height: 16,
+                marginRight: 4,
+                display: 'inline-block',
                 background: token.colorInfoBg,
                 border: `1px solid ${token.colorInfoBorder}`,
+                borderRadius: token.borderRadiusSM,
               }}
             />
 
-            <span className="text-xs">
+            <span style={{ fontSize: '12px' }}>
               {formatMessage({
                 id: 'OBShell.Session.Deadlock.DeadlockGraph.Uninterrupted',
                 defaultMessage: '未中断',
               })}
             </span>
           </div>
-          <div className="flex justify-center items-center">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <span
-              className="w-4 h-4 mr-1 inline-block rounded-sm"
               style={{
+                width: 16,
+                height: 16,
+                marginRight: 4,
+                display: 'inline-block',
                 background: token.colorErrorBg,
                 border: `1px solid ${token.colorErrorBorder}`,
+                borderRadius: token.borderRadiusSM,
               }}
             />
 
-            <span className="text-xs">
+            <span style={{ fontSize: '12px' }}>
               {formatMessage({
                 id: 'OBShell.Session.Deadlock.DeadlockGraph.Interrupted',
                 defaultMessage: '已中断',
@@ -273,7 +293,7 @@ const DeadlockGraph: React.FC<DeadlockGraphProps> = ({ id, nodeList, relationLis
           </div>
         </Space>
       )}
-      <div id={containerId} className={`${styles.graphContainer} h-[140%]`} />
+      <div id={containerId} style={{ height: '140%' }} className={styles.graphContainer} />
     </>
   );
 };

@@ -51,8 +51,8 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
 
   const [keyword, setKeyword] = useState('');
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
-  const [dbUser, setDbUser] = useState<API.DbUser | null>(null);
-  const [userStats, setUserStats] = useState<API.SessionUserStats[]>({});
+  const [dbUser, setDbUser] = useState<API.ObUser | null>(null);
+  const [userStats, setUserStats] = useState<API.ObUserStats>({});
 
   // 修改参数值的抽屉是否可见
   const [valueVisible, setValueVisible] = useState(false);
@@ -107,12 +107,12 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
     },
   });
 
-  const modifyPassword = (record: API.DbUser) => {
+  const modifyPassword = (record: API.ObUser) => {
     setModifyPasswordVisible(true);
     setDbUser(record);
   };
 
-  const modifyPrivileges = (record: API.DbUser) => {
+  const modifyPrivileges = (record: API.ObUser) => {
     setValueVisible(true);
     setDbUser(record);
   };
@@ -149,7 +149,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
     },
   });
 
-  const changeLockedStatus = (record: API.DbUser) => {
+  const changeLockedStatus = (record: API.ObUser) => {
     if (record.isLocked) {
       Modal.confirm({
         title: formatMessage({
@@ -237,7 +237,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
       }),
 
       dataIndex: 'accessibleDatabases',
-      render: (text: string[], record: API.DbUser) => {
+      render: (text: string[], record: API.ObUser) => {
         if (record.username === 'root' || record.username === 'proxyro') {
           return '*';
         }
@@ -259,7 +259,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
       }),
 
       dataIndex: 'connectionStrings',
-      render: (connectionStrings: API.ObproxyAndConnectionString[], record: API.DbUser) => {
+      render: (connectionStrings: API.ObproxyAndConnectionString[], record: API.ObUser) => {
         return (
           <RenderConnectionString
             callBack={() => {
@@ -275,19 +275,11 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
     {
       title: formatMessage({ id: 'ocp-express.User.MySQL.Locking', defaultMessage: '锁定' }),
       dataIndex: 'isLocked',
-      render: (text: boolean, record: API.DbUser) =>
+      render: (text: boolean, record: API.ObUser) =>
         record.username === 'root' || record.username === 'proxyro' ? (
           <Switch size="small" checked={text} disabled={true} />
         ) : (
-          <Switch
-            data-aspm-click="c304264.d308789"
-            data-aspm-desc="MySQL 用户列表-切换锁定状态"
-            data-aspm-param={``}
-            data-aspm-expo
-            onClick={() => changeLockedStatus(record)}
-            checked={text}
-            size="small"
-          />
+          <Switch onClick={() => changeLockedStatus(record)} checked={text} size="small" />
         ),
     },
     {
@@ -296,16 +288,12 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
         defaultMessage: '操作',
       }),
       dataIndex: 'operation',
-      render: (text: string, record: API.DbUser) => {
+      render: (text: string, record: API.ObUser) => {
         return (
           <Space size="middle">
             {!isDesktopMode && record.username !== 'root' && tenantData?.tenant_name !== 'sys' && (
               <>
                 <a
-                  data-aspm-click="c304264.d308787"
-                  data-aspm-desc="MySQL 用户列表-修改密码"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   onClick={() => {
                     modifyPassword(record);
                   }}
@@ -320,10 +308,6 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
             {record.username !== 'root' && (
               <>
                 <a
-                  data-aspm-click="c304264.d308784"
-                  data-aspm-desc="MySQL 用户列表-修改权限"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   onClick={() => {
                     modifyPrivileges(record);
                   }}
@@ -334,10 +318,6 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
                   })}
                 </a>
                 <a
-                  data-aspm-click="c304264.d308786"
-                  data-aspm-desc="MySQL 用户列表-删除用户"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   onClick={() => {
                     run({
                       name: tenantName,
@@ -378,10 +358,6 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
         ),
         extra: (
           <Button
-            data-aspm-click="c304264.d308782"
-            data-aspm-desc="MySQL 用户列表-新建用户"
-            data-aspm-param={``}
-            data-aspm-expo
             type="primary"
             onClick={() => {
               setValueVisible(true);
@@ -397,12 +373,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
     >
       <Row gutter={[16, 16]}>
         <Col span={24}>
-          <div
-            data-aspm="c304265"
-            data-aspm-desc="MySQL 用户列表"
-            data-aspm-param={``}
-            data-aspm-expo
-          >
+          <div>
             <Card
               title={formatMessage({
                 id: 'ocp-express.User.MySQL.UserList',
@@ -412,10 +383,6 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
               className="card-without-padding"
               extra={
                 <MyInput.Search
-                  data-aspm-click="c304264.d308781"
-                  data-aspm-desc="MySQL 用户列表-搜索用户"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   allowClear={true}
                   onSearch={(value: string) => setKeyword(value)}
                   placeholder={formatMessage({

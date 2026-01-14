@@ -20,7 +20,6 @@ import React from 'react';
 import { Alert, Descriptions, Modal } from '@oceanbase/design';
 import type { ModalProps } from '@oceanbase/design/es/modal';
 import { useRequest } from 'ahooks';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { taskSuccess } from '@/util/task';
 import { tenantRemoveReplicas } from '@/service/obshell/tenant';
 

@@ -58,7 +58,6 @@ import WhitelistInput from '@/component/WhitelistInput';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import FormPrimaryZone from '@/component/FormPrimaryZone';
 import SetParameterEditableProTable from '@/component/ParameterTemplate/SetParameterEditableProTable';
-import useStyles from './index.style';
 import { getObclusterCharsets } from '@/service/obshell/ob';
 import { tenantCreate } from '@/service/obshell/tenant';
 import { unitConfigCreate } from '@/service/obshell/unit';
@@ -66,20 +65,14 @@ import { getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { message } from 'antd';
 import { obclusterInfo } from '@/service/obshell/obcluster';
 import { TIMEZONE_LIST, filterTimezonesByMode } from '@/constant/timezone';
+import styles from './index.less';
 
 const { Option } = MySelect;
 const { Text } = Typography;
 
-interface collation {
-  is_default: boolean;
-  name: string;
-}
-
 interface NewProps {}
 
 const New: React.FC<NewProps> = ({}) => {
-  const { styles } = useStyles();
-
   const [form] = Form.useForm();
   const { getFieldValue, validateFields, setFieldsValue } = form;
 

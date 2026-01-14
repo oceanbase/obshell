@@ -33,6 +33,7 @@ import queryString from 'query-string';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { LOGIN_KEY, LOGIN_SECRET_KEY, LOGIN_IV, SESSION_ID } from '@/constant/login';
 import { getErrorDescription } from './component';
+import { PUBLIC_KEY } from '@/constant/login';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -201,7 +202,7 @@ request.interceptors.request.use((url, options) => {
   const { password, publicKey: profilePublicKey } = profile || {};
 
   // 兼容页面刷新
-  const publicKey = profilePublicKey || getEncryptLocalStorage('publicKey');
+  const publicKey = profilePublicKey || getEncryptLocalStorage(PUBLIC_KEY);
   const sessionId = getEncryptLocalStorage(SESSION_ID);
   const isFormData = options.data instanceof FormData;
   const isLoginApi = url.includes('/api/v1/login');

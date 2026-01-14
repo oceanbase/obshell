@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { Card, Spin } from '@oceanbase/design';
-import useStyles from './index.style';
+import styles from './index.less';
 
 export interface TaskSuccessProps {
   children: React.ReactNode;
@@ -31,7 +31,6 @@ const PageCard: React.FC<TaskSuccessProps> = ({
   className,
   ...restProps
 }) => {
-  const { styles } = useStyles();
   return (
     <Card bordered={false} className={`${styles.card} ${className}`} {...restProps}>
       <Spin spinning={loading}>{children}</Spin>

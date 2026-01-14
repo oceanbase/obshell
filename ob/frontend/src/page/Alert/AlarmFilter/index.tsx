@@ -312,26 +312,31 @@ export default function AlarmFilter({ form, type, depend }: AlarmFilterProps) {
             </Form.Item>
           </Col>
         )}
+        <Col span={6} offset={type === 'event' && isExpand ? 6 : 0}>
+          <Space style={{ float: 'right' }}>
+            <Button type="link" onClick={() => form.resetFields()}>
+              {formatMessage({ id: 'OBShell.Alert.AlarmFilter.Reset', defaultMessage: '重置' })}
+            </Button>
+            {type === 'event' &&
+              (isExpand ? (
+                <Button onClick={() => setIsExpand(false)} type="link">
+                  {formatMessage({ id: 'OBShell.Alert.AlarmFilter.Stow', defaultMessage: '收起' })}
+
+                  <UpOutlined />
+                </Button>
+              ) : (
+                <Button onClick={() => setIsExpand(true)} type="link">
+                  {formatMessage({
+                    id: 'OBShell.Alert.AlarmFilter.Expand',
+                    defaultMessage: '展开',
+                  })}
+
+                  <DownOutlined />
+                </Button>
+              ))}
+          </Space>
+        </Col>
       </Row>
-      <Space style={{ float: 'right' }}>
-        <Button type="link" onClick={() => form.resetFields()}>
-          {formatMessage({ id: 'OBShell.Alert.AlarmFilter.Reset', defaultMessage: '重置' })}
-        </Button>
-        {type === 'event' &&
-          (isExpand ? (
-            <Button onClick={() => setIsExpand(false)} type="link">
-              {formatMessage({ id: 'OBShell.Alert.AlarmFilter.Stow', defaultMessage: '收起' })}
-
-              <UpOutlined />
-            </Button>
-          ) : (
-            <Button onClick={() => setIsExpand(true)} type="link">
-              {formatMessage({ id: 'OBShell.Alert.AlarmFilter.Expand', defaultMessage: '展开' })}
-
-              <DownOutlined />
-            </Button>
-          ))}
-      </Space>
     </Form>
   );
 }

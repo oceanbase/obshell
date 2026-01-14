@@ -16,15 +16,14 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Form, Alert, Modal, message, Input } from '@oceanbase/design';
+import { Form, Alert, Modal, message, Input, ModalProps } from '@oceanbase/design';
 import { ExclamationCircleFilled } from '@oceanbase/icons';
 import { useRequest } from 'ahooks';
 import { MODAL_FORM_ITEM_LAYOUT } from '@/constant';
-import Password from '@/component/Password';
 import MyInput from '@/component/MyInput';
 import { persistTenantRootPassword } from '@/service/obshell/tenant';
 
-export interface TenantAdminPasswordModalProps {
+export interface TenantAdminPasswordModalProps extends ModalProps {
   tenantName?: string;
   errorMessage: string;
   type: string; // 'EDIT' | 'ADD'
@@ -68,7 +67,7 @@ const TenantAdminPasswordModal: React.FC<TenantAdminPasswordModalProps> = ({
       const { newPassword } = values;
       createOrReplacePassword(
         {
-          name: tenantName,
+          name: tenantName!,
         },
         {
           password: newPassword,

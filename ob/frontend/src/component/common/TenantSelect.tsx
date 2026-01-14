@@ -19,7 +19,6 @@ import React from 'react';
 import { Select } from '@oceanbase/design';
 import type { SelectProps } from '@oceanbase/design/es/select';
 import { useRequest } from 'ahooks';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { getTenantOverView } from '@/service/obshell/tenant';
 
 const { Option } = Select;

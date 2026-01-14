@@ -14,13 +14,7 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
-import { message } from '@oceanbase/design';
-import * as ObClusterController from '@/service/ocp-express/ObClusterController';
 import { obclusterInfo } from '@/service/obshell/obcluster';
-import { DEFAULT_LIST_DATA } from '@/constant';
-import { taskSuccess } from '@/util/task';
 import { flatten } from 'lodash';
 
 export const namespace = 'cluster';

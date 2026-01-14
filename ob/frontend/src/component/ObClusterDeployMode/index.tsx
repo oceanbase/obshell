@@ -16,7 +16,7 @@
 
 import React from 'react';
 import { Tag } from '@oceanbase/design';
-import useStyles from './index.style';
+import styles from './index.less';
 
 interface ObClusterDeployModeProps {
   clusterData: API.ClusterInfo;
@@ -30,7 +30,6 @@ const ObClusterDeployMode: React.FC<ObClusterDeployModeProps> = ({
   mode = 'tag',
   className,
 }: ObClusterDeployModeProps) => {
-  const { styles } = useStyles();
   const deployMode = (clusterData.zones || []).map(item => ({
     regionName: item.regionName,
     serverCount: (item.servers || []).length,

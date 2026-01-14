@@ -18,6 +18,7 @@ import { formatMessage } from '@/util/intl';
 import React from 'react';
 import classNames from 'classnames';
 import styles from './index.less';
+
 export interface BatchOperationBarProps {
   className?: string;
   style?: React.CSSProperties;

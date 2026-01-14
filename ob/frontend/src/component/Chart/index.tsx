@@ -18,7 +18,6 @@ import React from 'react';
 import { isObject } from 'lodash';
 import { sortByMoment } from '@oceanbase/util';
 import * as Charts from '@oceanbase/charts';
-import * as OBCharts from '@oceanbase/charts';
 
 export type ChartType =
   | 'Bar'
@@ -140,7 +139,7 @@ const Chart: React.FC<ChartProps> = ({
     },
     ...restProps,
   };
-  const ChartComp = OBCharts[type] || Charts[type];
+  const ChartComp = Charts[type];
   return <ChartComp {...config} />;
 };
 

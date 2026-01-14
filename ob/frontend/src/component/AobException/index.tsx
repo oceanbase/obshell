@@ -17,8 +17,7 @@
 import { formatMessage } from '@/util/intl';
 import React, { createElement } from 'react';
 import { Button } from '@oceanbase/design';
-import useStyles from './index.style';
-
+import styles from './index.less';
 interface AobExceptionProps {
   title?: React.ReactNode;
   desc?: React.ReactNode;
@@ -47,7 +46,6 @@ const AobException: React.FC<AobExceptionProps> = ({
   onBack,
   ...rest
 }) => {
-  const { styles } = useStyles();
   return (
     <div className={`${styles.container} ${className}`} {...rest}>
       <div className={styles.imgWrapper}>
@@ -59,14 +57,7 @@ const AobException: React.FC<AobExceptionProps> = ({
         <div className={styles.actions}>
           {actions ||
             (onBack ? (
-              <Button
-                data-aspm-click="ca48180.da30493"
-                data-aspm-desc="异常页-返回首页"
-                data-aspm-param={``}
-                data-aspm-expo
-                type="primary"
-                onClick={onBack}
-              >
+              <Button type="primary" onClick={onBack}>
                 {backText}
               </Button>
             ) : (
@@ -76,15 +67,7 @@ const AobException: React.FC<AobExceptionProps> = ({
                   to: redirect,
                   href: redirect,
                 },
-                <Button
-                  data-aspm-click="ca48180.da30493"
-                  data-aspm-desc="异常页-返回首页"
-                  data-aspm-param={``}
-                  data-aspm-expo
-                  type="primary"
-                >
-                  {backText}
-                </Button>
+                <Button type="primary">{backText}</Button>
               )
             ))}
         </div>

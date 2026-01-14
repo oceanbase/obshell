@@ -50,13 +50,7 @@ const RoleList: React.FC<RoleListProps> = ({
       dataIndex: 'role',
       render: (text: string) => (
         <Tooltip placement="topLeft" title={text}>
-          <a
-            data-aspm-click="c304260.d308766"
-            data-aspm-desc="Oracle 角色列表-跳转角色详情"
-            data-aspm-param={``}
-            data-aspm-expo
-            onClick={() => history.push(`/cluster/tenant/${tenantName}/user/role/${text}`)}
-          >
+          <a onClick={() => history.push(`/cluster/tenant/${tenantName}/user/role/${text}`)}>
             {text}
           </a>
         </Tooltip>
@@ -202,10 +196,6 @@ const RoleList: React.FC<RoleListProps> = ({
         }
         return (
           <a
-            data-aspm-click="c304260.d308770"
-            data-aspm-desc="Oracle 角色列表-删除角色"
-            data-aspm-param={``}
-            data-aspm-expo
             onClick={() => {
               setDeleteModalVisible(true);
               setCurrent(record);
@@ -224,10 +214,6 @@ const RoleList: React.FC<RoleListProps> = ({
   return (
     <>
       <Table
-        data-aspm="c304260"
-        data-aspm-desc="Oracle 角色列表"
-        data-aspm-param={``}
-        data-aspm-expo
         columns={columns}
         rowKey="id"
         loading={dbRoleLoading}

@@ -8,7 +8,6 @@ import { validateUnitCount } from '@/util/oceanbase';
 import MySelect from '@/component/MySelect';
 import MyInput from '@/component/MyInput';
 import { getUnitSpecLimit, getResourcesLimit } from '@/util/cluster';
-import { useStyles } from './index.style';
 import './index.less';
 
 const { Option } = MySelect as any;

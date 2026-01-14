@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2024 OceanBase.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 import { formatMessage } from '@/util/intl';
 import { history, useDispatch } from 'umi';
 import {
@@ -24,7 +8,6 @@ import {
   Badge,
   Space,
   Tag,
-  Radio,
   Tooltip,
   Typography,
   Descriptions,
@@ -38,16 +21,13 @@ import { uniqueId, find } from 'lodash';
 import { byte2GB, findByValue } from '@oceanbase/util';
 import moment from 'moment';
 import { PageContainer } from '@oceanbase/ui';
-import * as ObTenantController from '@/service/ocp-express/ObTenantController';
 import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
 import { TENANT_MODE_LIST } from '@/constant/tenant';
 import { getCompactionStatusV4 } from '@/util/cluster';
-import { getTextLengthRule } from '@/util';
 import { taskSuccess } from '@/util/task';
 import { formatTime } from '@/util/datetime';
 import { useRequest, useInterval } from 'ahooks';
 import MyCard from '@/component/MyCard';
-import MyInput from '@/component/MyInput';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import ContentWithReload from '@/component/ContentWithReload';
 import BatchOperationBar from '@/component/BatchOperationBar';
@@ -57,7 +37,6 @@ import BatchModifyUnitModal from '../Component/BatchModifyUnitModal';
 import AddReplicaModal from '../Component/AddReplicaModal';
 import DeleteTenantModal from '../Component/DeleteTenantModal';
 import DeleteReplicaModal from '../Component/DeleteReplicaModal';
-import ModifyPasswordModal from '../Component/ModifyPasswordModal';
 import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
 import ModifyPrimaryZoneDrawer from '../Component/ModifyPrimaryZoneDrawer';
 
@@ -77,11 +56,6 @@ import { obclusterInfo, getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { getZonesFromTenant } from '@/util/tenant';
 const { Text } = Typography;
 
-// 将 GB 转换为 GiB (1 GB = 0.931323 GiB)
-const gbToGib = (gb: number): number => {
-  return Number((gb * 0.931323).toFixed(2));
-};
-
 interface NewProps {
   match: {
     params: {
@@ -98,7 +72,6 @@ const Detail: React.FC<NewProps> = ({
   const dispatch = useDispatch();
 
   const [form] = Form.useForm();
-  const [form2] = Form.useForm();
   const { setFieldsValue } = form;
 
   const [showAddReplicaModal, setShowAddReplicaModal] = useState(false);
@@ -108,9 +81,7 @@ const Detail: React.FC<NewProps> = ({
   const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
   const [showWhitelistModal, setShowWhitelistModal] = useState(false);
   const [showModifyPrimaryZoneDrawer, setShowModifyPrimaryZoneDrawer] = useState(false);
-  const [modifyPasswordVisible, setModifyPasswordVisible] = useState(false);
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
-  const [ediRemarksModal, setEdiRemarksModal] = useState(false);
 
   const [currentTenantZone, setCurrentTenantZone] = useState(null);
   const [selectedRows, setSelectedRows] = useState([]);
@@ -234,25 +205,6 @@ const Detail: React.FC<NewProps> = ({
       }
     },
   });
-
-  const { run: modifyTenantDescription, loading: modifyTenantDescriptionLoading } = useRequest(
-    ObTenantController.modifyTenantDescription,
-    {
-      manual: true,
-      onSuccess: res => {
-        if (res.successful) {
-          message.success(
-            formatMessage({
-              id: 'ocp-express.src.model.tenant.RemarksModified',
-              defaultMessage: '备注修改成功',
-            })
-          );
-          setEdiRemarksModal(false);
-          refresh();
-        }
-      },
-    }
-  );
 
   // 获取租户合并详情
   const { data, refresh: getTenantCompactionRefresh } = useRequest(getTenantCompaction, {
@@ -479,7 +431,7 @@ const Detail: React.FC<NewProps> = ({
                     defaultMessage: '租户名称',
                   })}
                 >
-                  {tenantData?.tenant_name}
+                  <Typography.Text copyable>{tenantData?.tenant_name}</Typography.Text>
                 </Descriptions.Item>
                 <Descriptions.Item
                   label={formatMessage({
@@ -508,6 +460,18 @@ const Detail: React.FC<NewProps> = ({
                 </Descriptions.Item>
                 <Descriptions.Item label="Collation">
                   {tenantData.collation || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item
+                  label={
+                    <ContentWithQuestion
+                      content="部署分步"
+                      tooltip={{
+                        title: '租户在各个 Zone 上的副本类型',
+                      }}
+                    />
+                  }
+                >
+                  {tenantData.deployment_steps || '-'}
                 </Descriptions.Item>
                 <Descriptions.Item
                   span={2}
@@ -656,16 +620,7 @@ const Detail: React.FC<NewProps> = ({
                   })}
                 >
                   <Tooltip placement="bottomLeft" title={tenantData?.comment}>
-                    <Text
-                      style={{ width: '95%', minWidth: 180 }}
-                      ellipsis={true}
-                      // editable={{
-                      //   editing: false,
-                      //   onStart: () => {
-                      //     setEdiRemarksModal(true);
-                      //   },
-                      // }}
-                    >
+                    <Text style={{ width: '95%', minWidth: 180 }} ellipsis={true}>
                       {tenantData?.comment || '-'}
                     </Text>
                   </Tooltip>
@@ -995,18 +950,6 @@ const Detail: React.FC<NewProps> = ({
         }}
       />
 
-      <ModifyPasswordModal
-        visible={modifyPasswordVisible}
-        tenantData={tenantData}
-        onCancel={() => {
-          setModifyPasswordVisible(false);
-        }}
-        onSuccess={() => {
-          setModifyPasswordVisible(false);
-          refresh();
-        }}
-      />
-
       <OBProxyAndConnectionStringModal
         width={900}
         visible={connectionStringModalVisible}
@@ -1019,49 +962,6 @@ const Detail: React.FC<NewProps> = ({
           refresh();
         }}
       />
-
-      <Modal
-        title={formatMessage({
-          id: 'ocp-express.Detail.Overview.ModifyRemarks',
-          defaultMessage: '修改备注',
-        })}
-        visible={ediRemarksModal}
-        destroyOnClose={true}
-        confirmLoading={modifyTenantDescriptionLoading}
-        onOk={() => {
-          form2.validateFields().then(values => {
-            modifyTenantDescription(
-              {
-                tenantName,
-              },
-
-              { description: values?.description }
-            );
-          });
-        }}
-        onCancel={() => {
-          setEdiRemarksModal(false);
-        }}
-      >
-        <Form form={form2} layout="vertical" hideRequiredMark={true}>
-          <Form.Item
-            label={formatMessage({
-              id: 'ocp-express.Detail.Overview.Note',
-              defaultMessage: '备注',
-            })}
-            name="description"
-            initialValue={tenantData?.description}
-            rules={[getTextLengthRule(0, 1024)]}
-          >
-            <MyInput.TextArea
-              placeholder={formatMessage({
-                id: 'ocp-express.Detail.Overview.Enter',
-                defaultMessage: '请输入',
-              })}
-            />
-          </Form.Item>
-        </Form>
-      </Modal>
     </PageContainer>
   );
 };

@@ -252,8 +252,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             dataSource={user_stats}
             rowKey={record => record.user_name || ''}
             pagination={false}
-            scroll={{ y: 432 }}
-            className="min-h-[486px]"
+            style={{ minHeight: 486 }}
           />
         </Card>
       </Col>
@@ -272,8 +271,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             dataSource={client_stats}
             rowKey={record => record.client_ip || ''}
             pagination={false}
-            scroll={{ y: 432 }}
-            className="min-h-[486px]"
+            style={{ minHeight: 486 }}
           />
         </Card>
       </Col>
@@ -292,8 +290,7 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             dataSource={db_stats}
             rowKey={record => record.db_name || ''}
             pagination={false}
-            scroll={{ y: 432 }}
-            className="min-h-[486px]"
+            style={{ minHeight: 486 }}
           />
         </Card>
       </Col>

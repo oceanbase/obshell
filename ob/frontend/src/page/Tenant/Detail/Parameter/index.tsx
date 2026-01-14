@@ -30,7 +30,6 @@ import {
   Modal,
   message,
 } from '@oceanbase/design';
-import { isNullValue } from '@oceanbase/util';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
 import {

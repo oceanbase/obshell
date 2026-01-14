@@ -15,7 +15,7 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { history, useDispatch, useSelector } from 'umi';
+import { history, useDispatch } from 'umi';
 import React from 'react';
 import { message } from '@oceanbase/design';
 import { Login } from '@oceanbase/ui';
@@ -43,7 +43,6 @@ const LoginPage: React.FC<LoginPageProps> = ({
     query: { callback },
   },
 }) => {
-  const { themeMode } = useSelector((state: DefaultRootState) => state.global);
   const dispatch = useDispatch();
 
   useDocumentTitle(formatMessage({ id: 'ocp-express.page.Login.Login', defaultMessage: '登录' }));
@@ -94,22 +93,12 @@ const LoginPage: React.FC<LoginPageProps> = ({
     runLogin();
   };
 
-  const logoUrl = '/assets/logo/obshell_dashboard_logo.svg';
+  const logoUrl = '/assets/logo/obshell_dashboard_login_logo.svg';
 
   return (
     <Login
       logo={logoUrl}
-      bgImage={
-        themeMode === 'dark'
-          ? '/assets/login/background_img_dark.svg'
-          : '/assets/login/background_img.svg'
-      }
-      title={
-        <div>
-          Welcome to <div>obshell Dashboard !</div>
-        </div>
-      }
-      description="Let's start a happy journey"
+      bgImage={'/assets/login/background_img.svg'}
       showLocale={true}
       locales={['zh-CN', 'en-US']}
       loginProps={{
