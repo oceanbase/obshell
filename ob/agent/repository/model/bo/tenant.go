@@ -134,6 +134,7 @@ type TenantInfo struct {
 	LowercaseTableNames      string                       `json:"lower_case_table_names"`
 	DeadLockDetectionEnabled bool                         `json:"dead_lock_detection_enabled"`
 	ConnectionStrings        []ObproxyAndConnectionString `json:"connection_strings"`
+	Comment                  string                       `json:"comment"`
 }
 
 type TenantCompaction struct {

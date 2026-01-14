@@ -39,6 +39,7 @@ type DbaObTenant struct {
 	InRecyclebin string    `gorm:"column:IN_RECYCLEBIN" json:"in_recyclebin"`
 	CreatedTime  time.Time `gorm:"column:CREATE_TIME" json:"created_time"`
 	ReadOnly     bool      `json:"read_only"`
+	Comment      string    `gorm:"column:COMMENT" json:"comment"`
 }
 
 type DbaObResourcePool struct {

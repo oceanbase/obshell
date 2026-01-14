@@ -144,6 +144,7 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		PrimaryZone:       tenant.PrimaryZone,
 		Locality:          tenant.Locality,
 		InRecyclebin:      tenant.InRecyclebin,
+		Comment:           tenant.Comment,
 		Pools:             pools,
 		ConnectionStrings: []bo.ObproxyAndConnectionString{connectionStr},
 	}
