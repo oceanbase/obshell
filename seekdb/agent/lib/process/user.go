@@ -22,9 +22,11 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 
+	"github.com/shirou/gopsutil/v3/process"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 )
 
@@ -74,27 +76,42 @@ func GetObserverUid() (uint32, error) {
 }
 
 func GetUidFromPid(pid int) (uint32, error) {
-	// Get uid from /proc/[pid]/status.
-	statusFile := filepath.Join("/proc", fmt.Sprint(pid), "status")
-	file, err := os.Open(statusFile)
+	if runtime.GOOS == "linux" {
+		// On Linux, get uid from /proc/[pid]/status
+		statusFile := filepath.Join("/proc", fmt.Sprint(pid), "status")
+		file, err := os.Open(statusFile)
+		if err != nil {
+			return 0, err
+		}
+		defer file.Close()
+
+		var uidStr string
+		scanner := bufio.NewScanner(file)
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			if strings.HasPrefix(line, "Uid:") {
+				fields := strings.Fields(line)
+				if len(fields) > 1 {
+					uidStr = fields[1]
+					id, err := strconv.Atoi(uidStr) // If err, id is zero.
+					return uint32(id), err
+				}
+			}
+		}
+		return 0, errors.Occur(errors.ErrCommonUnexpected, "uid not found")
+	}
+	// On macOS and other platforms, use gopsutil to get process UID
+	proc, err := process.NewProcess(int32(pid))
 	if err != nil {
 		return 0, err
 	}
-	defer file.Close()
-
-	var uidStr string
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if strings.HasPrefix(line, "Uid:") {
-			fields := strings.Fields(line)
-			if len(fields) > 1 {
-				uidStr = fields[1]
-				id, err := strconv.Atoi(uidStr) // If err, id is zero.
-				return uint32(id), err
-			}
-		}
+	uids, err := proc.Uids()
+	if err != nil {
+		return 0, err
+	}
+	if len(uids) > 0 {
+		return uint32(uids[0]), nil
 	}
 	return 0, errors.Occur(errors.ErrCommonUnexpected, "uid not found")
 }

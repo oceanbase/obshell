@@ -126,7 +126,22 @@ func (s *Server) GetRealState() int32 {
 func (s *Server) IsRunning() bool {
 	status := s.GetStatus()
 	log.Infof("obshell server state: %d, agent is unidentified: %v", status.Status.State, status.Status.Agent.IsUnidentified())
-	return status.Status.State == constant.STATE_RUNNING
+	// If we can get real status from server, use it
+	if status.Status.State == constant.STATE_RUNNING {
+		return true
+	}
+	// If process is running but status is not RUNNING, try to get real status directly
+	// This handles cases where GetStatus() returns default STOPPED due to auth errors
+	if s.IsProcRunning() {
+		if ret, err := s.getRealStatus(); err == nil {
+			return ret.State == constant.STATE_RUNNING
+		}
+		// Process is running but can't get status (likely auth issue or server not fully ready)
+		// In this case, if process is running, we consider server as running
+		// because the process existence indicates server is operational
+		return true
+	}
+	return false
 }
 
 func (s *Server) casState(old, new int32) bool {

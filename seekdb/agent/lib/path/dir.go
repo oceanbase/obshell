@@ -81,12 +81,16 @@ func getMyPathByArgs() (string, error) {
 		return "", nil
 	}
 
-	// get the pid of the current process
-	pid := os.Getpid()
-	// get the binary path of the current process from /proc/pid/exe
-	binaryPath, err := os.Readlink(fmt.Sprintf("/proc/%d/exe", pid))
+	// get the binary path of the current process
+	// use os.Executable() for cross-platform compatibility (works on Linux, macOS, Windows)
+	binaryPath, err := os.Executable()
 	if err != nil {
-		return "", errors.Occurf(errors.ErrCommonUnexpected, "failed to read link /proc/%d/exe: %v", pid, err)
+		return "", errors.Occurf(errors.ErrCommonUnexpected, "failed to get executable path: %v", err)
+	}
+	// resolve symlinks to get the actual binary path
+	binaryPath, err = filepath.EvalSymlinks(binaryPath)
+	if err != nil {
+		return "", errors.Occurf(errors.ErrCommonUnexpected, "failed to resolve executable symlink: %v", err)
 	}
 	binDir = filepath.Dir(binaryPath)
 

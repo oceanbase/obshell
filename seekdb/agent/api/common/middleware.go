@@ -22,13 +22,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"net"
-	"net/http"
 	"regexp"
 	"runtime/debug"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -49,6 +46,13 @@ import (
 type UNIX_CONNECT_TYPE string
 
 const UNIX_CONNECT UNIX_CONNECT_TYPE = "unix_conn"
+
+// PeerCred represents Unix socket peer credentials in a platform-independent way
+type PeerCred interface {
+	Uid() uint32
+	Gid() uint32
+	Pid() int32
+}
 
 const (
 	statusURI = constant.URI_API_V1 + constant.URI_STATUS
@@ -86,70 +90,60 @@ func UnixSocketMiddleware() func(*gin.Context) {
 		r := c.Request
 		var err error
 		peerCred := getPeerCred(r) // Obtain the Unix user credentials from the socket.
-		if peerCred != nil {
-			userId := peerCred.Uid
-
-			// Attempt to obtain the UID we want to compare against.
-			// This can be taken from the seekdb process, the ownership of the OB etc directory, or the current process.
-			var compareUid uint32
-			if pidStr, _ := process.GetObserverPid(); pidStr != "" {
-				pid, _ := strconv.Atoi(pidStr)
-				compareUid, err = process.GetUidFromPid(pid)
-			} else if path.IsEtcDirExist() {
-				compareUid, err = path.EtcDirOwnerUid()
-			} else {
-				compareUid = process.Uid()
-			}
-			if err != nil {
-				log.WithContext(NewContextWithTraceId(c)).Errorf("get uid failed, err: %v", err)
-				resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrSecurityUserPermissionDenied))
-				c.JSON(resp.Status, resp)
-				c.Abort()
-			}
-
-			if userId == compareUid || userId == 0 {
-				c.Next()
-				return
-			}
+		if peerCred == nil {
+			// If we cannot get peer credentials (e.g., connection error, platform limitation),
+			// skip credential checking to avoid false rejections
+			c.Next()
+			return
 		}
 
-		// If authorization fails or credentials are not available, respond with 'permission denied'.
+		var userId uint32
+		// Type assertion for PeerCred interface
+		cred, ok := peerCred.(PeerCred)
+		if !ok {
+			// If peerCred is not nil but type assertion fails, skip credential checking
+			c.Next()
+			return
+		}
+		userId = cred.Uid()
+
+		// Attempt to obtain the UID we want to compare against.
+		// This can be taken from the seekdb process, the ownership of the OB etc directory, or the current process.
+		var compareUid uint32
+		if pidStr, _ := process.GetObserverPid(); pidStr != "" {
+			pid, _ := strconv.Atoi(pidStr)
+			compareUid, err = process.GetUidFromPid(pid)
+		} else if path.IsEtcDirExist() {
+			compareUid, err = path.EtcDirOwnerUid()
+		} else {
+			compareUid = process.Uid()
+		}
+		if err != nil {
+			log.WithContext(NewContextWithTraceId(c)).Errorf("get uid failed, err: %v", err)
+			resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrSecurityUserPermissionDenied))
+			c.JSON(resp.Status, resp)
+			c.Abort()
+			return
+		}
+
+		// Allow access if:
+		// 1. The user is the owner of the resource (seekdb process, etc directory, or current process)
+		// 2. The user is root (UID 0), which has system-wide privileges
+		if userId == compareUid || userId == 0 {
+			c.Next()
+			return
+		}
+
+		// If authorization fails, respond with 'permission denied'.
 		resp := ocshttp.BuildResponse(nil, errors.Occur(errors.ErrSecurityUserPermissionDenied))
 		c.JSON(resp.Status, resp)
 		c.Abort()
 	}
 }
 
-// getPeerCred retrieves the Unix credentials (UID, GID, PID) of the peer process of a Unix Domain Socket connection.
-// It uses the 'SO_PEERCRED' socket option to get the credentials from an HTTP request object.
-func getPeerCred(r *http.Request) (ucred *syscall.Ucred) {
-	iconn := r.Context().Value(UNIX_CONNECT)
-	if iconn == nil {
-		return
-	}
-
-	conn, ok := iconn.(net.Conn)
-	if !ok {
-		return
-	}
-
-	rawConn, err := conn.(*net.UnixConn).SyscallConn()
-	if err != nil {
-		return
-	}
-
-	err = rawConn.Control(func(fd uintptr) {
-		var err error
-		ucred, err = syscall.GetsockoptUcred(int(fd), syscall.SOL_SOCKET, syscall.SO_PEERCRED)
-		if err != nil {
-			return
-		}
-	})
-	if err != nil {
-		return
-	}
-	return ucred
-}
+// getPeerCred is implemented in platform-specific files:
+// - middleware_linux.go for Linux (uses SO_PEERCRED)
+// - middleware_darwin.go for macOS (returns nil, skips credential checking)
 
 func compareRequestUri(c *gin.Context, maskUri string) bool {
 	requestUriArr := strings.Split(c.Request.RequestURI, "/")

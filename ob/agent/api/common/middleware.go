@@ -22,13 +22,10 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"io"
-	"net"
-	"net/http"
 	"regexp"
 	"runtime/debug"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -50,6 +47,13 @@ import (
 type UNIX_CONNECT_TYPE string
 
 const UNIX_CONNECT UNIX_CONNECT_TYPE = "unix_conn"
+
+// PeerCred represents Unix socket peer credentials in a platform-independent way
+type PeerCred interface {
+	Uid() uint32
+	Gid() uint32
+	Pid() int32
+}
 
 const (
 	statusURI = constant.URI_API_V1 + constant.URI_STATUS
@@ -89,7 +93,15 @@ func UnixSocketMiddleware() func(*gin.Context) {
 		var err error
 		peerCred := getPeerCred(r) // Obtain the Unix user credentials from the socket.
 		if peerCred != nil {
-			userId := peerCred.Uid
+			var userId uint32
+			// Type assertion for PeerCred interface
+			if cred, ok := peerCred.(PeerCred); ok {
+				userId = cred.Uid()
+			} else {
+				// On macOS, peerCred is nil, so skip credential checking
+				c.Next()
+				return
+			}
 
 			// Attempt to obtain the UID we want to compare against.
 			// This can be taken from the observer process, the ownership of the OB etc directory, or the current process.
@@ -122,36 +134,9 @@ func UnixSocketMiddleware() func(*gin.Context) {
 	}
 }
 
-// getPeerCred retrieves the Unix credentials (UID, GID, PID) of the peer process of a Unix Domain Socket connection.
-// It uses the 'SO_PEERCRED' socket option to get the credentials from an HTTP request object.
-func getPeerCred(r *http.Request) (ucred *syscall.Ucred) {
-	iconn := r.Context().Value(UNIX_CONNECT)
-	if iconn == nil {
-		return
-	}
-
-	conn, ok := iconn.(net.Conn)
-	if !ok {
-		return
-	}
-
-	rawConn, err := conn.(*net.UnixConn).SyscallConn()
-	if err != nil {
-		return
-	}
-
-	err = rawConn.Control(func(fd uintptr) {
-		var err error
-		ucred, err = syscall.GetsockoptUcred(int(fd), syscall.SOL_SOCKET, syscall.SO_PEERCRED)
-		if err != nil {
-			return
-		}
-	})
-	if err != nil {
-		return
-	}
-	return ucred
-}
+// getPeerCred is implemented in platform-specific files:
+// - middleware_linux.go for Linux (uses SO_PEERCRED)
+// - middleware_darwin.go for macOS (returns nil, skips credential checking)
 
 func compareRequestUri(c *gin.Context, maskUri string) bool {
 	requestUriArr := strings.Split(c.Request.RequestURI, "/")

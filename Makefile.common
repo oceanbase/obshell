@@ -6,6 +6,9 @@ DIST=0
 PWD ?= $(shell pwd)
 PROXY=https://goproxy.cn
 
+# Detect OS
+UNAME_S := $(shell uname -s)
+
 GO              := GO111MODULE=on GOPROXY=${PROXY},direct go
 BUILD_FLAG      := -p $(PROCESSOR)
 GOBUILD         := $(GO) build $(BUILD_FLAG)

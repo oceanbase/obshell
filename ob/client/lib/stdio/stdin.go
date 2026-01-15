@@ -20,8 +20,6 @@ import (
 	"bufio"
 	"os"
 	"strings"
-	"syscall"
-	"unsafe"
 )
 
 var input *SysStdin
@@ -104,9 +102,6 @@ func (s *SysStdin) ReadLines(blocked bool) ([]string, error) {
 	return lines, nil
 }
 
-// isTerminal returns true if the given file descriptor is a terminal.
-func isTerminal(fd uintptr) bool {
-	var termios syscall.Termios
-	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, fd, uintptr(syscall.TCGETS), uintptr(unsafe.Pointer(&termios)))
-	return err == 0
-}
+// isTerminal is implemented in platform-specific files:
+// - stdin_linux.go for Linux
+// - stdin_darwin.go for macOS

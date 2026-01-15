@@ -24,12 +24,14 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"syscall"
 
 	"github.com/coreos/go-systemd/v22/dbus"
 	"github.com/shirou/gopsutil/v3/net"
+	"github.com/shirou/gopsutil/v3/process"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
@@ -93,7 +95,7 @@ func getObserverProcess() (*ProcessInfo, error) {
 	}
 	return &ProcessInfo{
 		pid:      fmt.Sprint(pid),
-		procPath: fmt.Sprintf("/proc/%d", pid),
+		procPath: fmt.Sprintf("/proc/%d", pid), // kept for Linux compatibility, not used on macOS
 	}, nil
 }
 
@@ -101,6 +103,23 @@ func (p *ProcessInfo) exist() (bool, error) {
 	if p.pid == "" {
 		return false, nil
 	}
+	pidInt, err := strconv.Atoi(p.pid)
+	if err != nil {
+		return false, err
+	}
+	// On macOS and other non-Linux platforms, use Signal(0) to check if process exists
+	if runtime.GOOS != "linux" {
+		proc, err := os.FindProcess(pidInt)
+		if err != nil {
+			return false, nil
+		}
+		// Signal(0) doesn't actually send a signal, it just checks if the process exists
+		if err := proc.Signal(syscall.Signal(0)); err != nil {
+			return false, nil
+		}
+		return true, nil
+	}
+	// On Linux, use /proc for efficiency
 	if _, err := os.Stat(p.procPath); err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -111,7 +130,27 @@ func (p *ProcessInfo) exist() (bool, error) {
 }
 
 func (p *ProcessInfo) checkDir() (bool, error) {
-	cwdPath := fmt.Sprintf("/proc/%s/cwd", p.pid)
+	pidInt, err := strconv.Atoi(p.pid)
+	if err != nil {
+		return false, err
+	}
+
+	var cwdPath string
+	if runtime.GOOS == "linux" {
+		// On Linux, use /proc
+		cwdPath = fmt.Sprintf("/proc/%s/cwd", p.pid)
+	} else {
+		// On macOS and other platforms, use gopsutil to get process working directory
+		proc, err := process.NewProcess(int32(pidInt))
+		if err != nil {
+			return false, err
+		}
+		cwd, err := proc.Cwd()
+		if err != nil {
+			return false, err
+		}
+		cwdPath = cwd
+	}
 	return checkProcessDir(cwdPath)
 }
 
@@ -172,7 +211,25 @@ func GetObserverBinPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return os.Readlink(fmt.Sprintf("/proc/%s/exe", pid))
+	pidInt, err := strconv.Atoi(pid)
+	if err != nil {
+		return "", err
+	}
+
+	if runtime.GOOS == "linux" {
+		// On Linux, use /proc
+		return os.Readlink(fmt.Sprintf("/proc/%s/exe", pid))
+	}
+	// On macOS and other platforms, use gopsutil to get process executable path
+	proc, err := process.NewProcess(int32(pidInt))
+	if err != nil {
+		return "", err
+	}
+	exe, err := proc.Exe()
+	if err != nil {
+		return "", err
+	}
+	return exe, nil
 }
 
 func GetDaemonPid() (int32, error) {
@@ -272,6 +329,11 @@ func FindPIDByPort(port uint32) (int32, error) {
 }
 
 func GetSystemdUnit(pid int) (string, error) {
+	// systemd is Linux-specific, return empty on other platforms
+	if runtime.GOOS != "linux" {
+		return "", nil
+	}
+
 	ctx := context.Background()
 	if conn, err := dbus.NewSystemdConnectionContext(ctx); err == nil && conn != nil {
 		defer conn.Close()

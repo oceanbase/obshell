@@ -7,12 +7,28 @@ default: clean fmt pre-build build
 pre-build: bindata swagger
 
 bindata: get
-	cd ob; go-bindata -o agent/bindata/bindata.go -pkg bindata agent/assets/...
-	cd seekdb; go-bindata -o agent/bindata/bindata.go -pkg bindata agent/assets/...
+	@if command -v go-bindata > /dev/null 2>&1; then \
+		GO_BINDATA=go-bindata; \
+	elif [ -f "$(GOPATH_BIN)/go-bindata" ]; then \
+		GO_BINDATA="$(GOPATH_BIN)/go-bindata"; \
+	else \
+		echo "Error: go-bindata not found. Please run 'make get' first."; \
+		exit 1; \
+	fi; \
+	cd ob && $$GO_BINDATA -o agent/bindata/bindata.go -pkg bindata agent/assets/...;cd ..; \
+	cd seekdb && $$GO_BINDATA -o agent/bindata/bindata.go -pkg bindata agent/assets/...;cd ..
 
 swagger: get
-	cd ob; swag init -g agent/api/agent_route.go -o agent/api/docs --instanceName ob_swagger
-	cd seekdb; swag init -g agent/api/agent_route.go -o agent/api/docs --instanceName seekdb_swagger
+	@if command -v swag > /dev/null 2>&1; then \
+		SWAG=swag; \
+	elif [ -f "$(GOPATH_BIN)/swag" ]; then \
+		SWAG="$(GOPATH_BIN)/swag"; \
+	else \
+		echo "Error: swag not found. Please run 'make get' first."; \
+		exit 1; \
+	fi; \
+	cd ob && $$SWAG init -g agent/api/agent_route.go -o agent/api/docs --instanceName ob_swagger;cd ..; \
+	cd seekdb && $$SWAG init -g agent/api/agent_route.go -o agent/api/docs --instanceName seekdb_swagger;cd ..
 
 build: build-debug
 
@@ -40,6 +56,10 @@ ob-frontend-build-tester:
 	cd ob/frontend && pnpm i && pnpm build:tester && cd ../
 
 rpm:
+	@if [ "$(UNAME_S)" = "Darwin" ]; then \
+		echo "Error: RPM build is not supported on macOS. Please use a Linux system or Docker to build RPM packages."; \
+		exit 1; \
+	fi
 	cd ./rpm && VERSION=$(VERSION) RELEASE=$(RELEASE) NAME=$(NAME) OBSHELL_RELEASE=$(OBSHELL_RELEASE) rpmbuild -bb obshell.spec
 
 set-disable-encryption-flags:
