@@ -17,11 +17,18 @@
 package ob
 
 import (
+	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
+
+	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/executor/tenant"
+	"github.com/oceanbase/obshell/ob/agent/global"
 	"github.com/oceanbase/obshell/ob/agent/meta"
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/bo"
+	"github.com/oceanbase/obshell/ob/agent/secure"
 	modelob "github.com/oceanbase/obshell/ob/model/oceanbase"
 )
 
@@ -123,6 +130,27 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 				observerBo.Stats.Ip = server.SvrIp
 				observerBo.Stats.Port = server.SvrPort
 			}
+
+			if server.SvrIp == meta.OCS_AGENT.GetIp() && server.SvrPort == meta.RPC_PORT {
+				observerBo.DataDir = getLocalObserverDataDir()
+				observerBo.RedoDir = getLocalObserverRedoDir()
+			} else {
+				for _, agent := range allAgents {
+					if server.SvrIp == agent.Ip && server.SvrPort == agent.RpcPort {
+						agentInfo := meta.NewAgentInfo(agent.Ip, agent.Port)
+						var observerInfo bo.Observer
+						err := secure.SendGetRequest(agentInfo, constant.URI_OBSERVER_API_PREFIX+constant.URI_INFO, nil, &observerInfo)
+						if err != nil {
+							log.Warnf("Failed to get observer info from agent %s: %v", agentInfo.String(), err)
+						} else {
+							observerBo.DataDir = observerInfo.DataDir
+							observerBo.RedoDir = observerInfo.RedoDir
+						}
+						break
+					}
+				}
+			}
+
 			zoneInfo.Servers = append(zoneInfo.Servers, observerBo)
 		}
 		info.Zones = append(info.Zones, zoneInfo)
@@ -199,4 +227,40 @@ func GetObclusterLicense() (license *bo.ObLicense, err error) {
 		return oblicense.ToBO(), nil
 	}
 	return
+}
+
+func getLocalObserverDataDir() string {
+	dataDir, err := observerService.GetOBStringParatemerByName(constant.CONFIG_DATA_DIR)
+	if err != nil {
+		log.Warnf("Failed to get data dir: %v", err)
+		return ""
+	}
+	return dataDir
+}
+
+func getLocalObserverRedoDir() string {
+	clogPath := filepath.Join(global.HomePath, constant.OB_DIR_STORE, constant.OB_DIR_CLOG)
+	realPath, err := filepath.EvalSymlinks(clogPath)
+	if err != nil {
+		log.Warnf("Failed to resolve clog symlink: %v", err)
+		return ""
+	}
+	return realPath
+}
+
+func GetLocalObserverInfo() (*bo.Observer, error) {
+	svrInfo := meta.ObserverSvrInfo{
+		Ip:   meta.OCS_AGENT.GetIp(),
+		Port: meta.RPC_PORT,
+	}
+	server, err := obclusterService.GetOBServer(svrInfo)
+	if err != nil {
+		return nil, err
+	}
+
+	observerBo := server.ToBo()
+	observerBo.DataDir = getLocalObserverDataDir()
+	observerBo.RedoDir = getLocalObserverRedoDir()
+
+	return &observerBo, nil
 }

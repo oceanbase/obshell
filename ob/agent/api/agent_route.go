@@ -169,6 +169,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))
 	observer.POST(constant.URI_CONFIG, obServerConfigHandler(true))
 	observer.DELETE("", obClusterScaleInHandler)
+	observer.GET(constant.URI_INFO, observerInfoHandler)
 
 	// zone routes
 	zone.DELETE(constant.URI_PATH_PARAM_NAME, zoneDeleteHandler)

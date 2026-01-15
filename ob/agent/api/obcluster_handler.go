@@ -796,3 +796,19 @@ func checkUpgradeEnvironmentHandler(c *gin.Context) {
 	err := ob.CheckPythonEnvironment()
 	common.SendResponse(c, nil, err)
 }
+
+// @ID observerInfo
+// @Summary get observer info
+// @Description get observer info including data_dir and redo_dir
+// @Tags observer
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Success 200 object http.OcsAgentResponse{data=bo.Observer}
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/observer/info [get]
+func observerInfoHandler(c *gin.Context) {
+	observerInfo, err := ob.GetLocalObserverInfo()
+	common.SendResponse(c, observerInfo, err)
+}
