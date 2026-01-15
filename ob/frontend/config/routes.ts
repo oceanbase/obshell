@@ -140,6 +140,11 @@ export default [
             name: '集群详情',
           },
           {
+            path: 'overview/parameter',
+            component: 'Cluster/Parameter',
+            name: '集群参数管理',
+          },
+          {
             path: 'tenant/result/:taskId',
             component: 'Tenant/Result/Success',
             name: '新建租户任务提交成功',
