@@ -42,10 +42,6 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
           />
         </Descriptions.Item>
         <Descriptions.Item label="OceanBase 版本号">{clusterData.ob_version}</Descriptions.Item>
-        <Descriptions.Item label="软件安装路径">-</Descriptions.Item>
-        <Descriptions.Item label="数据盘路径">-</Descriptions.Item>
-        <Descriptions.Item label="日志盘路径">-</Descriptions.Item>
-        <Descriptions.Item label="日志路径">-</Descriptions.Item>
       </Descriptions>
     </MyCard>
   );

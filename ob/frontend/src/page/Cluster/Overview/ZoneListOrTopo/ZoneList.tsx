@@ -116,6 +116,14 @@ const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
         }),
         dataIndex: 'architecture',
       },
+      {
+        title: '数据盘路径',
+        dataIndex: 'data_dir',
+      },
+      {
+        title: '日志盘路径',
+        dataIndex: 'redo_dir',
+      },
 
       {
         title: formatMessage({

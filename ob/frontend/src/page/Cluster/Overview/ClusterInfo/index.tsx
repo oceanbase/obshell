@@ -39,6 +39,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
       description: '已分配',
       percentValue: (stats.cpu_core_assigned_percent || 0).toFixed(1),
       totalValue: stats.cpu_core_total || 0,
+      assignedValue: stats.cpu_core_assigned || 0,
       leftValue: (stats.cpu_core_total || 0) - (stats.cpu_core_assigned || 0),
     },
     {
@@ -50,6 +51,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
       description: '已分配',
       percentValue: (stats.memory_assigned_percent || 0).toFixed(1),
       totalValue: stats.memory_total || 0,
+      assignedValue: stats.memory_in_bytes_assigned || 0,
       leftValue: (stats.memory_in_bytes_total || 0) - (stats.memory_in_bytes_assigned || 0),
     },
     {
@@ -61,6 +63,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
       description: '已使用',
       percentValue: (stats.disk_assigned_percent || 0).toFixed(1),
       totalValue: stats.disk_total || 0,
+      assignedValue: stats.disk_in_bytes_assigned || 0,
       leftValue: (stats.disk_in_bytes_total || 0) - (stats.disk_in_bytes_assigned || 0),
     },
   ];
@@ -183,12 +186,12 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                             item.totalValue}
                       </Descriptions.Item>
                       <Descriptions.Item label={item.description}>
-                        {isNullValue(item.leftValue)
+                        {isNullValue(item.assignedValue)
                           ? '-'
                           : item.key === 'cpu'
-                          ? `${item.leftValue} C`
+                          ? `${item.assignedValue} C`
                           : // 内存和磁盘需要进行单位换算
-                            formatSize(item.leftValue)}
+                            formatSize(item.assignedValue)}
                       </Descriptions.Item>
                       <Descriptions.Item label="消耗比">
                         <span style={{ color: getStrokeColor(Number(item.percentValue)) }}>
@@ -230,12 +233,12 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                     <div className={styles.progressDescriptionItem}>
                       <span className={styles.progressDescriptionItemName}>{item.description}</span>
                       <span>
-                        {isNullValue(item.leftValue)
+                        {isNullValue(item.assignedValue)
                           ? '-'
                           : item.key === 'cpu'
-                          ? `${item.leftValue} C`
+                          ? `${item.assignedValue} C`
                           : // 内存和磁盘需要进行单位换算
-                            formatSize(item.leftValue)}
+                            formatSize(item.assignedValue)}
                       </span>
                     </div>
                     <Divider style={{ margin: '4px 0' }} />
