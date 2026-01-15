@@ -90,7 +90,7 @@ func UnixSocketMiddleware() func(*gin.Context) {
 			userId := peerCred.Uid
 
 			// Attempt to obtain the UID we want to compare against.
-			// This can be taken from the observer process, the ownership of the OB etc directory, or the current process.
+			// This can be taken from the seekdb process, the ownership of the OB etc directory, or the current process.
 			var compareUid uint32
 			if pidStr, _ := process.GetObserverPid(); pidStr != "" {
 				pid, _ := strconv.Atoi(pidStr)

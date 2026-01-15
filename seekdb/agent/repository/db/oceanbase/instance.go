@@ -80,7 +80,7 @@ func GetAvailableInstance() (db *gorm.DB, err error) {
 		return dbInstance, nil
 	}
 
-	// If the test sql execution fails, it will check the observer process
+	// If the test sql execution fails, it will check the seekdb process
 	if err := CheckObserverProcess(); err != nil {
 		return nil, err
 	}
@@ -102,7 +102,7 @@ func getSqlExecutableInstance(sql string) (db *gorm.DB, err error) {
 		return dbInstance, nil
 	}
 
-	// If the test sql execution fails, it will check the observer process
+	// If the test sql execution fails, it will check the seekdb process
 	if err := CheckObserverProcess(); err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func getSqlExecutableInstance(sql string) (db *gorm.DB, err error) {
 	return nil, errors.Occur(errors.ErrAgentOceanbaseUesless)
 }
 
-// if observer process not exist, return error
+// if seekdb process not exist, return error
 func CheckObserverProcess() error {
 	exist, err := process.CheckObserverProcess()
 	if err != nil {

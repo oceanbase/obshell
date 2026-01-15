@@ -168,22 +168,22 @@ func (a *Agent) NeedStartOB() bool {
 func CheckAndStartOBServer() error {
 	exist, err := process.CheckObserverProcess()
 	if err != nil {
-		return errors.Wrap(err, "check observer process failed ")
+		return errors.Wrap(err, "check seekdb process failed ")
 	}
 
 	if !exist {
-		log.Info("observer process has started, but not running, start it")
-		// If the config file exists and the observer process is not running,
-		// the observer process needs to be started.
+		log.Info("seekdb process has started, but not running, start it")
+		// If the config file exists and the seekdb process is not running,
+		// the seekdb process needs to be started.
 		if err := observer.SafeStartObserver(); err != nil {
-			process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Wrap(err, "start observer process failed"))
+			process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Wrap(err, "start seekdb process failed"))
 		}
 	}
 
 	// Permission Verification.
 	observerUid, err := process.GetObserverUid()
 	if err != nil {
-		return errors.Wrap(err, "get observer uid failed")
+		return errors.Wrap(err, "get seekdb uid failed")
 	}
 	if process.Uid() != 0 && process.Uid() != observerUid {
 		process.ExitWithError(constant.EXIT_CODE_ERROR_OB_START_FAILED, errors.Occur(errors.ErrSecurityUserPermissionDenied))
@@ -193,7 +193,7 @@ func CheckAndStartOBServer() error {
 
 func (a *Agent) handleUnidentified() (err error) {
 	if err = CheckAndStartOBServer(); err != nil {
-		return errors.Wrap(err, "unidetified agent check and start observer failed")
+		return errors.Wrap(err, "unidetified agent check and start seekdb failed")
 	}
 
 	waitDbConnectInit()

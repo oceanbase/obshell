@@ -46,14 +46,14 @@ func CreateRestartDag(p param.ObRestartParam) (*task.DagDetailDTO, error) {
 		builder.AddTask(newMinorFreezeTask(), false)
 	}
 	if exist, err := process.CheckObserverProcess(); err != nil {
-		log.Warnf("Check observer process failed: %v", err)
+		log.Warnf("Check seekdb process failed: %v", err)
 	} else if exist {
 		pid, err := process.GetObserverPid()
 		if err != nil {
 			return nil, err
 		}
 		ctx.SetParam(PARAM_OBSERVER_PID, pid)
-		// when observer process is exists, should stop it first
+		// when seekdb process is exists, should stop it first
 		builder.AddTask(newStopObserverTask(), false)
 	}
 

@@ -80,7 +80,7 @@ func ObshellPidPath() string {
 }
 
 func ObserverPidPath() string {
-	return filepath.Join(RunDir(), constant.PROC_OBSERVER+".pid")
+	return filepath.Join(RunDir(), constant.PROC_SEEKDB+".pid")
 }
 
 func ObshellPidBakPath() string {

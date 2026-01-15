@@ -86,7 +86,7 @@ type ProcessInfo struct {
 }
 
 func getObserverProcess() (*ProcessInfo, error) {
-	obServerPidPath := filepath.Join(path.RunDir(), "observer.pid")
+	obServerPidPath := filepath.Join(path.RunDir(), "seekdb.pid")
 	pid, err := getPid(obServerPidPath)
 	if err != nil {
 		return nil, err
@@ -164,7 +164,7 @@ func GetObserverPid() (string, error) {
 }
 
 func GetObserverPidInt() (int32, error) {
-	return getPid(filepath.Join(path.RunDir(), "observer.pid"))
+	return getPid(filepath.Join(path.RunDir(), "seekdb.pid"))
 }
 
 func GetObserverBinPath() (string, error) {

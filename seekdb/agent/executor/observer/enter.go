@@ -29,16 +29,16 @@ const (
 	DATA_SKIP_START_TASK = "skipStartTask"
 
 	// task name
-	TASK_NAME_START        = "Start observer"
-	TASK_NAME_STOP         = "Stop observer"
+	TASK_NAME_START        = "Start seekdb"
+	TASK_NAME_STOP         = "Stop seekdb"
 	TASK_NAME_MINOR_FREEZE = "Minor freeze before stop server"
 
 	// dag name
-	DAG_EMERGENCY_START  = "Start local observer"
-	DAG_EMERGENCY_STOP   = "Stop local observer"
-	DAG_START_OBSERVER   = "Start observer"
-	DAG_STOP_OBSERVER    = "Stop observer"
-	DAG_RESTART_OBSERVER = "Restart observer"
+	DAG_EMERGENCY_START  = "Start local seekdb"
+	DAG_EMERGENCY_STOP   = "Stop local seekdb"
+	DAG_START_OBSERVER   = "Start seekdb"
+	DAG_STOP_OBSERVER    = "Stop seekdb"
+	DAG_RESTART_OBSERVER = "Restart seekdb"
 
 	// rpc retry times
 	MAX_RETRY_RPC_TIMES = 3

@@ -43,7 +43,7 @@ func GetMyOBVersion() (version string, IsCommunityEdition bool, err error) {
 	buildNumber := match[1]
 
 	// get version
-	regex = regexp.MustCompile(`\(OceanBase SeekDB\s*([\d.]+)\)`)
+	regex = regexp.MustCompile(`\(OceanBase seekdb\s*([\d.]+)\)`)
 	match = regex.FindStringSubmatch(res)
 	if match == nil {
 		return "", false, errors.Occurf(errors.ErrObBinaryVersionUnexpected, "match is nil, res is:\n <<< %s >>>", res)

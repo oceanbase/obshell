@@ -57,7 +57,7 @@ func InitUserRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user [post]
+// @Router /api/v1/seekdb/user [post]
 func createUserHandler(c *gin.Context) {
 	var param param.CreateUserParam
 	if err := c.BindJSON(&param); err != nil {
@@ -79,7 +79,7 @@ func createUserHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user} [delete]
+// @Router /api/v1/seekdb/user/{user} [delete]
 func dropUserHandler(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	if user == "" {
@@ -101,7 +101,7 @@ func dropUserHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/users [GET]
+// @Router /api/v1/seekdb/users [GET]
 func listUsers(c *gin.Context) {
 	queryParam := &param.ListUsersQueryParam{}
 	if err := c.BindQuery(queryParam); err != nil {
@@ -126,7 +126,7 @@ func listUsers(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user} [GET]
+// @Router /api/v1/seekdb/user/{user} [GET]
 func getUser(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	obuser, err := observer.GetUser(user)
@@ -146,7 +146,7 @@ func getUser(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/db-privileges [PUT]
+// @Router /api/v1/seekdb/user/{user}/db-privileges [PUT]
 func modifyDbPrivilege(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	modifyUserDbPrivilegeParam := param.ModifyUserDbPrivilegeParam{}
@@ -171,7 +171,7 @@ func modifyDbPrivilege(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/stats [GET]
+// @Router /api/v1/seekdb/user/{user}/stats [GET]
 func getUserStats(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	userStats, err := observer.GetUserStats(user)
@@ -191,7 +191,7 @@ func getUserStats(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/global-privileges [PUT]
+// @Router /api/v1/seekdb/user/{user}/global-privileges [PUT]
 func modifyGlobalPrivilege(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	modifyUserGlobalPrivilegeParam := param.ModifyUserGlobalPrivilegeParam{}
@@ -217,7 +217,7 @@ func modifyGlobalPrivilege(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/password [PUT]
+// @Router /api/v1/seekdb/user/{user}/password [PUT]
 func changePassword(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	changeUserPasswordParam := param.ChangeUserPasswordParam{}
@@ -242,7 +242,7 @@ func changePassword(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/lock [POST]
+// @Router /api/v1/seekdb/user/{user}/lock [POST]
 func lockUser(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	err := observer.LockUser(user)
@@ -261,7 +261,7 @@ func lockUser(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/user/{user}/lock [DELETE]
+// @Router /api/v1/seekdb/user/{user}/lock [DELETE]
 func unlockUser(c *gin.Context) {
 	user := c.Param(constant.URI_PARAM_USER)
 	err := observer.UnlockUser(user)

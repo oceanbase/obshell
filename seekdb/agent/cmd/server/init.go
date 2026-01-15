@@ -45,7 +45,7 @@ var agentService = agentservice.AgentService{}
 
 func (a *Agent) checkObserverBinary() error {
 	if _, err := os.Stat(path.ObserverBinPath()); err != nil {
-		return errors.Occurf(errors.ErrCommonUnexpected, "observer binary not found in %s", path.ObserverBinPath())
+		return errors.Occurf(errors.ErrCommonUnexpected, "seekdb binary not found in %s", path.ObserverBinPath())
 	}
 	return nil
 }

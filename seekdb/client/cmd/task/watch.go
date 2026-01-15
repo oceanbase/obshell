@@ -35,7 +35,7 @@ func newWatchCmd() *cobra.Command {
 	opts := &TaskWatchFlags{}
 	watchCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_WATCH,
-		Short:   "Watch OceanBase SeekDB task running info.",
+		Short:   "Watch OceanBase seekdb task running info.",
 		PreRunE: cmdlib.ValidateArgs,
 		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetSilenceMode(false)

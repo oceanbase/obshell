@@ -117,7 +117,7 @@ func callStopApi(flags *StopObserverFlags) (err error) {
 	param := &param.ObStopParam{
 		Terminate: flags.terminate,
 	}
-	uri := constant.URI_OBSERVER_API_PREFIX + constant.URI_STOP
+	uri := constant.URI_SEEKDB_API_PREFIX + constant.URI_STOP
 	if err = callEmerTypeApi(uri, param); err != nil {
 		return
 	}
@@ -131,7 +131,7 @@ func callEmerTypeApi(uri string, param interface{}) (err error) {
 		return err
 	}
 	if dag == nil {
-		if uri == constant.URI_OBSERVER_API_PREFIX+constant.URI_STOP {
+		if uri == constant.URI_SEEKDB_API_PREFIX+constant.URI_STOP {
 			stdio.Print("seekdb is already stopped.")
 		}
 		return nil

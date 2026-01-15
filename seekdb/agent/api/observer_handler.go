@@ -26,19 +26,19 @@ import (
 	"github.com/oceanbase/obshell/seekdb/param"
 )
 
-// @ID stopObserver
-// @Summary stop observer
-// @Description stop observer
-// @Tags observer
+// @ID stopSeekdb
+// @Summary stop seekdb
+// @Description stop seekdb
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
-// @Param body body param.ObStopParam true "stop observer params"
+// @Param body body param.ObStopParam true "stop seekdb params"
 // @Param X-OCS-Header header string true "Authorization"
 // @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/stop [post]
+// @Router /api/v1/seekdb/stop [post]
 func obStopHandler(c *gin.Context) {
 	var param param.ObStopParam
 	if err := c.BindJSON(&param); err != nil {
@@ -67,10 +67,10 @@ func obStopHandler(c *gin.Context) {
 	}
 }
 
-// @ID startObserver
-// @Summary start observers
-// @Description start observers
-// @Tags observer
+// @ID startSeekdb
+// @Summary start seekdb
+// @Description start seekdb
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -78,7 +78,7 @@ func obStopHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/start [post]
+// @Router /api/v1/seekdb/start [post]
 func obStartHandler(c *gin.Context) {
 	var param param.StartObParam
 	if err := c.BindJSON(&param); err != nil {
@@ -110,19 +110,19 @@ func obStartHandler(c *gin.Context) {
 	}
 }
 
-// @ID restartObserver
-// @Summary restart observer
-// @Description restart observer
-// @Tags observer
+// @ID restartSeekdb
+// @Summary restart seekdb
+// @Description restart seekdb
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
-// @Param body body param.ObRestartParam true "restart observer params"
+// @Param body body param.ObRestartParam true "restart seekdb params"
 // @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/restart [post]
+// @Router /api/v1/seekdb/restart [post]
 func obRestartHandler(c *gin.Context) {
 	var param param.ObRestartParam
 	if err := c.BindJSON(&param); err != nil {
@@ -133,15 +133,15 @@ func obRestartHandler(c *gin.Context) {
 	common.SendResponse(c, data, err)
 }
 
-// @ID GetObInfo
-// @Summary get ob and agent info
-// @Description get ob and agent info
-// @Tags observer
+// @ID GetSeekdbInfo
+// @Summary get seekdb info
+// @Description get seekdb info
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Success 200 object http.OcsAgentResponse{data=observer.ObserverInfo}
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/info [get]
+// @Router /api/v1/seekdb/info [get]
 func observerInfoHandler(c *gin.Context) {
 	data := observer.GetObserverInfo()
 	common.SendResponse(c, data, nil)
@@ -157,7 +157,7 @@ func isEmergencyMode(c *gin.Context) (bool, error) {
 // @ID				getCompaction
 // @Summary		get major compaction info
 // @Description	get major compaction info
-// @Tags			observer
+// @Tags			seekdb
 // @Accept			application/json
 // @Produce		application/json
 // @Param			X-OCS-Header	header	string	true	"Authorization"
@@ -165,7 +165,7 @@ func isEmergencyMode(c *gin.Context) (bool, error) {
 // @Failure		400				object	http.OcsAgentResponse
 // @Failure		401				object	http.OcsAgentResponse
 // @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/observer/compaction [get]
+// @Router			/api/v1/seekdb/compaction [get]
 func getCompactionHandler(c *gin.Context) {
 	compaction, err := observer.GetCompaction()
 	common.SendResponse(c, compaction, err)
@@ -174,7 +174,7 @@ func getCompactionHandler(c *gin.Context) {
 // @ID				majorCompaction
 // @Summary		trigger  major compaction
 // @Description	trigger  major compaction
-// @Tags			observer
+// @Tags			seekdb
 // @Accept			application/json
 // @Produce		application/json
 // @Param			X-OCS-Header	header	string	true	"Authorization"
@@ -182,7 +182,7 @@ func getCompactionHandler(c *gin.Context) {
 // @Failure		400				object	http.OcsAgentResponse
 // @Failure		401				object	http.OcsAgentResponse
 // @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/observer/compact [post]
+// @Router			/api/v1/seekdb/compact [post]
 func majorCompactionHandler(c *gin.Context) {
 	common.SendResponse(c, nil, observer.MajorCompaction())
 }
@@ -190,7 +190,7 @@ func majorCompactionHandler(c *gin.Context) {
 // @ID				clearCompactionError
 // @Summary		clear major compaction error
 // @Description	clear major compaction error
-// @Tags			observer
+// @Tags			seekdb
 // @Accept			application/json
 // @Produce		application/json
 // @Param			X-OCS-Header	header	string	true	"Authorization"
@@ -198,7 +198,7 @@ func majorCompactionHandler(c *gin.Context) {
 // @Failure		400				object	http.OcsAgentResponse
 // @Failure		401				object	http.OcsAgentResponse
 // @Failure		500				object	http.OcsAgentResponse
-// @Router			/api/v1/observer/compaction-error [delete]
+// @Router			/api/v1/seekdb/compaction-error [delete]
 func clearCompactionErrorHandler(c *gin.Context) {
 	common.SendResponse(c, nil, observer.ClearCompactionError())
 }
@@ -206,7 +206,7 @@ func clearCompactionErrorHandler(c *gin.Context) {
 // @ID modifyWhitelist
 // @Summary modify whitelist
 // @Description modify whitelist
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -215,7 +215,7 @@ func clearCompactionErrorHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/whitelist [put]
+// @Router /api/v1/seekdb/whitelist [put]
 func modifyWhitelistHandler(c *gin.Context) {
 	var param param.ModifyWhitelistParam
 	if err := c.BindJSON(&param); err != nil {
@@ -234,7 +234,7 @@ func modifyWhitelistHandler(c *gin.Context) {
 // @ID setParameters
 // @Summary set parameters
 // @Description set parameters
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -243,7 +243,7 @@ func modifyWhitelistHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/parameters [PATCH]
+// @Router /api/v1/seekdb/parameters [PATCH]
 func setParametersHandler(c *gin.Context) {
 	var param param.SetParametersParam
 	if err := c.BindJSON(&param); err != nil {
@@ -256,7 +256,7 @@ func setParametersHandler(c *gin.Context) {
 // @ID setVariables
 // @Summary set variables
 // @Description set variables
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -265,7 +265,7 @@ func setParametersHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/variables [PATCH]
+// @Router /api/v1/seekdb/variables [PATCH]
 func setVariablesHandler(c *gin.Context) {
 	var param param.SetVariablesParam
 	if err := c.BindJSON(&param); err != nil {
@@ -278,7 +278,7 @@ func setVariablesHandler(c *gin.Context) {
 // @ID getParameters
 // @Summary get parameters
 // @Description get parameters
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -287,7 +287,7 @@ func setVariablesHandler(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/parameters [get]
+// @Router /api/v1/seekdb/parameters [get]
 func getParameters(c *gin.Context) {
 	format := c.Query("filter")
 	parameters, err := observer.GetParameters(format)
@@ -297,7 +297,7 @@ func getParameters(c *gin.Context) {
 // @ID getVariables
 // @Summary get variables
 // @Description get variables
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
@@ -306,7 +306,7 @@ func getParameters(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/variables [get]
+// @Router /api/v1/seekdb/variables [get]
 func getVariables(c *gin.Context) {
 	format := c.Query("filter")
 	variables, err := observer.GetVariables(format)
@@ -318,30 +318,30 @@ func getVariables(c *gin.Context) {
 // @ID GetStatistics
 // @Summary get statistics data
 // @Description get statistics data
-// @Tags observer
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Success 200 object http.OcsAgentResponse{data=bo.ObclusterStatisticInfo}
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/statistics [GET]
+// @Router /api/v1/seekdb/statistics [GET]
 func GetStatistics(c *gin.Context) {
 	statisticsData := observer.GetStatisticsInfo()
 	common.SendResponse(c, statisticsData, nil)
 }
 
-// @ID getObserverCharsets
-// @Summary get observer charsets
-// @Description get observer charsets
-// @Tags observer
+// @ID getCharsets
+// @Summary get seekdb charsets
+// @Description get seekdb charsets
+// @Tags seekdb
 // @Accept application/json
 // @Produce application/json
 // @Param X-OCS-Header header string true "Authorization"
 // @Success 200 object http.OcsAgentResponse{data=[]bo.CharsetInfo}
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/charsets [get]
+// @Router /api/v1/seekdb/charsets [get]
 func getObserverCharsets(c *gin.Context) {
 	if !meta.OCS_AGENT.IsClusterAgent() {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))

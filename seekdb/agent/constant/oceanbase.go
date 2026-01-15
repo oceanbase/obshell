@@ -97,7 +97,7 @@ const (
 	OB_DIR_ETC = "etc"
 	OB_DIR_LOG = "log"
 
-	OB_CONFIG_FILE = "observer.config.bin"
+	OB_CONFIG_FILE = "seekdb.config.bin"
 	OB_ADMIN       = "ob_admin"
 
 	OB_IMPORT_TIME_ZONE_INFO_SCRIPT = "import_time_zone_info.py"

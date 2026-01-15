@@ -40,7 +40,7 @@ func newShowCmd() *cobra.Command {
 	opts := &TaskShowFlags{}
 	showCmd := command.NewCommand(&cobra.Command{
 		Use:     CMD_SHOW,
-		Short:   "Show OceanBase SeekDB task info.",
+		Short:   "Show OceanBase seekdb task info.",
 		PreRunE: cmdlib.ValidateArgs,
 		RunE: command.WithErrorHandler(func(cmd *cobra.Command, args []string) error {
 			stdio.SetVerboseMode(opts.verbose)

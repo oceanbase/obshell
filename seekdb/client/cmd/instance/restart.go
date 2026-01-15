@@ -106,7 +106,7 @@ func callRestartApi(flags *RestartObserverFlags) (err error) {
 	param := &param.ObRestartParam{
 		Terminate: flags.terminate,
 	}
-	uri := constant.URI_OBSERVER_API_PREFIX + constant.URI_RESTART
+	uri := constant.URI_SEEKDB_API_PREFIX + constant.URI_RESTART
 	if err = callEmerTypeApi(uri, param); err != nil {
 		return
 	}

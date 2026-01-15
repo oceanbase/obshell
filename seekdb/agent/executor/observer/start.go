@@ -54,22 +54,22 @@ func newStartObServerTask() *StartObserverTask {
 func (t *StartObserverTask) Execute() error {
 	exist, err := process.CheckObserverProcess()
 	if err != nil {
-		return errors.Wrap(err, "check observer process failed")
+		return errors.Wrap(err, "check seekdb process failed")
 	}
 	if exist {
 		t.GetContext().SetData(DATA_SKIP_START_TASK, true)
-		t.ExecuteLog("observer started.")
+		t.ExecuteLog("seekdb started.")
 	} else {
-		t.ExecuteLog("start observer")
+		t.ExecuteLog("start seekdb")
 		if err := startObserver(t); err != nil {
 			return err
 		}
 	}
 
 	if err := t.observerHealthCheck(); err != nil {
-		return errors.Wrap(err, "observer health check failed")
+		return errors.Wrap(err, "seekdb health check failed")
 	}
-	t.ExecuteLog("start observer success")
+	t.ExecuteLog("start seekdb success")
 
 	return nil
 }
@@ -92,10 +92,10 @@ func (t *StartObserverTask) observerHealthCheck() error {
 		if retryCount%10 == 0 {
 			t.TimeoutCheck()
 		} else {
-			t.ExecuteLogf("observer health check, retry [%d/%d]", retryCount, maxRetries)
+			t.ExecuteLogf("seekdb health check, retry [%d/%d]", retryCount, maxRetries)
 		}
 
-		// Check if the observer process exists
+		// Check if the seekdb process exists
 		if exist, err := process.CheckObserverProcess(); err != nil {
 			return errors.Occur(errors.ErrObServerProcessCheckFailed, err.Error())
 		} else if !exist {
@@ -112,7 +112,7 @@ func (t *StartObserverTask) observerHealthCheck() error {
 	}
 
 	// If retries run out, return a timeout error
-	return errors.Occur(errors.ErrTaskDagExecuteTimeout, "observer health check")
+	return errors.Occur(errors.ErrTaskDagExecuteTimeout, "seekdb health check")
 }
 
 func (t *StartObserverTask) Rollback() error {
@@ -132,7 +132,7 @@ func startObserver(t task.ExecutableTask) error {
 	return execStartCmd(path.ObserverBinPath(), "--base-dir", global.HomePath)
 }
 
-// SafeStartObserver is a safe method to start the observer, ensuring that it has been successfully started at least once before using.
+// SafeStartObserver is a safe method to start the seekdb, ensuring that it has been successfully started at least once before using.
 // This method allows an empty config and does not check whether the config contains the necessary startup configuration items.
 func SafeStartObserver() error {
 	if isFirst, err := isFirstStart(); err != nil {
@@ -142,7 +142,7 @@ func SafeStartObserver() error {
 	}
 
 	cmd := fmt.Sprintf("%s --base-dir %s", path.ObserverBinPath(), global.HomePath)
-	log.Info("safty start observer, cmd: ", cmd)
+	log.Info("safty start seekdb, cmd: ", cmd)
 	return execStartCmd(path.ObserverBinPath(), "--base-dir", global.HomePath)
 }
 
@@ -170,7 +170,7 @@ func execStartCmd(bin string, args ...string) error {
 func CreateStartDag() (*task.DagDetailDTO, error) {
 	template := task.NewTemplateBuilder(DAG_START_OBSERVER).
 		SetMaintenance(task.GlobalMaintenance())
-	// If not need start, then skip start observer.
+	// If not need start, then skip start seekdb.
 	template.AddTask(newStartObServerTask(), false)
 
 	dag, err := localTaskService.CreateDagInstanceByTemplate(template.Build(), task.NewTaskContext().SetParam(task.FAILURE_EXIT_MAINTENANCE, true))

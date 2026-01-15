@@ -214,7 +214,7 @@ func RunDir() string {
 
 func ObserverBinPath() string {
 	initialize()
-	return filepath.Join(RunDir(), constant.PROC_OBSERVER)
+	return filepath.Join(RunDir(), constant.PROC_SEEKDB)
 }
 
 func ObserverClusterIdFilePath() string {

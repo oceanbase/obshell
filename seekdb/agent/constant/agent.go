@@ -83,7 +83,7 @@ const (
 	PROC_OBSHELL_ADMIN  = "admin"
 	PROC_OBSHELL_CLIENT = "client"
 
-	PROC_OBSERVER = "observer"
+	PROC_SEEKDB = "seekdb"
 )
 
 // upload pkg names

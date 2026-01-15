@@ -64,7 +64,7 @@ func CreateStopDag(p param.ObStopParam) (*task.DagDetailDTO, error) {
 	if exist, err := process.CheckObserverProcess(); err != nil {
 		log.Warnf("Check observer process failed: %v", err)
 	} else if !exist {
-		return nil, nil // when observer process not exist, return nil directly
+		return nil, nil // when seekdb process not exist, return nil directly
 	}
 
 	pid, err := process.GetObserverPidInt()
@@ -77,7 +77,7 @@ func CreateStopDag(p param.ObStopParam) (*task.DagDetailDTO, error) {
 		log.Warnf("Failed to get systemd unit: %v", err)
 	}
 	if systemdUnit != "" {
-		return nil, errors.Occur(errors.ErrCommonUnexpected, "observer is managed by systemd, please stop it manually via systemctl")
+		return nil, errors.Occur(errors.ErrCommonUnexpected, "seekdb is managed by systemd, please stop it manually via systemctl")
 	}
 
 	builder := task.NewTemplateBuilder(DAG_STOP_OBSERVER)
@@ -102,40 +102,40 @@ func stopObserver(t task.ExecutableTask) error {
 	if err := t.GetContext().GetParamWithValue(PARAM_OBSERVER_PID, &pid); err != nil {
 		return err
 	}
-	t.ExecuteLogf("Expected observer pid is: %s", pid)
+	t.ExecuteLogf("Expected seekdb pid is: %s", pid)
 
-	t.ExecuteLog("Get current observer Pid")
+	t.ExecuteLog("Get current seekdb Pid")
 	currentPid, err := process.GetObserverPid()
 	if err != nil {
 		return err
 	}
 	if currentPid == "" {
-		t.ExecuteLog("Observer is not running")
+		t.ExecuteLog("seekdb is not running")
 		return nil
 	}
 	if currentPid != pid {
-		t.ExecuteLogf("Observer has been restarted by other, new pid: %s", currentPid)
+		t.ExecuteLogf("seekdb has been restarted by other, new pid: %s", currentPid)
 		return nil
 	}
 
 	for i := 0; i < STOP_OB_MAX_RETRY_TIME; i++ {
-		t.ExecuteLogf("Kill observer process %s", pid)
+		t.ExecuteLogf("Kill seekdb process %s", pid)
 		res := exec.Command("kill", "-9", pid)
 		if err := res.Run(); err != nil {
-			log.Warn("Kill observer process failed")
+			log.Warn("Kill seekdb process failed")
 		}
 
 		time.Sleep(time.Second * STOP_OB_MAX_RETRY_INTERVAL)
 		t.TimeoutCheck()
 
-		t.ExecuteLog("Check observer process")
+		t.ExecuteLog("Check seekdb process")
 		if _, err := os.Stat(fmt.Sprintf("/proc/%s", pid)); err != nil {
 			if os.IsNotExist(err) {
-				t.ExecuteLog("Successfully killed the observer process")
+				t.ExecuteLog("Successfully killed the seekdb process")
 				return nil
 			}
-			log.Warnf("Check observer process failed: %v", err)
+			log.Warnf("Check seekdb process failed: %v", err)
 		}
 	}
-	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "kill observer process")
+	return errors.Occur(errors.ErrObClusterAsyncOperationTimeout, "kill seekdb process")
 }

@@ -28,7 +28,7 @@ import (
 
 // @title			obshell API
 // @version		1.0
-// @description	This is a set of operation and maintenance management API interfaces developed based on observer.
+// @description	This is a set of operation and maintenance management API interfaces developed based on seekdb.
 // @BasePath		/
 // @contact.name	obshell API Support
 // @contact.url	https://open.oceanbase.com
@@ -64,13 +64,13 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	v1.Use(common.SetApiFlag)
 
 	agent := v1.Group(constant.URI_AGENT_GROUP)
-	observer := v1.Group(constant.URI_OBSERVER_GROUP)
+	seekdb := v1.Group(constant.URI_SEEKDB_GROUP)
 	upgrade := v1.Group(constant.URI_UPGRADE)
 	pkg := v1.Group(constant.URI_PACKAGE)
 
 	if !isLocalRoute {
 		agent.Use(common.Verify())
-		observer.Use(common.Verify())
+		seekdb.Use(common.Verify())
 		upgrade.Use(common.Verify())
 	}
 
@@ -88,29 +88,29 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	system := v1.Group(constant.URI_SYSTEM_GROUP)
 	InitExternalRoutes(system, isLocalRoute)
 
-	// observer routes
-	observer.POST(constant.URI_STOP, obStopHandler)
-	observer.POST(constant.URI_START, obStartHandler)
-	observer.POST(constant.URI_RESTART, obRestartHandler)
-	observer.GET(constant.URI_INFO, observerInfoHandler)
-	observer.GET(constant.URI_STATISTICS, GetStatistics)
+	// seekdb routes
+	seekdb.POST(constant.URI_STOP, obStopHandler)
+	seekdb.POST(constant.URI_START, obStartHandler)
+	seekdb.POST(constant.URI_RESTART, obRestartHandler)
+	seekdb.GET(constant.URI_INFO, observerInfoHandler)
+	seekdb.GET(constant.URI_STATISTICS, GetStatistics)
 	// for compaction
-	observer.GET(constant.URI_COMPACTION, getCompactionHandler)
-	observer.POST(constant.URI_COMPACT, majorCompactionHandler)
-	observer.DELETE(constant.URI_COMPACTION_ERROR, clearCompactionErrorHandler)
+	seekdb.GET(constant.URI_COMPACTION, getCompactionHandler)
+	seekdb.POST(constant.URI_COMPACT, majorCompactionHandler)
+	seekdb.DELETE(constant.URI_COMPACTION_ERROR, clearCompactionErrorHandler)
 	// for whitelist
-	observer.PUT(constant.URI_WHITELIST, modifyWhitelistHandler)
+	seekdb.PUT(constant.URI_WHITELIST, modifyWhitelistHandler)
 	// for variables
-	observer.GET(constant.URI_VARIABLES, getVariables)
-	observer.PATCH(constant.URI_VARIABLES, setVariablesHandler)
+	seekdb.GET(constant.URI_VARIABLES, getVariables)
+	seekdb.PATCH(constant.URI_VARIABLES, setVariablesHandler)
 	// for parameters
-	observer.GET(constant.URI_PARAMETERS, getParameters)
-	observer.PATCH(constant.URI_PARAMETERS, setParametersHandler)
+	seekdb.GET(constant.URI_PARAMETERS, getParameters)
+	seekdb.PATCH(constant.URI_PARAMETERS, setParametersHandler)
 	// for charsets
-	observer.GET(constant.URI_CHARSETS, getObserverCharsets)
+	seekdb.GET(constant.URI_CHARSETS, getObserverCharsets)
 
-	InitUserRoutes(observer, isLocalRoute)
-	InitDatabaseRoutes(observer, isLocalRoute)
+	InitUserRoutes(seekdb, isLocalRoute)
+	InitDatabaseRoutes(seekdb, isLocalRoute)
 
 	// agent routes
 	agent.POST(constant.URI_UPGRADE, agentUpgradeHandler)

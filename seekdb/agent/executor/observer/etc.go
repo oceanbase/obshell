@@ -54,7 +54,7 @@ func HasStarted() (bool, error) {
 }
 
 func LoadOBConfigFromConfigFile() (err error) {
-	// Load ob port from $homepath/etc/observer.config.bin.
+	// Load ob port from $homepath/etc/seekdb.config.bin.
 	log.Info("load ob config from config file")
 	filePath := path.ObConfigPath()
 

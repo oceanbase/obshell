@@ -55,7 +55,7 @@ func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 	cmd.VarsPs(&flag.OldServerPid, []string{constant.FLAG_PID}, int32(0), "Old obshell pid, only used for upgrade", false)
 	cmd.Flags().MarkHidden(constant.FLAG_PID)
 	cmd.VarsPs(&flag.rootPassword, []string{constant.FLAG_ROOT_PWD}, "", "The password for OceanBase root@sys user, only used for takeover", false)
-	cmd.VarsPs(&flag.NeedStartOB, []string{constant.FLAG_START_OB}, false, "If need to start observer", false)
+	cmd.VarsPs(&flag.NeedStartOB, []string{constant.FLAG_START_OB}, false, "If need to start seekdb", false)
 	cmd.VarsPs(&flag.BaseDir, []string{constant.FLAG_BASE_DIR}, "", "The base directory for the agent", false)
 	cmd.Flags().MarkHidden(constant.FLAG_START_OB)
 }

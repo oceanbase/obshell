@@ -51,16 +51,16 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 	info.ObshellPort = meta.OCS_AGENT.GetPort()
 	info.Version, err = obclusterService.GetObVersion()
 	if err != nil {
-		log.Warnf("Failed to get observer version: %v", err)
+		log.Warnf("Failed to get seekdb version: %v", err)
 		// get from sqlite
 		err = agentService.GetObConfig(constant.CONFIG_OB_VERSION, &info.Version)
 		if err != nil {
-			log.Warnf("Failed to get observer version from sqlite: %v", err)
+			log.Warnf("Failed to get seekdb version from sqlite: %v", err)
 		}
 	}
 	observer, err := obclusterService.GetOBServer()
 	if err != nil {
-		log.Warnf("Failed to get observer: %v", err)
+		log.Warnf("Failed to get seekdb: %v", err)
 	}
 	info.ClusterName, err = observerService.GetOBStringParatemerByName(constant.OB_PARAM_CLUSTER_NAME)
 	if err != nil {
@@ -93,10 +93,10 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 		info.RedoDir = filepath.Join(path.AgentDir(), info.RedoDir)
 	}
 
-	// Get observer pid
+	// Get seekdb pid
 	info.BinPath, err = process.GetObserverBinPath()
 	if err != nil {
-		log.Warnf("Failed to get observer pid: %v", err)
+		log.Warnf("Failed to get seekdb pid: %v", err)
 	}
 	err = agentService.GetObConfig(constant.CONFIG_USER, &info.User)
 	if err != nil {
@@ -147,7 +147,7 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 
 	resource, err := obclusterService.GetObserverResource()
 	if err != nil {
-		log.Warnf("Failed to get observer resource: %v", err)
+		log.Warnf("Failed to get seekdb resource: %v", err)
 	}
 	if resource != nil {
 		info.ObserverResourceInfo = obmodel.ObserverResourceInfo{
@@ -161,7 +161,7 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 	info.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uroot -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT)
 	pid, err := process.GetObserverPidInt()
 	if err != nil {
-		log.Warnf("Failed to get observer pid: %v", err)
+		log.Warnf("Failed to get seekdb pid: %v", err)
 	} else {
 		info.SystemdUnit, err = process.GetSystemdUnit(int(pid))
 		if err != nil {

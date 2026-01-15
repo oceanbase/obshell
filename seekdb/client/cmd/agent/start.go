@@ -27,7 +27,7 @@ import (
 
 func initStartCmd(c *cobra.Command) {
 	c.Hidden = false
-	c.Short = "Start the background running obshell agent process for OceanBase SeekDB."
+	c.Short = "Start the background running obshell agent process for OceanBase seekdb."
 	c.PersistentPreRun = func(cmd *cobra.Command, args []string) {
 		ocsagentlog.InitLogger(config.DefaultClientLoggerConifg())
 		global.InitGlobalVariable()

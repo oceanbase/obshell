@@ -61,7 +61,7 @@ func GetStatisticsInfo() *bo.ObclusterStatisticInfo {
 
 	observer, err := obclusterService.GetOBServer()
 	if err != nil {
-		log.Warnf("Failed to get observer info: %v", err)
+		log.Warnf("Failed to get seekdb info: %v", err)
 	}
 
 	info.Instances = bo.ObserverInfo{
@@ -70,7 +70,7 @@ func GetStatisticsInfo() *bo.ObclusterStatisticInfo {
 
 	observerResource, err := obclusterService.GetObserverResource()
 	if err != nil {
-		log.Warnf("Failed to get observer resource: %v", err)
+		log.Warnf("Failed to get seekdb resource: %v", err)
 	}
 
 	if observerResource != nil {

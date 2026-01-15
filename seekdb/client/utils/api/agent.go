@@ -60,7 +60,7 @@ func GetMyDaemonStatus() (status *daemon.DaemonStatus, err error) {
 }
 
 func GetObserverInfo() (observerInfo *obmodel.ObserverInfo, err error) {
-	uri := constant.URI_API_V1 + constant.URI_OBSERVER_GROUP + constant.URI_INFO
+	uri := constant.URI_API_V1 + constant.URI_SEEKDB_GROUP + constant.URI_INFO
 	stdio.Verbosef("Calling API %s", uri)
 	err = http.SendGetRequestViaUnixSocket(path.ObshellSocketPath(), uri, nil, &observerInfo)
 	return

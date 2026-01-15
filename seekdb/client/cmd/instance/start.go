@@ -83,7 +83,7 @@ func observerStart() (err error) {
 }
 
 func callStartApi() (err error) {
-	uri := constant.URI_OBSERVER_API_PREFIX + constant.URI_START
+	uri := constant.URI_SEEKDB_API_PREFIX + constant.URI_START
 	if err = callEmerTypeApi(uri, nil); err != nil {
 		log.Errorf("call start api failed: %v", err)
 		return

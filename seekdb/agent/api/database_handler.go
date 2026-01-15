@@ -53,7 +53,7 @@ func InitDatabaseRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/databases [GET]
+// @Router /api/v1/seekdb/databases [GET]
 func listDatabases(c *gin.Context) {
 	databases, err := observer.ListDatabases()
 	common.SendResponse(c, databases, err)
@@ -71,7 +71,7 @@ func listDatabases(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/database/{database} [GET]
+// @Router /api/v1/seekdb/database/{database} [GET]
 func getDatabase(c *gin.Context) {
 	databaseName := c.Param(constant.URI_PARAM_DATABASE)
 	database, err := observer.GetDatabase(databaseName)
@@ -90,7 +90,7 @@ func getDatabase(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/database/{database} [DELETE]
+// @Router /api/v1/seekdb/database/{database} [DELETE]
 func deleteDatabase(c *gin.Context) {
 	databaseName := c.Param(constant.URI_PARAM_DATABASE)
 	err := observer.DeleteDatabase(databaseName)
@@ -110,7 +110,7 @@ func deleteDatabase(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/database/{database} [PUT]
+// @Router /api/v1/seekdb/database/{database} [PUT]
 func updateDatabase(c *gin.Context) {
 	databaseName := c.Param(constant.URI_PARAM_DATABASE)
 	modifyDatabaseParam := param.ModifyDatabaseParam{}
@@ -135,7 +135,7 @@ func updateDatabase(c *gin.Context) {
 // @Failure 400 object http.OcsAgentResponse
 // @Failure 401 object http.OcsAgentResponse
 // @Failure 500 object http.OcsAgentResponse
-// @Router /api/v1/observer/database [POST]
+// @Router /api/v1/seekdb/database [POST]
 func createDatabase(c *gin.Context) {
 	createDatabaseParam := param.CreateDatabaseParam{}
 	err := c.BindJSON(&createDatabaseParam)

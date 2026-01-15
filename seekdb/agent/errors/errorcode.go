@@ -86,33 +86,33 @@ var (
 	ErrAgentRPCRequestFailed = NewErrorCode("Agent.RPC.RequestFailed", unexpected, "err.agent.rpc.request.failed") // "request [%s]%s to %s failed: %s"
 
 	// OB.Binary
-	ErrObBinaryVersionUnexpected = NewErrorCode("SeekDB.Binary.Version.Unexpected", unexpected, "err.seekdb.binary.version.unexpected")
+	ErrObBinaryVersionUnexpected = NewErrorCode("seekdb.Binary.Version.Unexpected", unexpected, "err.seekdb.binary.version.unexpected")
 
 	// OB.Tenant
-	ErrObTenantCompactionStatusNotIdle = NewErrorCode("SeekDB.Compaction.Status.NotIdle", badRequest, "err.seekdb.compaction.status.not.idle") // "Instance is in '%s' status, operation not allowed"
-	ErrObEmptyVariable                 = NewErrorCode("SeekDB.Variable.Empty", illegalArgument, "err.seekdb.variable.empty")                   // "variable name or value is empty"
-	ErrObEmptyParameter                = NewErrorCode("SeekDB.Parameter.Empty", illegalArgument, "err.seekdb.parameter.empty")                 // "parameter name or value is empty"
-	ErrObParameterNotExist             = NewErrorCode("SeekDB.Parameter.NotExist", badRequest, "err.seekdb.parameter.not.exist")               // "parameter '%s' is not exist"
-	ErrObVariableInvalid               = NewErrorCode("SeekDB.Variable.Invalid", illegalArgument, "err.seekdb.variable.invalid")               // "variable '%s' is invalid: %s"
-	ErrObVariableNotExist              = NewErrorCode("SeekDB.Variable.NotExist", notFound, "err.seekdb.variable.not.exist")                   // "variable '%s' is not exist"
+	ErrObTenantCompactionStatusNotIdle = NewErrorCode("seekdb.Compaction.Status.NotIdle", badRequest, "err.seekdb.compaction.status.not.idle") // "Instance is in '%s' status, operation not allowed"
+	ErrObEmptyVariable                 = NewErrorCode("seekdb.Variable.Empty", illegalArgument, "err.seekdb.variable.empty")                   // "variable name or value is empty"
+	ErrObEmptyParameter                = NewErrorCode("seekdb.Parameter.Empty", illegalArgument, "err.seekdb.parameter.empty")                 // "parameter name or value is empty"
+	ErrObParameterNotExist             = NewErrorCode("seekdb.Parameter.NotExist", badRequest, "err.seekdb.parameter.not.exist")               // "parameter '%s' is not exist"
+	ErrObVariableInvalid               = NewErrorCode("seekdb.Variable.Invalid", illegalArgument, "err.seekdb.variable.invalid")               // "variable '%s' is invalid: %s"
+	ErrObVariableNotExist              = NewErrorCode("seekdb.Variable.NotExist", notFound, "err.seekdb.variable.not.exist")                   // "variable '%s' is not exist"
 
 	// OB.Cluster
-	ErrObClusterUnderMaintenance        = NewErrorCode("SeekDB.UnderMaintenance", known, "err.seekdb.under.maintenance")
-	ErrObClusterUnderMaintenanceWithDag = NewErrorCode("SeekDB.UnderMaintenanceWithDag", known, "err.seekdb.under.maintenance.with.dag")
-	ErrObClusterNotInitialized          = NewErrorCode("SeekDB.NotInitialized", illegalArgument, "err.seekdb.not.initialized")
-	ErrObClusterMysqlPortNotInitialized = NewErrorCode("SeekDB.MysqlPortNotInitialized", unexpected, "err.seekdb.mysql.port.not.initialized")
-	ErrObClusterMinorFreezeTimeout      = NewErrorCode("SeekDB.MinorFreezeTimeout", unexpected, "err.seekdb.minor.freeze.timeout")
-	ErrObClusterAsyncOperationTimeout   = NewErrorCode("SeekDB.AsyncOperationTimeout", unexpected, "err.seekdb.async.operation.timeout")
-	ErrObClusterPasswordIncorrect       = NewErrorCode("SeekDB.Password.Incorrect", illegalArgument, "err.seekdb.password.incorrect") // "password incorrect"
+	ErrObClusterUnderMaintenance        = NewErrorCode("seekdb.UnderMaintenance", known, "err.seekdb.under.maintenance")
+	ErrObClusterUnderMaintenanceWithDag = NewErrorCode("seekdb.UnderMaintenanceWithDag", known, "err.seekdb.under.maintenance.with.dag")
+	ErrObClusterNotInitialized          = NewErrorCode("seekdb.NotInitialized", illegalArgument, "err.seekdb.not.initialized")
+	ErrObClusterMysqlPortNotInitialized = NewErrorCode("seekdb.MysqlPortNotInitialized", unexpected, "err.seekdb.mysql.port.not.initialized")
+	ErrObClusterMinorFreezeTimeout      = NewErrorCode("seekdb.MinorFreezeTimeout", unexpected, "err.seekdb.minor.freeze.timeout")
+	ErrObClusterAsyncOperationTimeout   = NewErrorCode("seekdb.AsyncOperationTimeout", unexpected, "err.seekdb.async.operation.timeout")
+	ErrObClusterPasswordIncorrect       = NewErrorCode("seekdb.Password.Incorrect", illegalArgument, "err.seekdb.password.incorrect") // "password incorrect"
 
 	// OB.Server
-	ErrObServerProcessCheckFailed = NewErrorCode("SeekDB.Process.CheckFailed", unexpected, "err.seekdb.process.check.failed") // "check observer process exist: %s."
-	ErrObServerProcessNotExist    = NewErrorCode("SeekDB.Process.NotExist", unexpected, "err.seekdb.process.not.exist")       // "observer process not exist"
-	ErrObServerHasNotBeenStarted  = NewErrorCode("SeekDB.HasNotBeenStarted", unexpected, "err.seekdb.has.not.been.started")   // "observer has not started yet, please start it with normal way"
+	ErrObServerProcessCheckFailed = NewErrorCode("seekdb.Process.CheckFailed", unexpected, "err.seekdb.process.check.failed") // "check seekdb process exist: %s."
+	ErrObServerProcessNotExist    = NewErrorCode("seekdb.Process.NotExist", unexpected, "err.seekdb.process.not.exist")       // "seekdb process not exist"
+	ErrObServerHasNotBeenStarted  = NewErrorCode("seekdb.HasNotBeenStarted", unexpected, "err.seekdb.has.not.been.started")   // "seekdb has not started yet, please start it with normal way"
 
 	// OB.Package
-	ErrObPackageNameNotSupport = NewErrorCode("SeekDB.Package.Name.NotSupport", illegalArgument, "err.seekdb.package.name.not.support")
-	ErrObPackageMissingFile    = NewErrorCode("SeekDB.Package.MissingFile", unexpected, "err.seekdb.package.missing.file")
+	ErrObPackageNameNotSupport = NewErrorCode("seekdb.Package.Name.NotSupport", illegalArgument, "err.seekdb.package.name.not.support")
+	ErrObPackageMissingFile    = NewErrorCode("seekdb.Package.MissingFile", unexpected, "err.seekdb.package.missing.file")
 
 	ErrPackageReleaseFormatInvalid    = NewErrorCode("Package.ReleaseFormat.Invalid", illegalArgument, "err.package.release.format.invalid")
 	ErrPackageCompressionNotSupported = NewErrorCode("Package.Compression.NotSupported", illegalArgument, "err.package.compression.not.supported")
@@ -145,15 +145,15 @@ var (
 	ErrEnvironmentDiskSpaceNotEnough = NewErrorCode("Environment.DiskSpaceNotEnough", unexpected, "err.environment.disk.space.not.enough")
 
 	// Ob.Database
-	ErrObDatabaseNotExist    = NewErrorCode("SeekDB.Database.NotExist", notFound, "err.seekdb.database.not.exist")
-	ErrObDatabaseNameInvalid = NewErrorCode("SeekDB.Database.Name.Invalid", illegalArgument, "err.seekdb.database.name.invalid")
+	ErrObDatabaseNotExist    = NewErrorCode("seekdb.Database.NotExist", notFound, "err.seekdb.database.not.exist")
+	ErrObDatabaseNameInvalid = NewErrorCode("seekdb.Database.Name.Invalid", illegalArgument, "err.seekdb.database.name.invalid")
 
 	// Ob.User
-	ErrObUserPrivilegeNotSupported = NewErrorCode("SeekDB.User.Privilege.NotSupported", illegalArgument, "err.seekdb.user.privilege.not.supported")
-	ErrObUserNameEmpty             = NewErrorCode("SeekDB.User.Name.Empty", illegalArgument, "err.seekdb.user.name.empty")
-	ErrObUserNameInvalid           = NewErrorCode("SeekDB.User.Name.Invalid", illegalArgument, "err.seekdb.user.name.invalid")
-	ErrObUserNotExists             = NewErrorCode("SeekDB.User.NotExists", notFound, "err.seekdb.user.not.exist")
-	ErrObUserPasswordError         = NewErrorCode("SeekDB.User.Password.Error", illegalArgument, "err.seekdb.user.password.error")
+	ErrObUserPrivilegeNotSupported = NewErrorCode("seekdb.User.Privilege.NotSupported", illegalArgument, "err.seekdb.user.privilege.not.supported")
+	ErrObUserNameEmpty             = NewErrorCode("seekdb.User.Name.Empty", illegalArgument, "err.seekdb.user.name.empty")
+	ErrObUserNameInvalid           = NewErrorCode("seekdb.User.Name.Invalid", illegalArgument, "err.seekdb.user.name.invalid")
+	ErrObUserNotExists             = NewErrorCode("seekdb.User.NotExists", notFound, "err.seekdb.user.not.exist")
+	ErrObUserPasswordError         = NewErrorCode("seekdb.User.Password.Error", illegalArgument, "err.seekdb.user.password.error")
 
 	// Request
 	ErrRequestFileMissing                        = NewErrorCode("Request.File.Missing", unexpected, "err.request.file.missing")
@@ -172,7 +172,7 @@ var (
 	ErrSecurityAuthenticationFileSha256Mismatch         = NewErrorCode("Security.Authentication.File.Sha256Mismatch", unauthorized, "err.security.authentication.file.sha256.mismatch")
 	ErrSecurityAuthenticationHeaderDecryptFailed        = NewErrorCode("Security.Authentication.Header.DecryptFailed", unauthorized, "err.security.authentication.header.decrypt.failed")
 	ErrSecurityAuthenticationHeaderUriMismatch          = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch", 10008)
-	ErrSecurityAuthenticationIncorrectOceanbasePassword = NewErrorCode("Security.Authentication.IncorrectSeekDBPassword", unauthorized, "err.security.authentication.incorrect.seekdb.password", 10008)
+	ErrSecurityAuthenticationIncorrectOceanbasePassword = NewErrorCode("Security.Authentication.IncorrectseekdbPassword", unauthorized, "err.security.authentication.incorrect.seekdb.password", 10008)
 	ErrSecurityAuthenticationExpired                    = NewErrorCode("Security.Authentication.Expired", unauthorized, "err.security.authentication.expired", 10008)
 	ErrSecurityAuthenticationTimestampInvalid           = NewErrorCode("Security.Authentication.Timestamp.Invalid", unauthorized, "err.security.authentication.timestamp.invalid", 10008)
 
@@ -231,12 +231,12 @@ var (
 	ErrAgentTCPListenerCreateFailed        = NewErrorCode("Agent.TCP.Listener.CreateFailed", unexpected, "err.agent.tcp.listener.create.failed")                 // "create tcp listerner failed"
 	ErrAgentAlreadyInitialized             = NewErrorCode("Agent.AlreadyInitialized", unexpected, "err.agent.already.initialized")                               // "agent already initialized"
 	ErrAgentNotInitialized                 = NewErrorCode("Agent.NotInitialized", unexpected, "err.agent.not.initialized")                                       // "agent not initialized"
-	ErrAgentIpInconsistentWithOBServer     = NewErrorCode("Agent.IP.InconsistentWithOBServer", unexpected, "err.agent.ip.inconsistent.with.ob.server")           // "agent ip inconsistent with observer"
+	ErrAgentIpInconsistentWithOBServer     = NewErrorCode("Agent.IP.InconsistentWithOBServer", unexpected, "err.agent.ip.inconsistent.with.ob.server")           // "agent ip inconsistent with seekdb"
 	ErrAgentLoadOBConfigFailed             = NewErrorCode("Agent.Load.OBConfigFailed", unexpected, "err.agent.load.ob.config.failed")                            // "load ob config from config file failed"
 	ErrAgentInfoNotEqual                   = NewErrorCode("Agent.Info.NotEqual", unexpected, "err.agent.info.not.equal")                                         // "agent info not equal"
 	ErrAgentStartWithInvalidInfo           = NewErrorCode("Agent.Start.WithInvalidInfo", unexpected, "err.agent.start.with.invalid.info")                        // "agent start with invalid info: %v"
-	ErrAgentSeekDBNotExists                = NewErrorCode("Agent.SeekDB.Not.Exists", illegalArgument, "err.agent.seekdb.not.exists")                             // "SeekDB not exists in current directory. Please do takeover first."
-	ErrAgentStartObserverFailed            = NewErrorCode("Agent.Start.ObserverFailed", unexpected, "err.agent.start.observer.failed")                           // "start observer via flag failed, err: %v"
+	ErrAgentSeekDBNotExists                = NewErrorCode("Agent.seekdb.Not.Exists", illegalArgument, "err.agent.seekdb.not.exists")                             // "seekdb not exists in current directory. Please do takeover first."
+	ErrAgentStartObserverFailed            = NewErrorCode("Agent.Start.ObserverFailed", unexpected, "err.agent.start.observer.failed")                           // "start seekdb via flag failed, err: %v"
 	ErrAgentTakeOverFailed                 = NewErrorCode("Agent.TakeOverFailed", unexpected, "err.agent.take.over.failed")                                      // "take over or rebuild failed: %v"
 	ErrAgentServeOnUnixSocketFailed        = NewErrorCode("Agent.ServeOnUnixSocketFailed", unexpected, "err.agent.serve.on.unix.socket.failed")                  // "serve on unix listener failed: %v\n"
 	ErrAgentServeOnTcpSocketFailed         = NewErrorCode("Agent.ServeOnTcpSocketFailed", unexpected, "err.agent.serve.on.tcp.socket.failed")                    // "serve on tcp listener failed: %v\n"
