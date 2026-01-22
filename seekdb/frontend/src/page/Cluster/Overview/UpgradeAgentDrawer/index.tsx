@@ -1,12 +1,12 @@
-import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
-import { Form, Modal } from '@oceanbase/design';
-import { useRequest } from 'ahooks';
-import { taskSuccess } from '@/util/task';
 import type { MyDrawerProps } from '@/component/MyDrawer';
 import PackageSelect from '@/component/PackageSelect';
 import { agentUpgrade } from '@/service/obshell/upgrade';
 import { getAgentInfo } from '@/service/obshell/v1';
+import { formatMessage } from '@/util/intl';
+import { taskSuccess } from '@/util/task';
+import { Form, Modal } from '@oceanbase/design';
+import { useRequest } from 'ahooks';
+import React, { useState } from 'react';
 export interface UpgradeDrawerProps extends MyDrawerProps {
   seekdbInfoData: API.ObserverInfo;
   onSuccess: () => void;
@@ -102,7 +102,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
           </Form.Item>
           <Form.Item
             label={formatMessage({
-              id: 'SeekDB.Overview.UpgradeAgentDrawer.ObshellPort',
+              id: 'seekdb.Overview.UpgradeAgentDrawer.ObshellPort',
               defaultMessage: 'obshell 端口',
             })}
             style={{ marginBottom: 0 }}

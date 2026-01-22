@@ -14,25 +14,25 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React from 'react';
-import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
-import Icon from '@oceanbase/icons';
-import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
-import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
 import { ReactComponent as AlarmSvg } from '@/asset/alarm.svg';
 import { ReactComponent as AlarmSelectedSvg } from '@/asset/alarm_selected.svg';
-import { ReactComponent as SystemSvg } from '@/asset/system.svg';
-import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
-import { ReactComponent as InstanceSvg } from '@/asset/instance.svg';
-import { ReactComponent as InstanceSelectedSvg } from '@/asset/instance_selected.svg';
 import { ReactComponent as DatabaseSvg } from '@/asset/database.svg';
 import { ReactComponent as DatabaseSelectedSvg } from '@/asset/database_selected.svg';
-import { ReactComponent as UserSvg } from '@/asset/user.svg';
-import { ReactComponent as UserSelectedSvg } from '@/asset/user_selected.svg';
+import { ReactComponent as InstanceSvg } from '@/asset/instance.svg';
+import { ReactComponent as InstanceSelectedSvg } from '@/asset/instance_selected.svg';
+import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
+import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
 import { ReactComponent as ParameterSvg } from '@/asset/parameter.svg';
 import { ReactComponent as ParameterSelectedSvg } from '@/asset/parameter_selected.svg';
+import { ReactComponent as SystemSvg } from '@/asset/system.svg';
+import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
+import { ReactComponent as UserSvg } from '@/asset/user.svg';
+import { ReactComponent as UserSelectedSvg } from '@/asset/user_selected.svg';
 import { getInstanceAvailableFlag } from '@/util/instance';
+import { formatMessage } from '@/util/intl';
+import Icon from '@oceanbase/icons';
+import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
+import React from 'react';
 import useUiMode from './useUiMode';
 import useSeekdbInfo from './usSeekdbInfo';
 
@@ -45,7 +45,7 @@ export const useBasicMenu = (): MenuItem[] => {
     {
       link: '/instance',
       title: formatMessage({
-        id: 'SeekDB.src.hook.useMenu.InstanceManagement',
+        id: 'seekdb.src.hook.useMenu.InstanceManagement',
         defaultMessage: '实例管理',
       }),
       icon: <Icon component={InstanceSvg} />,

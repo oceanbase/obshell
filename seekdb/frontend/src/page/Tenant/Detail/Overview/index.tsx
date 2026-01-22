@@ -14,53 +14,53 @@
  * limitations under the License.
  */
 
+import ContentWithQuestion from '@/component/ContentWithQuestion';
+import ContentWithReload from '@/component/ContentWithReload';
+import MyCard from '@/component/MyCard';
+import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
+import { OB_INFO_STATUS_LIST } from '@/constant/tenant';
+import useUiMode from '@/hook/useUiMode';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
+import UpgradeAgentDrawer from '@/page/Cluster/Overview/UpgradeAgentDrawer';
+import {
+  clearCompactionError,
+  getCompaction,
+  majorCompaction,
+  restartSeekdb,
+  startSeekdb,
+  stopSeekdb,
+} from '@/service/obshell/seekdb';
+import { getCompactionStatusV4 } from '@/util/cluster';
+import { formatTime } from '@/util/datetime';
+import { getInstanceAvailableFlag } from '@/util/instance';
 import { formatMessage } from '@/util/intl';
 import {
+  Badge,
+  BadgeProps,
   Button,
   Col,
+  Descriptions,
+  Dropdown,
+  Menu,
+  Modal,
   Row,
-  Badge,
   Space,
   Tag,
   Tooltip,
-  Descriptions,
-  Modal,
   message,
-  Menu,
-  Dropdown,
-  BadgeProps,
 } from '@oceanbase/design';
-import { history, useDispatch, useSelector } from 'umi';
-import React, { useState, useEffect } from 'react';
-import { findByValue, isNullValue } from '@oceanbase/util';
-import moment from 'moment';
-import { PageContainer } from '@oceanbase/ui';
-import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
-import { getCompactionStatusV4 } from '@/util/cluster';
-import { formatTime } from '@/util/datetime';
-import { useRequest, useInterval } from 'ahooks';
-import MyCard from '@/component/MyCard';
-import ContentWithQuestion from '@/component/ContentWithQuestion';
-import ContentWithReload from '@/component/ContentWithReload';
-import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
-import {
-  getCompaction,
-  majorCompaction,
-  clearCompactionError,
-  startSeekdb,
-  stopSeekdb,
-  restartSeekdb,
-} from '@/service/obshell/seekdb';
-import InstanceConnectionString from '../Component/InstanceConnectionString';
 import { EditOutlined, EllipsisOutlined, QuestionCircleOutlined } from '@oceanbase/icons';
-import UpgradeAgentDrawer from '@/page/Cluster/Overview/UpgradeAgentDrawer';
-import { OB_INFO_STATUS_LIST } from '@/constant/tenant';
-import useUiMode from '@/hook/useUiMode';
-import { getInstanceAvailableFlag } from '@/util/instance';
-import useSeekdbInfo from '@/hook/usSeekdbInfo';
-interface NewProps {}
+import { PageContainer } from '@oceanbase/ui';
+import { findByValue, isNullValue } from '@oceanbase/util';
+import { useInterval, useRequest } from 'ahooks';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
+import { history, useDispatch, useSelector } from 'umi';
+import InstanceConnectionString from '../Component/InstanceConnectionString';
+import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
+interface NewProps { }
 
-const Detail: React.FC<NewProps> = ({}) => {
+const Detail: React.FC<NewProps> = ({ }) => {
   const dispatch = useDispatch();
   const { seekdbInfoData: seekdbInfo } = useSeekdbInfo();
   const loading = useSelector(
@@ -253,7 +253,7 @@ const Detail: React.FC<NewProps> = ({}) => {
       if (res.successful) {
         Modal.success({
           title: formatMessage({
-            id: 'SeekDB.Detail.Overview.TheTaskOfRestartingThe',
+            id: 'seekdb.Detail.Overview.TheTaskOfRestartingThe',
             defaultMessage: '重启实例的任务提交成功',
           }),
 
@@ -299,10 +299,10 @@ const Detail: React.FC<NewProps> = ({}) => {
     } else if (key === 'start') {
       modal.confirm({
         title: formatMessage({
-          id: 'SeekDB.Detail.Overview.AreYouSureYouWant',
+          id: 'seekdb.Detail.Overview.AreYouSureYouWant',
           defaultMessage: '确定要启动实例吗？',
         }),
-        okText: formatMessage({ id: 'SeekDB.Detail.Overview.Start', defaultMessage: '启动' }),
+        okText: formatMessage({ id: 'seekdb.Detail.Overview.Start', defaultMessage: '启动' }),
         width: 520,
         onOk: () => {
           startFn();
@@ -311,14 +311,14 @@ const Detail: React.FC<NewProps> = ({}) => {
     } else if (key === 'stop') {
       modal.confirm({
         title: formatMessage({
-          id: 'SeekDB.Detail.Overview.AreYouSureYouWant.1',
+          id: 'seekdb.Detail.Overview.AreYouSureYouWant.1',
           defaultMessage: '确定要停止实例吗？',
         }),
         content: formatMessage({
-          id: 'SeekDB.Detail.Overview.StoppingTheInstanceWillCause',
+          id: 'seekdb.Detail.Overview.StoppingTheInstanceWillCause',
           defaultMessage: '停止实例将导致业务中断，请确认相关风险后再执行操作。',
         }),
-        okText: formatMessage({ id: 'SeekDB.Detail.Overview.Stop', defaultMessage: '停止' }),
+        okText: formatMessage({ id: 'seekdb.Detail.Overview.Stop', defaultMessage: '停止' }),
         okType: 'danger',
         width: 520,
         onOk: () => {
@@ -330,14 +330,14 @@ const Detail: React.FC<NewProps> = ({}) => {
     } else if (key === 'restart') {
       modal.confirm({
         title: formatMessage({
-          id: 'SeekDB.Detail.Overview.AreYouSureYouWant.2',
+          id: 'seekdb.Detail.Overview.AreYouSureYouWant.2',
           defaultMessage: '确定要重启实例吗？',
         }),
         content: formatMessage({
-          id: 'SeekDB.Detail.Overview.RestartingTheInstanceWillCause',
+          id: 'seekdb.Detail.Overview.RestartingTheInstanceWillCause',
           defaultMessage: '重启实例将导致业务中断，请确认相关风险后再执行操作。',
         }),
-        okText: formatMessage({ id: 'SeekDB.Detail.Overview.Restart', defaultMessage: '重启' }),
+        okText: formatMessage({ id: 'seekdb.Detail.Overview.Restart', defaultMessage: '重启' }),
         okType: 'danger',
         width: 520,
         onOk: () => {
@@ -351,7 +351,7 @@ const Detail: React.FC<NewProps> = ({}) => {
 
   const tooltipTitle = formatMessage(
     {
-      id: 'SeekDB.Detail.Overview.InstanceSeekdbinfostatusnameThisOperationIs',
+      id: 'seekdb.Detail.Overview.InstanceSeekdbinfostatusnameThisOperationIs',
       defaultMessage: '实例{seekdbInfoStatusName}，暂不支持此操作',
     },
     { seekdbInfoStatusName: seekdbInfoStatusName }
@@ -405,7 +405,7 @@ const Detail: React.FC<NewProps> = ({}) => {
         title: (
           <ContentWithReload
             content={formatMessage({
-              id: 'SeekDB.Detail.Overview.InstanceManagement',
+              id: 'seekdb.Detail.Overview.InstanceManagement',
               defaultMessage: '实例管理',
             })}
             spin={loading}
@@ -425,7 +425,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                     (['STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && tooltipTitle) ||
                     (!!systemdUnit &&
                       formatMessage({
-                        id: 'SeekDB.Detail.Overview.TheSeekdbInstanceIsRunning',
+                        id: 'seekdb.Detail.Overview.TheSeekdbInstanceIsRunning',
                         defaultMessage:
                           '当前 seekdb 实例运行在 systemd 管理下，如需停止服务，请执行 systemctl stop seekdb 命令。',
                       }))
@@ -437,7 +437,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                     }
                     onClick={() => handleMenuClick('stop')}
                   >
-                    {formatMessage({ id: 'SeekDB.Detail.Overview.Stop', defaultMessage: '停止' })}
+                    {formatMessage({ id: 'seekdb.Detail.Overview.Stop', defaultMessage: '停止' })}
                   </Button>
                 </Tooltip>
               )}
@@ -449,7 +449,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                     handleMenuClick('start');
                   }}
                 >
-                  {formatMessage({ id: 'SeekDB.Detail.Overview.Start', defaultMessage: '启动' })}
+                  {formatMessage({ id: 'seekdb.Detail.Overview.Start', defaultMessage: '启动' })}
                 </Button>
               </Tooltip>
             )}
@@ -468,7 +468,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                     handleMenuClick('restart');
                   }}
                 >
-                  {formatMessage({ id: 'SeekDB.Detail.Overview.Restart', defaultMessage: '重启' })}
+                  {formatMessage({ id: 'seekdb.Detail.Overview.Restart', defaultMessage: '重启' })}
                 </Button>
               </Tooltip>
             )}
@@ -497,7 +497,7 @@ const Detail: React.FC<NewProps> = ({}) => {
             <Descriptions column={4}>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.Status',
+                  id: 'seekdb.Detail.Overview.Status',
                   defaultMessage: '状态',
                 })}
               >
@@ -509,7 +509,7 @@ const Detail: React.FC<NewProps> = ({}) => {
                 {['STARTING', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && (
                   <Tooltip
                     title={formatMessage({
-                      id: 'SeekDB.Detail.Overview.CanEnterTheTaskCenter',
+                      id: 'seekdb.Detail.Overview.CanEnterTheTaskCenter',
                       defaultMessage: '可进入任务中心查看',
                     })}
                   >
@@ -519,7 +519,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.SeekdbVersionNumber',
+                  id: 'seekdb.Detail.Overview.SeekdbVersionNumber',
                   defaultMessage: 'seekdb 版本号',
                 })}
               >
@@ -527,7 +527,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.Specifications',
+                  id: 'seekdb.Detail.Overview.Specifications',
                   defaultMessage: '规格',
                 })}
               >
@@ -535,7 +535,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.HardwareArchitecture',
+                  id: 'seekdb.Detail.Overview.HardwareArchitecture',
                   defaultMessage: '硬件架构',
                 })}
               >
@@ -543,7 +543,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.NumberOfDatabases',
+                  id: 'seekdb.Detail.Overview.NumberOfDatabases',
                   defaultMessage: '数据库数',
                 })}
               >
@@ -551,7 +551,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.NumberOfUsers',
+                  id: 'seekdb.Detail.Overview.NumberOfUsers',
                   defaultMessage: '用户数',
                 })}
               >
@@ -559,7 +559,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.SqlPort',
+                  id: 'seekdb.Detail.Overview.SqlPort',
                   defaultMessage: 'SQL 端口',
                 })}
               >
@@ -567,7 +567,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.ObshellPort',
+                  id: 'seekdb.Detail.Overview.ObshellPort',
                   defaultMessage: 'obshell 端口',
                 })}
               >
@@ -583,7 +583,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.Creator',
+                  id: 'seekdb.Detail.Overview.Creator',
                   defaultMessage: '创建者',
                 })}
               >
@@ -591,7 +591,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.StartUpTime',
+                  id: 'seekdb.Detail.Overview.StartUpTime',
                   defaultMessage: '启动时间',
                 })}
               >
@@ -599,7 +599,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.OnlineDuration',
+                  id: 'seekdb.Detail.Overview.OnlineDuration',
                   defaultMessage: '在线时长',
                 })}
               >
@@ -607,7 +607,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.WorkingDirectory',
+                  id: 'seekdb.Detail.Overview.WorkingDirectory',
                   defaultMessage: '工作目录',
                 })}
               >
@@ -615,7 +615,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.DataDiskPath',
+                  id: 'seekdb.Detail.Overview.DataDiskPath',
                   defaultMessage: '数据盘路径',
                 })}
               >
@@ -623,7 +623,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.LogDiskPath',
+                  id: 'seekdb.Detail.Overview.LogDiskPath',
                   defaultMessage: '日志盘路径',
                 })}
               >
@@ -631,7 +631,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.LogDirectory',
+                  id: 'seekdb.Detail.Overview.LogDirectory',
                   defaultMessage: '日志目录',
                 })}
               >
@@ -639,7 +639,7 @@ const Detail: React.FC<NewProps> = ({}) => {
               </Descriptions.Item>
               <Descriptions.Item
                 label={formatMessage({
-                  id: 'SeekDB.Detail.Overview.SoftwareInstallationPath',
+                  id: 'seekdb.Detail.Overview.SoftwareInstallationPath',
                   defaultMessage: '软件安装路径',
                 })}
               >

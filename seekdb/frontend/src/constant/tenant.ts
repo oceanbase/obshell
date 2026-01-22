@@ -555,7 +555,7 @@ export const LOWER_CASE_TABLE_NAMES = [
 export const OB_INFO_STATUS_LIST = [
   {
     label: formatMessage({
-      id: 'SeekDB.src.constant.tenant.Available',
+      id: 'seekdb.src.constant.tenant.Available',
       defaultMessage: '正常运行',
     }),
     value: 'AVAILABLE',
@@ -563,30 +563,30 @@ export const OB_INFO_STATUS_LIST = [
   },
   {
     label: formatMessage({
-      id: 'SeekDB.src.constant.tenant.NotAvailable',
+      id: 'seekdb.src.constant.tenant.NotAvailable',
       defaultMessage: '不可用',
     }),
     value: 'UNAVAILABLE',
     badgeStatus: 'error',
   },
   {
-    label: formatMessage({ id: 'SeekDB.src.constant.tenant.Starting', defaultMessage: '启动中' }),
+    label: formatMessage({ id: 'seekdb.src.constant.tenant.Starting', defaultMessage: '启动中' }),
     value: 'STARTING',
     badgeStatus: 'processing',
   },
   {
-    label: formatMessage({ id: 'SeekDB.src.constant.tenant.Stopping', defaultMessage: '停止中' }),
+    label: formatMessage({ id: 'seekdb.src.constant.tenant.Stopping', defaultMessage: '停止中' }),
     value: 'STOPPING',
     badgeStatus: 'processing',
   },
   {
-    label: formatMessage({ id: 'SeekDB.src.constant.tenant.Stopped', defaultMessage: '已停止' }),
+    label: formatMessage({ id: 'seekdb.src.constant.tenant.Stopped', defaultMessage: '已停止' }),
     value: 'STOPPED',
     badgeStatus: 'default',
   },
   {
     label: formatMessage({
-      id: 'SeekDB.src.constant.tenant.RestartInProcess',
+      id: 'seekdb.src.constant.tenant.RestartInProcess',
       defaultMessage: '重启中',
     }),
     value: 'RESTARTING',

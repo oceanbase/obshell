@@ -1,6 +1,6 @@
 module.exports = {
   extract: {
-    name: 'SeekDB',
+    name: 'seekdb',
     sourcePath: 'src',
     fileType: 'ts',
     prettier: true,
@@ -51,14 +51,14 @@ module.exports = {
     sourceLang: 'zh-CN',
     sdkVersion: 'normal',
     bailingual: {
-      appName: 'SeekDB',
+      appName: 'seekdb',
     },
   },
   import: {
     type: 'json',
     path: 'src/locale',
     bailingual: {
-      appName: 'SeekDB',
+      appName: 'seekdb',
       tag: '',
     },
   },
