@@ -76,6 +76,9 @@ func reusePort(network, address string, c syscall.RawConn) error {
 }
 
 func NewSocketListener(path string) (*net.UnixListener, error) {
+	// Remove existing socket file to avoid "address already in use" error
+	syscall.Unlink(path)
+
 	addr, err := net.ResolveUnixAddr("unix", path)
 	if err != nil {
 		return nil, err
