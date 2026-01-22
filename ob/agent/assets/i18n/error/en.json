@@ -1,5 +1,5 @@
 {
-  "err.agent.start.for.oceanbase.seekdb.incorrectly": "Attempting to use obshell command for OceanBase SeekDB incorrectly, should use '--seekdb' flag",
+  "err.agent.start.for.oceanbase.seekdb.incorrectly": "Attempting to use obshell command for OceanBase seekdb incorrectly, should use '--seekdb' flag",
   "err.agent.daemon.serve.on.unix.socket.failed": "Daemon serve on socket listener failed",
   "err.agent.daemon.start.failed": "Daemon start failed",
   "err.agent.already.exists": "Agent %s already exists in cluster",

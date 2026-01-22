@@ -19,11 +19,9 @@ package ob
 import (
 	"bufio"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -58,13 +56,10 @@ func HasStarted() (bool, error) {
 
 func IsOceanBaseSeekdb() bool {
 	// execute the observer binary, if it is success, return true
-	cmd := exec.Command(filepath.Join(path.RunDir(), constant.PROC_OBSERVER), "-V")
-	out, err := cmd.CombinedOutput()
-	if err != nil {
+	if _, err := os.Stat(filepath.Join(path.RunDir(), constant.PROC_SEEKDB)); err != nil {
 		return false
 	}
-	res := string(out)
-	return strings.Contains(res, "OceanBase SeekDB")
+	return true
 }
 
 func LoadOBConfigFromConfigFile() (err error) {

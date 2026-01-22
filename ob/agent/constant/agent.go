@@ -86,6 +86,7 @@ const (
 	PROC_OBSHELL_CLIENT = "client"
 
 	PROC_OBSERVER = "observer"
+	PROC_SEEKDB   = "seekdb"
 
 	PROC_OBPROXY = "obproxy"
 )
