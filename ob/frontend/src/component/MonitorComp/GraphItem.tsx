@@ -1,8 +1,10 @@
-import React from 'react';
-import { Card } from '@oceanbase/design';
+import { Card, theme } from '@oceanbase/design';
+import { find, isEmpty } from 'lodash';
+import React, { useState } from 'react';
 import IconTip from '../IconTip';
-import LineGraph from './LineGraph';
+import EditMetrics from './EditMetrics';
 import styles from './index.less';
+import LineGraph from './LineGraph';
 
 interface GraphItemProps {
   graphContainer: API.MetricGroup;
@@ -16,6 +18,7 @@ interface GraphItemProps {
   useFor: Monitor.MonitorUseFor;
   filterData?: any[];
   filterQueryMetric?: Monitor.MetricsLabels;
+  activeDimension?: string;
 }
 
 // 生成图表标题文本
@@ -55,30 +58,61 @@ const GraphItem: React.FC<GraphItemProps> = ({
   useFor,
   filterData,
   filterQueryMetric,
+  activeDimension,
 }) => {
+  const { token } = theme.useToken();
+
+  // 管理当前显示的指标
+  const [metrics, setMetrics] = useState(graphContainer.metrics);
+
   const graphTitle = generateGraphTitle(graphContainer, type);
   const graphId = generateGraphId(activeTabKey, graphContainer.name);
 
+  // 当前展示的指标名称列表
+  const metricsName = metrics.map(item => item.name as string);
+
   return (
-    <Card className={styles.monitorItem} key={graphIdx}>
+    <Card
+      className={styles.monitorItem}
+      key={graphIdx}
+      styles={{
+        body: {
+          padding: 16,
+        },
+      }}
+    >
       <div className={styles.graphHeader}>
         <IconTip
           tip={graphContainer.description}
-          style={{ fontSize: 16 }}
+          iconProps={{ style: { color: token.colorTextSecondary } }}
           content={<span className={styles.graphHeaderText}>{graphTitle}</span>}
         />
+        {!isEmpty(graphContainer.metrics) && (
+          <EditMetrics
+            key={graphId}
+            groupMetrics={graphContainer.metrics}
+            initialKeys={metricsName}
+            onOk={selectedMetrics => {
+              const newMetrics = selectedMetrics.map(item => {
+                return find(graphContainer.metrics, metric => metric.name === item)!;
+              });
+              setMetrics(newMetrics);
+            }}
+          />
+        )}
       </div>
       <LineGraph
         id={graphId}
         isRefresh={isRefresh}
         queryRange={queryRange}
-        metrics={graphContainer.metrics}
+        metrics={metrics}
         labels={filterLabel}
         groupLabels={dynamicGroupLabels}
         type={type}
         useFor={useFor}
         filterData={filterData}
         filterQueryMetric={filterQueryMetric}
+        activeDimension={activeDimension}
       />
     </Card>
   );

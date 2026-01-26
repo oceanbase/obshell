@@ -1,7 +1,6 @@
 import { Input, Menu } from '@oceanbase/design';
 import { SearchOutlined } from '@oceanbase/icons';
 import React, { useEffect, useState } from 'react';
-import EllipsisTooltip from '@/component/common/EllipsisTooltip';
 import styles from './index.less';
 
 interface MonitorUnitSelectProps {
@@ -47,11 +46,7 @@ export default (props: MonitorUnitSelectProps) => {
       <Menu
         selectedKeys={[String(selectedUnit?.value) || '']}
         items={searchedUnits.map(u => ({
-          label: (
-            <EllipsisTooltip title={u.value || ''} placement="right">
-              {u.value || ''}
-            </EllipsisTooltip>
-          ),
+          label: u.value || '',
           key: u.value || '',
           onClick: () => handleSelect(u),
         }))}

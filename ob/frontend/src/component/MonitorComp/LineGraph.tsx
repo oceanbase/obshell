@@ -1,12 +1,15 @@
-import { POINT_NUMBER } from '@/constant/monitor';
 import { DATE_TIME_FORMAT } from '@/constant/datetime';
+import { BASE_CHART_COLORS, EXTEND_CHART_COLORS, POINT_NUMBER } from '@/constant/monitor';
+import { useColorMapping } from '@/hook/useColorMapping';
 import useRequestOfMonitor from '@/hook/useRequestOfMonitor';
+import { queryMetricsReq } from '@/service';
 import { Line } from '@antv/g2plot';
+import { formatNumber } from '@oceanbase/util';
 import { useInViewport, useUpdateEffect } from 'ahooks';
 import { Empty, Spin } from 'antd';
 import dayjs from 'dayjs';
-import React, { useEffect, useRef, useState } from 'react';
-import { queryMetricsReq } from '@/service';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import ChartLegend, { LegendDataProps } from './ChartLegend';
 
 interface LineGraphProps {
   id: string;
@@ -20,6 +23,7 @@ interface LineGraphProps {
   useFor: Monitor.MonitorUseFor;
   filterData?: any[];
   filterQueryMetric?: Monitor.MetricsLabels;
+  activeDimension?: string;
 }
 
 export default function LineGraph({
@@ -28,12 +32,13 @@ export default function LineGraph({
   labels,
   queryRange,
   groupLabels,
-  height = 186,
+  height = 110,
   isRefresh = false,
   type = 'DETAIL',
   useFor,
   filterData,
   filterQueryMetric,
+  activeDimension,
 }: LineGraphProps) {
   const [isEmpty, setIsEmpty] = useState<boolean>(true);
   const [isloading, setIsloading] = useState<boolean>(true);
@@ -44,6 +49,20 @@ export default function LineGraph({
   // only initiate a network request when entering the visible area for the first time
   const [inViewportCount, setInViewportCount] = useState<number>(0);
   const lastRequestRef = useRef<string>('');
+
+  // 隐藏的图例列表
+  const [hiddenLegends, setHiddenLegends] = useState<string[]>([]);
+  // 图例数据
+  const [legendData, setLegendData] = useState<Record<string, LegendDataProps>>({});
+  // 原始图表数据（未过滤隐藏图例）
+  const [originalChartData, setOriginalChartData] = useState<any[]>([]);
+
+  // 获取所有指标名称用于颜色映射，使用 useMemo 避免每次渲染都创建新数组
+  const metricsName = useMemo(
+    () => Array.from(new Set(originalChartData.map(item => item.name))),
+    [originalChartData]
+  );
+  const colorMapping = useColorMapping(metricsName);
 
   /**
    * The overview page only displays the first metrics
@@ -63,6 +82,7 @@ export default function LineGraph({
       useFor,
       filterData,
       filterQueryMetric,
+      activeDimension,
     };
   };
 
@@ -89,7 +109,7 @@ export default function LineGraph({
     queryMetrics(params);
   };
 
-  const lineInstanceRender = (metricsData: any) => {
+  const lineInstanceRender = (metricsData: any, isLegendToggle = false) => {
     // 按时间戳排序数据,确保图表按时间顺序显示
     const sortedMetricsData = [...metricsData].sort((a, b) => a.date - b.date);
     const timeStampList: number[] = sortedMetricsData.map(item => item.date);
@@ -103,33 +123,45 @@ export default function LineGraph({
       values.push(metric.value);
     }
 
-    // 统计不同的图例数量
-    const uniqueNames = new Set(sortedMetricsData.map(item => item.name));
-    const legendCount = uniqueNames.size;
+    // 过滤掉隐藏的图例数据
+    const filterLegendsData = sortedMetricsData.filter(item => !hiddenLegends.includes(item.name));
+
+    // 统计不同的图例数量和名称
+    const uniqueNames = Array.from(new Set(sortedMetricsData.map(item => item.name)));
+    const legendCount = uniqueNames.length;
     // 图例超过5个时才启用滚动
     const needScroll = legendCount > 5;
 
-    const config = {
-      data: sortedMetricsData,
+    // 根据当前数据计算颜色映射（确保首次渲染就有正确的颜色）
+    const chartColors = legendCount > 10 ? EXTEND_CHART_COLORS : BASE_CHART_COLORS;
+    const currentColorMapping: Record<string, string> = uniqueNames.reduce((acc, cur, index) => {
+      acc[cur] = chartColors[index % chartColors.length];
+      return acc;
+    }, {} as Record<string, string>);
+
+    const config: any = {
+      data: filterLegendsData,
       xField: 'date',
       yField: 'value',
       height: height,
       seriesField: 'name',
+      color: (datum: any) => currentColorMapping[datum.name] || '#3D88F2',
+      legend: false, // 始终隐藏 G2Plot 自带的图例
       xAxis: {
         nice: false,
         tickCount: POINT_NUMBER,
         label: {
-          formatter: (text: number) => {
+          formatter: (text: string) => {
             const time = dayjs
-              .unix(Math.ceil(text / 1000))
+              .unix(Math.ceil(Number(text) / 1000))
               .format(isCrossDay ? 'DD HH:mm' : 'HH:mm');
             return time;
           },
         },
       },
       tooltip: {
-        title: (value: number) => {
-          return dayjs.unix(Math.ceil(value / 1000)).format(DATE_TIME_FORMAT);
+        title: (value: string) => {
+          return dayjs.unix(Math.ceil(Number(value) / 1000)).format(DATE_TIME_FORMAT);
         },
         // 根据图例数量动态设置样式
         domStyles: needScroll
@@ -142,8 +174,6 @@ export default function LineGraph({
               },
             }
           : undefined,
-        // 自动调整位置,避免超出屏幕
-        position: 'auto',
         // 设置tooltip偏移量,让它离鼠标远一点,方便左右滑动查看数据
         offset: needScroll ? 40 : 0,
         // 优化显示效果
@@ -151,9 +181,16 @@ export default function LineGraph({
         shared: true,
         // 图例超过5个时才允许鼠标进入tooltip
         enterable: needScroll,
-      },
+      } as any,
       interactions: [{ type: 'marker-active' }],
+      animation: isLegendToggle ? false : undefined, // 图例切换时禁用动画
     };
+
+    // 如果是图例切换且图表实例已存在，使用 changeData 更新数据
+    if (isLegendToggle && lineInstanceRef.current) {
+      lineInstanceRef.current.changeData(filterLegendsData);
+      return;
+    }
 
     // 如果图表实例存在，先销毁它
     if (lineInstanceRef.current) {
@@ -177,7 +214,7 @@ export default function LineGraph({
   const { data: metricsData, run: queryMetrics } = useRequestOfMonitor(queryMetricsReq, {
     isRealTime: isRefresh,
     manual: true,
-    onSuccess: metricsData => {
+    onSuccess: (metricsData: any) => {
       if (!metricsData || !metricsData.length) {
         lineInstanceDestroy();
         return;
@@ -186,6 +223,44 @@ export default function LineGraph({
       if (metricsData && metricsData.length > 0) {
         setIsEmpty(false);
         setIsloading(false);
+
+        // 按时间戳排序数据
+        const sortedMetricsData = [...metricsData].sort((a, b) => a.date - b.date);
+
+        // 保存原始图表数据（只在数据请求成功时更新，避免在渲染函数中更新导致循环）
+        setOriginalChartData(sortedMetricsData);
+
+        // 计算图例数据
+        const legendObject: Record<string, number[]> = {};
+        sortedMetricsData.forEach(item => {
+          if (!legendObject[item.name]) {
+            legendObject[item.name] = [];
+          }
+          legendObject[item.name].push(item.value);
+        });
+
+        const newLegendData: Record<string, LegendDataProps> = Object.keys(legendObject).reduce(
+          (pre, cur) => {
+            const max = Math.max(...legendObject[cur]);
+            const avg =
+              legendObject[cur].reduce((acc, val) => acc + val, 0) / legendObject[cur].length;
+            const currentItem = sortedMetricsData.filter(item => item.name === cur).pop();
+            const current = currentItem?.value || 0;
+
+            return {
+              ...pre,
+              [cur]: {
+                name: cur,
+                max: formatNumber(max),
+                avg: formatNumber(avg),
+                current: formatNumber(current),
+              },
+            };
+          },
+          {}
+        );
+        setLegendData(newLegendData);
+
         lineInstanceRender(metricsData);
       } else {
         lineInstanceDestroy();
@@ -197,10 +272,10 @@ export default function LineGraph({
   });
 
   useUpdateEffect(() => {
-    if (!isEmpty) {
-      lineInstanceRender(metricsData);
+    if (!isEmpty && metricsData) {
+      lineInstanceRender(metricsData, true); // 传入 true 表示是图例切换
     }
-  }, [isEmpty]);
+  }, [hiddenLegends]);
 
   useUpdateEffect(() => {
     if (inViewport) {
@@ -231,7 +306,7 @@ export default function LineGraph({
         safeQueryMetrics();
       }
     }
-  }, [labels, queryRange, groupLabels, filterQueryMetric]);
+  }, [labels, queryRange, groupLabels, filterQueryMetric, metrics]);
 
   // 监听ID变化，当tab切换导致ID变化时，重新初始化图表
   useUpdateEffect(() => {
@@ -257,15 +332,33 @@ export default function LineGraph({
     };
   }, []);
 
+  // 点击图例
+  const handleLegendClick = (name: string) => {
+    setHiddenLegends(prev =>
+      prev.includes(name) ? prev.filter(line => line !== name) : [...prev, name]
+    );
+  };
+
   return (
-    <div style={{ height: `${height}px` }}>
+    <div>
       <Spin spinning={isloading}>
         {isEmpty ? (
           <div ref={lineGraphRef}>
             <Empty />
           </div>
         ) : (
-          <div id={id} ref={lineGraphRef}></div>
+          <>
+            <div style={{ height: 'auto' }} id={id} ref={lineGraphRef}></div>
+            {/* 自定义图例区域 */}
+            <ChartLegend
+              colorMapping={colorMapping}
+              metricsName={metricsName}
+              chartData={originalChartData}
+              legendData={legendData}
+              hiddenLegends={hiddenLegends}
+              onClickLegend={handleLegendClick}
+            />
+          </>
         )}
       </Spin>
     </div>

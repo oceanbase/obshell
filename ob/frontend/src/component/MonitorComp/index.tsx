@@ -1,16 +1,16 @@
 import { formatMessage } from '@/util/intl';
-import { useRequest } from 'ahooks';
 import { Card } from '@oceanbase/design';
+import { useRequest } from 'ahooks';
 
-import { listAllMetrics } from '@/service/obshell/metric';
-import React, { useEffect, useMemo, useState } from 'react';
-import styles from './index.less';
 import { DimensionMap } from '@/constant/monitor';
-import MySegmented from '../MySegmented';
+import { listAllMetrics } from '@/service/obshell/metric';
 import { isEmpty } from 'lodash';
-import MonitorUnitSelect from '../MonitorUnitSelect';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'umi';
+import MonitorUnitSelect from '../MonitorUnitSelect';
+import MySegmented from '../MySegmented';
 import { GraphItem } from './GraphItem';
+import styles from './index.less';
 
 /**
  * Queryable label:
@@ -26,7 +26,7 @@ interface MonitorCompProps {
   filterLabel: Monitor.MetricsLabels;
   queryRange: Monitor.QueryRangeType;
   isRefresh?: boolean;
-  queryScope: Monitor.EventObjectType;
+  queryScope: API.ListAllMetricsParams['scope'];
   type: Monitor.MonitorUseTarget;
   groupLabels: Monitor.LabelKeys[];
   useFor?: Monitor.MonitorUseFor;
@@ -226,7 +226,7 @@ export default function MonitorComp({
   const renderGraphList = (metricGroups: API.MetricGroup[]) => {
     return metricGroups?.map((graphContainer: API.MetricGroup, graphIdx: number) => (
       <GraphItem
-        key={graphIdx}
+        key={`${activeTabKey}-${activeDimension}-${graphIdx}`}
         graphContainer={graphContainer}
         graphIdx={graphIdx}
         activeTabKey={activeTabKey}
@@ -238,6 +238,7 @@ export default function MonitorComp({
         useFor={useFor}
         filterData={filterData}
         filterQueryMetric={unitFilterQueryMetric}
+        activeDimension={activeDimension}
       />
     ));
   };

@@ -9,7 +9,7 @@ interface MonitorDetailProps {
   filterLabel: Monitor.LabelType[];
   setFilterLabel: React.Dispatch<React.SetStateAction<Monitor.LabelType[]>>;
   groupLabels: Monitor.LabelKeys[];
-  queryScope: Monitor.EventObjectType;
+  queryScope: API.ListAllMetricsParams['scope'];
   useFor: Monitor.MonitorUseFor;
 }
 

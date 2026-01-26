@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
 import { AUTO_FRESH_ITEMS_TYPE } from '@/component/MonitorSearch/AutoFresh';
+import { formatMessage } from '@/util/intl';
 
 export const MAX_POINTS = 120;
 
@@ -47,6 +47,44 @@ export const DEFAULT_QUERY_RANGE: Monitor.QueryRangeType = {
 export const REFRESH_FREQUENCY = 15;
 
 export const POINT_NUMBER = 15;
+
+// OB Charts 基础色板
+export const BASE_CHART_COLORS = [
+  '#3D88F2',
+  '#41D9A6',
+  '#FAC357',
+  '#547199',
+  '#79BFF2',
+  '#4D997F',
+  '#88CC66',
+  '#B3749E',
+  '#E6987F',
+  '#8C675B',
+];
+
+// OB Charts 延伸色板
+export const EXTEND_CHART_COLORS = [
+  '#3D88F2',
+  '#8BB8F7',
+  '#41D9A6',
+  '#8DE8CA',
+  '#FAC357',
+  '#FCDB9A',
+  '#547199',
+  '#98AAC2',
+  '#79BFF2',
+  '#AFD9F7',
+  '#4D997F',
+  '#94C2B3',
+  '#88CC66',
+  '#B7E0A3',
+  '#B3749E',
+  '#D1ACC5',
+  '#E6987F',
+  '#F0C1B2',
+  '#8C675B',
+  '#BAA49D',
+];
 
 const Dimension = {
   databasePerformance: [

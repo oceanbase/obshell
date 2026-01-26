@@ -1,0 +1,96 @@
+.legendContainer {
+  background: #f8fafe;
+  border-radius: 4px;
+  margin-top: 10px;
+  height: 108px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+
+  .legendTable {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+
+    td {
+      line-height: 20px;
+    }
+
+    thead {
+      height: 28px;
+
+      tr {
+        th:first-child {
+          text-align: left;
+        }
+
+        th {
+          color: #1890ff;
+          line-height: 20px;
+          text-align: right;
+          font-weight: 400;
+          padding: 4px 0;
+        }
+
+        .sortableHeader {
+          cursor: pointer;
+          user-select: none;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: rgba(0, 0, 0, 2%);
+          }
+
+          .headerContent {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: flex-end;
+            width: 100%;
+
+            .sortIcon {
+              font-size: 12px;
+              color: #1890ff;
+            }
+          }
+        }
+      }
+    }
+
+    tbody {
+      tr {
+        td:first-child {
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+          text-align: left;
+          color: rgba(0, 0, 0, 0.65);
+          padding-right: 24px;
+
+          .stick {
+            min-width: 14px;
+            width: 14px;
+            height: 2px;
+            margin-right: 8px;
+          }
+        }
+
+        td {
+          text-align: right;
+          color: rgba(0, 0, 0, 0.85);
+        }
+      }
+    }
+  }
+
+  .legendTableHead {
+    padding: 0 8px;
+  }
+
+  .legendTableBody {
+    padding: 0 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+}

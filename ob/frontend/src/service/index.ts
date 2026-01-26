@@ -1,7 +1,7 @@
 import { formatMessage } from '@/util/intl';
+import { findBy, formatNumber } from '@oceanbase/util';
 import { flatten } from 'lodash';
 import { queryMetrics } from './obshell/metric';
-import { findBy, formatNumber } from '@oceanbase/util';
 
 type QueryMetricsType = {
   groupLabels: string[];
@@ -12,6 +12,7 @@ type QueryMetricsType = {
   useFor: Monitor.MonitorUseFor;
   filterData?: any[];
   filterQueryMetric?: Monitor.MetricsLabels;
+  activeDimension?: string;
 };
 
 type LabelType = {
@@ -107,6 +108,7 @@ export async function queryMetricsReq({
   metrics,
   filterData,
   filterQueryMetric,
+  activeDimension,
   ...data
 }: QueryMetricsType) {
   const metricsKeys =
@@ -163,26 +165,37 @@ export async function queryMetricsReq({
           const svrIpLabel = labels.find((label: LabelType) => label.key === 'svr_ip');
           const svrPortLabel = labels.find((label: LabelType) => label.key === 'svr_port');
 
+          // 根据监控类型过滤标签
           let processedLabels = labels
-            .filter((label: LabelType) => label.key !== 'svr_ip' && label.key !== 'svr_port')
+            .filter((label: LabelType) => {
+              // 过滤掉 svr_ip 和 svr_port
+              if (label.key === 'svr_ip' || label.key === 'svr_port') return false;
+              // 如果是集群监控，过滤掉 ob_cluster_name
+              if (useFor === 'cluster' && label.key === 'ob_cluster_name') return false;
+              // 如果是租户监控，过滤掉 tenant_name
+              if (useFor === 'tenant' && label.key === 'tenant_name') return false;
+              return true;
+            })
             .sort((a: LabelType, b: LabelType) => a.key.localeCompare(b.key));
 
-          // 如果同时存在 svr_ip 和 svr_port，添加拼接后的服务器地址
-          if (svrIpLabel && svrPortLabel) {
-            processedLabels = [
-              ...processedLabels,
-              { key: 'server', value: `${svrIpLabel.value}:${svrPortLabel.value}` },
-            ];
-          } else {
-            // 如果只有其中一个，保留原标签
-            if (svrIpLabel) processedLabels.push(svrIpLabel);
-            if (svrPortLabel) processedLabels.push(svrPortLabel);
+          // 如果不是 unit 维度，且同时存在 svr_ip 和 svr_port，添加拼接后的服务器地址
+          if (activeDimension !== 'unit') {
+            if (svrIpLabel && svrPortLabel) {
+              processedLabels = [
+                ...processedLabels,
+                { key: 'server', value: `${svrIpLabel.value}:${svrPortLabel.value}` },
+              ];
+            } else {
+              // 如果只有其中一个，保留原标签
+              if (svrIpLabel) processedLabels.push(svrIpLabel);
+              if (svrPortLabel) processedLabels.push(svrPortLabel);
+            }
           }
 
           const tenantLabel = processedLabels.map((label: LabelType) => label.value).join('，');
           const tenantName = tenantLabel || '';
           const metricName = findBy(metrics, 'key', metric.metric?.name)?.name || '';
-          item.name = `${metricName} (${tenantName})`;
+          item.name = `${metricName}${tenantName ? ` (${tenantName})` : ''}`;
         }
       });
     });

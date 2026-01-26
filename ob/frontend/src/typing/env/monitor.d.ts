@@ -33,13 +33,6 @@ declare namespace Monitor {
     step: number;
   };
 
-  type EventObjectType =
-    | 'OBCLUSTER'
-    | 'OBTENANT'
-    | 'OBBACKUPPOLICY'
-    | 'OBPROXY'
-    | EventObjectType[];
-
   type LabelKeys =
     | 'ob_cluster_name'
     | 'ob_cluster_id'
