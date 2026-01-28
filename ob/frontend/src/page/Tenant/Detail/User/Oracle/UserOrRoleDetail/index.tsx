@@ -672,6 +672,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                   })}
                   className="search-input"
                 />
+
                 {userData?.user_name !== 'SYS' && (
                   <Button
                     onClick={() => {
@@ -713,6 +714,7 @@ const UserOrRoleDetail: React.FC<UserOrRoleDetailProps> = ({
                       title={formatMessage(
                         {
                           id: 'ocp-express.Oracle.UserOrRoleDetail.AfterTheObjectIsDeleted',
+                          defaultMessage: '删除后，该用户将无此对象的权限，确定要删除吗？',
                         },
 
                         { selectedRowsLength: selectedRows.length }

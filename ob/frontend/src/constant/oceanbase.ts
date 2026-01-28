@@ -73,18 +73,6 @@ export const OB_CLUSTER_STATUS_LIST: Global.StatusItem[] = [
 ];
 
 export const ZONE_STATUS_LIST: Global.StatusItem[] = [
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Creating',
-  //     defaultMessage: '创建中',
-  //   }),
-
-  //   value: 'CREATING',
-  //   badgeStatus: 'processing',
-  //   // 需要遵守一定顺序，越危险的操作位置越后
-  //   operations: [],
-  // },
-
   {
     label: formatMessage({
       id: 'ocp-express.src.constant.oceanbase.Running',
@@ -95,25 +83,6 @@ export const ZONE_STATUS_LIST: Global.StatusItem[] = [
     operations: [
       {
         label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.AddObserver',
-          defaultMessage: '添加 OBServer',
-        }),
-
-        value: 'addServer',
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Restart.4',
-          defaultMessage: '重启',
-        }),
-
-        value: 'restart',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
           id: 'ocp-express.src.constant.oceanbase.Stop.4',
           defaultMessage: '停止',
         }),
@@ -121,232 +90,64 @@ export const ZONE_STATUS_LIST: Global.StatusItem[] = [
         value: 'stop',
         isDanger: true,
       },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
-      },
     ],
   },
 
   {
     label: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.Unavailable',
-      defaultMessage: '不可用',
+      id: 'ocp-express.src.constant.oceanbase.Stop',
+      defaultMessage: '停止中',
     }),
+    value: 'STOPPING',
+    badgeStatus: 'processing',
+    operations: [],
+  },
 
-    value: 'SERVICE_STOPPED',
-    badgeStatus: 'error',
+  {
+    label: formatMessage({
+      id: 'OBShell.src.constant.oceanbase.Stopped',
+      defaultMessage: '已停止',
+    }),
+    value: 'STOPPED',
+    badgeStatus: 'default',
     operations: [
       {
         label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.AddObserver',
-          defaultMessage: '添加 OBServer',
+          id: 'ocp-express.src.constant.oceanbase.Start',
+          defaultMessage: '启动',
         }),
-
-        value: 'addServer',
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Restart.4',
-          defaultMessage: '重启',
-        }),
-
-        value: 'restart',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Stop.4',
-          defaultMessage: '停止',
-        }),
-
-        value: 'stop',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
+        value: 'start',
       },
     ],
   },
 
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Deleting',
-  //     defaultMessage: '删除中',
-  //   }),
+  {
+    label: formatMessage({
+      id: 'ocp-express.src.constant.oceanbase.Starting',
+      defaultMessage: '启动中',
+    }),
 
-  //   value: 'DELETING',
-  //   badgeStatus: 'warning',
-  //   operations: [],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Stop',
-  //     defaultMessage: '停止中',
-  //   }),
-  //   value: 'STOPPING',
-  //   badgeStatus: 'warning',
-  //   operations: [],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Stopped',
-  //     defaultMessage: '已停止',
-  //   }),
-  //   value: 'STOPPED',
-  //   badgeStatus: 'default',
-  //   operations: [
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.Start',
-  //         defaultMessage: '启动',
-  //       }),
-  //       value: 'start',
-  //     },
-
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.Delete',
-  //         defaultMessage: '删除',
-  //       }),
-
-  //       value: 'delete',
-  //       isDanger: true,
-  //     },
-  //   ],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Starting',
-  //     defaultMessage: '启动中',
-  //   }),
-
-  //   value: 'STARTING',
-  //   badgeStatus: 'processing',
-  //   operations: [],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Restart',
-  //     defaultMessage: '重启中',
-  //   }),
-  //   value: 'RESTARTING',
-  //   badgeStatus: 'processing',
-  //   operations: [],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.Deleted',
-  //     defaultMessage: '已删除',
-  //   }),
-  //   value: 'DELETED',
-  //   badgeStatus: 'default',
-  //   operations: [
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.ReleaseAHost',
-  //         defaultMessage: '释放主机',
-  //       }),
-
-  //       value: 'setFree',
-  //     },
-  //   ],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.OperationsIn',
-  //     defaultMessage: '运维中',
-  //   }),
-
-  //   value: 'OPERATING',
-  //   badgeStatus: 'processing',
-  //   operations: [],
-  // },
-
-  // {
-  //   label: formatMessage({
-  //     id: 'ocp-express.src.constant.oceanbase.ServiceStopped',
-  //     defaultMessage: '服务已停止',
-  //   }),
-
-  //   value: 'SERVICE_STOPPED',
-  //   badgeStatus: 'warning',
-  //   operations: [
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.Start',
-  //         defaultMessage: '启动',
-  //       }),
-  //       value: 'start',
-  //     },
-
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.Restart.4',
-  //         defaultMessage: '重启',
-  //       }),
-
-  //       value: 'restart',
-  //       isDanger: true,
-  //     },
-
-  //     {
-  //       label: formatMessage({
-  //         id: 'ocp-express.src.constant.oceanbase.Delete',
-  //         defaultMessage: '删除',
-  //       }),
-
-  //       value: 'delete',
-  //       isDanger: true,
-  //     },
-  //   ],
-  // },
+    value: 'STARTING',
+    badgeStatus: 'processing',
+    operations: [],
+  },
+  {
+    label: formatMessage({ id: 'OBShell.src.constant.oceanbase.Unknown', defaultMessage: '未知' }),
+    value: 'UNKNOWN',
+    badgeStatus: 'default',
+    operations: [
+      {
+        label: formatMessage({
+          id: 'ocp-express.src.constant.oceanbase.Start',
+          defaultMessage: '启动',
+        }),
+        value: 'start',
+      },
+    ],
+  },
 ];
 
 export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
-  {
-    label: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.Creating',
-      defaultMessage: '创建中',
-    }),
-
-    value: 'CREATING',
-    badgeStatus: 'processing',
-    // 需要遵守一定顺序，越危险的操作位置越后
-    operations: [],
-  },
-  {
-    label: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.Reloading',
-      defaultMessage: '重装中',
-    }),
-
-    value: 'REINSTALLING',
-    badgeStatus: 'warning',
-    operations: [],
-  },
-
   {
     label: formatMessage({
       id: 'ocp-express.src.constant.oceanbase.Running',
@@ -355,16 +156,6 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
     value: 'RUNNING',
     badgeStatus: 'success', //processing
     operations: [
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Restart.4',
-          defaultMessage: '重启',
-        }),
-
-        value: 'restart',
-        isDanger: true,
-      },
-
       {
         label: formatMessage({
           id: 'ocp-express.src.constant.oceanbase.StopService',
@@ -394,34 +185,6 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
         value: 'stopProcess',
         isDanger: true,
       },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Replacement',
-          defaultMessage: '替换',
-        }),
-
-        value: 'replace',
-        isDanger: true,
-      },
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Reload',
-          defaultMessage: '重装',
-        }),
-
-        value: 'reInstall',
-        isDanger: true,
-      },
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
-      },
     ],
   },
 
@@ -441,35 +204,6 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
         }),
         value: 'start',
       },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Replacement',
-          defaultMessage: '替换',
-        }),
-
-        value: 'replace',
-        isDanger: true,
-      },
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Reload',
-          defaultMessage: '重装',
-        }),
-
-        value: 'reInstall',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
-      },
     ],
   },
 
@@ -480,23 +214,8 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
     }),
 
     value: 'SERVICE_STOPPING',
-    badgeStatus: 'warning',
-    operations: [
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.StopProcess',
-          defaultMessage: '停止进程',
-        }),
-
-        modalTitle: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.StopObserverProcess',
-          defaultMessage: '停止 OBServer 进程',
-        }),
-
-        value: 'stopProcess',
-        isDanger: true,
-      },
-    ],
+    badgeStatus: 'processing',
+    operations: [],
   },
 
   {
@@ -506,7 +225,7 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
     }),
 
     value: 'PROCESS_STOPPING',
-    badgeStatus: 'warning',
+    badgeStatus: 'processing',
     operations: [],
   },
 
@@ -541,35 +260,6 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
         value: 'stopProcess',
         isDanger: true,
       },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Replacement',
-          defaultMessage: '替换',
-        }),
-
-        value: 'replace',
-        isDanger: true,
-      },
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Reload',
-          defaultMessage: '重装',
-        }),
-
-        value: 'reInstall',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
-      },
     ],
   },
 
@@ -589,35 +279,6 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
         }),
         value: 'start',
       },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Replacement',
-          defaultMessage: '替换',
-        }),
-
-        value: 'replace',
-        isDanger: true,
-      },
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Reload',
-          defaultMessage: '重装',
-        }),
-
-        value: 'reInstall',
-        isDanger: true,
-      },
-
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.Delete',
-          defaultMessage: '删除',
-        }),
-
-        value: 'delete',
-        isDanger: true,
-      },
     ],
   },
 
@@ -628,17 +289,7 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
     }),
 
     value: 'STARTING',
-    badgeStatus: 'warning',
-    operations: [],
-  },
-
-  {
-    label: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.Restart',
-      defaultMessage: '重启中',
-    }),
-    value: 'RESTARTING',
-    badgeStatus: 'warning',
+    badgeStatus: 'processing',
     operations: [],
   },
 
@@ -649,32 +300,8 @@ export const OB_SERVER_STATUS_LIST: Global.StatusItem[] = [
     }),
 
     value: 'DELETING',
-    badgeStatus: 'warning',
+    badgeStatus: 'processing',
     operations: [],
-  },
-
-  {
-    label: formatMessage({
-      id: 'ocp-express.src.constant.oceanbase.Deleted',
-      defaultMessage: '已删除',
-    }),
-    value: 'DELETED',
-    badgeStatus: 'default',
-    operations: [
-      {
-        label: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.ReleaseAHost',
-          defaultMessage: '释放主机',
-        }),
-
-        modalTitle: formatMessage({
-          id: 'ocp-express.src.constant.oceanbase.ReleaseAHost',
-          defaultMessage: '释放主机',
-        }),
-
-        value: 'setFree',
-      },
-    ],
   },
 ];
 

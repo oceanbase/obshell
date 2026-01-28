@@ -1,42 +1,41 @@
+import ContentWithReload from '@/component/ContentWithReload';
+import MyCard from '@/component/MyCard';
+import useDocumentTitle from '@/hook/useDocumentTitle';
+import useReload from '@/hook/useReload';
+import useUiMode from '@/hook/useUiMode';
+import { obStart, obStop } from '@/service/obshell/ob';
+import { obclusterInfo, obclusterSetParameters } from '@/service/obshell/obcluster';
+import { getAgentMainDags } from '@/service/obshell/task';
 import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
-import React, { useRef, useState } from 'react';
 import {
-  Space,
-  Tag,
-  Col,
-  Row,
   Badge,
   Button,
-  theme,
+  Col,
   Dropdown,
   Menu,
   Modal,
+  Row,
+  Space,
+  Tag,
   message,
+  theme,
 } from '@oceanbase/design';
-import { flatten, isEmpty, reduce } from 'lodash';
+import { EllipsisOutlined } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
-import useReload from '@/hook/useReload';
-import useDocumentTitle from '@/hook/useDocumentTitle';
-import ContentWithReload from '@/component/ContentWithReload';
-import MyCard from '@/component/MyCard';
+import { useRafInterval, useRequest } from 'ahooks';
+import { flatten, isEmpty, reduce } from 'lodash';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
+import { history, useDispatch, useModel } from 'umi';
+import BaseInfo from './BaseInfo';
 import ClusterInfo from './ClusterInfo';
 import CompactionTimeTop3 from './CompactionTimeTop3';
-import TenantResourceTop3 from './TenantResourceTop3';
-import ZoneListOrTopo from './ZoneListOrTopo';
-import { EllipsisOutlined } from '@oceanbase/icons';
-import UpgradeDrawer from './UpgradeDrawer';
-import { useRafInterval, useRequest } from 'ahooks';
-import { obStart, obStop } from '@/service/obshell/ob';
-import { obclusterInfo, obclusterSetParameters } from '@/service/obshell/obcluster';
-import UpgradeAgentDrawer from './UpgradeAgentDrawer';
-import moment from 'moment';
-import { getAgentMainDags } from '@/service/obshell/task';
-import useUiMode from '@/hook/useUiMode';
-import LicenseDetailModal from './License/LicenseDetailModal';
 import LicenseAlert from './License/LicenseAlert';
-import BaseInfo from './BaseInfo';
-import { useDispatch } from 'umi';
+import LicenseDetailModal from './License/LicenseDetailModal';
+import TenantResourceTop3 from './TenantResourceTop3';
+import UpgradeAgentDrawer from './UpgradeAgentDrawer';
+import UpgradeDrawer from './UpgradeDrawer';
+import ZoneListOrTopo from './ZoneListOrTopo';
 
 export const getServerStatus = (server: API.Observer) => {
   let status = 'OTHER';
@@ -67,9 +66,11 @@ const Detail: React.FC = () => {
     formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
   );
 
+  const { getTopologyInfo, refreshTopologyInfo } = useModel('topologyInfo');
+
   const {
     data: obclusterInfoRes,
-    refresh,
+    refresh: refreshObclusterInfo,
     loading: obclusterInfoLoading,
   } = useRequest(
     () =>
@@ -95,6 +96,15 @@ const Detail: React.FC = () => {
       },
     }
   );
+
+  const refresh = () => {
+    refreshObclusterInfo();
+    refreshTopologyInfo();
+  };
+
+  useEffect(() => {
+    getTopologyInfo();
+  }, []);
 
   useRafInterval(
     () => {
@@ -603,16 +613,16 @@ const Detail: React.FC = () => {
                 >
                   {isAbnormal
                     ? formatMessage({
-                        id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
-                        defaultMessage: '集群状态异常',
-                      })
+                      id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
+                      defaultMessage: '集群状态异常',
+                    })
                     : formatMessage(
-                        {
-                          id: 'ocp-express.Cluster.Overview.Obversion',
-                          defaultMessage: '{obVersion} 版本',
-                        },
-                        { obVersion: obVersion }
-                      )}
+                      {
+                        id: 'ocp-express.Cluster.Overview.Obversion',
+                        defaultMessage: '{obVersion} 版本',
+                      },
+                      { obVersion: obVersion }
+                    )}
                 </Tag>
               }
               spin={reloading}
@@ -705,7 +715,12 @@ const Detail: React.FC = () => {
                     >
                       {item.totalCount}
                     </div>
-                    <div style={{ fontSize: '14px', color: token.colorTextTertiary }}>总数量</div>
+                    <div style={{ fontSize: '14px', color: token.colorTextTertiary }}>
+                      {formatMessage({
+                        id: 'OBShell.Cluster.Overview.TotalQuantity',
+                        defaultMessage: '总数量',
+                      })}
+                    </div>
                   </div>
                   {item.content}
                 </div>
@@ -723,7 +738,7 @@ const Detail: React.FC = () => {
           <TenantResourceTop3 clusterData={clusterData} />
         </Col>
         <Col span={24}>
-          <ZoneListOrTopo clusterData={clusterData} />
+          <ZoneListOrTopo />
         </Col>
       </Row>
 

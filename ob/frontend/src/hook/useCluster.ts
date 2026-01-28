@@ -21,6 +21,5 @@ export function useCluster() {
     isStandalone,
     isDistributedBusiness,
     isCommunityEdition,
-
   };
 }

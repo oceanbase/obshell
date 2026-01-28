@@ -1,28 +1,219 @@
+import TaskLabel from '@/component/TaskLabel';
+import { ZONE_STATUS_LIST } from '@/constant/oceanbase';
+import { obStart, obStopZone } from '@/service/obshell/ob';
+import { getAgentMainDags } from '@/service/obshell/task';
+import { getFailedTasksInfo } from '@/util/cluster';
+import { getOperationComponent } from '@/util/component';
 import { formatMessage } from '@/util/intl';
+import { taskSuccess } from '@/util/task';
+import { Badge, Checkbox, message, Modal, Space, Table, TableColumnType } from '@oceanbase/design';
+import { ContentWithIcon } from '@oceanbase/ui';
+import { findByValue } from '@oceanbase/util';
+import { useRequest } from 'ahooks';
 import React, { useState } from 'react';
-import { Badge, TableColumnType } from '@oceanbase/design';
-import { Table } from '@oceanbase/design';
-import { byte2GB, findByValue } from '@oceanbase/util';
-import { isEnglish } from '@/util';
-import MyProgress from '@/component/MyProgress';
-import { ZONE_STATUS_LIST, OB_SERVER_STATUS_LIST } from '@/constant/oceanbase';
-import { getServerStatus } from '..';
+import { useModel } from 'umi';
 import styles from './index.less';
+import OBServerList from './OBServerList';
 
-export interface ZoneListProps {
-  clusterData: API.ClusterInfo;
+export interface Operation {
+  label: string;
+  modalTitle: string;
+  value: string;
+  isDanger: boolean;
 }
 
-const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
-  const dataSource = clusterData?.zones || [];
-  const expandable =
-    (clusterData?.zones?.filter(item => (item?.servers?.length || 0) > 0).length || 0) > 0;
+const ZoneList: React.FC = () => {
+  const { zoneList, refreshTopologyInfo, setPendingOperation } = useModel('topologyInfo');
+
+  const expandable = (zoneList?.filter(item => (item?.servers?.length || 0) > 0).length || 0) > 0;
 
   const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>(
     // 默认展开全部 Zone
-    dataSource.map(item => item.name!) || []
+    zoneList.map(item => item.name!) || []
   );
-  const [statusList, setStatusList] = useState<string[]>([]);
+
+  const { runAsync: runAgentMainDags } = useRequest(getAgentMainDags, {
+    manual: true,
+  });
+
+  const { run: startZone, loading: startZoneLoading } = useRequest(obStart, {
+    manual: true,
+    onSuccess: (res, params) => {
+      if (res.successful && res.data?.id) {
+        const body = params?.[0] as API.StartObParam | undefined;
+        const zoneName = body?.scope?.target?.[0];
+        if (zoneName) {
+          setPendingOperation(zoneName, res.data.id);
+        }
+        taskSuccess({
+          taskId: res.data.id,
+          message: formatMessage({
+            id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.TheTaskOfStartingZone',
+            defaultMessage: '启动 Zone 的任务提交成功',
+          }),
+        });
+        refreshTopologyInfo();
+      }
+    },
+  });
+  const { run: stopZone, loading: stopZoneLoading } = useRequest(obStopZone, {
+    manual: true,
+    onSuccess: (res, params) => {
+      if (res.successful && res.data?.id) {
+        const body = params?.[0] as API.ObZoneStopParam | undefined;
+        const zoneName = body?.zone;
+        if (zoneName) {
+          setPendingOperation(zoneName, res.data.id);
+        }
+        taskSuccess({
+          taskId: res.data.id,
+          message: formatMessage({
+            id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.TaskSubmissionOfZoneStopped',
+            defaultMessage: '停止 Zone 的任务提交成功',
+          }),
+        });
+        refreshTopologyInfo();
+      }
+    },
+  });
+
+  const isStandAloneCluster = zoneList?.length === 1 && zoneList?.[0]?.servers?.length === 1;
+
+  // 停止 Zone 确认弹窗
+  const showStopZoneModal = (
+    record: API.Zone,
+    forcePassDag: { id: any[] },
+    failedTaskContent: string
+  ) => {
+    const freezeServerValueRef = { current: true };
+
+    Modal.confirm({
+      title: formatMessage(
+        {
+          id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.AreYouSureYouWant',
+          defaultMessage: '确定要停止 {recordName} 吗？',
+        },
+        { recordName: record.name }
+      ),
+      content: (
+        <Space direction="vertical">
+          <div>
+            {formatMessage({
+              id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.IfYouStopAZone',
+              defaultMessage: '停止 Zone 会停止当前 Zone 中的所有 OBserver，请谨慎操作。',
+            })}
+          </div>
+          <div>
+            <ContentWithIcon
+              iconType="question"
+              content={formatMessage({
+                id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.PerformADumpOperationBefore',
+                defaultMessage: '停止进程前执行转储操作',
+              })}
+              tooltip={{
+                title: formatMessage({
+                  id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.PerformingThisActionWillIncrease',
+                  defaultMessage:
+                    '执行本动作会延长停止进程的响应时间，但可以显著缩短 OBServer 恢复时间。',
+                }),
+              }}
+            />
+
+            <Checkbox
+              style={{ marginLeft: '8px' }}
+              defaultChecked={freezeServerValueRef.current}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                freezeServerValueRef.current = e.target.checked;
+              }}
+            />
+          </div>
+          {failedTaskContent && <div style={{ marginBottom: '8px' }}>{failedTaskContent}</div>}
+        </Space>
+      ),
+
+      okText: formatMessage({
+        id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.Stop',
+        defaultMessage: '停止',
+      }),
+      okButtonProps: { danger: true, ghost: true, loading: stopZoneLoading },
+      onOk: () => {
+        const params = {
+          zone: record.name!,
+          forcePassDag,
+          freeze_server: freezeServerValueRef.current,
+        };
+        stopZone(params);
+      },
+    });
+  };
+
+  // 启动 Zone 确认弹窗
+  const showStartZoneModal = (
+    record: API.Zone,
+    forcePassDag: { id: any[] },
+    failedTaskContent: string
+  ) => {
+    Modal.confirm({
+      title: formatMessage(
+        {
+          id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.AreYouSureYouWant.1',
+          defaultMessage: '确定要启动 {recordName} 吗？',
+        },
+        { recordName: record.name }
+      ),
+      content: (
+        <Space direction="vertical">
+          <div>
+            {formatMessage({
+              id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.StartingAZoneStartsAll',
+              defaultMessage:
+                '启动 Zone 会启动当前 Zone 中的所有 OBServer，并同步数据，可能需要一段时间。',
+            })}
+          </div>
+          {failedTaskContent && <div style={{ marginBottom: '8px' }}>{failedTaskContent}</div>}
+        </Space>
+      ),
+
+      okText: formatMessage({
+        id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.Start',
+        defaultMessage: '启动',
+      }),
+      okButtonProps: { loading: startZoneLoading },
+      onOk: () => {
+        startZone({
+          scope: {
+            type: 'ZONE' as const,
+            target: [record.name!],
+          },
+          forcePassDag,
+        });
+      },
+    });
+  };
+
+  // 处理 Zone 操作
+  const handleZoneOperation = async (key: string, record: API.Zone) => {
+    const res = await runAgentMainDags();
+    const dagList: API.DagDetailDTO[] = res.data?.contents || [];
+
+    if (dagList.some(item => item.state !== 'FAILED')) {
+      message.warning(
+        formatMessage({
+          id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.ThereIsCurrentlyAnOngoing',
+          defaultMessage: '当前有正在进行的Zone启停任务，此时禁止继续启停',
+        })
+      );
+      return;
+    }
+
+    const { content, forcePassDag } = getFailedTasksInfo(dagList);
+
+    if (key === 'stop') {
+      showStopZoneModal(record, forcePassDag, content);
+    } else if (key === 'start') {
+      showStartZoneModal(record, forcePassDag, content);
+    }
+  };
 
   const columns: TableColumnType<API.Zone>[] = [
     {
@@ -58,9 +249,9 @@ const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
         const roleLabel =
           text && text.role === 'LEADER'
             ? formatMessage({
-                id: 'ocp-express.Component.ZoneList.Main',
-                defaultMessage: '（主）',
-              })
+              id: 'ocp-express.Component.ZoneList.Main',
+              defaultMessage: '（主）',
+            })
             : '';
 
         return <span>{text ? `${text?.ip}:${text?.svr_port}${roleLabel}` : '-'}</span>;
@@ -72,6 +263,7 @@ const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
         id: 'ocp-express.Component.ZoneList.State',
         defaultMessage: '状态',
       }),
+      width: 110,
       dataIndex: 'status',
       filters: ZONE_STATUS_LIST.map(item => ({
         value: item.value,
@@ -83,157 +275,41 @@ const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
         return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
       },
     },
+    {
+      title: formatMessage({
+        id: 'OBShell.Overview.ZoneListOrTopo.ZoneList.Operation',
+        defaultMessage: '操作',
+      }),
+      width: 136,
+      render: (_, record) => {
+        if (isStandAloneCluster) return null;
+        const taskId = record.local_task_id || '';
+        const operations = findByValue(ZONE_STATUS_LIST, record.status)?.operations || [];
+        return (
+          <Space onClick={e => e.stopPropagation()}>
+            {taskId && <TaskLabel taskId={taskId} />}
+            {getOperationComponent({
+              mode: 'link',
+              operations: operations,
+              record,
+              displayCount: 0,
+              handleOperation: handleZoneOperation,
+            })}
+          </Space>
+        );
+      },
+    },
   ];
 
-  function getExpandedRowRender(record: API.Zone) {
-    const { servers } = record;
-    const expandColumns: TableColumnType<API.Observer>[] = [
-      {
-        title: 'IP',
-        dataIndex: 'ip',
-      },
-
-      {
-        title: formatMessage({
-          id: 'ocp-express.Component.ZoneListOrTopo.ZoneList.SqlPort',
-          defaultMessage: 'SQL 端口',
-        }),
-        dataIndex: 'sql_port',
-      },
-
-      {
-        title: formatMessage({
-          id: 'ocp-express.Component.ZoneListOrTopo.ZoneList.RpcPort',
-          defaultMessage: 'RPC 端口',
-        }),
-        dataIndex: 'svr_port',
-      },
-
-      {
-        title: formatMessage({
-          id: 'ocp-express.Component.ZoneListOrTopo.ZoneList.HardwareArchitecture',
-          defaultMessage: '硬件架构',
-        }),
-        dataIndex: 'architecture',
-      },
-      {
-        title: '数据盘路径',
-        dataIndex: 'data_dir',
-      },
-      {
-        title: '日志盘路径',
-        dataIndex: 'redo_dir',
-      },
-
-      {
-        title: formatMessage({
-          id: 'ocp-express.Detail.Component.WaterLevel.ResourceWaterLevel',
-          defaultMessage: '资源水位',
-        }),
-
-        dataIndex: 'stats',
-        render: (text: API.ServerResourceStats) => {
-          const {
-            cpu_core_assigned: cpuCoreAssigned = 0,
-            cpu_core_total: cpuCoreTotal = 0,
-            cpu_core_assigned_percent: cpuCoreAssignedPercent = 0,
-            memory_in_bytes_assigned: memoryInBytesAssigned = 0,
-            memory_in_bytes_total: memoryInBytesTotal = 0,
-            memory_assigned_percent: memoryAssignedPercent = 0,
-            disk_used: diskUsed = 0,
-            disk_total: diskTotal = 0,
-            disk_used_percent: diskUsedPercent = 0,
-          } = text || {};
-          const prefixWidth = isEnglish() ? 50 : 30;
-          return (
-            <span className={styles.stats}>
-              <MyProgress
-                showInfo={false}
-                prefix="CPU"
-                prefixWidth={prefixWidth}
-                affix={formatMessage(
-                  {
-                    id: 'ocp-express.Component.OBServerList.CpucoreassignedCpucoretotalCore',
-                    defaultMessage: '{cpuCoreAssigned}/{cpuCoreTotal} 核',
-                  },
-
-                  { cpuCoreAssigned, cpuCoreTotal }
-                )}
-                affixWidth={120}
-                percent={cpuCoreAssignedPercent}
-              />
-
-              <MyProgress
-                showInfo={false}
-                prefix={formatMessage({
-                  id: 'ocp-express.Component.OBServerList.Memory',
-                  defaultMessage: '内存',
-                })}
-                prefixWidth={prefixWidth}
-                affix={`${byte2GB(memoryInBytesAssigned).toFixed(1)}/${byte2GB(
-                  memoryInBytesTotal
-                ).toFixed(1)} GB`}
-                affixWidth={120}
-                percent={memoryAssignedPercent}
-              />
-
-              <MyProgress
-                showInfo={false}
-                prefix={formatMessage({
-                  id: 'ocp-express.Component.OBServerList.Disk',
-                  defaultMessage: '磁盘',
-                })}
-                prefixWidth={prefixWidth}
-                // 磁盘使用率一般不高，已使用量和总量可能差距较大，因此这里展示时不统一单位
-                affix={`${diskUsed}/${diskTotal}`}
-                affixWidth={120}
-                percent={diskUsedPercent}
-              />
-            </span>
-          );
-        },
-      },
-
-      {
-        title: formatMessage({
-          id: 'ocp-express.Component.OBServerList.State',
-          defaultMessage: '状态',
-        }),
-        dataIndex: 'inner_status',
-        // filters: OB_SERVER_STATUS_LIST.map(item => ({
-        //   value: item.value,
-        //   text: item.label,
-        // })),
-        // filteredValue: statusList,
-        // 这里不用设置 onFilter，dataSource 已经根据 statusList 做了筛选
-        render: (_, record) => {
-          const value = getServerStatus(record);
-          const statusItem = findByValue(OB_SERVER_STATUS_LIST, value);
-          return <Badge status={statusItem.badgeStatus} text={statusItem.label} />;
-        },
-      },
-    ];
-
-    return (
-      <Table
-        columns={expandColumns}
-        dataSource={(servers || []).filter(
-          item => statusList.length === 0 || statusList.includes(item.status as string)
-        )}
-        rowKey={item => item.id}
-        pagination={false}
-        onChange={(_, filters) => {
-          setStatusList(filters.status || []);
-        }}
-      />
-    );
-  }
+  const getExpandedRowRender = (zoneRecord: API.Zone) => {
+    return <OBServerList zoneRecord={zoneRecord} />;
+  };
 
   return (
     <Table
       id="ocp-zone-table"
       columns={columns}
-      dataSource={dataSource}
+      dataSource={zoneList}
       rowKey={(record: API.Zone) => record.name as string}
       rowClassName={(record: API.Zone) =>
         expandable && !record.servers?.length ? 'table-row-hide-expand-icon' : ''
@@ -248,6 +324,7 @@ const ZoneList: React.FC<ZoneListProps> = ({ clusterData }) => {
       }}
       pagination={false}
       className={styles.table}
+      scroll={{ x: 1000 }}
     />
   );
 };

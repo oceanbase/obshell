@@ -36,7 +36,10 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
     {
       key: 'cpu',
       title: 'CPU',
-      description: '已分配',
+      description: formatMessage({
+        id: 'OBShell.Overview.ClusterInfo.Allocated',
+        defaultMessage: '已分配',
+      }),
       percentValue: (stats.cpu_core_assigned_percent || 0).toFixed(1),
       totalValue: stats.cpu_core_total || 0,
       assignedValue: stats.cpu_core_assigned || 0,
@@ -48,7 +51,10 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
         id: 'ocp-express.Component.ClusterInfo.Memory',
         defaultMessage: '内存',
       }),
-      description: '已分配',
+      description: formatMessage({
+        id: 'OBShell.Overview.ClusterInfo.Allocated',
+        defaultMessage: '已分配',
+      }),
       percentValue: (stats.memory_assigned_percent || 0).toFixed(1),
       totalValue: stats.memory_total || 0,
       assignedValue: stats.memory_in_bytes_assigned || 0,
@@ -60,7 +66,10 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
         id: 'ocp-express.Component.ClusterInfo.Disk',
         defaultMessage: '磁盘',
       }),
-      description: '已使用',
+      description: formatMessage({
+        id: 'OBShell.Overview.ClusterInfo.Used',
+        defaultMessage: '已使用',
+      }),
       percentValue: (stats.disk_assigned_percent || 0).toFixed(1),
       totalValue: stats.disk_total || 0,
       assignedValue: stats.disk_in_bytes_assigned || 0,
@@ -80,7 +89,10 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
 
   return (
     <MyCard
-      title="资源水位"
+      title={formatMessage({
+        id: 'OBShell.Overview.ClusterInfo.ResourceWaterLevel',
+        defaultMessage: '资源水位',
+      })}
       extra={
         <Popover
           placement="bottomRight"
@@ -193,7 +205,12 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                           : // 内存和磁盘需要进行单位换算
                             formatSize(item.assignedValue)}
                       </Descriptions.Item>
-                      <Descriptions.Item label="消耗比">
+                      <Descriptions.Item
+                        label={formatMessage({
+                          id: 'OBShell.Overview.ClusterInfo.ConsumptionRatio',
+                          defaultMessage: '消耗比',
+                        })}
+                      >
                         <span style={{ color: getStrokeColor(Number(item.percentValue)) }}>
                           {/* 最多保留 1 位有效小数，需要用 toPercent 处理下 */}
                           {isNullValue(item.percentValue)
@@ -227,6 +244,7 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                   strokeWidth={8}
                   strokeColor={getStrokeColor(Number(item.percentValue))}
                 />
+
                 <Space direction="vertical" className={styles.progressText}>
                   <div className={styles.progressTitle}>{item.title}</div>
                   <div className={styles.progressDescription}>
@@ -243,7 +261,12 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
                     </div>
                     <Divider style={{ margin: '4px 0' }} />
                     <div className={styles.progressDescriptionItem}>
-                      <span className={styles.progressDescriptionItemName}>总量</span>
+                      <span className={styles.progressDescriptionItemName}>
+                        {formatMessage({
+                          id: 'OBShell.Overview.ClusterInfo.Total',
+                          defaultMessage: '总量',
+                        })}
+                      </span>
                       <span>
                         {isNullValue(item.totalValue)
                           ? '-'

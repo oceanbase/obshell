@@ -464,14 +464,20 @@ const Detail: React.FC<NewProps> = ({
                 <Descriptions.Item
                   label={
                     <ContentWithQuestion
-                      content="部署分步"
+                      content={formatMessage({
+                        id: 'OBShell.Detail.Overview.DeploymentStepByStep',
+                        defaultMessage: '部署分步',
+                      })}
                       tooltip={{
-                        title: '租户在各个 Zone 上的副本类型',
+                        title: formatMessage({
+                          id: 'OBShell.Detail.Overview.TypesOfTenantReplicasIn',
+                          defaultMessage: '租户在各个 Zone 上的副本类型',
+                        }),
                       }}
                     />
                   }
                 >
-                  {tenantData.deployment_steps || '-'}
+                  {tenantData.locality || '-'}
                 </Descriptions.Item>
                 <Descriptions.Item
                   span={2}

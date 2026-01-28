@@ -199,7 +199,7 @@ export function getSimpleComponentByClusterParameterValue(
       {formatMessage(
         {
           id: 'ocp-express.src.util.component.ValuesstringCustom',
-          defaultMessage: '{valuesString}（自定义）',
+          defaultMessage: '{valuesString} (自定义)',
         },
 
         { valuesString }

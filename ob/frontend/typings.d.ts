@@ -74,15 +74,6 @@ declare global {
       modalTitle?: string;
       divider?: boolean;
       isDanger?: boolean;
-      accessibleField?:
-        | 'readAccessible'
-        | 'createAccessible'
-        | 'updateAccessible'
-        | 'deleteAccessible'
-        // 下载主机日志，属于主机的通用权限
-        | 'readHostAccessible'
-        // 查看任务详情，属于任务的通用权限
-        | 'readTaskAccessible';
       buttonProps?: ButtonProps;
       tooltip?: Omit<TooltipProps, 'overlay'>;
       popconfirm?: PopconfirmProps;

@@ -70,13 +70,13 @@ const Log: React.FC<LogProps> = ({
         title: formatMessage(
           {
             id: 'OBShell.Backup.Backup.Log.AreYouSureYouWant',
-            defaultMessage: '确定恢复 {tenantName} 的日志备份任务吗？',
+            defaultMessage: '确定开启 {tenantName} 的备份调度吗？',
           },
           { tenantName: tenant_name }
         ),
         content: formatMessage({
           id: 'OBShell.Backup.Backup.Log.DataBackupConsumesACertain',
-          defaultMessage: '恢复日志备份任务需要消耗一定数据库资源。',
+          defaultMessage: '启动备份策略后数据备份需要消耗一定数据库资源。',
         }),
         onOk: () => {
           return patchTenantArchiveLog(
@@ -152,13 +152,13 @@ const Log: React.FC<LogProps> = ({
         title: formatMessage(
           {
             id: 'OBShell.Backup.Backup.Log.AreYouSureYouWant.1',
-            defaultMessage: '确定暂停 {tenantName} 的日志备份任务吗？',
+            defaultMessage: '确定暂停 {tenantName} 的备份调度吗？',
           },
           { tenantName: tenant_name }
         ),
         content: formatMessage({
           id: 'OBShell.Backup.Backup.Log.AutomaticBackupWillNoLonger',
-          defaultMessage: '暂停后将会暂停日志备份，请谨慎操作。',
+          defaultMessage: '暂停后将不再自动备份，请谨慎操作。',
         }),
 
         okText: formatMessage({ id: 'ocp-v2.Backup.Backup.Log.Pause', defaultMessage: '暂停' }),

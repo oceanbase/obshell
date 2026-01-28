@@ -1103,3 +1103,27 @@ Tour 组件底部按钮不支持完全自定义，只能通过覆盖样式的方
     padding: 0 0 4px !important;
   }
 }
+// 嵌套子表格样式
+.ant-table-expanded-row {
+  // 第一列 padding 调整
+  .ant-table-thead > tr > th:first-child:not(.ant-table-selection-column),
+  .ant-table-tbody
+    > tr
+    > td:first-child:not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell) {
+    padding-left: 16px !important;
+  }
+  // 背景色
+  & > .ant-table-cell,
+  .ant-table-thead .ant-table-cell,
+  .ant-table-tbody .ant-table-cell {
+    background-color: #f8fafe !important;
+  }
+
+  .ant-table-tbody {
+    .ant-table-row:not(:last-child) {
+      .ant-table-cell {
+        border-bottom: 1px solid #e2e8f3 !important;
+      }
+    }
+  }
+}

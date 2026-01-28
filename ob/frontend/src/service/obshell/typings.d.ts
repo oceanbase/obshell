@@ -288,6 +288,7 @@ declare namespace API {
     is_standalone?: boolean;
     /** only for standalone cluster */
     license?: ObLicense;
+    local_task_id?: string;
     ob_version?: string;
     stats?: BaseResourceStats;
     status?: string;
@@ -321,6 +322,10 @@ declare namespace API {
     obConfigs: Record<string, any>;
     targetAgentPassword?: string;
     zone: string;
+  };
+
+  type ClusterTopology = {
+    zones?: Zone[];
   };
 
   type ClusterUnitConfigLimit = {
@@ -521,6 +526,7 @@ declare namespace API {
   };
 
   type DbaObTenant = {
+    comment?: string;
     created_time?: string;
     in_recyclebin?: string;
     locality?: string;
@@ -693,16 +699,10 @@ declare namespace API {
     page?: number;
     /** Page size */
     size?: number;
-    /** Start time filter */
-    start_time?: string;
-    /** End time filter */
-    end_time?: string;
-    /** Scenario filter (basic or performance) */
+    /** Scenario filter ('basic' or 'performance' or 'basic,performance') */
     scenario?: string;
-    /** Sort field */
-    sort_by?: string;
-    /** Sort order (asc or desc) */
-    sort_order?: string;
+    /** Sort parameter (format: field,order) */
+    sort?: string;
   };
 
   type getInspectionReportParams = {
@@ -1349,9 +1349,15 @@ declare namespace API {
 
   type Observer = {
     architecture?: string;
+    data_dir?: string;
     id?: number;
     inner_status?: string;
     ip?: string;
+    local_task_id?: string;
+    /** oceanbase.STATE_PROCESS_NOT_RUNNING, oceanbase.STATE_PROCESS_RUNNING, oceanbase.STATE_CONNECTION_RESTRICTED, oceanbase.STATE_CONNECTION_AVAILABLE */
+    ob_status?: number;
+    obshell_port?: number;
+    redo_dir?: string;
     sql_port?: number;
     start_time?: string;
     stats?: ServerResourceStats;
@@ -1433,6 +1439,12 @@ declare namespace API {
 
   type ObUserStats = {
     session?: ObUserSessionStats;
+  };
+
+  type ObZoneStopParam = {
+    forcePassDag?: ForcePassDagParam;
+    freeze_server?: boolean;
+    zone: string;
   };
 
   type OcsAgentResponse = {
@@ -1985,6 +1997,7 @@ declare namespace API {
     charset?: string;
     /** Only for ORACLE tenant */
     collation?: string;
+    comment?: string;
     connection_strings?: ObproxyAndConnectionString[];
     created_time?: string;
     dead_lock_detection_enabled?: boolean;
@@ -2280,6 +2293,7 @@ declare namespace API {
   type Zone = {
     idc_name?: string;
     inner_status?: string;
+    local_task_id?: string;
     name?: string;
     region_name?: string;
     root_server?: RootServer;

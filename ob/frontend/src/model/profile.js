@@ -1,4 +1,3 @@
-
 import { history } from 'umi';
 import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { SESSION_ID } from '@/constant/login';
@@ -17,7 +16,7 @@ const model = {
   effects: {
     *logout({}, { put, call }) {
       const res = yield call(v1Service.logout, {
-        session_id: getEncryptLocalStorage(SESSION_ID)
+        session_id: getEncryptLocalStorage(SESSION_ID),
       });
       if (res.successful) {
         setEncryptLocalStorage(SESSION_ID, '');
@@ -31,7 +30,6 @@ const model = {
         setEncryptLocalStorage('login', 'false');
         history.push('/login');
       }
-
     },
   },
 

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 export const namespace = 'global';
 
 const model = {

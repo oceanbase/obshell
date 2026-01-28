@@ -325,11 +325,11 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
       // 需要精确到微秒级
       const timestamp = restoreDateValue
         ? !isNullValue(restoreMicrosecondsValue) &&
-        `${restoreDateValue.format('YYYY-MM-DD')}T${(restoreTimeValue || 0).format(
-          'HH:mm:ss'
-        )}.${formatRestoreMicroseconds(restoreMicrosecondsValue || 0)}${restoreTimeValue.format(
-          'Z'
-        )}`
+          `${restoreDateValue.format('YYYY-MM-DD')}T${(restoreTimeValue || 0).format(
+            'HH:mm:ss'
+          )}.${formatRestoreMicroseconds(restoreMicrosecondsValue || 0)}${restoreTimeValue.format(
+            'Z'
+          )}`
         : null;
 
       const { archive_base_uri, data_base_uri } = tenantBackupConfigInfo;
@@ -368,8 +368,8 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
   const selectedRestoreDateTime =
     currentRestoreDate && currentRestoreTime && !isNullValue(currentRestoreMicroseconds)
       ? `${moment(currentRestoreDate).format(DATE_FORMAT_DISPLAY)} ${moment(
-        currentRestoreTime
-      ).format(TIME_FORMAT)}.${formatRestoreMicroseconds(currentRestoreMicroseconds)}`
+          currentRestoreTime
+        ).format(TIME_FORMAT)}.${formatRestoreMicroseconds(currentRestoreMicroseconds)}`
       : '-';
 
   // 源租户在不同视图下的展示 label
@@ -393,13 +393,13 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
       path: isGlobalRestore ? `/tenant` : `/cluster/tenant/${tenantName}/backup`,
       breadcrumbName: isGlobalRestore
         ? formatMessage({
-          id: 'OBShell.component.MonitorSearch.Tenant',
-          defaultMessage: '租户',
-        })
+            id: 'OBShell.component.MonitorSearch.Tenant',
+            defaultMessage: '租户',
+          })
         : formatMessage({
-          id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
-          defaultMessage: '备份恢复',
-        }),
+            id: 'OBShell.Backup.Component.RestoreNow.BackupRecovery',
+            defaultMessage: '备份恢复',
+          }),
     },
 
     { breadcrumbName: title },

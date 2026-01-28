@@ -61,10 +61,8 @@ export async function getInspectionHistory(
         // size has a default value: 10
         size: '10',
 
-        // sort_by has a default value: start_time
-        sort_by: 'start_time',
-        // sort_order has a default value: desc
-        sort_order: 'desc',
+        // sort has a default value: start_time,desc
+        sort: 'start_time,desc',
         ...params,
       },
       ...(options || {}),
@@ -96,6 +94,17 @@ export async function obclusterSetParameters(
     data: body,
     ...(options || {}),
   });
+}
+
+/** get obcluster topology info get obcluster topology info GET /api/v1/obcluster/topology/info */
+export async function obclusterTopologyInfo(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.ClusterTopology }>(
+    '/api/v1/obcluster/topology/info',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
 }
 
 /** get resource unit config limit get resource unit config limit GET /api/v1/obcluster/unit-config-limit */

@@ -78,6 +78,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
         name: tenantName,
       },
     ],
+
     refreshDeps: [ready],
   });
 
@@ -163,7 +164,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
               {formatMessage(
                 {
                   id: 'ocp-express.User.MySQL.TenantTenantdataname',
-                  defaultMessage: '租户：{tenantDataName}',
+                  defaultMessage: '租户： {tenantDataName}',
                 },
 
                 { tenantDataName: tenantData.tenant_name }
@@ -173,7 +174,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
               {formatMessage(
                 {
                   id: 'ocp-express.User.MySQL.UsernameRecordusername',
-                  defaultMessage: '用户名：{recordUsername}',
+                  defaultMessage: '用户名： {recordUsername}',
                 },
 
                 { recordUsername: record.username }
@@ -356,6 +357,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
             }}
           />
         ),
+
         extra: (
           <Button
             type="primary"

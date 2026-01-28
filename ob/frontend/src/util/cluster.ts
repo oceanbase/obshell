@@ -15,9 +15,10 @@
  */
 
 import { DATE_FORMAT } from '@/constant/datetime';
-import { toNumber } from 'lodash';
 import { formatTime } from '@/util/datetime';
+import { formatMessage } from '@/util/intl';
 import { isNullValue } from '@oceanbase/util';
+import { toNumber } from 'lodash';
 /* 获取 4.0 以下集群实际的合并状态
  */
 export function getCompactionStatus(
@@ -128,4 +129,28 @@ export const isEffectiveTrial = (license: API.ObLicense): boolean => {
   const expiredTime = getLicenseExpiredTime(license);
   const effectiveDays = getDaysUntilExpiry(expiredTime) || 0;
   return isTrialLicense(license) && effectiveDays > 0;
+};
+
+// 获取失败任务信息
+export const getFailedTasksInfo = (dagList: API.DagDetailDTO[]) => {
+  const failedTasks = dagList.filter(item => item.state === 'FAILED');
+
+  if (failedTasks.length === 0) {
+    return { content: '', forcePassDag: { id: [] } };
+  }
+
+  const listString = failedTasks.map(item => `[${item.name}:${item.id}]`).join('，');
+
+  const content = formatMessage(
+    {
+      id: 'ocp-v2.Cluster.Overview.WillAutomaticallySkipTasksListstring',
+      defaultMessage: '将会自动跳过任务 {listString}',
+    },
+    { listString }
+  );
+
+  return {
+    content,
+    forcePassDag: { id: failedTasks.map(item => item.id) },
+  };
 };

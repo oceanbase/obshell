@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import MyCard from '@/component/MyCard';
 import { OB_CLUSTER_STATUS_LIST } from '@/constant/oceanbase';
 import { Badge, Descriptions, theme } from '@oceanbase/design';
@@ -22,12 +23,28 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
   };
 
   return (
-    <MyCard title="基本信息">
+    <MyCard
+      title={formatMessage({
+        id: 'OBShell.Overview.BaseInfo.BasicInformation',
+        defaultMessage: '基本信息',
+      })}
+    >
       <Descriptions column={3}>
-        <Descriptions.Item label="集群名" contentProps={{ ellipsis: true, copyable: true }}>
+        <Descriptions.Item
+          label={formatMessage({
+            id: 'OBShell.Overview.BaseInfo.ClusterName',
+            defaultMessage: '集群名',
+          })}
+          contentProps={{ ellipsis: true, copyable: true }}
+        >
           {clusterData.cluster_name}
         </Descriptions.Item>
-        <Descriptions.Item label="集群状态">
+        <Descriptions.Item
+          label={formatMessage({
+            id: 'OBShell.Overview.BaseInfo.ClusterStatus',
+            defaultMessage: '集群状态',
+          })}
+        >
           <Badge
             status={statusItem.badgeStatus}
             text={
@@ -41,7 +58,14 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
             }
           />
         </Descriptions.Item>
-        <Descriptions.Item label="OceanBase 版本号">{clusterData.ob_version}</Descriptions.Item>
+        <Descriptions.Item
+          label={formatMessage({
+            id: 'OBShell.Overview.BaseInfo.OceanbaseVersionNumber',
+            defaultMessage: 'OceanBase 版本号',
+          })}
+        >
+          {clusterData.ob_version}
+        </Descriptions.Item>
       </Descriptions>
     </MyCard>
   );

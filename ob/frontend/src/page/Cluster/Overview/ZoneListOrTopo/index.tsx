@@ -1,13 +1,9 @@
+import MyCard from '@/component/MyCard';
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import MyCard from '@/component/MyCard';
 import ZoneList from './ZoneList';
 
-export interface ZoneListOrTopoProps {
-  clusterData: API.ClusterInfo;
-}
-
-const ZoneListOrTopo: React.FC<ZoneListOrTopoProps> = ({ clusterData }) => {
+const ZoneListOrTopo: React.FC = () => {
   return (
     <div>
       <MyCard
@@ -17,7 +13,7 @@ const ZoneListOrTopo: React.FC<ZoneListOrTopoProps> = ({ clusterData }) => {
           defaultMessage: '拓扑结构',
         })}
       >
-        <ZoneList clusterData={clusterData} />
+        <ZoneList />
       </MyCard>
     </div>
   );

@@ -69,6 +69,18 @@ export async function obStop(body: API.ObStopParam, options?: { [key: string]: a
   });
 }
 
+/** stop a zone stop a zone POST /api/v1/ob/zone/stop */
+export async function obStopZone(body: API.ObZoneStopParam, options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>('/api/v1/ob/zone/stop', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** get obcluster charsets get obcluster charsets GET /api/v1/obcluster/charsets */
 export async function getObclusterCharsets(
   // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)

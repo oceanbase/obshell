@@ -59,6 +59,14 @@ export async function obUpgradeCheck(
   });
 }
 
+/** check python environment for upgrade check python and module dependencies for upgrade POST /api/v1/upgrade/env/check */
+export async function checkUpgradeEnvironment(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse>('/api/v1/upgrade/env/check', {
+    method: 'POST',
+    ...(options || {}),
+  });
+}
+
 /** upload upgrade package upload upgrade package POST /api/v1/upgrade/package */
 export async function upgradePkgUpload(body: {}, file?: File, options?: { [key: string]: any }) {
   const formData = new FormData();

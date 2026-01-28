@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React from 'react';
-import { Form, Checkbox, Row, Col, Modal, message, ModalProps } from '@oceanbase/design';
-import { useRequest } from 'ahooks';
+import { MAX_FORM_ITEM_LAYOUT } from '@/constant';
 import {
+  ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST,
   ORACLE_TABLE_PRIVILEGE_LIST,
   ORACLE_VIEW_PRIVILEGE_LIST,
-  ORACLE_STORED_PROCEDURE_PRIVILEGE_LIST,
 } from '@/constant/tenant';
-import { MAX_FORM_ITEM_LAYOUT } from '@/constant';
 import { patchRoleObjectPrivilege, patchUserObjectPrivilege } from '@/service/obshell/tenant';
+import { formatMessage } from '@/util/intl';
+import { Checkbox, Col, Form, message, Modal, ModalProps, Row } from '@oceanbase/design';
+import { useRequest } from 'ahooks';
+import React from 'react';
 
 /**
  * 参数说明
@@ -86,9 +86,10 @@ const ModifyObjectPrivilegeModal: React.FC<ModifyObjectPrivilegeModalProps> = ({
           message.success(
             formatMessage(
               {
-                id: 'ocp-express.Oracle.Component.ModifyObjectPrivilegeModal.TheObjectPermissionOfObjectname',
+                id: 'OBShell.Oracle.Component.ModifyObjectPrivilegeModal.ObjectnameObjectPermissionsModifiedSuccessfully',
+                defaultMessage: '{objectName} 的对象权限修改成功',
               },
-              { objectName }
+              { objectName: objectName }
             )
           );
           if (onSuccess) {

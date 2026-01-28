@@ -11,6 +11,7 @@ import * as ob from './ob';
 import * as backup from './backup';
 import * as obcluster from './obcluster';
 import * as obproxy from './obproxy';
+import * as observer from './observer';
 import * as package from './package';
 import * as recyclebin from './recyclebin';
 import * as resourcePool from './resourcePool';
@@ -30,6 +31,7 @@ export default {
   backup,
   obcluster,
   obproxy,
+  observer,
   package,
   recyclebin,
   resourcePool,

@@ -71,7 +71,7 @@ const LoginPage: React.FC<LoginPageProps> = ({
           res.error?.message ||
             formatMessage({
               id: 'ocp-v2.src.util.request.AuthenticationFailedAccessDenied',
-              defaultMessage: '密码错误',
+              defaultMessage: '验证失败：访问被拒绝',
             })
         );
       }
