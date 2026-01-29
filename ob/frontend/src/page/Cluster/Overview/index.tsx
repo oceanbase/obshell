@@ -38,16 +38,14 @@ import ZoneListOrTopo from './ZoneListOrTopo';
 
 const Detail: React.FC = () => {
   const { token } = theme.useToken();
-  const [clusterStatus, setClusterStatus] = useState<'normal' | 'abnormal'>('normal');
   const dispatch = useDispatch();
-  const isAbnormal = clusterStatus === 'abnormal';
   const { isDesktopMode } = useUiMode();
 
   useDocumentTitle(
     formatMessage({ id: 'ocp-v2.Cluster.Overview.ClusterManagement', defaultMessage: '集群管理' })
   );
 
-  const { getTopologyInfo, refreshTopologyInfo } = useModel('topologyInfo');
+  const { getTopologyInfo, refreshTopologyInfo, topologyInfoLoading } = useModel('topologyInfo');
 
   const {
     data: obclusterInfoRes,
@@ -61,26 +59,23 @@ const Detail: React.FC = () => {
     {
       onSuccess: res => {
         if (res.successful) {
-          if (isAbnormal) {
-            setClusterStatus('normal');
-            reload();
-          }
           dispatch({
             type: 'cluster/update',
             payload: {
               clusterData: res.data,
             },
           });
-        } else {
-          setClusterStatus('abnormal');
         }
       },
     }
   );
 
-  const { runAsync: runAgentMainDags, loading: agentMainDagsLoading } = useRequest(getAgentMainDags, {
-    manual: true,
-  });
+  const { runAsync: runAgentMainDags, loading: agentMainDagsLoading } = useRequest(
+    getAgentMainDags,
+    {
+      manual: true,
+    }
+  );
 
   const refresh = () => {
     refreshObclusterInfo();
@@ -91,14 +86,16 @@ const Detail: React.FC = () => {
     getTopologyInfo();
   }, []);
 
+  const clusterData: API.ClusterInfo = obclusterInfoRes?.data || {};
+  const isAbnormal = obclusterInfoRes?.data ? clusterData.status !== 'AVAILABLE' : false;
+
   useRafInterval(
     () => {
+      if (obclusterInfoLoading || topologyInfoLoading) return;
       refresh();
     },
-    isAbnormal ? 3000 : undefined
+    isAbnormal ? 10000 : undefined
   );
-
-  const clusterData: API.ClusterInfo = obclusterInfoRes?.data || {};
 
   const [reloading, reload] = useReload(false);
 
@@ -118,8 +115,9 @@ const Detail: React.FC = () => {
     const unavailableCount = data?.filter(item => item?.status === unavailableStatus)?.length || 0;
     const runningCount = data?.filter(item => item?.status === runningStatus)?.length || 0;
 
-    const otherCount = data
-      ?.filter(item => ![normalStatus, unavailableStatus, runningStatus].includes(item.status!))?.length || 0;
+    const otherCount =
+      data?.filter(item => ![normalStatus, unavailableStatus, runningStatus].includes(item.status!))
+        ?.length || 0;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
@@ -589,16 +587,16 @@ const Detail: React.FC = () => {
                 >
                   {isAbnormal
                     ? formatMessage({
-                      id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
-                      defaultMessage: '集群状态异常',
-                    })
+                        id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
+                        defaultMessage: '集群状态异常',
+                      })
                     : formatMessage(
-                      {
-                        id: 'ocp-express.Cluster.Overview.Obversion',
-                        defaultMessage: '{obVersion} 版本',
-                      },
-                      { obVersion: obVersion }
-                    )}
+                        {
+                          id: 'ocp-express.Cluster.Overview.Obversion',
+                          defaultMessage: '{obVersion} 版本',
+                        },
+                        { obVersion: obVersion }
+                      )}
                 </Tag>
               }
               spin={reloading}

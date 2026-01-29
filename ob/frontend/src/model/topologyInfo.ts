@@ -1,13 +1,14 @@
 import { obclusterTopologyInfo } from '@/service/obshell/obcluster';
 import { useDeepCompareMemo } from '@oceanbase/ui';
 import { useRafInterval, useRequest } from 'ahooks';
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const topologyInfoModel = () => {
   const {
     data: obclusterTopologyInfoData,
     run,
     refresh,
+    loading,
   } = useRequest(obclusterTopologyInfo, {
     manual: true,
   });
@@ -85,6 +86,7 @@ const topologyInfoModel = () => {
   // 使用 useRafInterval 实现轮询
   useRafInterval(
     () => {
+      if (loading) return;
       refresh();
     },
     needPolling ? 3000 : undefined
@@ -96,6 +98,7 @@ const topologyInfoModel = () => {
     refreshTopologyInfo: refresh,
     setPendingOperation,
     clearPendingOperation,
+    topologyInfoLoading: loading,
   };
 };
 export default topologyInfoModel;

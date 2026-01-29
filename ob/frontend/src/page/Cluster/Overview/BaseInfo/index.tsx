@@ -1,18 +1,33 @@
-import { formatMessage } from '@/util/intl';
 import MyCard from '@/component/MyCard';
-import { OB_CLUSTER_STATUS_LIST } from '@/constant/oceanbase';
+import { formatMessage } from '@/util/intl';
 import { Badge, Descriptions, theme } from '@oceanbase/design';
-import { findByValue } from '@oceanbase/util';
 import React from 'react';
 
 export interface BaseInfoProps {
   clusterData: API.ClusterInfo;
 }
 
+
+const unavailableStatus = {
+  label: formatMessage({
+    id: 'ocp-express.src.constant.oceanbase.Unavailable',
+    defaultMessage: '不可用',
+  }),
+
+  value: 'UNAVAILABLE',
+  badgeStatus: 'error',
+};
+
+const availableStatus = {
+  label: formatMessage({ id: 'ocp-v2.src.constant.oceanbase.Available', defaultMessage: '可用' }),
+  value: 'AVAILABLE',
+  badgeStatus: 'success',
+};
+
 const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
   const { token } = theme.useToken();
 
-  const statusItem = findByValue(OB_CLUSTER_STATUS_LIST, clusterData.status);
+  const statusItem = clusterData.status === 'AVAILABLE' ? availableStatus : unavailableStatus;
 
   // 将 badge 状态映射为 color
   const colorMap: Record<string, string> = {
@@ -35,7 +50,6 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
             id: 'OBShell.Overview.BaseInfo.ClusterName',
             defaultMessage: '集群名',
           })}
-          contentProps={{ ellipsis: true, copyable: true }}
         >
           {clusterData.cluster_name}
         </Descriptions.Item>
