@@ -23,8 +23,7 @@ import {
 import { EllipsisOutlined } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
 import { useRafInterval, useRequest } from 'ahooks';
-import { flatten, isEmpty, reduce } from 'lodash';
-import moment from 'moment';
+import { flatten, isEmpty } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { history, useDispatch, useModel } from 'umi';
 import BaseInfo from './BaseInfo';
@@ -36,24 +35,6 @@ import TenantResourceTop3 from './TenantResourceTop3';
 import UpgradeAgentDrawer from './UpgradeAgentDrawer';
 import UpgradeDrawer from './UpgradeDrawer';
 import ZoneListOrTopo from './ZoneListOrTopo';
-
-export const getServerStatus = (server: API.Observer) => {
-  let status = 'OTHER';
-  if (!server) return status;
-
-  if (
-    server.inner_status === 'ACTIVE' &&
-    // 未开始时 start_time 的时间戳等于 0（1970年01月01日00时00分00），所以判断时间戳大于 0
-    moment(server.start_time).valueOf() > 0
-  ) {
-    status = 'RUNNING';
-  }
-  if (server.inner_status === 'INACTIVE') {
-    status = 'UNAVAILABLE';
-  }
-
-  return status;
-};
 
 const Detail: React.FC = () => {
   const { token } = theme.useToken();
@@ -97,6 +78,10 @@ const Detail: React.FC = () => {
     }
   );
 
+  const { runAsync: runAgentMainDags, loading: agentMainDagsLoading } = useRequest(getAgentMainDags, {
+    manual: true,
+  });
+
   const refresh = () => {
     refreshObclusterInfo();
     refreshTopologyInfo();
@@ -121,13 +106,9 @@ const Detail: React.FC = () => {
   const obVersion = clusterData.ob_version || '';
   const deadLockDetectionEnabled = clusterData.dead_lock_detection_enabled;
 
-  const realServerList = flatten(clusterData.zones?.map(item => item.servers || [])).map(item => {
-    const status = getServerStatus(item);
+  const realServerList = flatten(clusterData.zones?.map(item => item.servers || []));
 
-    return { ...item, status };
-  });
-
-  const ResultStatusContent = ({ type }) => {
+  const ResultStatusContent = ({ type }: { type: 'tenant' | 'OBServer' }) => {
     const runningStatus = 'RUNNING';
     const normalStatus = 'NORMAL';
     const unavailableStatus = 'UNAVAILABLE';
@@ -137,13 +118,8 @@ const Detail: React.FC = () => {
     const unavailableCount = data?.filter(item => item?.status === unavailableStatus)?.length || 0;
     const runningCount = data?.filter(item => item?.status === runningStatus)?.length || 0;
 
-    const otherCount =
-      reduce(
-        data
-          ?.filter(item => ![normalStatus, unavailableStatus, runningStatus].includes(item.status))
-          .map(e => e.count),
-        (sum, n) => sum + n
-      ) || 0;
+    const otherCount = data
+      ?.filter(item => ![normalStatus, unavailableStatus, runningStatus].includes(item.status!))?.length || 0;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-around' }}>
@@ -390,7 +366,7 @@ const Detail: React.FC = () => {
     } else if (key === 'upgradeAgent') {
       setUpgradeAgentVisible(true);
     } else if (key === 'start' || key === 'stop') {
-      getAgentMainDags().then(res => {
+      runAgentMainDags().then(res => {
         const dagList: API.DagDetailDTO[] = res.data?.contents || [];
 
         if (dagList.some(item => item.state !== 'FAILED')) {
@@ -652,6 +628,7 @@ const Detail: React.FC = () => {
                 onClick={() => {
                   handleMenuClick('start');
                 }}
+                loading={agentMainDagsLoading}
               >
                 <span>
                   {formatMessage({
@@ -667,6 +644,7 @@ const Detail: React.FC = () => {
                 onClick={() => {
                   handleMenuClick('stop');
                 }}
+                loading={agentMainDagsLoading}
               >
                 <span>
                   {formatMessage({
