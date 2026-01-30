@@ -1,24 +1,24 @@
+import MouseTooltip from '@/component/MouseTooltip';
+import MyCard from '@/component/MyCard';
+import ObClusterDeployMode from '@/component/ObClusterDeployMode';
+import { formatSize, isEnglish } from '@/util';
 import { formatMessage } from '@/util/intl';
-import React from 'react';
+import { toPercent } from '@oceanbase/charts/es/util/number';
 import {
   Col,
   Descriptions,
+  Divider,
+  Popover,
+  Progress,
   Row,
+  Space,
+  theme,
   Tooltip,
   Typography,
-  Popover,
-  theme,
-  Progress,
-  Space,
-  Divider,
 } from '@oceanbase/design';
 import { EllipsisOutlined } from '@oceanbase/icons';
 import { isNullValue } from '@oceanbase/util';
-import { toPercent } from '@oceanbase/charts/es/util/number';
-import { formatSize, isEnglish } from '@/util';
-import ObClusterDeployMode from '@/component/ObClusterDeployMode';
-import MyCard from '@/component/MyCard';
-import MouseTooltip from '@/component/MouseTooltip';
+import React from 'react';
 import styles from './index.less';
 
 const { Text } = Typography;
@@ -63,8 +63,8 @@ const Detail: React.FC<DetailProps> = ({ clusterData }) => {
     {
       key: 'disk',
       title: formatMessage({
-        id: 'ocp-express.Component.ClusterInfo.Disk',
-        defaultMessage: '磁盘',
+        id: 'OBShell.Overview.ClusterInfo.DataDisk',
+        defaultMessage: '数据盘',
       }),
       description: formatMessage({
         id: 'OBShell.Overview.ClusterInfo.Used',

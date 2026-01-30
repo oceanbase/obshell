@@ -1,58 +1,58 @@
-import { formatMessage } from '@/util/intl';
-import { history, useDispatch } from 'umi';
-import {
-  Button,
-  Col,
-  Form,
-  Row,
-  Badge,
-  Space,
-  Tag,
-  Tooltip,
-  Typography,
-  Descriptions,
-  Modal,
-  message,
-  Switch,
-} from '@oceanbase/design';
-import { QuestionCircleOutlined } from '@oceanbase/icons';
-import React, { useEffect, useState } from 'react';
-import { uniqueId, find } from 'lodash';
-import { byte2GB, findByValue } from '@oceanbase/util';
-import moment from 'moment';
-import { PageContainer } from '@oceanbase/ui';
+import BatchOperationBar from '@/component/BatchOperationBar';
+import ContentWithQuestion from '@/component/ContentWithQuestion';
+import ContentWithReload from '@/component/ContentWithReload';
+import FormEditZoneReplicaTable from '@/component/FormEditZoneReplicaTable';
+import MyCard from '@/component/MyCard';
+import RenderConnectionString from '@/component/RenderConnectionString';
 import { COMPACTION_STATUS_LISTV4 } from '@/constant/compaction';
 import { TENANT_MODE_LIST } from '@/constant/tenant';
 import { getCompactionStatusV4 } from '@/util/cluster';
-import { taskSuccess } from '@/util/task';
 import { formatTime } from '@/util/datetime';
-import { useRequest, useInterval } from 'ahooks';
-import MyCard from '@/component/MyCard';
-import ContentWithQuestion from '@/component/ContentWithQuestion';
-import ContentWithReload from '@/component/ContentWithReload';
-import BatchOperationBar from '@/component/BatchOperationBar';
-import FormEditZoneReplicaTable from '@/component/FormEditZoneReplicaTable';
-import RenderConnectionString from '@/component/RenderConnectionString';
-import BatchModifyUnitModal from '../Component/BatchModifyUnitModal';
-import AddReplicaModal from '../Component/AddReplicaModal';
-import DeleteTenantModal from '../Component/DeleteTenantModal';
-import DeleteReplicaModal from '../Component/DeleteReplicaModal';
-import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
-import ModifyPrimaryZoneDrawer from '../Component/ModifyPrimaryZoneDrawer';
-
-import OBProxyAndConnectionStringModal from '../Component/OBProxyAndConnectionStringModal';
+import { formatMessage } from '@/util/intl';
+import { taskSuccess } from '@/util/task';
 import {
-  getTenantInfo,
-  tenantModifyReplicas,
+  Badge,
+  Button,
+  Col,
+  Descriptions,
+  Form,
+  message,
+  Modal,
+  Row,
+  Space,
+  Switch,
+  Tag,
+  Tooltip,
+  Typography,
+} from '@oceanbase/design';
+import { QuestionCircleOutlined } from '@oceanbase/icons';
+import { PageContainer } from '@oceanbase/ui';
+import { byte2GB, findByValue } from '@oceanbase/util';
+import { useInterval, useRequest } from 'ahooks';
+import { find, uniqueId } from 'lodash';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
+import { history, useDispatch } from 'umi';
+import AddReplicaModal from '../Component/AddReplicaModal';
+import BatchModifyUnitModal from '../Component/BatchModifyUnitModal';
+import DeleteReplicaModal from '../Component/DeleteReplicaModal';
+import DeleteTenantModal from '../Component/DeleteTenantModal';
+import ModifyPrimaryZoneDrawer from '../Component/ModifyPrimaryZoneDrawer';
+import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
+
+import {
   getTenantCompaction,
-  tenantMajorCompaction,
+  getTenantInfo,
   tenantClearCompactionError,
   tenantLock,
+  tenantMajorCompaction,
+  tenantModifyReplicas,
   tenantUnlock,
 } from '@/service/obshell/tenant';
+import OBProxyAndConnectionStringModal from '../Component/OBProxyAndConnectionStringModal';
 
+import { getUnitConfigLimit, obclusterInfo } from '@/service/obshell/obcluster';
 import { unitConfigCreate } from '@/service/obshell/unit';
-import { obclusterInfo, getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { getZonesFromTenant } from '@/util/tenant';
 const { Text } = Typography;
 
@@ -488,7 +488,7 @@ const Detail: React.FC<NewProps> = ({
                 >
                   <RenderConnectionString
                     connectionStrings={tenantData.connection_strings || []}
-                    maxWidth={500}
+                    maxWidth={450}
                     callBack={() => {
                       setConnectionStringModalVisible(true);
                     }}

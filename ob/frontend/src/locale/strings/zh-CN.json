@@ -1746,5 +1746,12 @@
   "OBShell.ZoneListOrTopo.OBServerList.OBServerModal.RpcPort": "RPC 端口",
   "OBShell.ZoneListOrTopo.OBServerList.OBServerModal.HardwareArchitecture": "硬件架构",
   "OBShell.ZoneListOrTopo.OBServerList.ThereAreCurrentlyObserverStart": "当前有正在进行的OBServer启停任务，此时禁止继续启停",
-  "OBShell.Overview.ZoneListOrTopo.ZoneList.ThereIsCurrentlyAnOngoing": "当前有正在进行的Zone启停任务，此时禁止继续启停"
+  "OBShell.Overview.ZoneListOrTopo.ZoneList.ThereIsCurrentlyAnOngoing": "当前有正在进行的Zone启停任务，此时禁止继续启停",
+  "OBShell.component.MonitorComp.EditMetrics.EditMonitoringMetrics": "编辑监控指标",
+  "OBShell.component.MonitorComp.EditMetrics.Save": "保存",
+  "OBShell.component.MonitorComp.EditMetrics.Cancel": "取消",
+  "OBShell.component.MonitorComp.EditMetrics.PleaseEnter": "请输入",
+  "OBShell.component.MonitorComp.EditMetrics.SelectAll": "全选",
+  "OBShell.component.MonitorComp.EditMetrics.ClearAll": "清除全部",
+  "OBShell.Overview.ClusterInfo.DataDisk": "数据盘"
 }

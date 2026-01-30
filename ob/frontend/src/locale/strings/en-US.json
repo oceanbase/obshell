@@ -1746,5 +1746,12 @@
   "OBShell.ZoneListOrTopo.OBServerList.OBServerModal.RpcPort": "RPC Port",
   "OBShell.ZoneListOrTopo.OBServerList.OBServerModal.HardwareArchitecture": "Hardware Architecture",
   "OBShell.ZoneListOrTopo.OBServerList.ThereAreCurrentlyObserverStart": "There are currently OBServer start-stop tasks in progress, and it is forbidden to continue starting and stopping at this time.",
-  "OBShell.Overview.ZoneListOrTopo.ZoneList.ThereIsCurrentlyAnOngoing": "There is currently an ongoing Zone start-stop task, and it is forbidden to continue starting and stopping at this time."
+  "OBShell.Overview.ZoneListOrTopo.ZoneList.ThereIsCurrentlyAnOngoing": "There is currently an ongoing Zone start-stop task, and it is forbidden to continue starting and stopping at this time.",
+  "OBShell.component.MonitorComp.EditMetrics.EditMonitoringMetrics": "Edit monitoring metrics",
+  "OBShell.component.MonitorComp.EditMetrics.Save": "Save",
+  "OBShell.component.MonitorComp.EditMetrics.Cancel": "Cancel",
+  "OBShell.component.MonitorComp.EditMetrics.PleaseEnter": "Please enter",
+  "OBShell.component.MonitorComp.EditMetrics.SelectAll": "Select All",
+  "OBShell.component.MonitorComp.EditMetrics.ClearAll": "Clear All",
+  "OBShell.Overview.ClusterInfo.DataDisk": "Data disk"
 }

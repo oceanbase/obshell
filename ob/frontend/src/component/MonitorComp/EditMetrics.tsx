@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 import { EditOutlined, SearchOutlined } from '@oceanbase/icons';
 import { useDeepCompareEffect } from 'ahooks';
 import { Button, Checkbox, Col, Divider, Form, Input, Row, Space, theme, Tooltip } from 'antd';
@@ -87,7 +88,12 @@ const EditMetrics: React.FC<EditMetricsProps> = ({ groupMetrics, initialKeys, on
 
   return (
     <>
-      <Tooltip title="编辑监控指标">
+      <Tooltip
+        title={formatMessage({
+          id: 'OBShell.component.MonitorComp.EditMetrics.EditMonitoringMetrics',
+          defaultMessage: '编辑监控指标',
+        })}
+      >
         <EditOutlined
           onClick={() => {
             setEditMetricsVisible(true);
@@ -97,23 +103,37 @@ const EditMetrics: React.FC<EditMetricsProps> = ({ groupMetrics, initialKeys, on
         />
       </Tooltip>
       <MyDrawer
-        title="编辑监控指标"
+        title={formatMessage({
+          id: 'OBShell.component.MonitorComp.EditMetrics.EditMonitoringMetrics',
+          defaultMessage: '编辑监控指标',
+        })}
         width={350}
         open={editMetricsVisible}
         onClose={handleClose}
         footer={
           <Space>
             <Button type="primary" onClick={handleSave}>
-              保存
+              {formatMessage({
+                id: 'OBShell.component.MonitorComp.EditMetrics.Save',
+                defaultMessage: '保存',
+              })}
             </Button>
-            <Button onClick={handleClose}>取消</Button>
+            <Button onClick={handleClose}>
+              {formatMessage({
+                id: 'OBShell.component.MonitorComp.EditMetrics.Cancel',
+                defaultMessage: '取消',
+              })}
+            </Button>
           </Space>
         }
         maskClosable={false}
       >
         <Input
           prefix={<SearchOutlined />}
-          placeholder="请输入"
+          placeholder={formatMessage({
+            id: 'OBShell.component.MonitorComp.EditMetrics.PleaseEnter',
+            defaultMessage: '请输入',
+          })}
           value={search}
           onChange={handleInputChange}
           style={{ marginBottom: 24 }}
@@ -132,10 +152,16 @@ const EditMetrics: React.FC<EditMetricsProps> = ({ groupMetrics, initialKeys, on
               indeterminate={isIndeterminate}
               onChange={(e: CheckboxChangeEvent) => onCheckAllChange(e.target.checked)}
             >
-              全选
+              {formatMessage({
+                id: 'OBShell.component.MonitorComp.EditMetrics.SelectAll',
+                defaultMessage: '全选',
+              })}
             </Checkbox>
             <Button type="link" onClick={onClearAll}>
-              清除全部
+              {formatMessage({
+                id: 'OBShell.component.MonitorComp.EditMetrics.ClearAll',
+                defaultMessage: '清除全部',
+              })}
             </Button>
           </div>
           <Divider style={{ margin: '6px 0 12px 0' }} />

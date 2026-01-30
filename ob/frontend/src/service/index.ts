@@ -1,4 +1,3 @@
-import { formatMessage } from '@/util/intl';
 import { findBy, formatNumber } from '@oceanbase/util';
 import { flatten } from 'lodash';
 import { queryMetrics } from './obshell/metric';
@@ -71,32 +70,6 @@ const setMetricNameFromLabels = (labels: Monitor.MetricsLabels) => {
 // 定义图例排序规则
 const sortLegendNames = (names: string[]): string[] => {
   return names.sort((a, b) => {
-    // 优先级规则：
-    // 1. 集群名称在前
-    // 2. 租户名称在后
-    // 3. 同类型按字母顺序排序
-
-    const isClusterA =
-      a.includes('cluster') ||
-      a.includes(formatMessage({ id: 'OBShell.src.service.Cluster', defaultMessage: '集群' }));
-    const isClusterB =
-      b.includes('cluster') ||
-      b.includes(formatMessage({ id: 'OBShell.src.service.Cluster', defaultMessage: '集群' }));
-    const isTenantA =
-      a.includes('tenant') ||
-      a.includes(formatMessage({ id: 'OBShell.src.service.Tenant', defaultMessage: '租户' }));
-    const isTenantB =
-      b.includes('tenant') ||
-      b.includes(formatMessage({ id: 'OBShell.src.service.Tenant', defaultMessage: '租户' }));
-
-    // 集群相关的排在前面
-    if (isClusterA && !isClusterB) return -1;
-    if (!isClusterA && isClusterB) return 1;
-
-    // 租户相关的排在后面
-    if (isTenantA && !isTenantB) return 1;
-    if (!isTenantA && isTenantB) return -1;
-
     // 同类型或都不是特殊类型时，按字母顺序排序
     return a.localeCompare(b, 'zh-CN', { numeric: true });
   });
@@ -205,19 +178,18 @@ export async function queryMetricsReq({
 
     // 收集所有唯一的图例名称
     const uniqueNames = Array.from(new Set(flattenedData.map((item: any) => item.name || '')));
-
     // 对图例名称进行排序
     const sortedNames = sortLegendNames(uniqueNames);
 
     // 创建名称到排序索引的映射
     const nameToIndex = new Map(sortedNames.map((name, index) => [name, index]));
-
     // 根据排序后的索引对数据进行排序
-    return flattenedData.sort((a: any, b: any) => {
-      const indexA = nameToIndex.get(a.name || '') || 999999;
-      const indexB = nameToIndex.get(b.name || '') || 999999;
+    const sortedData = flattenedData.sort((a: any, b: any) => {
+      const indexA = nameToIndex.get(a.name || '') ?? 999999;
+      const indexB = nameToIndex.get(b.name || '') ?? 999999;
       return indexA - indexB;
     });
+    return sortedData;
   }
   return [];
 }

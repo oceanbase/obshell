@@ -1,14 +1,13 @@
-import { formatMessage } from '@/util/intl';
-import { DATE_TIME_FORMAT_DISPLAY } from '@/constant/datetime';
-import useReload from '@/hook/useReload';
 import RefreshProgress from '@/component/MonitorSearch/AutoFresh/RefreshProgress';
-import React, { useState, useEffect } from 'react';
-import { toString } from 'lodash';
-import dayjs from 'dayjs';
+import { DATE_TIME_FORMAT_DISPLAY } from '@/constant/datetime';
+import { formatMessage } from '@/util/intl';
 import { Button, Dropdown, Form, Space } from '@oceanbase/design';
 import { DownOutlined, SyncOutlined } from '@oceanbase/icons';
 import { DateRanger } from '@oceanbase/ui';
 import { useInterval } from 'ahooks';
+import dayjs from 'dayjs';
+import { toString } from 'lodash';
+import React, { useEffect, useState } from 'react';
 
 import { AUTO_FRESH_ITEMS } from '@/constant/monitor';
 import styles from './index.less';
@@ -49,7 +48,7 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
   customRefreshItems,
 }) => {
   const [second, setSecond] = useState<number>(0);
-  const [loading, setLoading] = useReload(false);
+  const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
 
   // 同步 queryRange 到表单
@@ -84,9 +83,9 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
               {isRealtime
                 ? frequencyItem?.label
                 : formatMessage({
-                    id: 'OBShell.MonitorSearch.AutoFresh.Close',
-                    defaultMessage: '关闭',
-                  })}
+                  id: 'OBShell.MonitorSearch.AutoFresh.Close',
+                  defaultMessage: '关闭',
+                })}
               <DownOutlined />
             </Space>
           </Button>,
@@ -105,17 +104,21 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
         }}
         onClick={() => {
           if (isRealtime) return;
-          setLoading();
+          setLoading(true);
+          // 确保旋转动画至少完成一圈（1秒）
+          setTimeout(() => {
+            setLoading(false);
+          }, 500);
           setSecond(0);
           onRefreshClick?.();
           onRefresh();
         }}
       >
         <Space>
-          {loading ? null : isRealtime ? (
+          {isRealtime ? (
             <RefreshProgress value={second / ((frequency as number) - 1)} />
           ) : (
-            <SyncOutlined />
+            <SyncOutlined spin={loading} />
           )}
           <span>
             {formatMessage({
