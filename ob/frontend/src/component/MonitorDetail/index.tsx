@@ -27,13 +27,6 @@ export default function MonitorDetail({
   const [serverOption, setServerOption] = useState<Monitor.OptionType[]>([]);
   const [isHostPerformanceTab, setIsHostPerformanceTab] = useState<boolean>(false); // 是否为主机性能 tab， 只有 OceanBase集群才有
 
-  const handleTabChange = (isHostPerformance: boolean) => {
-    // 只有 OceanBase集群才有主机性能tab，需要通知 DataFilter 更新 serverOption
-    if (queryScope === 'OBCLUSTER') {
-      setIsHostPerformanceTab(isHostPerformance);
-    }
-  };
-
   return (
     <>
       <DataFilter
@@ -58,7 +51,9 @@ export default function MonitorDetail({
         queryScope={queryScope}
         serverOption={serverOption}
         useFor={useFor}
-        onTabChange={handleTabChange}
+        onTabChange={(isHostPerformance: boolean) => {
+          setIsHostPerformanceTab(isHostPerformance);
+        }}
       />
     </>
   );

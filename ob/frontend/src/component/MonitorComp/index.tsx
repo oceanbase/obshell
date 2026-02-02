@@ -2,8 +2,9 @@ import { formatMessage } from '@/util/intl';
 import { Card } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 
-import { DimensionMap } from '@/constant/monitor';
+import { Dimension } from '@/constant/monitor';
 import { listAllMetrics } from '@/service/obshell/metric';
+import { findBy } from '@oceanbase/util';
 import { isEmpty } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'umi';
@@ -47,7 +48,7 @@ export default function MonitorComp({
   serverOption,
   onTabChange,
 }: MonitorCompProps) {
-  const [activeTabKey, setActiveTabKey] = useState<string>('0');
+  const [activeTabKey, setActiveTabKey] = useState<string>('');
   const [activeDimension, setActiveDimension] = useState<string>('');
   const { isSingleMachine } = useSelector((state: DefaultRootState) => state.cluster);
 
@@ -58,17 +59,11 @@ export default function MonitorComp({
   });
   const allMetrics: API.MetricClass[] = listAllMetricsRes?.data?.contents || [];
 
+  const currentContainer = findBy(allMetrics, 'key', activeTabKey);
   // 判断当前是否为"主机性能" tab
-  const currentContainer = allMetrics?.[parseInt(activeTabKey)];
   const isHostPerformanceTab = useMemo(() => {
-    return (
-      currentContainer?.name ===
-      formatMessage({
-        id: 'OBShell.component.MonitorComp.HostPerformance',
-        defaultMessage: '主机性能',
-      })
-    );
-  }, [currentContainer?.name]);
+    return currentContainer?.key === 'host_performance';
+  }, [currentContainer?.key]);
 
   // 根据 filterLabel 过滤 serverOption
   const filteredServerOption = useMemo(() => {
@@ -100,20 +95,26 @@ export default function MonitorComp({
   }, [serverOption, filterLabel]);
 
   const dimension = useMemo(() => {
-    return DimensionMap[currentContainer?.name as keyof typeof DimensionMap]?.filter(item =>
+    return Dimension[currentContainer?.key as keyof typeof Dimension]?.filter((item: any) =>
       isSingleMachine ? item.singleMachineFlag : true
     );
-  }, [currentContainer?.name, isSingleMachine]);
+  }, [currentContainer?.key, isSingleMachine]);
 
   // 生成tab列表
   const tabList = useMemo(() => {
     return (
-      allMetrics?.map((container: API.MetricClass, index: number) => ({
-        key: index.toString(),
+      allMetrics?.map((container: API.MetricClass) => ({
+        key: container.key,
         label: container?.name,
       })) || []
     );
   }, [allMetrics]);
+
+  useEffect(() => {
+    if (!isEmpty(tabList)) {
+      setActiveTabKey(tabList?.[0]?.key || '');
+    }
+  }, [tabList]);
 
   useEffect(() => {
     if (isEmpty(dimension)) return;
@@ -122,7 +123,10 @@ export default function MonitorComp({
 
   // 当 isHostPerformanceTab 变化时，通知父组件
   useEffect(() => {
-    onTabChange?.(isHostPerformanceTab);
+    // 只有 OceanBase集群才有主机性能tab，需要通知 DataFilter 更新 serverOption
+    if (queryScope === 'OBCLUSTER') {
+      onTabChange?.(isHostPerformanceTab);
+    }
   }, [isHostPerformanceTab]);
 
   // 当筛选条件变化时，检查当前选中的 unit 是否仍在过滤后的列表中
@@ -245,7 +249,7 @@ export default function MonitorComp({
 
   // 生成当前激活tab的内容
   const currentTabContent = useMemo(() => {
-    const currentContainer = allMetrics?.[parseInt(activeTabKey)];
+    const currentContainer = findBy(allMetrics, 'key', activeTabKey);
     if (!currentContainer?.metric_groups) return null;
 
     const graphList = renderGraphList(currentContainer.metric_groups);

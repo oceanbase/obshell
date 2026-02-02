@@ -1077,6 +1077,7 @@ declare namespace API {
     description: string;
     metric_groups: MetricGroup[];
     name: string;
+    key: string;
   };
 
   type MetricData = {

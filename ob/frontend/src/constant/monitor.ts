@@ -86,8 +86,8 @@ export const EXTEND_CHART_COLORS = [
   '#BAA49D',
 ];
 
-const Dimension = {
-  databasePerformance: [
+export const Dimension = {
+  "database_performance": [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -122,7 +122,7 @@ const Dimension = {
     },
   ],
 
-  hostPerformance: [
+  "host_performance": [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -141,7 +141,7 @@ const Dimension = {
     },
   ],
 
-  observerPerformance: [
+  "observer_performance": [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -160,7 +160,7 @@ const Dimension = {
     },
   ],
 
-  performanceAndSQL: [
+  "performance_and_sql": [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -179,7 +179,7 @@ const Dimension = {
     },
   ],
 
-  transaction: [
+  "transaction": [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -198,7 +198,7 @@ const Dimension = {
     },
   ],
 
-  storageAndCache: [
+  "storage_and_cache": [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -216,19 +216,4 @@ const Dimension = {
       singleMachineFlag: false,
     },
   ],
-};
-
-export const DimensionMap = {
-  数据库性能: Dimension['databasePerformance'],
-  主机性能: Dimension['hostPerformance'],
-  OBServer性能: Dimension['observerPerformance'],
-  性能与SQL: Dimension['performanceAndSQL'],
-  事务: Dimension['transaction'],
-  存储与缓存: Dimension['storageAndCache'],
-  'Database Performance': Dimension['databasePerformance'],
-  'Host performance': Dimension['hostPerformance'],
-  'OBServer performance': Dimension['observerPerformance'],
-  'Performance and SQL': Dimension['performanceAndSQL'],
-  Transaction: Dimension['transaction'],
-  'Storage and Cache': Dimension['storageAndCache'],
 };
