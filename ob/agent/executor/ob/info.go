@@ -127,6 +127,29 @@ func getClusterConfigByName(serverConfName string, agentConfName string) (value 
 	return
 }
 
+// getClusterConfigByNameFromLocal gets cluster config only from local SQLite, without querying OB.
+// This is used when OB cluster is unavailable to avoid blocking.
+func getClusterConfigByNameFromLocal(agentConfName string) (value string, err error) {
+	var config sqlite.ObGlobalConfig
+	config, err = observerService.GetObGlobalConfigByName(agentConfName)
+	value = config.Value
+	return
+}
+
+// getClusterNameFromLocal gets cluster name only from local SQLite
+func getClusterNameFromLocal() (clusterName string, err error) {
+	return getClusterConfigByNameFromLocal(constant.CONFIG_CLUSTER_NAME)
+}
+
+// getClusterIDFromLocal gets cluster ID only from local SQLite
+func getClusterIDFromLocal() (clusterID int, err error) {
+	confVal, err := getClusterConfigByNameFromLocal(constant.CONFIG_CLUSTER_ID)
+	if confVal != "" {
+		clusterID, err = strconv.Atoi(confVal)
+	}
+	return
+}
+
 func getClusterConfig() (resp *param.ClusterConfig, err error) {
 	servers, err := obclusterService.GetAllOBServers()
 	if err != nil {

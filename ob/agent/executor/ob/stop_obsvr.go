@@ -117,7 +117,10 @@ func buildSubStopTaskCtx(param CreateSubDagParam) *task.TaskContext {
 	ctx := task.NewTaskContext().
 		SetParam(PARAM_MAIN_DAG_ID, param.GenericID).
 		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, param.ExpectedStage).
-		SetParam(PARAM_MAIN_AGENT, param.Agent)
+		SetParam(PARAM_MAIN_AGENT, param.Agent).
+		SetParam(PARAM_SCOPE, param.Scope).
+		SetParam(PARAM_MAIN_DAG_NAME, param.MainDagName).
+		SetParam(PARAM_STOP_OBSERVER_PROCESS, param.StopObserverProcess)
 	return ctx
 }
 

@@ -61,7 +61,8 @@ func buildStartObclusterTaskContext(param param.StartObParam) (*task.TaskContext
 		SetParam(PARAM_SCOPE, param.Scope).
 		SetParam(PARAM_FORCE_PASS_DAG, param.ForcePassDagParam).
 		SetParam(PARAM_URI, constant.URI_OB_RPC_PREFIX+constant.URI_START).
-		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, SUB_START_DAG_EXPECT_MAIN_NEXT_STAGE)
+		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, SUB_START_DAG_EXPECT_MAIN_NEXT_STAGE).
+		SetParam(PARAM_MAIN_DAG_NAME, DAG_START_OB)
 	for _, agent := range needStartAgents {
 		ctx.SetAgentData(&agent, DATA_SUB_DAG_NEED_EXEC_CMD, true)
 	}

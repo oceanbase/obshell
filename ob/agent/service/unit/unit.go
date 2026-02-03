@@ -102,6 +102,34 @@ func (u *UnitService) GetUnitConfigById(id int) (unit *oceanbaseModel.DbaObUnitC
 	return
 }
 
+// GetUnitConfigsByIds batch gets multiple unit configs by IDs in one query
+// This is more efficient than calling GetUnitConfigById multiple times
+func (u *UnitService) GetUnitConfigsByIds(ids []int) (unitConfigsMap map[int]*oceanbaseModel.DbaObUnitConfig, err error) {
+	if len(ids) == 0 {
+		return make(map[int]*oceanbaseModel.DbaObUnitConfig), nil
+	}
+
+	db, err := oceanbase.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var units []oceanbaseModel.DbaObUnitConfig
+	err = db.Table(DBA_OB_UNIT_CONFIGS).
+		Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops").
+		Where("UNIT_CONFIG_ID IN ?", ids).Scan(&units).Error
+	if err != nil {
+		return nil, err
+	}
+
+	unitConfigsMap = make(map[int]*oceanbaseModel.DbaObUnitConfig)
+	for i := range units {
+		unitConfigsMap[units[i].UnitConfigId] = &units[i]
+	}
+
+	return
+}
+
 func (u *UnitService) GetUnitConfigNameById(id int) (name string, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {

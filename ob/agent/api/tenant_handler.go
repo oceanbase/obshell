@@ -118,7 +118,7 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 	tenant.DELETE(constant.URI_PATH_PARAM_NAME+constant.URI_SESSIONS+constant.URI_QUERIES, tenantHandlerWrapper(killTenantSessionQueryHandler))
 	tenant.GET(constant.URI_PATH_PARAM_NAME+constant.URI_DEADLOCKS, tenantHandlerWrapper(ListTenantDeadlocksHandler))
 
-	tenants.GET(constant.URI_OVERVIEW, getTenantOverView)
+	tenants.GET(constant.URI_OVERVIEW, findAvailableClusterAgentIfNeedWrapper(getTenantOverView))
 }
 
 // @ID tenantCreate

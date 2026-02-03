@@ -130,6 +130,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	// ob routes
 	ob.POST(constant.URI_INIT, obInitHandler)
 	ob.POST(constant.URI_STOP, obStopHandler)
+	ob.POST(constant.URI_ZONE_GROUP+constant.URI_PATH_PARAM_ZONE_NAME+constant.URI_STOP, obStopZoneHandler)
+	ob.POST(constant.URI_ZONE_GROUP+constant.URI_PATH_PARAM_ZONE_NAME+constant.URI_STOP+constant.URI_CHECK, obZoneStopCheckHandler)
 	ob.POST(constant.URI_START, obStartHandler)
 	ob.GET(constant.URI_INFO, obInfoHandler)
 	ob.POST(constant.URI_SCALE_OUT, obClusterScaleOutHandler)
@@ -154,7 +156,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	// obcluster routes
 	obcluster.PUT(constant.URI_CONFIG, obclusterConfigHandler(true))
 	obcluster.POST(constant.URI_CONFIG, obclusterConfigHandler(true))
-	obcluster.GET(constant.URI_INFO, obclusterInfoHandler)
+	obcluster.GET(constant.URI_INFO, findAvailableClusterAgentIfNeedWrapper(obclusterInfoHandler))
+	obcluster.GET(constant.URI_TOPOLOGY+constant.URI_INFO, findAvailableClusterAgentIfNeedWrapper(obclusterTopologyHandler))
 	obcluster.GET(constant.URI_PARAMETERS, obclusterParametersHandler)
 	obcluster.PATCH(constant.URI_PARAMETERS, obclusterSetParametersHandler)
 	obcluster.GET(constant.URI_CHARSETS, getObclusterCharsets)

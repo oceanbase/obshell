@@ -66,7 +66,9 @@ func buildStopTaskContext(param param.ObStopParam) (*task.TaskContext, error) {
 		SetParam(PARAM_SCOPE, param.Scope).
 		SetParam(PARAM_FORCE_PASS_DAG, param.ForcePassDagParam).
 		SetParam(PARAM_URI, constant.URI_OB_RPC_PREFIX+constant.URI_STOP).
-		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, SUB_STOP_DAG_EXPECT_MAIN_NEXT_STAGE)
+		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, SUB_STOP_DAG_EXPECT_MAIN_NEXT_STAGE).
+		SetParam(PARAM_MAIN_DAG_NAME, DAG_STOP_OB).
+		SetParam(PARAM_STOP_OBSERVER_PROCESS, param.Force || param.Terminate)
 	if param.Force || param.Terminate {
 		for _, agent := range needStopAgents {
 			ctx.SetAgentData(&agent, DATA_SUB_DAG_NEED_EXEC_CMD, true)
@@ -158,8 +160,9 @@ func newPassSubStopDagTask() *PassSubStopDagTask {
 }
 
 const (
-	SUB_STOP_DAG_EXPECT_MAIN_NEXT_STAGE   = 3
-	MAIN_STOP_DAG_EXPECTED_SUB_NEXT_STAGE = 2
+	SUB_STOP_DAG_EXPECT_MAIN_NEXT_STAGE      = 3
+	MAIN_STOP_DAG_EXPECTED_SUB_NEXT_STAGE    = 2
+	SUB_STOP_ZONE_DAG_EXPECT_MAIN_NEXT_STAGE = 3
 )
 
 func (t *CreateSubStopDagTask) Execute() error {
@@ -179,7 +182,6 @@ func (t *WaitSubStopDagFinishTask) Execute() (err error) {
 }
 
 func (t *ExecStopSqlTask) Execute() (err error) {
-	t.ExecuteLog("Stop observer")
 	ctx := t.GetContext()
 	if err := ctx.GetDataWithValue(DATA_ALL_AGENT_DAG_MAP, &t.allAgentDagMap); err != nil {
 		return err
@@ -231,6 +233,7 @@ func (t *ExecStopSqlTask) stopZone() (err error) {
 }
 
 func (t *ExecStopSqlTask) stopServer() (err error) {
+	t.ExecuteLog("Stop observer")
 	agents, err := agentService.GetAllAgentsDOFromOB()
 	if err != nil {
 		return err
@@ -260,6 +263,51 @@ func (t *PassSubStopDagTask) Execute() (err error) {
 	return t.execute()
 }
 
+// validateStopZoneMajorityCondition checks if stopping the zone will satisfy majority condition for all log streams
+func validateStopZoneMajorityCondition(zoneName string) error {
+	// Get all user tenants for error message
+	tenants, err := tenantService.GetAllUserTenants()
+	if err != nil {
+		return errors.Wrap(err, "get all user tenants failed")
+	}
+
+	// Find which tenants are affected
+	var invalidTenants []string
+	tenantChecked := make(map[int]bool)
+
+	// Get all log streams in the zone
+	logStreams, err := obclusterService.GetLogInfosInZone(zoneName)
+	if err != nil {
+		return errors.Wrap(err, "get log streams in zone failed")
+	}
+
+	// Check each log stream to find invalid tenants
+	for _, ls := range logStreams {
+		alive, err := obclusterService.IsLsMultiPaxosAliveAfterStopZone(ls.LsId, ls.TenantId, zoneName)
+		if err != nil {
+			log.Warnf("validateStopZoneMajorityCondition: failed to check tenant %d LS %d: %v", ls.TenantId, ls.LsId, err)
+			continue
+		}
+		if !alive {
+			// Find tenant name
+			for _, tenant := range tenants {
+				if tenant.TenantID == ls.TenantId && !tenantChecked[tenant.TenantID] {
+					invalidTenants = append(invalidTenants, tenant.TenantName)
+					tenantChecked[tenant.TenantID] = true
+
+					break
+				}
+			}
+		}
+	}
+
+	if len(invalidTenants) > 0 {
+		return errors.Occur(errors.ErrObClusterTenantReplicaInvalid, zoneName, invalidTenants)
+	}
+
+	return nil
+}
+
 func CheckStopObParam(param *param.ObStopParam) error {
 	if param.Scope.Type == SCOPE_GLOBAL && (!param.Force && !param.Terminate) {
 		return errors.Occur(errors.ErrObClusterForceStopOrTerminateRequired)
@@ -267,8 +315,60 @@ func CheckStopObParam(param *param.ObStopParam) error {
 	if param.Force && param.Terminate {
 		return errors.Occur(errors.ErrObClusterStopModeConflict)
 	}
-	if !param.Force && oceanbase.GetState() != oceanbase.STATE_CONNECTION_AVAILABLE {
+	if (!param.Force || param.Scope.Type == SCOPE_ZONE) && oceanbase.GetState() != oceanbase.STATE_CONNECTION_AVAILABLE {
 		return errors.Occur(errors.ErrObClusterForceStopRequired)
 	}
+
+	// If need to execute stop sql, check if has other stop task
+
+	if param.Scope.Type == SCOPE_SERVER {
+		if !param.Terminate && !param.Force {
+			// Check all servers is in one zone
+			servers, err := agentService.GetAllAgentsDOFromOB()
+			if err != nil {
+				return errors.Wrap(err, "get all agents do from ob failed")
+			}
+			var targetToZoneMap = make(map[string]string)
+			for _, server := range servers {
+				targetToZoneMap[fmt.Sprintf("%s:%d", server.Ip, server.Port)] = server.Zone
+			}
+			var zone string
+			for _, target := range param.Scope.Target {
+				if zone == "" {
+					zone = targetToZoneMap[target]
+				} else if targetToZoneMap[target] != zone {
+					return errors.Occur(errors.ErrObServerStoppedInMultiZone)
+				}
+			}
+			// Check whether has other stopped server in the same zone.
+			if exist, err := obclusterService.HasOtherStopTask(zone); err != nil {
+				return errors.Wrap(err, "check if has other stop task failed")
+			} else if exist {
+				return errors.Occur(errors.ErrObServerStoppedInMultiZone)
+			}
+		}
+	}
+
+	if param.Scope.Type == SCOPE_ZONE {
+		if !param.Terminate && !param.Force {
+			if len(param.Scope.Target) > 1 {
+				return errors.Occur(errors.ErrObServerStoppedInMultiZone)
+			} else if len(param.Scope.Target) != 0 {
+				// Check whether has other stopped zone or server in other zone.
+				zone := param.Scope.Target[0]
+				if exist, err := obclusterService.HasOtherStopTask(zone); err != nil {
+					return errors.Wrap(err, "check if has other stop task failed")
+				} else if exist {
+					return errors.Occur(errors.ErrObServerStoppedInMultiZone)
+				}
+
+				// Validate majority condition before stopping zone
+				if err := validateStopZoneMajorityCondition(zone); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
 	return nil
 }

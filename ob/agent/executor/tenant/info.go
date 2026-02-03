@@ -36,6 +36,17 @@ func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Optimization: Batch get read_only variable for all tenants in one query
+	tenantNames := make([]string, 0, len(tenants))
+	for i := range tenants {
+		tenantNames = append(tenantNames, tenants[i].TenantName)
+	}
+	readOnlyMap, err := tenantService.GetTenantsVariableByNames(tenantNames, constant.VARIABLE_READ_ONLY)
+	if err != nil {
+		return nil, err
+	}
+
 	tenantOverviews := make([]oceanbase.TenantOverview, 0)
 	for i := range tenants {
 		connectionStr := bo.ObproxyAndConnectionString{
@@ -48,10 +59,7 @@ func GetTenantsOverView(mode string) ([]oceanbase.TenantOverview, error) {
 		}
 		connectionStrs := make([]bo.ObproxyAndConnectionString, 0)
 		connectionStrs = append(connectionStrs, connectionStr)
-		readOnly, err := tenantService.GetTenantVariable(tenants[i].TenantName, constant.VARIABLE_READ_ONLY)
-		if err != nil {
-			return nil, err
-		}
+		readOnly := readOnlyMap[tenants[i].TenantName]
 		if readOnly != nil {
 			tenants[i].ReadOnly = (readOnly.Value == "1")
 		}
@@ -69,10 +77,26 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		return nil, err
 	}
 
-	whitelist, err := tenantService.GetTenantVariable(tenantName, "ob_tcp_invited_nodes")
+	// Optimization: Batch get all tenant variables in one query instead of multiple separate queries
+	// This reduces database round trips from 5 queries (with subqueries) to 1 query
+	variableNames := []string{
+		"ob_tcp_invited_nodes",
+		constant.VARIABLE_READ_ONLY,
+		constant.VARIABLE_LOWER_CASE_TABLE_NAMES,
+		constant.VARIABLE_TIME_ZONE,
+		"CHARACTER_SET_SERVER",
+	}
+	variablesMap, err := tenantService.GetTenantVariablesByNames(tenantName, variableNames)
 	if err != nil {
 		return nil, err
 	}
+
+	// Extract variables from map
+	whitelist := variablesMap["ob_tcp_invited_nodes"]
+	readOnly := variablesMap[constant.VARIABLE_READ_ONLY]
+	lowerCaseTableNames := variablesMap[constant.VARIABLE_LOWER_CASE_TABLE_NAMES]
+	timeZone := variablesMap[constant.VARIABLE_TIME_ZONE]
+	charset := variablesMap["CHARACTER_SET_SERVER"]
 
 	pools := make([]*bo.ResourcePoolWithUnit, 0)
 	poolInfos, err := tenantService.GetTenantResourcePool(tenant.TenantID)
@@ -80,43 +104,54 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		return nil, err
 	}
 
-	for _, poolInfo := range poolInfos {
-		unitConfig, err := unitService.GetUnitConfigById(poolInfo.UnitConfigId)
+	// Optimization: Batch get all unit configs and pool servers in one query each
+	if len(poolInfos) > 0 {
+		// Collect all unit config IDs and pool IDs
+		unitConfigIds := make([]int, 0, len(poolInfos))
+		poolIds := make([]int, 0, len(poolInfos))
+		for _, poolInfo := range poolInfos {
+			unitConfigIds = append(unitConfigIds, poolInfo.UnitConfigId)
+			poolIds = append(poolIds, poolInfo.ResourcePoolID)
+		}
+
+		// Batch get unit configs
+		unitConfigsMap, err := unitService.GetUnitConfigsByIds(unitConfigIds)
 		if err != nil {
 			return nil, err
 		}
-		observers, err := tenantService.GetTenantResourcePoolServers(poolInfo.ResourcePoolID)
+
+		// Batch get pool servers
+		serversMap, err := tenantService.GetTenantResourcePoolServersBatch(poolIds)
 		if err != nil {
 			return nil, err
 		}
-		observerList := make([]string, 0)
-		for _, observer := range observers {
-			observerList = append(observerList, fmt.Sprintf("%s:%d", observer.SvrIp, observer.SvrPort))
+
+		// Build pools from batch results
+		for _, poolInfo := range poolInfos {
+			unitConfig, ok := unitConfigsMap[poolInfo.UnitConfigId]
+			if !ok {
+				return nil, fmt.Errorf("unit config not found for pool %s", poolInfo.Name)
+			}
+
+			observers := serversMap[poolInfo.ResourcePoolID]
+			if observers == nil {
+				observers = make([]oceanbase.OBServer, 0)
+			}
+
+			observerList := make([]string, 0, len(observers))
+			for _, observer := range observers {
+				observerList = append(observerList, fmt.Sprintf("%s:%d", observer.SvrIp, observer.SvrPort))
+			}
+			poolWithUnit := bo.ResourcePoolWithUnit{
+				Name:       poolInfo.Name,
+				Id:         poolInfo.ResourcePoolID,
+				ZoneList:   poolInfo.ZoneList,
+				ServerList: strings.Join(observerList, ","),
+				UnitNum:    poolInfo.UnitNum,
+				Unit:       oceanbase.ConvertDbaObUnitConfigToObUnit(unitConfig),
+			}
+			pools = append(pools, &poolWithUnit)
 		}
-		poolWithUnit := bo.ResourcePoolWithUnit{
-			Name:       poolInfo.Name,
-			Id:         poolInfo.ResourcePoolID,
-			ZoneList:   poolInfo.ZoneList,
-			ServerList: strings.Join(observerList, ","),
-			UnitNum:    poolInfo.UnitNum,
-			Unit:       oceanbase.ConvertDbaObUnitConfigToObUnit(unitConfig),
-		}
-		pools = append(pools, &poolWithUnit)
-	}
-
-	readOnly, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_READ_ONLY)
-	if err != nil {
-		return nil, err
-	}
-
-	lowerCaseTableNames, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_LOWER_CASE_TABLE_NAMES)
-	if err != nil {
-		return nil, err
-	}
-
-	timeZone, err := tenantService.GetTenantVariable(tenantName, constant.VARIABLE_TIME_ZONE)
-	if err != nil {
-		return nil, err
 	}
 
 	var lclOpInterval string
@@ -149,14 +184,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 		ConnectionStrings: []bo.ObproxyAndConnectionString{connectionStr},
 	}
 
-	charset, err := tenantService.GetTenantVariable(tenantName, "CHARACTER_SET_SERVER")
-	if err != nil {
-		return nil, err
-	}
 	collatoinMap, err := obclusterService.GetCollationMap()
 	if err != nil {
 		return nil, err
 	}
+
 	if charset != nil && collatoinMap != nil {
 		id, _ := strconv.Atoi(charset.Value)
 		collation, ok := collatoinMap[id]
@@ -180,5 +212,6 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	if lclOpInterval != "0ms" && lclOpInterval != "0" {
 		tenantInfo.DeadLockDetectionEnabled = true
 	}
+
 	return tenantInfo, nil
 }

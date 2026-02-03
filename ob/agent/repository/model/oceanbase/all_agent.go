@@ -16,6 +16,8 @@
 
 package oceanbase
 
+import "github.com/oceanbase/obshell/ob/agent/repository/model/bo"
+
 type AllAgent struct {
 	Ip           string `gorm:"primaryKey;type:varchar(64);not null" json:"ip"`
 	Port         int    `gorm:"primaryKey;type:bigint(20);not null" json:"port"`
@@ -28,4 +30,20 @@ type AllAgent struct {
 	RpcPort      int    `gorm:"type:bigint(20)" json:"rpc_port"`
 	HomePath     string `gorm:"type:text" json:"home_path"`
 	PublicKey    string `gorm:"type:text" json:"public_key"`
+}
+
+func (a *AllAgent) ToBo() *bo.AllAgent {
+	return &bo.AllAgent{
+		Ip:           a.Ip,
+		Port:         a.Port,
+		Identity:     a.Identity,
+		Version:      a.Version,
+		Os:           a.Os,
+		Architecture: a.Architecture,
+		Zone:         a.Zone,
+		MysqlPort:    a.MysqlPort,
+		RpcPort:      a.RpcPort,
+		HomePath:     a.HomePath,
+		PublicKey:    a.PublicKey,
+	}
 }

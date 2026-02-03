@@ -52,6 +52,8 @@ const (
 
 	PARAM_EXPECTED_STAGE         = "expectedStage"
 	PARAM_MAIN_DAG_ID            = "mainDagId"
+	PARAM_MAIN_DAG_NAME          = "mainDagName"
+	PARAM_STOP_OBSERVER_PROCESS  = "stopObserverProcess"
 	PARAM_MAIN_AGENT             = "mainAgent"
 	PARAM_SCOPE                  = "scope"
 	PARAM_ALL_AGENTS             = "allAgents"

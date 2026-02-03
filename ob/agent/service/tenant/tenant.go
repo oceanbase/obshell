@@ -477,6 +477,79 @@ func (t *TenantService) GetTenantVariable(tenantName string, variableName string
 	return
 }
 
+// GetTenantVariablesByNames batch gets multiple tenant variables by names in one query
+// This is more efficient than calling GetTenantVariable multiple times
+func (t *TenantService) GetTenantVariablesByNames(tenantName string, variableNames []string) (variablesMap map[string]*oceanbase.CdbObSysVariable, err error) {
+	if len(variableNames) == 0 {
+		return make(map[string]*oceanbase.CdbObSysVariable), nil
+	}
+
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	// Get tenant_id once
+	tenantIdQuery := db.Table(DBA_OB_TENANTS).Select("TENANT_ID").Where("TENANT_NAME = ?", tenantName)
+
+	// Query all variables in one go
+	var variables []oceanbase.CdbObSysVariable
+	err = db.Table(CDB_OB_SYS_VARIABLES).
+		Where("TENANT_ID = (?) AND NAME IN ?", tenantIdQuery, variableNames).Scan(&variables).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Build map for easy lookup
+	variablesMap = make(map[string]*oceanbase.CdbObSysVariable)
+	for i := range variables {
+		variablesMap[variables[i].Name] = &variables[i]
+	}
+
+	return
+}
+
+// GetTenantsVariableByNames batch gets a specific variable for multiple tenants in one query
+// This is more efficient than calling GetTenantVariable multiple times for different tenants
+func (t *TenantService) GetTenantsVariableByNames(tenantNames []string, variableName string) (variablesMap map[string]*oceanbase.CdbObSysVariable, err error) {
+	if len(tenantNames) == 0 {
+		return make(map[string]*oceanbase.CdbObSysVariable), nil
+	}
+
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	// Use JOIN to get tenant variables in a single query
+	var results []struct {
+		TenantName string `gorm:"column:TENANT_NAME"`
+		Name       string `gorm:"column:NAME"`
+		Value      string `gorm:"column:VALUE"`
+		Info       string `gorm:"column:INFO"`
+	}
+	err = db.Table(DBA_OB_TENANTS+" t").
+		Select("t.TENANT_NAME, v.NAME, v.VALUE, v.INFO").
+		Joins("JOIN "+CDB_OB_SYS_VARIABLES+" v ON t.TENANT_ID = v.TENANT_ID").
+		Where("t.TENANT_NAME IN ? AND v.NAME = ?", tenantNames, variableName).
+		Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Build map for easy lookup by tenant name
+	variablesMap = make(map[string]*oceanbase.CdbObSysVariable)
+	for i := range results {
+		variablesMap[results[i].TenantName] = &oceanbase.CdbObSysVariable{
+			Name:  results[i].Name,
+			Value: results[i].Value,
+			Info:  results[i].Info,
+		}
+	}
+
+	return
+}
+
 func (t *TenantService) GetTenantActiveAgent(tenantName string) (agent *meta.AgentInfo, err error) {
 	db, err := oceanbasedb.GetInstance()
 	if err != nil {

@@ -41,7 +41,8 @@ func newMinorFreezeTask() *MinorFreezeTask {
 	return newTask
 }
 
-func (t *MinorFreezeTask) GetAllObServer() (servers []oceanbase.OBServer, err error) {
+func (t *MinorFreezeTask) GetAllObServer() (activeServers []oceanbase.OBServer, err error) {
+	servers := make([]oceanbase.OBServer, 0)
 	switch t.scope.Type {
 	case SCOPE_GLOBAL:
 		servers, err = obclusterService.GetAllOBServers()
@@ -74,6 +75,15 @@ func (t *MinorFreezeTask) GetAllObServer() (servers []oceanbase.OBServer, err er
 		}
 	}
 
+	// delete inactive servers
+	for _, server := range servers {
+		if server.Status == "INACTIVE" {
+			t.ExecuteWarnLogf("server %s is inactive, skip", meta.NewAgentInfo(server.SvrIp, server.SvrPort).String())
+		} else {
+			activeServers = append(activeServers, server)
+		}
+	}
+
 	return
 }
 
@@ -85,6 +95,10 @@ func (t *MinorFreezeTask) Execute() error {
 	servers, err := t.GetAllObServer()
 	if err != nil {
 		return errors.Wrap(err, "get all target observers failed")
+	}
+	if len(servers) == 0 {
+		t.ExecuteWarnLogf("no server to minor freeze")
+		return nil
 	}
 
 	checkpointScns, err := obclusterService.GetServerCheckpointScn(servers)

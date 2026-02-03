@@ -87,6 +87,12 @@ type ObStopParam struct {
 	ForcePassDagParam ForcePassDagParam `json:"forcePassDag"`
 }
 
+type ObZoneStopParam struct {
+	ZoneName          string            `json:"-"`
+	FreezeServer      bool              `json:"freeze_server"`
+	ForcePassDagParam ForcePassDagParam `json:"forcePassDag"`
+}
+
 type ForcePassDagParam struct {
 	ID []string `json:"id"`
 }
@@ -112,7 +118,6 @@ type ObUpgradeParam struct {
 	Mode         string `json:"mode" binding:"required"`
 	FreezeServer bool   `json:"freeze_server"`
 }
-
 
 type Scope struct {
 	Type       string   `json:"type"`

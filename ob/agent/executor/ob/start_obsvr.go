@@ -329,7 +329,9 @@ func CreateStartDag(params CreateSubDagParam) (*CreateSubDagResp, error) {
 	taskCtx := task.NewTaskContext().
 		SetParam(PARAM_MAIN_DAG_ID, params.GenericID).
 		SetParam(PARAM_EXPECT_MAIN_NEXT_STAGE, params.ExpectedStage).
-		SetParam(PARAM_MAIN_AGENT, params.Agent)
+		SetParam(PARAM_MAIN_AGENT, params.Agent).
+		SetParam(PARAM_SCOPE, params.Scope).
+		SetParam(PARAM_MAIN_DAG_NAME, params.MainDagName)
 
 	resp := &CreateSubDagResp{
 		SubDagInfo: SubDagInfo{

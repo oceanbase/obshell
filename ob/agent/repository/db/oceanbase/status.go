@@ -91,3 +91,37 @@ func GetState() int {
 
 	return STATE_PROCESS_RUNNING
 }
+
+func GetStateWithTimeout(obQueryTimeout string) int {
+	var err error
+	if err = CheckObserverProcess(); err != nil {
+		return STATE_PROCESS_NOT_RUNNING
+	}
+
+	if _, err = GetInstanceWithTimeout(obQueryTimeout); err == nil {
+		return STATE_CONNECTION_AVAILABLE
+	}
+
+	if _, err = GetRestrictedInstance(); err == nil {
+		return STATE_CONNECTION_RESTRICTED
+	}
+
+	return STATE_PROCESS_RUNNING
+}
+
+func GetStateQuick() int {
+	var err error
+	if err = CheckObserverProcess(); err != nil {
+		return STATE_PROCESS_NOT_RUNNING
+	}
+
+	if _, err = GetInstanceWithTimeout(DEFAULT_OCEANBASE_QUERY_TIMEOUT); err == nil {
+		return STATE_CONNECTION_AVAILABLE
+	}
+
+	if _, err = GetRestrictedInstance(); err == nil {
+		return STATE_CONNECTION_RESTRICTED
+	}
+
+	return STATE_PROCESS_RUNNING
+}

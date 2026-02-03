@@ -17,6 +17,8 @@
 package oceanbase
 
 import (
+	"fmt"
+
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/ob/agent/errors"
@@ -41,10 +43,26 @@ func GetOcsInstance() (db *gorm.DB, err error) {
 	return nil, errors.Occur(errors.ErrAgentOceanbaseDBNotOcs)
 }
 
+func GetOcsInstanceQuickly() (db *gorm.DB, err error) {
+	db, err = getSqlExecutableInstance(fmt.Sprintf(TEST_OCEANBASE_SQL_WITH_TIMEOUT, DEFAULT_OCEANBASE_QUERY_TIMEOUT))
+	if err != nil {
+		return nil, err
+	}
+
+	if isOcs {
+		return db, nil
+	}
+	return nil, errors.Occur(errors.ErrAgentOceanbaseDBNotOcs)
+}
+
 // GetInstance will return the current connection regardless of the database it is connected with.
 // If the connection cannot execute the SQL command 'SHOW DATABASES', it will return an error.
 func GetInstance() (db *gorm.DB, err error) {
 	return getSqlExecutableInstance(TEST_OCEANBASE_SQL)
+}
+
+func GetInstanceWithTimeout(obQueryTimeout string) (db *gorm.DB, err error) {
+	return getSqlExecutableInstance(fmt.Sprintf(TEST_OCEANBASE_SQL_WITH_TIMEOUT, obQueryTimeout))
 }
 
 func GetRawInstance() (db *gorm.DB) {
@@ -141,4 +159,23 @@ func IsInitPasswordError() bool {
 	}
 	errMsg := err.Error()
 	return isPasswordError(errMsg)
+}
+
+// QuickHealthCheck performs a fast health check on the OceanBase connection.
+func QuickHealthCheck() error {
+	if dbInstance == nil {
+		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
+	}
+
+	// Check observer process first (this is fast)
+	if err := CheckObserverProcess(); err != nil {
+		return err
+	}
+
+	// Check obcluster healthy with 2-second timeout (2000000 microseconds) to detect unresponsive cluster.
+	err := dbInstance.Exec(fmt.Sprintf(TEST_OCEANBASE_SQL_WITH_TIMEOUT, DEFAULT_OCEANBASE_QUERY_TIMEOUT)).Error
+	if err != nil {
+		return errors.Occur(errors.ErrAgentOceanbaseUesless)
+	}
+	return nil
 }

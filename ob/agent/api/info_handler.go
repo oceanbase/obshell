@@ -83,7 +83,7 @@ func GitInfoHandler(c *gin.Context) {
 	common.SendResponse(c, config.GetGitInfo(), nil)
 }
 
-func GetAgentStatus(s *http.State) (http.AgentStatus, error) {
+func GetAgentStatus(s *http.State, obQueryTimeout string) (http.AgentStatus, error) {
 	isrunning, err := localTaskService.IsRunning()
 	var status = http.AgentStatus{
 		State:            s.GetState(),
@@ -98,7 +98,13 @@ func GetAgentStatus(s *http.State) (http.AgentStatus, error) {
 		status.Port = meta.OCS_AGENT.GetPort()
 	}
 	status.SqlPort = meta.MYSQL_PORT
-	status.OBState = oceanbase.GetState()
+	if obQueryTimeout != "" {
+		status.OBState = oceanbase.GetStateWithTimeout(obQueryTimeout)
+	} else {
+		// Use short timeout so status API returns quickly when OB is unavailable,
+		// allowing daemon/client to see State=RUNNING and avoid blocking "obshell agent start".
+		status.OBState = oceanbase.GetStateWithTimeout("10000000")
+	}
 	return status, err
 }
 
@@ -114,7 +120,8 @@ func GetAgentStatus(s *http.State) (http.AgentStatus, error) {
 // @Router /api/v1/status [get]
 func StatusHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		status, err := GetAgentStatus(s)
+		obQueryTimeout := c.Query("ob_query_timeout")
+		status, err := GetAgentStatus(s, obQueryTimeout)
 		common.SendResponse(c, status, err)
 	}
 }
@@ -131,8 +138,9 @@ func StatusHandler(s *http.State) gin.HandlerFunc {
 // @Router /api/v1/agents/status [get]
 func GetAllAgentStatus(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		obQueryTimeout := c.Query("ob_query_timeout")
 		agentsStatus := make(map[string]http.AgentStatus)
-		status, err := GetAgentStatus(s)
+		status, err := GetAgentStatus(s, obQueryTimeout)
 		if err == nil {
 			agentsStatus[meta.OCS_AGENT.String()] = status
 		}

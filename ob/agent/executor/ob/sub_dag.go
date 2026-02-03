@@ -53,6 +53,10 @@ type CreateSubDagTask struct {
 	uri string
 	// params for remote create sub dag
 	param *CreateSubDagParam
+	// scope in main dag
+	scope param.Scope
+	// main dag name
+	mainDagName string
 }
 
 type CreateSubDagParam struct {
@@ -60,6 +64,9 @@ type CreateSubDagParam struct {
 	NeedExecCmd bool
 	SubDagInfo
 	param.ForcePassDagParam
+	Scope               param.Scope
+	MainDagName         string
+	StopObserverProcess bool
 }
 
 func NewCreateSubDagTask(name string) *CreateSubDagTask {
@@ -105,6 +112,16 @@ func (t *CreateSubDagTask) getParams(agent meta.AgentInfo) (err error) {
 	if err := ctx.GetParamWithValue(PARAM_EXPECT_MAIN_NEXT_STAGE, &t.expectedStage); err != nil {
 		return err
 	}
+	if err := ctx.GetParamWithValue(PARAM_SCOPE, &t.scope); err != nil {
+		return err
+	}
+	if err := ctx.GetParamWithValue(PARAM_MAIN_DAG_NAME, &t.mainDagName); err != nil {
+		return err
+	}
+	var stopObserverProcess bool
+	if err := ctx.GetParamWithValue(PARAM_STOP_OBSERVER_PROCESS, &stopObserverProcess); err != nil {
+		// ignore the error, it's not critical
+	}
 
 	t.param = &CreateSubDagParam{
 		Agent:             meta.OCS_AGENT.GetAgentInfo(),
@@ -114,6 +131,9 @@ func (t *CreateSubDagTask) getParams(agent meta.AgentInfo) (err error) {
 			GenericID:     t.mainDagID,
 			ExpectedStage: t.expectedStage,
 		},
+		Scope:               t.scope,
+		MainDagName:         t.mainDagName,
+		StopObserverProcess: stopObserverProcess,
 	}
 	return nil
 }

@@ -178,7 +178,7 @@ func getAllAgentsInfo() (agents []meta.AgentInfo, err error) {
 }
 
 func getPublicKeyByAgentInfo(agent meta.AgentInfoInterface) (pk string, err error) {
-	db, _ := oceanbasedb.GetOcsInstance()
+	db, _ := oceanbasedb.GetOcsInstanceQuickly()
 	if db == nil {
 		db, err = sqlitedb.GetSqliteInstance()
 	}

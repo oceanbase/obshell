@@ -98,6 +98,40 @@ func (t *TenantService) GetTenantResourcePoolServers(resourcePoolId int) (server
 	return
 }
 
+// GetTenantResourcePoolServersBatch batch gets servers for multiple resource pools in one query
+// This is more efficient than calling GetTenantResourcePoolServers multiple times
+func (t *TenantService) GetTenantResourcePoolServersBatch(resourcePoolIds []int) (serversMap map[int][]model.OBServer, err error) {
+	if len(resourcePoolIds) == 0 {
+		return make(map[int][]model.OBServer), nil
+	}
+
+	db, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var servers []struct {
+		ResourcePoolId int   `gorm:"column:resource_pool_id"`
+		SvrIp          string `gorm:"column:SVR_IP"`
+		SvrPort        int    `gorm:"column:SVR_PORT"`
+	}
+	sql := "SELECT resource_pool_id, SVR_IP, SVR_PORT FROM oceanbase.DBA_OB_UNITS WHERE resource_pool_id IN ?"
+	err = db.Raw(sql, resourcePoolIds).Scan(&servers).Error
+	if err != nil {
+		return nil, err
+	}
+
+	serversMap = make(map[int][]model.OBServer)
+	for _, server := range servers {
+		serversMap[server.ResourcePoolId] = append(serversMap[server.ResourcePoolId], model.OBServer{
+			SvrIp:   server.SvrIp,
+			SvrPort: server.SvrPort,
+		})
+	}
+
+	return
+}
+
 func (t *TenantService) GetResourcePoolByName(name string) (pool *model.DbaObResourcePool, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {

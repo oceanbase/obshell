@@ -885,6 +885,56 @@ func (*ObclusterService) GetLogInfosInServer(svrInfo meta.ObserverSvrInfo) (logS
 	return
 }
 
+// GetLogInfosInZone returns the log stat in target zone
+// only contains tenant_id and ls_id.
+func (*ObclusterService) GetLogInfosInZone(zoneName string) (logStats []oceanbase.ObLogStat, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	err = oceanbaseDb.Raw(`
+		SELECT DISTINCT a.TENANT_ID, a.LS_ID
+		FROM oceanbase.GV$OB_LOG_STAT as a
+		INNER JOIN oceanbase.DBA_OB_SERVERS as s
+			ON a.svr_ip = s.svr_ip AND a.svr_port = s.svr_port
+		WHERE s.zone = ?
+	`, zoneName).Find(&logStats).Error
+	return
+}
+
+// IsLsMultiPaxosAliveAfterStopZone checks if a log stream will have enough paxos members after stopping the zone
+// Similar to IsLsMultiPaxosAlive but excludes all servers in the zone instead of a single server
+func (ObclusterService *ObclusterService) IsLsMultiPaxosAliveAfterStopZone(lsId int, tenantId int, zoneName string) (bool, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return false, err
+	}
+	var count int64
+	if err = oceanbaseDb.Raw(`
+		SELECT COUNT(*) FROM oceanbase.GV$OB_LOG_STAT as a
+		INNER JOIN oceanbase.GV$OB_LOG_STAT as b
+			ON a.tenant_id = b.tenant_id AND a.ls_id = b.ls_id
+		INNER JOIN oceanbase.DBA_OB_SERVERS as s
+			ON a.svr_ip = s.svr_ip AND a.svr_port = s.svr_port
+		WHERE b.tenant_id = ? AND b.ls_id = ? AND b.role = 'LEADER'
+			AND b.paxos_member_list LIKE CONCAT('%', a.svr_ip, ':', a.svr_port, '%')
+			AND a.in_sync = 'YES'
+			AND s.zone != ?
+	`, tenantId, lsId, zoneName).Count(&count).Error; err != nil {
+		return false, err
+	}
+	var paxosMember int64
+	if err = oceanbaseDb.Table(GV_OB_LOG_STAT).Select("paxos_replica_num").Where("ls_id = ? AND tenant_id = ? AND ROLE = 'LEADER'", lsId, tenantId).Scan(&paxosMember).Error; err != nil {
+		return false, err
+	}
+	alive := count > paxosMember/2
+	if alive {
+		return true, nil
+	} else {
+		return false, nil
+	}
+}
+
 func (*ObclusterService) HasUnitInZone(zone string) (exist bool, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
@@ -1042,6 +1092,40 @@ func (obclusterService *ObclusterService) GetTenantMutilSysStat(tenantId int, St
 		sysStatMap[int64(sysStat.StatId)] = sysStat
 	}
 	return sysStatMap, nil
+}
+
+// GetTenantsMutilSysStatBatch batch gets sys stats for multiple tenants in one query
+// This is more efficient than calling GetTenantMutilSysStat multiple times
+func (obclusterService *ObclusterService) GetTenantsMutilSysStatBatch(tenantIds []int, StatIds []int) (tenantStatsMap map[int]map[int64]oceanbase.SysStat, err error) {
+	if len(tenantIds) == 0 {
+		return make(map[int]map[int64]oceanbase.SysStat), nil
+	}
+
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var sysStats []oceanbase.SysStat
+	err = oceanbaseDb.Model(oceanbase.SysStat{}).
+		Select("CON_ID, SVR_IP, SVR_PORT, NAME, CLASS, VALUE_TYPE, STAT_ID, sum(VALUE) AS VALUE").
+		Where("CON_ID IN ? AND STAT_ID IN ?", tenantIds, StatIds).
+		Group("CON_ID, STAT_ID").
+		Scan(&sysStats).Error
+	if err != nil {
+		return nil, err
+	}
+
+	tenantStatsMap = make(map[int]map[int64]oceanbase.SysStat)
+	for _, sysStat := range sysStats {
+		tenantId := int(sysStat.ConId)
+		if tenantStatsMap[tenantId] == nil {
+			tenantStatsMap[tenantId] = make(map[int64]oceanbase.SysStat)
+		}
+		tenantStatsMap[tenantId][int64(sysStat.StatId)] = sysStat
+	}
+
+	return tenantStatsMap, nil
 }
 
 func (*ObclusterService) GetTabletInMergingCount() (count int, err error) {

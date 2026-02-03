@@ -43,6 +43,7 @@ const (
 	URI_ALERTMANAGER     = "/alertmanager"
 
 	URI_INFO      = "/info"
+	URI_TOPOLOGY  = "/topology"
 	URI_TIME      = "/time"
 	URI_GIT_INFO  = "/git-info"
 	URI_HOST_INFO = "/host-info"
@@ -75,6 +76,7 @@ const (
 	URI_DEPLOY      = "/deploy"
 	URI_START       = "/start"
 	URI_STOP        = "/stop"
+	URI_ZONE_STOP   = "/zone/stop"
 	URI_UPDATE      = "/update"
 	URI_INIT        = "/init"
 	URI_DESTROY     = "/destroy"
@@ -85,16 +87,16 @@ const (
 	URI_STATISTICS  = "/statistics"
 
 	// Used for upgrade
-	URI_UPGRADE     = "/upgrade"
-	URI_CHECK       = "/check"
-	URI_ROUTE       = "/route"
-	URI_PACKAGE     = "/package"
-	URI_PARAMS      = "/params"
-	URI_BACKUP      = "/backup"
-	URI_RESTORE     = "/restore"
-	URI_WINDOWS     = "/windows"
-	URI_TASKS       = "/tasks"
-	URI_ENV         = "/env"
+	URI_UPGRADE = "/upgrade"
+	URI_CHECK   = "/check"
+	URI_ROUTE   = "/route"
+	URI_PACKAGE = "/package"
+	URI_PARAMS  = "/params"
+	URI_BACKUP  = "/backup"
+	URI_RESTORE = "/restore"
+	URI_WINDOWS = "/windows"
+	URI_TASKS   = "/tasks"
+	URI_ENV     = "/env"
 
 	// Used for tenant
 	URI_TENANTS           = "/tenants"
@@ -159,6 +161,8 @@ const (
 	URI_PATH_PARAM_DATABASE   = "/:" + URI_PARAM_DATABASE
 	URI_PARAM_SESSION_ID      = "session_id"
 	URI_PATH_PARAM_SESSION_ID = "/:" + URI_PARAM_SESSION_ID
+	URI_PARAM_ZONE_NAME       = "zone_name"
+	URI_PATH_PARAM_ZONE_NAME  = "/:" + URI_PARAM_ZONE_NAME
 
 	// Used for backup
 	URI_ARCHIVE = "/log"

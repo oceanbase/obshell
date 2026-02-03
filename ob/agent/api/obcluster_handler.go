@@ -267,6 +267,62 @@ func obStopHandler(c *gin.Context) {
 	}
 }
 
+// @ID obStopZone
+// @Summary stop a zone
+// @Description stop a zone
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param zone_name path string true "zone name"
+// @Param body body param.ObZoneStopParam true "stop zone param"
+// @Success 200 object http.OcsAgentResponse{data=task.DagDetailDTO}
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/zone/{zone_name}/stop [post]
+func obStopZoneHandler(c *gin.Context) {
+	zoneName := c.Param(constant.URI_PARAM_ZONE_NAME)
+	var param param.ObZoneStopParam
+	param.ZoneName = zoneName
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	data, err := ob.HandleObZoneStop(param)
+	common.SendResponse(c, data, err)
+}
+
+// @ID obZoneStopCheck
+// @Summary check before stopping a zone
+// @Description run validations (e.g. other stop task, majority condition) before stopping a zone
+// @Tags ob
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ObZoneStopParam true "stop zone param"
+// @Param zone_name path string true "zone name"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/ob/zone/{zone_name}/stop/check [post]
+func obZoneStopCheckHandler(c *gin.Context) {
+	zoneName := c.Param(constant.URI_PARAM_ZONE_NAME)
+	var param param.ObZoneStopParam
+	param.ZoneName = zoneName
+	if err := c.BindJSON(&param); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+	err := ob.CheckZoneStopValidate(param.ZoneName)
+	common.SendResponse(c, nil, err)
+}
+
 // @ID obStart
 // @Summary start observers
 // @Description start observers or the whole cluster, use param to specify
@@ -413,6 +469,26 @@ func obclusterInfoHandler(c *gin.Context) {
 	}
 	clusterInfo, err := ob.GetObclusterSummary()
 	common.SendResponse(c, clusterInfo, err)
+}
+
+// @ID				obclusterTopologyInfo
+// @Summary		get obcluster topology info
+// @Description	get obcluster topology info
+// @Tags			obcluster
+// @Accept			application/json
+// @Produce			application/json
+// @Param			X-OCS-Header	header	string	true	"Authorization"
+// @Success		200				object	http.OcsAgentResponse{data=bo.ClusterTopology}
+// @Failure		401				object	http.OcsAgentResponse
+// @Failure		500				object	http.OcsAgentResponse
+// @Router			/api/v1/obcluster/topology/info [get]
+func obclusterTopologyHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+	clusterTopology, err := ob.GetObclusterTopology()
+	common.SendResponse(c, clusterTopology, err)
 }
 
 // @ID				obclusterParameters

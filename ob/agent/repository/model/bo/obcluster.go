@@ -86,7 +86,8 @@ type Observer struct {
 	SqlPort        int                 `json:"sql_port"`
 	Version        string              `json:"version"`
 	WithRootserver bool                `json:"with_rootserver"`
-	Status         string              `json:"status"`
+	Status         string              `json:"status,omitempty"`
+	ObStatus       int                 `json:"ob_status"` // oceanbase.STATE_PROCESS_NOT_RUNNING, oceanbase.STATE_PROCESS_RUNNING, oceanbase.STATE_CONNECTION_RESTRICTED, oceanbase.STATE_CONNECTION_AVAILABLE
 	InnerStatus    string              `json:"inner_status"`
 	StartTime      time.Time           `json:"start_time"`
 	StopTime       time.Time           `json:"stop_time"`
@@ -94,6 +95,8 @@ type Observer struct {
 	Architecture   string              `json:"architecture"`
 	DataDir        string              `json:"data_dir"`
 	RedoDir        string              `json:"redo_dir"`
+	LocalTaskId    string              `json:"local_task_id,omitempty"`
+	ObshellPort    int                 `json:"obshell_port"`
 }
 
 type RootServer struct {
@@ -111,15 +114,21 @@ type Zone struct {
 	InnerStatus string     `json:"inner_status"`
 	RootServer  RootServer `json:"root_server"`
 	Servers     []Observer `json:"servers"`
+	LocalTaskId string     `json:"local_task_id,omitempty"`
 }
 
 type ClusterInfo struct {
 	ClusterBasicInfo
+	LocalTaskId string               `json:"local_task_id,omitempty"`
 	Stats       BaseResourceStats    `json:"stats"`
 	Zones       []Zone               `json:"zones"`
 	Tenants     []TenantInfo         `json:"tenants"`
 	TenantStats []TenantResourceStat `json:"tenant_stats"`
 	License     *ObLicense           `json:"license,omitempty"` // only for standalone cluster
+}
+
+type ClusterTopology struct {
+	Zones []Zone `json:"zones"`
 }
 
 type ClusterBasicInfo struct {

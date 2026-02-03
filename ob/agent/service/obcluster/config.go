@@ -62,6 +62,35 @@ func (s *ObserverService) GetOBParatemerByName(name string, value interface{}) (
 	return
 }
 
+// GetOBParatemersByNames batch gets multiple OB parameters by names in one query
+// This is more efficient than calling GetOBParatemerByName multiple times
+func (s *ObserverService) GetOBParatemersByNames(names []string) (paramsMap map[string]string, err error) {
+	if len(names) == 0 {
+		return make(map[string]string), nil
+	}
+
+	db, err := oceanbase.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var params []struct {
+		Name  string `gorm:"column:name"`
+		Value string `gorm:"column:value"`
+	}
+	err = db.Table(ob_parameters_view).Select("name, value").Where("name IN ?", names).Scan(&params).Error
+	if err != nil {
+		return nil, err
+	}
+
+	paramsMap = make(map[string]string)
+	for _, param := range params {
+		paramsMap[param.Name] = param.Value
+	}
+
+	return
+}
+
 func (s *ObserverService) GetOBStringParatemerByName(name string) (value string, err error) {
 	err = s.GetOBParatemerByName(name, &value)
 	return
