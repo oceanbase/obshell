@@ -60,8 +60,8 @@ const ZoneList: React.FC = () => {
     manual: true,
     onSuccess: (res, params) => {
       if (res.successful && res.data?.id) {
-        const body = params?.[0] as API.ObZoneStopParam | undefined;
-        const zoneName = body?.zone;
+        const body = params?.[0] as API.obStopZoneParams;
+        const zoneName = body?.zone_name;
         if (zoneName) {
           setPendingOperation(zoneName, res.data.id);
         }
@@ -138,11 +138,10 @@ const ZoneList: React.FC = () => {
       okButtonProps: { danger: true, ghost: true, loading: stopZoneLoading },
       onOk: () => {
         const params = {
-          zone: record.name!,
           forcePassDag,
           freeze_server: freezeServerValueRef.current,
         };
-        stopZone(params);
+        stopZone({ zone_name: record.name! }, params);
       },
     });
   };
@@ -249,9 +248,9 @@ const ZoneList: React.FC = () => {
         const roleLabel =
           text && text.role === 'LEADER'
             ? formatMessage({
-              id: 'ocp-express.Component.ZoneList.Main',
-              defaultMessage: '（主）',
-            })
+                id: 'ocp-express.Component.ZoneList.Main',
+                defaultMessage: '（主）',
+              })
             : '';
 
         return <span>{text ? `${text?.ip}:${text?.svr_port}${roleLabel}` : '-'}</span>;

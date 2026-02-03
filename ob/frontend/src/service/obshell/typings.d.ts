@@ -1075,9 +1075,9 @@ declare namespace API {
 
   type MetricClass = {
     description: string;
+    key: string;
     metric_groups: MetricGroup[];
     name: string;
-    key: string;
   };
 
   type MetricData = {
@@ -1393,6 +1393,11 @@ declare namespace API {
     terminate?: boolean;
   };
 
+  type obStopZoneParams = {
+    /** zone name */
+    zone_name: string;
+  };
+
   type ObTenantPreCheckResult = {
     is_connectable?: boolean;
     is_empty_root_password?: boolean;
@@ -1442,10 +1447,14 @@ declare namespace API {
     session?: ObUserSessionStats;
   };
 
+  type obZoneStopCheckParams = {
+    /** zone name */
+    zone_name: string;
+  };
+
   type ObZoneStopParam = {
     forcePassDag?: ForcePassDagParam;
     freeze_server?: boolean;
-    zone: string;
   };
 
   type OcsAgentResponse = {

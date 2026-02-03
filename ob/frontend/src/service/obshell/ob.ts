@@ -69,13 +69,42 @@ export async function obStop(body: API.ObStopParam, options?: { [key: string]: a
   });
 }
 
-/** stop a zone stop a zone POST /api/v1/ob/zone/stop */
-export async function obStopZone(body: API.ObZoneStopParam, options?: { [key: string]: any }) {
-  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>('/api/v1/ob/zone/stop', {
+/** stop a zone stop a zone POST /api/v1/ob/zone/${param0}/stop */
+export async function obStopZone(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.obStopZoneParams,
+  body: API.ObZoneStopParam,
+  options?: { [key: string]: any }
+) {
+  const { zone_name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>(
+    `/api/v1/ob/zone/${param0}/stop`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      params: { ...queryParams },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** check before stopping a zone run validations (e.g. other stop task, majority condition) before stopping a zone POST /api/v1/ob/zone/${param0}/stop/check */
+export async function obZoneStopCheck(
+  // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+  params: API.obZoneStopCheckParams,
+  body: API.ObZoneStopParam,
+  options?: { [key: string]: any }
+) {
+  const { zone_name: param0, ...queryParams } = params;
+  return request<API.OcsAgentResponse>(`/api/v1/ob/zone/${param0}/stop/check`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    params: { ...queryParams },
     data: body,
     ...(options || {}),
   });
