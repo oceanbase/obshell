@@ -21,6 +21,7 @@ import "github.com/oceanbase/obshell/ob/model/common"
 type MetricClass struct {
 	Name         string        `json:"name" yaml:"name" binding:"required"`
 	Description  string        `json:"description" yaml:"description" binding:"required"`
+	Key          string        `json:"key" yaml:"key" binding:"required"`
 	MetricGroups []MetricGroup `json:"metric_groups" yaml:"metricGroups" binding:"required"`
 }
 

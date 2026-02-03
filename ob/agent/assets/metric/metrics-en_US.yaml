@@ -1,6 +1,7 @@
 OBCLUSTER:
 - description: Database performance
   name: Database Performance
+  key: database_performance
   metricGroups:
   - description: Average number of SQL statements processed per second
     metrics:
@@ -219,6 +220,7 @@ OBCLUSTER:
     name: Transaction count
 - description: Host performance
   name: Host performance
+  key: host_performance
   metricGroups:
   - description: Linux system load
     name: Linux system load
@@ -318,6 +320,7 @@ OBCLUSTER:
       unit: MB/s
 OBTENANT:
 - description: Performance and SQL
+  key: performance_and_sql
   metricGroups:
   - description: Average number of SQL statements processed per second
     metrics:
@@ -659,6 +662,7 @@ OBTENANT:
     name: "RPC deliver fail count"
   name: Performance and SQL
 - description: Transaction
+  key: transaction
   metricGroups:
   - description: Average number of transactions processed per second
     metrics:
@@ -863,6 +867,7 @@ OBTENANT:
     name: "Memstore lock success ratio"
   name: Transaction
 - description: Storage and Cache
+  key: storage_and_cache
   metricGroups:
   - description: OB writable data memory
     metrics:
@@ -1104,6 +1109,7 @@ OBTENANT:
     #   name: Database Object
 OBTENANT_OVERVIEW:
 - description: OBTenant Overview
+  key: obtenant_overview
   name: OBTenant Overview
   metricGroups:
   - description: Average number of SQL statements processed per second
@@ -1151,6 +1157,7 @@ OBTENANT_OVERVIEW:
 OBCLUSTER_OVERVIEW:
 - description: OBCluster Overview
   name: OBCluster Overview
+  key: obcluster_overview
   metricGroups:
   - description: Average number of SQL statements processed per second
     metrics:
@@ -1196,6 +1203,7 @@ OBCLUSTER_OVERVIEW:
     name: Waiting for event time
 OBPROXY:
 - name: OBProxy service monitoring
+  key: obproxy_service_monitoring
   description: Obproxy service monitoring
   metricGroups:
   - name: TPS

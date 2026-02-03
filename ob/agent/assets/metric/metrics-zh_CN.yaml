@@ -1,6 +1,7 @@
 OBCLUSTER:
 - description: "数据库性能"
   name: "数据库性能"
+  key: database_performance
   metricGroups:
   - description: "平均每秒处理 SQL 语句数"
     metrics:
@@ -218,6 +219,7 @@ OBCLUSTER:
       unit: times/s
     name: "事务数量"
 - description: 主机性能
+  key: host_performance
   name: 主机性能
   metricGroups:
   - description: Linux 系统负载
@@ -318,6 +320,7 @@ OBCLUSTER:
       unit: MB/s
 OBTENANT:
 - description: "性能与SQL"
+  key: performance_and_sql
   metricGroups:
   - description: "平均每秒处理 SQL 语句数"
     metrics:
@@ -659,6 +662,7 @@ OBTENANT:
     name: "RPC 交付失败"
   name: "性能与SQL"
 - description: "事务"
+  key: transaction
   metricGroups:
   - description: "平均每秒处理事务数"
     metrics:
@@ -863,6 +867,7 @@ OBTENANT:
     name: "Memstore 锁申请成功率"
   name: "事务"
 - description: "存储与缓存"
+  key: storage_and_cache
   metricGroups:
   - description: "OB 可写入数据内存"
     metrics:
@@ -1105,6 +1110,7 @@ OBTENANT:
 OBTENANT_OVERVIEW:
 - description: Tenant Overview
   name: "租户概览指标"
+  key: obtenant_overview
   metricGroups:
   - description: "平均每秒处理 SQL 语句数"
     metrics:
@@ -1151,6 +1157,7 @@ OBTENANT_OVERVIEW:
 OBCLUSTER_OVERVIEW:
 - description: Cluster Overview
   name: "集群性能概览"
+  key: obcluster_overview
   metricGroups:
   - description: "平均每秒处理 SQL 语句数"
     metrics:
@@ -1196,6 +1203,7 @@ OBCLUSTER_OVERVIEW:
     name: "等待事件耗时"
 OBPROXY:
 - name: OBProxy 服务监控
+  key: obproxy_service_monitoring
   description: OBProxy 服务监控
   metricGroups:
   - name: TPS
