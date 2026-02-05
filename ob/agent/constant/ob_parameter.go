@@ -31,12 +31,13 @@ var (
 	// READONLY variables
 	CREATE_TENANT_STATEMENT_VARIABLES = []string{"lower_case_table_names"}
 	// Those variables could not set by sys tenant.
-	VARIAbLES_COLLATION_OR_CHARACTER = []string{
+	VARIAbLES_NEED_TO_CONNEC_WHEN_SET = []string{
 		"collation_server",
 		"collation_database",
 		"collation_connection",
 		"character_set_server",
 		"character_set_database",
 		"character_set_connection",
+		"plsql_warnings",
 	}
 )

@@ -22,10 +22,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oceanbase/obshell/ob/agent/api/common"
 	"github.com/oceanbase/obshell/ob/agent/constant"
+	"github.com/oceanbase/obshell/ob/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/meta"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
+	tenantservice "github.com/oceanbase/obshell/ob/agent/service/tenant"
 	"github.com/oceanbase/obshell/ob/param"
 	"github.com/oceanbase/obshell/ob/utils"
 )
@@ -85,7 +87,7 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 
 	needConnectTenant := false
 	for k := range param.Variables {
-		if utils.ContainsString(constant.VARIAbLES_COLLATION_OR_CHARACTER, k) {
+		if utils.ContainsString(constant.VARIAbLES_NEED_TO_CONNEC_WHEN_SET, k) {
 			needConnectTenant = true
 			break
 		}
@@ -101,6 +103,19 @@ func SetTenantVariables(c *gin.Context, tenantName string, param param.SetTenant
 			return errors.Wrap(err, "set tenant variables failed")
 		}
 	} else {
+		// Need tenant root password: forward to maintainer to get it when not provided
+		if param.TenantPassword == "" {
+			if coordinator.OCS_COORDINATOR == nil || !coordinator.OCS_COORDINATOR.HasMaintainer() {
+				return errors.Wrap(errors.Occur(errors.ErrAgentMaintainerNotActive), "need tenant password or maintainer to get root password")
+			}
+			if !coordinator.OCS_COORDINATOR.IsMaintainer() {
+				common.ForwardRequest(c, coordinator.OCS_COORDINATOR.Maintainer, param)
+				return nil
+			}
+			// Current agent is maintainer: fill password from persisted cache
+			param.TenantPassword, _ = tenantservice.GetPasswordMap().Get(tenantName)
+		}
+
 		executeAgent, err := GetExecuteAgentForTenant(tenantName)
 		if err != nil {
 			return errors.Wrap(err, "get execute agent failed")
