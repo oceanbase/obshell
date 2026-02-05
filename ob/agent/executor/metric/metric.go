@@ -89,7 +89,7 @@ func replaceQueryVariables(exprTemplate string, labels []common.KVPair, groupLab
 	return replacer.Replace(exprTemplate)
 }
 
-func extractMetricData(name string, resp *model.PrometheusQueryRangeResponse) []model.MetricData {
+func extractMetricData(name string, resp *model.PrometheusQueryRangeResponse, groupLabels []string) []model.MetricData {
 	metricDatas := make([]model.MetricData, 0)
 	for _, result := range resp.Data.Result {
 		values := make([]model.MetricValue, 0)
@@ -97,6 +97,11 @@ func extractMetricData(name string, resp *model.PrometheusQueryRangeResponse) []
 		labels := make([]common.KVPair, 0, len(result.Metric))
 		for k, v := range result.Metric {
 			labels = append(labels, common.KVPair{Key: k, Value: v})
+		}
+		// When group_labels are requested, skip series with no labels (Prometheus can return
+		// such series when some underlying series lack the group dimension).
+		if len(groupLabels) > 0 && len(labels) == 0 {
+			continue
 		}
 
 		metric := model.Metric{
@@ -185,7 +190,7 @@ func QueryMetricData(queryParam *model.MetricQuery) []model.MetricData {
 				if err != nil {
 					log.WithError(err).Error("Query expression expr got error")
 				} else if resp.StatusCode() == http.StatusOK {
-					ch <- extractMetricData(m, queryRangeResp)
+					ch <- extractMetricData(m, queryRangeResp, queryParam.GroupLabels)
 				} else {
 					log.Errorf("Query metrics from prometheus got unexpected status: %d", resp.StatusCode())
 				}
