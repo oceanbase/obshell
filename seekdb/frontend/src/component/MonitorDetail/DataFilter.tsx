@@ -1,10 +1,10 @@
 import { POINT_NUMBER } from '@/constant/monitor';
+import { Card } from '@oceanbase/design';
 import { useUpdateEffect } from 'ahooks';
-import { Card } from 'antd';
-import React, { useEffect, useState } from 'react';
-import { caculateStep } from './helper';
-import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';
 import dayjs from 'dayjs';
+import React, { useEffect, useState } from 'react';
+import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';
+import { caculateStep } from './helper';
 
 interface DataFilterProps {
   isRefresh: boolean;

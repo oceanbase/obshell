@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React, { useState, useEffect, useRef, useImperativeHandle } from 'react';
-import { Dropdown, Menu, Space, Tooltip, Typography, theme } from '@oceanbase/design';
-import { debounce } from 'lodash';
-import Icon, { MoreOutlined } from '@oceanbase/icons';
-import { findByValue, isNullValue } from '@oceanbase/util';
-import { Canvas } from '@antv/g-svg';
-import { useSize, useUpdateEffect } from 'ahooks';
-import scrollIntoView from 'scroll-into-view';
-import useDeepCompareEffect from 'use-deep-compare-effect';
 import { TIME_FORMAT } from '@/constant/datetime';
 import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
+import { formatMessage } from '@/util/intl';
 import type { Node, SubtaskOperationKey } from '@/util/task';
 import { getLatestNode, getTaskDuration, handleNodeOperate } from '@/util/task';
+import { Canvas } from '@antv/g-svg';
+import { Dropdown, Menu, Space, Tooltip, Typography, theme } from '@oceanbase/design';
+import Icon, { MoreOutlined } from '@oceanbase/icons';
+import { findByValue, isNullValue } from '@oceanbase/util';
+import { useDeepCompareEffect, useSize, useUpdateEffect } from 'ahooks';
+import { debounce } from 'lodash';
+import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
+import scrollIntoView from 'scroll-into-view';
 import styles from './TaskGraph.less';
 
 const { Text } = Typography;

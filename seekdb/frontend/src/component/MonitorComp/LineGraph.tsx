@@ -1,12 +1,12 @@
-import { POINT_NUMBER } from '@/constant/monitor';
 import { DATE_TIME_FORMAT } from '@/constant/datetime';
+import { POINT_NUMBER } from '@/constant/monitor';
 import useRequestOfMonitor from '@/hook/useRequestOfMonitor';
+import { queryMetricsReq } from '@/service';
 import { Line } from '@antv/g2plot';
+import { Empty, Spin } from '@oceanbase/design';
 import { useInViewport, useUpdateEffect } from 'ahooks';
-import { Empty, Spin } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useRef, useState } from 'react';
-import { queryMetricsReq } from '@/service';
 
 interface LineGraphProps {
   id: string;

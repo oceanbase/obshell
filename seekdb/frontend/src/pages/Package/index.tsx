@@ -25,11 +25,10 @@ import { getUpgradePkgInfo } from '@/service/obshell/upgrade';
 import { isEnglish } from '@/util';
 import { formatTime } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
-import { Card, Space, Table, Tooltip } from '@oceanbase/design';
+import { Button, Card, Modal, Space, Table, Tooltip, message } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { byte2MB, sortByMoment, sortByString } from '@oceanbase/util';
 import { useRequest } from 'ahooks';
-import { Button, Modal, message } from 'antd';
 import { uniq } from 'lodash';
 import React, { useState } from 'react';
 

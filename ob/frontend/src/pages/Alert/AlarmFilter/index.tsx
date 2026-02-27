@@ -2,12 +2,21 @@ import { LEVER_OPTIONS_ALARM, OBJECT_OPTIONS_ALARM, SEVERITY_MAP } from '@/const
 import { Alert } from '@/typing/env/alert';
 import { formatMessage } from '@/util/intl';
 
-import { Space } from '@oceanbase/design';
+import {
+  Button,
+  Col,
+  DatePicker,
+  Form,
+  FormInstance,
+  Input,
+  Row,
+  Select,
+  Space,
+  Tag,
+} from '@oceanbase/design';
 import { DownOutlined, UpOutlined } from '@oceanbase/icons';
 import { useModel } from '@umijs/max';
 import { useDebounceFn, useUpdateEffect } from 'ahooks';
-import type { FormInstance } from 'antd';
-import { Button, Col, DatePicker, Form, Input, Row, Select, Tag } from 'antd';
 import { flatten } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import { getSelectList } from '../helper';

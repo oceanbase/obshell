@@ -1,13 +1,14 @@
-import { formatMessage } from '@/util/intl';
-import { createOrUpdateSilencer, getSilencer, listRules } from '@/service/obshell/alarm';
 import AlertDrawer from '@/component/AlertDrawer';
 import IconTip from '@/component/IconTip';
 import InputLabelComp from '@/component/InputLabelComp';
-import { VALIDATE_DEBOUNCE, LABEL_NAME_RULE } from '@/constant/alert';
+import { LABEL_NAME_RULE, VALIDATE_DEBOUNCE } from '@/constant/alert';
 import { DATE_TIME_FORMAT } from '@/constant/datetime';
+import useSeekdbInfo from '@/hook/usSeekdbInfo';
+import { createOrUpdateSilencer, getSilencer, listRules } from '@/service/obshell/alarm';
 import { Alert } from '@/typing/env/alert';
-import { useRequest } from 'ahooks';
-import type { DrawerProps } from 'antd';
+import { getEncryptLocalStorage } from '@/util';
+import { formatMessage } from '@/util/intl';
+import type { DrawerProps } from '@oceanbase/design';
 import {
   Button,
   Col,
@@ -19,11 +20,10 @@ import {
   Space,
   message,
 } from '@oceanbase/design';
+import { useRequest } from 'ahooks';
 import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import { getInstancesFromRes, validateLabelValues } from '../helper';
-import { getEncryptLocalStorage } from '@/util';
-import useSeekdbInfo from '@/hook/usSeekdbInfo';
 
 interface ShieldDrawerProps extends DrawerProps {
   id?: string;

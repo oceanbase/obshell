@@ -53,8 +53,8 @@ config.local.ts
 .env
 package-lock.json
 yarn.lock
-pnpm-lock.yaml
 config.ts
+.pnpm-store
 
 # Frontend specific directories
 frontend/pids

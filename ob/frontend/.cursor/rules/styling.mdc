@@ -1,5 +1,5 @@
 ---
-globs: *.less,*.style.ts,src/component/**/*,src/page/**/*
+globs: *.less,src/component/**/*,src/page/**/*
 description: 样式开发规范和主题系统
 ---
 
@@ -7,136 +7,109 @@ description: 样式开发规范和主题系统
 
 ## 样式文件类型
 
-项目支持两种样式方案：
+项目使用 Less 作为样式方案：
 
-### 1. CSS-in-JS (推荐)
-**文件**: `index.style.ts`
-
-**优势**:
-- TypeScript 类型检查
-- 动态样式计算
-- 主题变量访问
-- 作用域隔离
-
-**示例**:
-```typescript
-import { createStyles } from 'antd-style';
-
-export const useStyles = createStyles(({ token, css }) => ({
-  container: css`
-    padding: ${token.padding}px;
-    background: ${token.colorBgContainer};
-    border-radius: ${token.borderRadius}px;
-  `,
-
-  title: css`
-    font-size: ${token.fontSizeLG}px;
-    color: ${token.colorTextHeading};
-    margin-bottom: ${token.margin}px;
-  `,
-}));
-```
-
-### 2. Less (特殊场景)
+### Less 样式
 **文件**: `index.less`
 
 **使用场景**:
+- 组件样式定义
 - 复杂的选择器逻辑
 - 第三方组件样式覆盖
 - 全局样式定义
 
-## 设计令牌使用
+## Less 变量使用
 
-### 主要设计令牌
-```typescript
+### 主要 Less 变量
+```less
 // 颜色
-token.colorPrimary        // 主色
-token.colorSuccess        // 成功色
-token.colorWarning        // 警告色
-token.colorError          // 错误色
-token.colorTextBase       // 基础文本色
-token.colorBgContainer    // 容器背景色
+@primary-color           // 主色
+@success-color           // 成功色
+@warning-color           // 警告色
+@error-color             // 错误色
+@text-color              // 基础文本色
+@background-color-base   // 容器背景色
 
 // 尺寸
-token.padding             // 基础内边距
-token.margin              // 基础外边距
-token.borderRadius        // 圆角
-token.fontSize            // 基础字号
-token.fontSizeLG          // 大字号
-
-// 阴影
-token.boxShadow           // 基础阴影
+@padding-lg              // 大内边距
+@padding-md              // 中等内边距
+@padding-sm              // 小内边距
+@border-radius-base      // 基础圆角
+@font-size-base          // 基础字号
+@font-size-lg            // 大字号
 ```
 
 ## 组件样式模式
 
 ### 1. 容器组件
-```typescript
-const containerStyles = css`
-  padding: ${token.paddingLG}px;
-  background: ${token.colorBgContainer};
-  border-radius: ${token.borderRadiusLG}px;
-  box-shadow: ${token.boxShadowSecondary};
-`;
+```less
+.container {
+  padding: @padding-lg;
+  background: @background-color-base;
+  border-radius: @border-radius-base;
+  box-shadow: @box-shadow-base;
+}
 ```
 
 ### 2. 卡片组件
-```typescript
-const cardStyles = css`
-  border: 1px solid ${token.colorBorderSecondary};
-  border-radius: ${token.borderRadius}px;
+```less
+.card {
+  border: 1px solid @border-color-base;
+  border-radius: @border-radius-base;
   overflow: hidden;
 
-  .card-header {
-    padding: ${token.padding}px ${token.paddingLG}px;
-    background: ${token.colorFillAlter};
-    border-bottom: 1px solid ${token.colorBorder};
+  &-header {
+    padding: @padding-md @padding-lg;
+    background: @background-color-light;
+    border-bottom: 1px solid @border-color-split;
   }
 
-  .card-body {
-    padding: ${token.paddingLG}px;
+  &-body {
+    padding: @padding-lg;
   }
-`;
+}
 ```
 
 ### 3. 表单组件
-```typescript
-const formStyles = css`
-  .ant-form-item {
-    margin-bottom: ${token.marginLG}px;
+```less
+.form {
+  :global {
+    .ant-form-item {
+      margin-bottom: @margin-lg;
+    }
   }
 
-  .form-actions {
+  &-actions {
     text-align: center;
-    padding-top: ${token.paddingLG}px;
-    border-top: 1px solid ${token.colorBorder};
+    padding-top: @padding-lg;
+    border-top: 1px solid @border-color-split;
   }
-`;
+}
 ```
 
 ## 响应式设计
 
 使用 Ant Design 断点：
-```typescript
-const responsiveStyles = css`
+```less
+.responsive-container {
   @media (max-width: 768px) {
-    padding: ${token.paddingSM}px;
+    padding: @padding-sm;
   }
 
   @media (min-width: 1200px) {
     max-width: 1200px;
     margin: 0 auto;
   }
-`;
+}
 ```
 
 ## 最佳实践
 
-1. **优先使用设计令牌**，避免硬编码颜色和尺寸
-2. **保持样式简洁**，避免过度嵌套
+1. **优先使用 Less 变量**，避免硬编码颜色和尺寸
+2. **保持样式简洁**，避免过度嵌套（最多3层）
 3. **使用语义化类名**，便于维护
-4. **支持主题切换**，适配深色模式
-5. **性能优化**，避免重复计算样式
+4. **使用 CSS Modules**，避免样式冲突
+5. **合理使用 :global**，覆盖第三方组件样式
 
 ## 全局样式
 

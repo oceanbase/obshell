@@ -43,10 +43,10 @@
 ### 5. styling.mdc
 
 - **作用**: 样式开发规范和主题系统
-- **应用范围**: `*.less`, `*.style.ts`, 组件和页面文件
+- **应用范围**: `*.less`, 组件和页面文件
 - **内容**:
-  - CSS-in-JS vs Less 使用场景
-  - 设计令牌使用规范
+  - Less 样式开发规范
+  - Less 变量使用规范
   - 响应式设计规范
 
 ### 6. internationalization.mdc
@@ -119,10 +119,10 @@
 - **前端框架**: React + TypeScript
 - **状态管理**: DVA
 - **UI 组件库**: Ant Design + Ant Design Pro
-- **样式方案**: Less + CSS-in-JS (antd-style)
+- **样式方案**: Less
 - **测试框架**: Jest + Testing Library
 - **国际化**: react-intl
-- **构建工具**: Webpack (via Ant Design Pro)
+- **构建工具**: Umi 4
 
 ---
 

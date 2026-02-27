@@ -30,6 +30,7 @@ test/
 ## 测试代码规范
 
 ### 1. 测试结构
+
 ```typescript
 import { ComponentName } from '../index';
 
@@ -46,7 +47,9 @@ describe('ComponentName', () => {
 
   it('should render correctly', () => {
     // Arrange
-    const props = { /* test props */ };
+    const props = {
+      /* test props */
+    };
 
     // Act
     const result = render(<ComponentName {...props} />);
@@ -62,11 +65,13 @@ describe('ComponentName', () => {
 ```
 
 ### 2. 测试命名
+
 - 使用 `describe` 描述测试对象
 - 使用 `it` 或 `test` 描述具体行为
 - 命名格式：`should [expected behavior] when [condition]`
 
 ### 3. 断言模式
+
 ```typescript
 // 基础断言
 expect(value).toBe(expected);
@@ -85,10 +90,11 @@ await expect(asyncFunction).rejects.toThrow();
 
 ## 组件测试
 
-### 1. React组件测试
+### 1. React 组件测试
+
 ```typescript
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider } from '@oceanbase/design';
 import { IntlProvider } from 'react-intl';
 import { MyComponent } from '../index';
 
@@ -120,6 +126,7 @@ describe('MyComponent', () => {
 ```
 
 ### 2. 表单组件测试
+
 ```typescript
 it('should validate form inputs', async () => {
   renderWithProviders(<MyForm />);
@@ -138,6 +145,7 @@ it('should validate form inputs', async () => {
 ## 工具函数测试
 
 ### 1. 纯函数测试
+
 ```typescript
 // test/util/format.test.js
 import { formatBytes, formatNumber } from '../../src/util/format';
@@ -156,6 +164,7 @@ describe('formatBytes', () => {
 ```
 
 ### 2. 异步函数测试
+
 ```typescript
 import { apiCall } from '../../src/util/request';
 
@@ -176,9 +185,10 @@ describe('apiCall', () => {
 });
 ```
 
-## Mock和模拟
+## Mock 和模拟
 
 ### 1. API Mock
+
 ```typescript
 // 模拟API请求
 jest.mock('../../src/service/api', () => ({
@@ -189,7 +199,8 @@ jest.mock('../../src/service/api', () => ({
 }));
 ```
 
-### 2. 第三方库Mock
+### 2. 第三方库 Mock
+
 ```typescript
 // 模拟Ant Design组件
 jest.mock('antd', () => ({
@@ -201,18 +212,21 @@ jest.mock('antd', () => ({
 }));
 ```
 
-### 3. 国际化Mock
+### 3. 国际化 Mock
+
 参考现有的 [mock-util-intl.js](mdc:test/mock-util-intl.js)
 
 ## 测试覆盖率
 
 ### 目标覆盖率
+
 - **语句覆盖率**: ≥80%
 - **分支覆盖率**: ≥75%
 - **函数覆盖率**: ≥85%
 - **行覆盖率**: ≥80%
 
 ### 运行覆盖率报告
+
 ```bash
 npm run test:coverage
 ```
@@ -220,23 +234,27 @@ npm run test:coverage
 ## 最佳实践
 
 ### 1. 测试原则
+
 - **单一职责**: 每个测试只验证一个功能点
 - **独立性**: 测试间不应相互依赖
 - **可重复**: 测试结果应该稳定可重复
 - **快速**: 避免不必要的异步等待
 
 ### 2. 测试内容
+
 - **核心业务逻辑**必须测试
 - **边界条件**和**异常情况**
 - **用户交互**流程
-- **API接口**调用
+- **API 接口**调用
 
 ### 3. 不需要测试的内容
+
 - 第三方库的内部实现
-- 简单的getter/setter
+- 简单的 getter/setter
 - 纯配置代码
 
 ### 4. 测试维护
+
 - 定期运行测试套件
 - 及时更新过时的测试
 - 保持测试代码的整洁
@@ -244,7 +262,7 @@ npm run test:coverage
 
 ## 常用测试工具
 
-- **@testing-library/react**: React组件测试
-- **@testing-library/jest-dom**: DOM断言扩展
+- **@testing-library/react**: React 组件测试
+- **@testing-library/jest-dom**: DOM 断言扩展
 - **jest**: 测试框架和断言库
 - **@testing-library/user-event**: 用户交互模拟

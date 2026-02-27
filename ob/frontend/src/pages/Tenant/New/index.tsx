@@ -53,6 +53,7 @@ import {
   Table,
   Tooltip,
   Typography,
+  message,
   token,
 } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
@@ -61,7 +62,6 @@ import { PageContainer } from '@oceanbase/ui';
 import { findBy, isNullValue } from '@oceanbase/util';
 import { history } from '@umijs/max';
 import { useRequest } from 'ahooks';
-import { message } from 'antd';
 import { uniq, uniqWith, uniqueId } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';

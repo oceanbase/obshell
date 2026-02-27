@@ -3,10 +3,9 @@ import { Alert } from '@/typing/env/alert';
 import { formatMessage } from '@/util/intl';
 
 import useSeekdbInfo from '@/hook/usSeekdbInfo';
-import { Space } from '@oceanbase/design';
+import type { FormInstance } from '@oceanbase/design';
+import { Button, Col, DatePicker, Form, Input, Row, Select, Space, Tag } from '@oceanbase/design';
 import { useDebounceFn, useUpdateEffect } from 'ahooks';
-import type { FormInstance } from 'antd';
-import { Button, Col, DatePicker, Form, Input, Row, Select, Tag } from 'antd';
 import React, { useEffect, useState } from 'react';
 
 interface AlarmFilterProps {

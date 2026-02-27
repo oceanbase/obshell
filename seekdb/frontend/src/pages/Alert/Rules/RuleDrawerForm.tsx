@@ -1,19 +1,19 @@
-import { formatMessage } from '@/util/intl';
-import { listRules } from '@/service/obshell/alarm';
 import AlertDrawer from '@/component/AlertDrawer';
 import IconTip from '@/component/IconTip';
 import InputLabelComp from '@/component/InputLabelComp';
 import InputTimeComp from '@/component/InputTimeComp';
 import {
   LABELNAME_REG,
+  LABEL_NAME_RULE,
   LEVER_OPTIONS_ALARM,
   SEVERITY_MAP,
   VALIDATE_DEBOUNCE,
-  LABEL_NAME_RULE,
 } from '@/constant/alert';
-import { useRequest } from 'ahooks';
-import type { DrawerProps } from 'antd';
+import { listRules } from '@/service/obshell/alarm';
+import { formatMessage } from '@/util/intl';
+import type { DrawerProps } from '@oceanbase/design';
 import { Col, Form, Input, Radio, Row, Select, Tag, message } from '@oceanbase/design';
+import { useRequest } from 'ahooks';
 import React, { useEffect } from 'react';
 import { validateLabelValues } from '../helper';
 

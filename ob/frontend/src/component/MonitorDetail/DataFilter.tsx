@@ -1,9 +1,9 @@
 import { POINT_NUMBER } from '@/constant/monitor';
 import { formatMessage } from '@/util/intl';
 import { getZonesFromTenant } from '@/util/tenant';
+import { Card, Select } from '@oceanbase/design';
 import { useSelector } from '@umijs/max';
 import { useUpdateEffect } from 'ahooks';
-import { Card, Select } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
 import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';

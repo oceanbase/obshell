@@ -1,5 +1,5 @@
+import { Typography } from '@oceanbase/design';
 import { CaretDownOutlined, CaretUpOutlined } from '@oceanbase/icons';
-import { Typography } from 'antd';
 import React, { useMemo, useState } from 'react';
 import styles from './index.less';
 

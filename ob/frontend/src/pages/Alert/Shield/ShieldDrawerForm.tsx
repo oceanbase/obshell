@@ -10,6 +10,7 @@ import {
   Button,
   Col,
   DatePicker,
+  DrawerProps,
   Form,
   Input,
   Radio,
@@ -20,7 +21,6 @@ import {
 } from '@oceanbase/design';
 import { useModel } from '@umijs/max';
 import { useRequest } from 'ahooks';
-import type { DrawerProps } from 'antd';
 import dayjs from 'dayjs';
 import React, { useEffect } from 'react';
 import {
