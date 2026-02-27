@@ -210,10 +210,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
         return (
           <Space size="middle">
             <a
-              data-aspm-click="c304244.d308729"
-              data-aspm-desc="数据库列表-编辑数据库"
-              data-aspm-param={``}
-              data-aspm-expo
               onClick={() => {
                 editDatabase(record);
               }}
@@ -224,10 +220,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
               })}
             </a>
             <a
-              data-aspm-click="c304244.d308728"
-              data-aspm-desc="数据库列表-删除数据库"
-              data-aspm-param={``}
-              data-aspm-expo
               onClick={() => {
                 setDeleteDatabaseModalVisible(true);
                 setCurrentDatabase(record);
@@ -287,10 +279,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
 
         extra: (
           <Button
-            data-aspm-click="c304244.d308725"
-            data-aspm-desc="数据库列表-新建数据库"
-            data-aspm-param={``}
-            data-aspm-expo
             type="primary"
             onClick={() => {
               setValueVisible(true);
@@ -306,7 +294,7 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
     >
       <Row gutter={[16, 16]}>
         <Col span={24}>
-          <div data-aspm="c304244" data-aspm-desc="数据库列表" data-aspm-param={``} data-aspm-expo>
+          <div>
             <Card
               title={formatMessage({
                 id: 'ocp-express.Detail.Database.DatabaseList',
@@ -316,10 +304,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
               className="card-without-padding"
               extra={
                 <MyInput.Search
-                  data-aspm-click="c304244.d308730"
-                  data-aspm-desc="数据库列表-搜索数据库"
-                  data-aspm-param={``}
-                  data-aspm-expo
                   allowClear={true}
                   onSearch={(value: string) => setKeyword(value)}
                   placeholder={formatMessage({
@@ -365,10 +349,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
                 footer={
                   <>
                     <Button
-                      data-aspm-click="c318540.d343253"
-                      data-aspm-desc="删除数据库-取消"
-                      data-aspm-param={``}
-                      data-aspm-expo
                       onClick={() => {
                         setCurrentDatabase(null);
                         setDeleteDatabaseModalVisible(false);
@@ -380,10 +360,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
                       })}
                     </Button>
                     <Button
-                      data-aspm-click="c318540.d343261"
-                      data-aspm-desc="删除数据库-提交"
-                      data-aspm-param={``}
-                      data-aspm-expo
                       type="primary"
                       danger={true}
                       ghost={true}
