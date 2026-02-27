@@ -1,10 +1,10 @@
 import { getFullPath } from '@/util/global';
-import { history, useLocation } from 'umi';
-import { useEffect } from 'react';
-import { flatten, isArray } from 'lodash';
 import type { TabPaneProps } from '@oceanbase/design/es/tabs';
 import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
+import { history, useLocation } from '@umijs/max';
+import { flatten, isArray } from 'lodash';
 import { match } from 'path-to-regexp';
+import { useEffect } from 'react';
 import useSeekdbInfo from './usSeekdbInfo';
 
 // 根据根路由或 Tab 的权限进行重定向

@@ -1,4 +1,4 @@
-import { useSelector } from 'umi';
+import { useSelector } from '@umijs/max';
 
 /**
  * 集群信息钩子

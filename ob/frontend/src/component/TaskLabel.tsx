@@ -1,8 +1,8 @@
 import { formatMessage } from '@/util/intl';
 import { Button } from '@oceanbase/design';
 import { directTo } from '@oceanbase/util';
+import { history } from '@umijs/max';
 import React from 'react';
-import { history } from 'umi';
 
 export interface TaskLabelProps {
   taskId?: number | string;

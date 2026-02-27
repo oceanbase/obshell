@@ -186,20 +186,25 @@ export default function LineGraph({
       animation: isLegendToggle ? false : undefined, // 图例切换时禁用动画
     };
 
-    // 如果是图例切换且图表实例已存在，使用 changeData 更新数据
+    // 确保 DOM 元素已挂载
+    if (!lineGraphRef.current) {
+      return;
+    }
+
+    // 如果是图例切换且图表实例已存在，仅更新数据
     if (isLegendToggle && lineInstanceRef.current) {
       lineInstanceRef.current.changeData(filterLegendsData);
       return;
     }
 
-    // 如果图表实例存在，先销毁它
+    // 销毁旧的图表实例
     if (lineInstanceRef.current) {
       lineInstanceRef.current.destroy();
       lineInstanceRef.current = null;
     }
 
     // 创建新的图表实例
-    lineInstanceRef.current = new Line(id, { ...config });
+    lineInstanceRef.current = new Line(lineGraphRef.current, { ...config });
     lineInstanceRef.current.render();
   };
 
@@ -348,7 +353,7 @@ export default function LineGraph({
           </div>
         ) : (
           <>
-            <div style={{ height: 'auto' }} id={id} ref={lineGraphRef}></div>
+            <div style={{ height: 'auto' }} ref={lineGraphRef}></div>
             {/* 自定义图例区域 */}
             <ChartLegend
               colorMapping={colorMapping}

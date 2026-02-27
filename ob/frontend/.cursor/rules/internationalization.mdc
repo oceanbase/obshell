@@ -1,167 +1,506 @@
 ---
-globs: src/locale/**/*,src/page/**/*,src/component/**/*
-description: 国际化(i18n)开发规范
+globs: src/locale/**/*,src/pages/**/*,src/component/**/*
+description: 国际化(i18n)开发规范 - OBShell 项目
 ---
 
 # 国际化开发规范
 
 ## 国际化文件结构
 
-项目支持中英双语，语言文件位于 `src/locale/`：
-- [zh-CN.js](mdc:src/locale/zh-CN.js): 中文(简体)
-- [en-US.js](mdc:src/locale/en-US.js): 英文
+项目支持中英双语，语言文件位于 `src/locale/strings/`：
 
-## 文本键值规范
+- `zh-CN.json`: 中文(简体)
+- `en-US.json`: 英文
+- `index.ts`: 导出配置
 
-### 1. 命名约定
-```javascript
-// 按模块.页面.组件.具体文本 的层级结构
-export default {
-  // 通用文本
-  common: {
-    confirm: '确认',
-    cancel: '取消',
-    submit: '提交',
-    reset: '重置',
-    search: '搜索',
-    edit: '编辑',
-    delete: '删除',
-    view: '查看',
-  },
+## 导入方式
 
-  // 模块级文本
-  cluster: {
-    title: '集群管理',
-    overview: {
-      title: '集群概览',
-      performance: '性能指标',
-    },
-    host: {
-      title: '主机管理',
-      addHost: '添加主机',
-    },
-  },
+### 方式一：使用自定义 formatMessage（推荐）
 
-  // 表单验证
-  validation: {
-    required: '此项为必填项',
-    emailFormat: '请输入正确的邮箱格式',
-    passwordLength: '密码长度不能少于8位',
-  },
-};
-```
-
-### 2. 使用规范
-
-在组件中使用国际化文本：
+适用于**常量定义、工具函数、非组件场景**：
 
 ```typescript
-import { useIntl } from 'umi';
+import { formatMessage } from '@/util/intl';
+
+// 在常量中使用
+export const ALERT_STATE_MAP = {
+  active: {
+    text: formatMessage({
+      id: 'OBShell.src.constant.alert.Active',
+      defaultMessage: '活跃',
+    }),
+  },
+};
+
+// 在函数中使用
+function getValidateMessage() {
+  return formatMessage({
+    id: 'OBShell.component.validation.Required',
+    defaultMessage: '此项为必填项',
+  });
+}
+```
+
+### 方式二：使用 useIntl Hook
+
+适用于**React 组件内部**：
+
+```typescript
+import { useIntl } from '@umijs/max';
 
 const Component: React.FC = () => {
   const intl = useIntl();
 
   return (
     <div>
-      <h1>{intl.formatMessage({ id: 'cluster.title' })}</h1>
-      <Button>
-        {intl.formatMessage({ id: 'common.submit' })}
-      </Button>
+      <h1>{intl.formatMessage({ id: 'OBShell.page.Cluster.Title' })}</h1>
     </div>
   );
 };
 ```
 
-## 动态文本处理
+## 文本键值命名规范
 
-### 1. 带参数的文本
-```javascript
-// zh-CN.js
-export default {
-  message: {
-    deleteConfirm: '确认删除 {name} 吗？',
-    itemCount: '共 {count} 项',
-  },
-};
+### 命名格式
 
-// 组件中使用
-const message = intl.formatMessage(
-  { id: 'message.deleteConfirm' },
-  { name: '集群A' }
-);
+```
+{AppName}.{category}.{module}.{page}.{component}.{text}
 ```
 
-### 2. 复数形式
-```javascript
-// zh-CN.js
-export default {
-  message: {
-    itemCount: '{count, plural, =0 {暂无数据} =1 {1项} other {#项}}',
-  },
-};
+### 实际示例
+
+```json
+{
+  // 页面级文本
+  "OBShell.page.Alert.AlarmEvent": "告警事件",
+  "OBShell.page.Monitor.PerformanceMonitoring": "性能监控",
+
+  // 组件级文本
+  "OBShell.component.AlertDrawer.Submission": "提交",
+  "OBShell.component.AlertDrawer.Cancel": "取消",
+
+  // 常量级文本
+  "OBShell.src.constant.alert.Active": "活跃",
+  "OBShell.src.constant.alert.Warning": "警告",
+
+  // 特定功能模块
+  "OBShell.Alert.AlarmFilter.ObjectType": "对象类型",
+  "OBShell.Alert.AlarmFilter.PleaseSelect": "请选择",
+
+  // 兼容旧代码（OCP迁移）
+  "ocp-express.page.Task.TaskName": "任务名",
+  "ocp-v2.Backup.Backup.Data.State": "状态"
+}
 ```
 
-## 最佳实践
+### 命名规则
 
-### 1. 文本提取原则
-- **所有用户可见文本**都必须国际化
-- **不要**国际化调试信息、console.log等开发文本
-- **API返回的错误信息**需要在前端映射为本地化文本
+1. **使用点号分隔**：`OBShell.category.module.text`
+2. **使用 PascalCase**：每个单词首字母大写
+3. **语义化命名**：键名应清晰表达文本含义
+4. **层级结构**：从大到小：应用 → 类别 → 模块 → 页面 → 组件 → 具体文本
 
-### 2. 键值设计
-- 使用**语义化**的键名，避免简单的序号
-- 键名使用**小驼峰**命名法
-- 按**功能模块**组织，便于维护
+### 分类说明
 
-### 3. 文本内容
-- 保持**简洁明了**，符合用户习惯
-- **避免**过长的句子，考虑不同语言的表达习惯
-- 重要操作添加**确认提示**
+- `page.*`: 页面级文本
+- `component.*`: 通用组件文本
+- `src.constant.*`: 常量定义文本
+- `src.hook.*`: Hook 相关文本
+- `{ModuleName}.*`: 特定功能模块（如 Alert、Monitor）
 
-### 4. 开发流程
-1. 先用中文开发功能
-2. 将硬编码文本提取到语言文件
-3. 添加对应的英文翻译
-4. 测试两种语言的显示效果
+## formatMessage 使用规范
 
-## 常用国际化模式
+### 基本用法
 
-### 表格列定义
 ```typescript
+formatMessage({
+  id: 'OBShell.page.Alert.AlarmEvent',
+  defaultMessage: '告警事件',
+});
+```
+
+### 带参数的文本
+
+```typescript
+// JSON 定义
+{
+  "OBShell.message.DeleteConfirm": "确认删除 {name} 吗？",
+  "OBShell.message.ItemCount": "共 {count} 项"
+}
+
+// 使用
+formatMessage(
+  {
+    id: 'OBShell.message.DeleteConfirm',
+    defaultMessage: '确认删除 {name} 吗？'
+  },
+  { name: '集群A' }
+)
+```
+
+### 复数形式
+
+```typescript
+// JSON 定义
+{
+  "OBShell.message.ItemCount": "{count, plural, =0 {暂无数据} =1 {1项} other {#项}}"
+}
+
+// 使用
+formatMessage(
+  { id: 'OBShell.message.ItemCount' },
+  { count: 5 }
+)
+```
+
+## 常见使用场景
+
+### 1. 页面标题
+
+```typescript
+import { formatMessage } from '@/util/intl';
+import useDocumentTitle from '@/hook/useDocumentTitle';
+
+const Page: React.FC = () => {
+  useDocumentTitle(
+    formatMessage({
+      id: 'OBShell.page.Task.Task',
+      defaultMessage: '任务',
+    })
+  );
+
+  return <div>...</div>;
+};
+```
+
+### 2. 表格列定义
+
+```typescript
+import { formatMessage } from '@/util/intl';
+
 const columns = [
   {
-    title: intl.formatMessage({ id: 'common.name' }),
+    title: formatMessage({
+      id: 'ocp-express.page.Task.TaskName',
+      defaultMessage: '任务名',
+    }),
     dataIndex: 'name',
   },
   {
-    title: intl.formatMessage({ id: 'common.status' }),
+    title: formatMessage({
+      id: 'ocp-express.page.Task.State',
+      defaultMessage: '状态',
+    }),
     dataIndex: 'status',
   },
 ];
 ```
 
-### 表单标签
+### 3. 表单标签和提示
+
 ```typescript
-<Form.Item
-  label={intl.formatMessage({ id: 'user.username' })}
-  name="username"
->
-  <Input placeholder={intl.formatMessage({ id: 'user.usernamePlaceholder' })} />
-</Form.Item>
+import { useIntl } from '@umijs/max';
+
+const FormComponent: React.FC = () => {
+  const intl = useIntl();
+
+  return (
+    <Form>
+      <Form.Item
+        label={intl.formatMessage({
+          id: 'OBShell.form.Username',
+          defaultMessage: '用户名',
+        })}
+        name="username"
+      >
+        <Input
+          placeholder={intl.formatMessage({
+            id: 'OBShell.form.UsernamePlaceholder',
+            defaultMessage: '请输入用户名',
+          })}
+        />
+      </Form.Item>
+    </Form>
+  );
+};
 ```
 
-### 操作确认
+### 4. 按钮和操作文本
+
 ```typescript
+import { formatMessage } from '@/util/intl';
+
+<Button>
+  {formatMessage({
+    id: 'OBShell.component.AlertDrawer.Submission',
+    defaultMessage: '提交'
+  })}
+</Button>
+
+<Button>
+  {formatMessage({
+    id: 'OBShell.component.AlertDrawer.Cancel',
+    defaultMessage: '取消'
+  })}
+</Button>
+```
+
+### 5. 确认对话框
+
+```typescript
+import { formatMessage } from '@/util/intl';
+import { Modal } from '@oceanbase/design';
+
 const handleDelete = () => {
   Modal.confirm({
-    title: intl.formatMessage({ id: 'common.deleteConfirm' }),
-    content: intl.formatMessage(
-      { id: 'message.deleteItem' },
+    title: formatMessage({
+      id: 'OBShell.modal.DeleteConfirm',
+      defaultMessage: '确认删除',
+    }),
+    content: formatMessage(
+      {
+        id: 'OBShell.modal.DeleteContent',
+        defaultMessage: '确认删除 {name} 吗？',
+      },
       { name: record.name }
     ),
+    okText: formatMessage({
+      id: 'OBShell.modal.Confirm',
+      defaultMessage: '确定',
+    }),
+    cancelText: formatMessage({
+      id: 'OBShell.modal.Cancel',
+      defaultMessage: '取消',
+    }),
     onOk: () => {
       // 执行删除
     },
   });
 };
 ```
+
+### 6. Tabs 标签
+
+```typescript
+import { formatMessage } from '@/util/intl';
+
+const TAB_ITEMS = [
+  {
+    key: 'event',
+    label: formatMessage({
+      id: 'OBShell.page.Alert.AlarmEvent',
+      defaultMessage: '告警事件',
+    }),
+  },
+  {
+    key: 'shield',
+    label: formatMessage({
+      id: 'OBShell.page.Alert.AlarmShielding',
+      defaultMessage: '告警屏蔽',
+    }),
+  },
+];
+```
+
+## 最佳实践
+
+### 1. 文本提取原则
+
+✅ **必须国际化**：
+
+- 所有用户可见的文本
+- 按钮、标签、提示信息
+- 表格列标题
+- 表单字段标签和占位符
+- 错误提示和成功消息
+- 页面标题和面包屑
+
+❌ **不需要国际化**：
+
+- `console.log` 调试信息
+- 代码注释
+- 变量名和函数名
+- API 请求路径
+- 数据库字段名
+
+### 2. defaultMessage 的重要性
+
+**必须提供 defaultMessage**，原因：
+
+- 作为开发时的默认显示文本
+- 当语言文件缺失时的回退文本
+- 便于代码审查时理解文本含义
+- 自动化工具可以提取生成语言文件
+
+```typescript
+// ✅ 推荐
+formatMessage({
+  id: 'OBShell.page.Alert.AlarmEvent',
+  defaultMessage: '告警事件',
+});
+
+// ❌ 不推荐（缺少 defaultMessage）
+formatMessage({
+  id: 'OBShell.page.Alert.AlarmEvent',
+});
+```
+
+### 3. 选择合适的导入方式
+
+```typescript
+// ✅ 在常量、工具函数中使用
+import { formatMessage } from '@/util/intl';
+
+// ✅ 在 React 组件中使用
+import { useIntl } from '@umijs/max';
+const intl = useIntl();
+```
+
+### 4. 保持一致性
+
+- 相同含义的文本使用相同的 ID
+- 通用文本（如"确定"、"取消"）复用同一个 ID
+- 遵循项目已有的命名规范
+
+### 5. 文本内容规范
+
+- **简洁明了**：避免过长的句子
+- **符合习惯**：使用用户熟悉的表达
+- **考虑翻译**：英文文本长度可能不同，预留空间
+- **避免拼接**：使用参数化文本而非字符串拼接
+
+```typescript
+// ✅ 推荐：使用参数
+formatMessage(
+  { id: 'message', defaultMessage: '删除 {count} 项' },
+  { count: 5 }
+) // ❌ 不推荐：字符串拼接
+`删除 ${count} 项`;
+```
+
+## 开发流程
+
+### 1. 添加新文本
+
+```typescript
+// Step 1: 在代码中使用 formatMessage
+formatMessage({
+  id: 'OBShell.page.NewFeature.Title',
+  defaultMessage: '新功能标题',
+})
+
+// Step 2: 在 zh-CN.json 中添加
+{
+  "OBShell.page.NewFeature.Title": "新功能标题"
+}
+
+// Step 3: 在 en-US.json 中添加对应翻译
+{
+  "OBShell.page.NewFeature.Title": "New Feature Title"
+}
+```
+
+### 2. 修改现有文本
+
+1. 在语言文件中修改文本内容
+2. 同步更新 `defaultMessage`
+3. 测试两种语言的显示效果
+
+### 3. 迁移旧代码
+
+保持旧的 ID 不变，只更新导入路径：
+
+```typescript
+// 迁移前
+import { formatMessage } from '@/i18n';
+
+// 迁移后
+import { formatMessage } from '@/util/intl';
+
+// ID 保持不变
+formatMessage({
+  id: 'ocp-express.page.Task.TaskName',
+  defaultMessage: '任务名',
+});
+```
+
+## 工具和配置
+
+### 语言文件位置
+
+```
+src/
+  locale/
+    strings/
+      zh-CN.json    # 中文语言文件
+      en-US.json    # 英文语言文件
+      index.ts      # 导出配置
+    index.ts        # 语言包入口
+  util/
+    intl.ts         # formatMessage 工具函数
+```
+
+### 切换语言
+
+用户可以通过界面切换语言，语言设置保存在 `localStorage` 中：
+
+```typescript
+// 获取当前语言
+const locale = localStorage.getItem('umi_locale') || 'zh-CN';
+
+// 切换语言（通过 UmiJS 提供的方法）
+import { setLocale } from '@umijs/max';
+setLocale('en-US');
+```
+
+## 常见问题
+
+### Q: 什么时候使用 `formatMessage`，什么时候使用 `useIntl`？
+
+A:
+
+- **formatMessage**：在常量定义、工具函数、非组件场景使用
+- **useIntl**：在 React 组件内部使用（因为是 Hook）
+
+### Q: 为什么有些 ID 以 `ocp-express` 或 `ocp-v2` 开头？
+
+A: 这些是从 OCP 项目迁移过来的代码，保持原有 ID 不变以避免破坏现有的国际化体系。新代码应使用 `OBShell` 前缀。
+
+### Q: 如何处理动态文本？
+
+A: 使用参数化文本：
+
+```typescript
+formatMessage(
+  {
+    id: 'message',
+    defaultMessage: '共 {count} 项，成功 {success} 项',
+  },
+  { count: 10, success: 8 }
+);
+```
+
+### Q: 文本中包含 HTML 标签怎么办？
+
+A: 使用 `formatMessage` 返回的字符串配合 React 组件：
+
+```typescript
+<span>
+  {formatMessage({ id: 'text.before' })}
+  <a href="#">{formatMessage({ id: 'text.link' })}</a>
+  {formatMessage({ id: 'text.after' })}
+</span>
+```
+
+## 检查清单
+
+在提交代码前，确保：
+
+- [ ] 所有用户可见文本都已国际化
+- [ ] 提供了 `defaultMessage`
+- [ ] 在 `zh-CN.json` 中添加了中文文本
+- [ ] 在 `en-US.json` 中添加了英文翻译
+- [ ] ID 命名符合规范
+- [ ] 使用了正确的导入方式
+- [ ] 测试了两种语言的显示效果
+- [ ] 动态文本使用了参数化而非拼接

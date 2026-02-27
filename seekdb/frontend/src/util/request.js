@@ -15,22 +15,22 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { getLocale, history, getDvaApp } from 'umi';
 import { message } from '@oceanbase/design';
-import { Base64 } from 'js-base64';
+import { getDvaApp, getLocale, history } from '@umijs/max';
 import CryptoJS from 'crypto-js';
+import { Base64 } from 'js-base64';
 /**
  * request 网络请求工具
  * 提供诸如参数序列号, 缓存, 超时, 字符编码处理, 错误处理等常用功能,
  */
-import { extend } from 'umi-request';
 import Cookies from 'js-cookie';
+import { extend } from 'umi-request';
 // import tracert from '@/util/tracert';
-import encrypt from '@/util/encrypt';
+import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { aesEncrypt } from '@/util/aes';
+import encrypt from '@/util/encrypt';
 import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
-import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 
 const statusCodeMessage = {
   400: formatMessage({

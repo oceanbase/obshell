@@ -24,15 +24,15 @@ description: OceanBase前端项目结构指南
 ## 文件命名约定
 
 - 页面组件：放在 `src/page/模块名/` 下
-- 通用组件：放在 `src/component/组件名/` 下，包含 `index.tsx`、`index.less`、`index.style.ts`
+- 通用组件：放在 `src/component/组件名/` 下，包含 `index.tsx`、`index.less`
 - API服务：放在 `src/service/` 对应模块下，使用 TypeScript
-- 样式文件：优先使用 `index.style.ts`（CSS-in-JS），必要时使用 `index.less`
+- 样式文件：使用 `index.less`（Less + CSS Modules）
 
 ## 技术栈
 
 - **框架**: React + TypeScript
 - **状态管理**: DVA
-- **UI组件**: Ant Design
-- **样式**: Less + CSS-in-JS
+- **UI组件**: Ant Design + OceanBase Design
+- **样式**: Less + CSS Modules
 - **测试**: Jest
-- **构建**: Webpack（通过Ant Design Pro配置）
+- **构建**: Webpack（通过 Ant Design Pro 配置）

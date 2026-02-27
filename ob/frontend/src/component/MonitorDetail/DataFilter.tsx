@@ -1,13 +1,13 @@
-import { formatMessage } from '@/util/intl';
 import { POINT_NUMBER } from '@/constant/monitor';
+import { formatMessage } from '@/util/intl';
+import { getZonesFromTenant } from '@/util/tenant';
+import { useSelector } from '@umijs/max';
 import { useUpdateEffect } from 'ahooks';
 import { Card, Select } from 'antd';
-import React, { useEffect, useState } from 'react';
-import { caculateStep, deduplicateServersByIp } from './helper';
-import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';
 import dayjs from 'dayjs';
-import { useSelector } from 'umi';
-import { getZonesFromTenant } from '@/util/tenant';
+import React, { useEffect, useState } from 'react';
+import AutoFresh, { FREQUENCY_TYPE } from '../MonitorSearch/AutoFresh';
+import { caculateStep, deduplicateServersByIp } from './helper';
 
 interface DataFilterProps {
   isRefresh: boolean;

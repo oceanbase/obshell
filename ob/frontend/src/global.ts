@@ -19,21 +19,20 @@
  * 要晚于 dva 或者 useModel 等状态管理插件的初始化时机，导致执行的先后顺序不符合预期，无法获取 moment 的多语言设置，因此
  * 放到 constant/init.ts 文件中进行初始化，并在 constant/index.ts 中引入，以保证使用前已设置 moment 的多语言配置
  */
-import { setLocale, getLocale } from 'umi';
-import moment from 'moment';
 import tracert from '@/util/tracert';
+import moment from 'moment';
 
 // 引入并配置 dayjs 插件，解决 DateRanger 组件中 weekday 方法缺失的问题
 import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
+import 'dayjs/locale/zh-cn';
 import advancedFormat from 'dayjs/plugin/advancedFormat';
-import weekday from 'dayjs/plugin/weekday';
-import localeData from 'dayjs/plugin/localeData';
-import weekOfYear from 'dayjs/plugin/weekOfYear';
-import weekYear from 'dayjs/plugin/weekYear';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear';
-import 'dayjs/locale/zh-cn';
+import localeData from 'dayjs/plugin/localeData';
+import weekday from 'dayjs/plugin/weekday';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import weekYear from 'dayjs/plugin/weekYear';
 
 // 扩展 dayjs 插件
 dayjs.extend(customParseFormat);
@@ -61,10 +60,11 @@ const validLocalMap = {
   zh_CN: 'zh-CN',
 };
 
-const locale = validLocalMap[getLocale()] || 'zh-CN';
+// const locale = validLocalMap[getLocale()] || 'zh-CN';
+const locale = 'zh-CN';
 
 // 只接受中划线格式
-setLocale(locale);
+// setLocale(locale);
 
 // 自定义各个 locale 下的日期时间格式
 moment.updateLocale('en', {

@@ -18,7 +18,6 @@ import TableFilterDropdown from '@/component/TableFilterDropdown';
 import { DATE_TIME_FORMAT_DISPLAY } from '@/constant/datetime';
 import { formatTimeWithMicroseconds } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
 import type { ModalFuncProps } from '@oceanbase/design';
 import {
   Button,
@@ -27,23 +26,24 @@ import {
   Dropdown,
   Input,
   Menu,
+  Modal,
   Popconfirm,
   Row,
   Space,
-  Tooltip,
-  Tree,
-  Modal,
   Tag,
   token,
+  Tooltip,
+  Tree,
 } from '@oceanbase/design';
-import React from 'react';
-import { groupBy, keyBy, noop, uniq } from 'lodash';
-import moment from 'moment';
-import { EllipsisOutlined, SearchOutlined } from '@oceanbase/icons';
 import type { ButtonProps } from '@oceanbase/design/es/button';
 import type { PopconfirmProps } from '@oceanbase/design/es/popconfirm';
 import type { FilterDropdownProps } from '@oceanbase/design/es/table/interface';
 import type { TooltipProps } from '@oceanbase/design/es/tooltip';
+import { EllipsisOutlined, SearchOutlined } from '@oceanbase/icons';
+import { history } from '@umijs/max';
+import { groupBy, noop, uniq } from 'lodash';
+import moment from 'moment';
+import React from 'react';
 
 export interface getConfirmModalProps extends ModalFuncProps {
   operationType: 'confirm' | 'delete';

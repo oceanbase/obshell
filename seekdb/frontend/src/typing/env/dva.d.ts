@@ -30,13 +30,6 @@ import {
   take,
 } from 'redux-saga/effects';
 
-export interface CredentialError {
-  clusterName: string;
-  tenantName: string;
-  username: string;
-  errorMessage: string;
-}
-
 interface DvaLoading {
   global: boolean;
   effects: { [key: string]: boolean | undefined };
@@ -115,6 +108,8 @@ declare global {
     loading: DvaLoading;
     router: {
       location: {
+        pathname: string;
+        search: string;
         query?: {
           [key: string]: string;
         };
@@ -123,59 +118,11 @@ declare global {
     global: {
       themeMode: 'light' | 'dark';
       publicKey: string;
-      uiMode: string;
-      // 后端返回的应用信息没有定义类型，需要手动指定
-      appInfo: Global.AppInfo;
-      systemInfo: API.SystemInfo;
-      showCredentialModal: boolean;
-      // 密码箱连接缺失或者连接失败对应的结构化信息
-      credentialErrorData: CredentialError;
+      seekdbInfoData: API.ObserverInfo;
     };
     profile: {
       password?: string;
       publicKey?: string;
-      userData: API.AuthenticatedUser;
-    };
-    iam: {
-      userListData: {
-        page?: {
-          totalElements?: number;
-        };
-        contents?: API.User[];
-      };
-    };
-    cluster: {
-      clusterData: API.ClusterInfo;
-    };
-    tenant: {
-      tenantData: API.TenantInfo;
-      unitSpecList: API.UnitSpec[];
-    };
-    obproxy: {
-      obproxyCluster: API.ObproxyCluster;
-    };
-    backup: {
-      storageConfigList: API.ObBackupServiceStorageConfig[];
-    };
-    alarm: {
-      channelListData?: {
-        page?: {
-          totalElements?: number;
-        };
-        contents?: API.OcpChannel[];
-      };
-    };
-    log: {
-      logData: any;
-    };
-    compute: {
-      hostTypeListData: API.PaginatedResponsePaginatedData_HostType_;
-      idcListData: API.PaginatedResponsePaginatedData_Idc_;
-      regionListData: API.PaginatedResponsePaginatedData_Region_;
-    };
-    report: {
-      collapsed: boolean;
-      siderWidth: number;
     };
   }
 }

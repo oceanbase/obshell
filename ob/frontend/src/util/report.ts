@@ -15,9 +15,9 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { getLocale } from 'umi';
-import { isEmpty, isNumber, omit, toNumber } from 'lodash';
 import { formatNumber, isNullValue } from '@oceanbase/util';
+import { getLocale } from '@umijs/max';
+import { isEmpty, isNumber, omit, toNumber } from 'lodash';
 
 /**
  * 将微秒转换为秒，并最多保留两位小数

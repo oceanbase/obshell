@@ -15,7 +15,6 @@
  */
 
 import { createIntl } from 'react-intl';
-// import { getLocale } from 'umi';
 
 import messages from '@/locale/strings';
 
@@ -24,8 +23,6 @@ export const getLocale = () => {
   return lang || 'zh-CN';
 };
 export const locale = getLocale();
-
-// const locale = getLocale();
 
 const intl = createIntl({
   locale,

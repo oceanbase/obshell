@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { defineConfig } from 'umi';
+import { defineConfig } from '@umijs/max';
 
 export default defineConfig({
   define: {

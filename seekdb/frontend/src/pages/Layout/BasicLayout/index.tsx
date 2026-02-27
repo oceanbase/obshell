@@ -1,0 +1,351 @@
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { useBasicMenu } from '@/hook/useMenu';
+import useRedirectRoute from '@/hook/useRedirect';
+import useUiMode from '@/hook/useUiMode';
+import { getAgentUnfinishDags, getClusterUnfinishDags } from '@/service/obshell/task';
+import { getAgentInfo, getTime } from '@/service/obshell/v1';
+import { formatMessage } from '@/util/intl';
+import { Alert, Badge, Menu, Modal, Space, theme, Tooltip } from '@oceanbase/design';
+import { LoadingOutlined, UnorderedListOutlined } from '@oceanbase/icons';
+import { BasicLayout as OBUIBasicLayout } from '@oceanbase/ui';
+import type { BasicLayoutProps as OBUIBasicLayoutProps } from '@oceanbase/ui/es/BasicLayout';
+import { history, Outlet, useDispatch, useLocation } from '@umijs/max';
+import { useRequest } from 'ahooks';
+import { find } from 'lodash';
+import moment from 'moment';
+import React, { useState } from 'react';
+import styles from './index.less';
+interface BasicLayoutProps extends OBUIBasicLayoutProps {
+  children: React.ReactNode;
+}
+
+const BasicLayout: React.FC<BasicLayoutProps> = props => {
+  const { token } = theme.useToken();
+  const dispatch = useDispatch();
+  const { isDesktopMode, window } = useUiMode();
+
+  // 全局菜单
+  const basicMenus = useBasicMenu();
+  const {
+    sideHeader,
+    menus = basicMenus,
+    subSideMenus,
+    subSideMenuProps,
+    children,
+    ...restProps
+  } = props;
+
+  const location = useLocation();
+  const { pathname } = location;
+  // 是否展示时间差提示
+  const [offsetAlertVisible, setOffsetAlertVisible] = useState(false);
+  const [validating, setValidating] = useState(false);
+  // 客户端与服务端的时间差 (以秒为单位)
+  const [offsetSeconds, setOffsetSeconds] = useState(0);
+
+  const simpleLogoUrl = '/assets/logo/obshell_dashboard_logo.svg';
+
+  // 根据菜单权限进行重定向
+  useRedirectRoute('/', basicMenus);
+
+  const { refresh, loading } = useRequest(getTime, {
+    onSuccess: res => {
+      // 客户端时间: 取当前时间即可
+      const clientDateTime = moment();
+      // 服务端时间: data 为后端返回的 RFC3339 格式的时间戳字符串
+      const serverDateTime = moment(res.data);
+      const newOffsetSeconds = clientDateTime.diff(serverDateTime, 'seconds');
+      setOffsetSeconds(newOffsetSeconds);
+      // 如果时间差大于等于 60s，则展示 Alert
+      if (Math.abs(newOffsetSeconds) >= 60) {
+        setOffsetAlertVisible(true);
+      }
+    },
+  });
+
+  const { data: clusterTaskListData } = useRequest(
+    () => {
+      return getClusterUnfinishDags(
+        {},
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      );
+    },
+    {
+      pollingInterval: 50000,
+    }
+  );
+
+  const { data: agentTaskListData } = useRequest(
+    () => {
+      return getAgentUnfinishDags(
+        {},
+        {
+          HIDE_ERROR_MESSAGE: true,
+        }
+      );
+    },
+    {
+      pollingInterval: 30000,
+    }
+  );
+
+  const failedTaskList = (clusterTaskListData?.data?.contents || [])
+    .filter(item => item.state === 'FAILED')
+    .concat((agentTaskListData?.data?.contents || []).filter(item => item.state === 'FAILED'));
+
+  const runningTaskList = (clusterTaskListData?.data?.contents || [])
+    .filter(item => item.state === 'RUNNING')
+    .concat((agentTaskListData?.data?.contents || []).filter(item => item.state === 'RUNNING'));
+
+  // 时间差是否超出最大限制 60 秒
+  const overThreshold = Math.abs(offsetSeconds) >= 60;
+  const message = overThreshold
+    ? formatMessage(
+        {
+          id: 'ocp-express.Layout.BasicLayout.TheTimeDifferenceBetweenThe',
+          defaultMessage:
+            '客户端与服务器时间差过大，时间差为 {offsetSeconds} 秒。请矫正客户端或服务器时间，时间差需小于 60 秒',
+        },
+
+        { offsetSeconds }
+      )
+    : formatMessage(
+        {
+          id: 'ocp-express.Layout.BasicLayout.TheTimeBetweenTheClient',
+          defaultMessage:
+            '客户端与服务器时间已同步，时间差为 {offsetSeconds} 秒，obshell Dashboard 可正常使用',
+        },
+
+        { offsetSeconds }
+      );
+
+  const handleUserMenuClick = (key: string) => {
+    if (key === 'logout') {
+      Modal.confirm({
+        title: formatMessage({
+          id: 'ocp-express.Layout.Header.ExitLogin',
+          defaultMessage: '退出登录',
+        }),
+        content: formatMessage({
+          id: 'ocp-express.Layout.Header.AreYouSureYouWant',
+          defaultMessage: '你确定要退出登录吗？退出后，需要重新登录',
+        }),
+
+        onOk: () => {
+          dispatch({
+            type: 'profile/logout',
+          });
+        },
+      });
+    }
+  };
+
+  const userMenu = (
+    <Menu
+      onClick={({ key }) => {
+        handleUserMenuClick(key as string);
+      }}
+    >
+      <Menu.Item key="logout">
+        {formatMessage({
+          id: 'ocp-express.Layout.Header.ExitLogin',
+          defaultMessage: '退出登录',
+        })}
+      </Menu.Item>
+    </Menu>
+  );
+
+  // 计算默认展开的菜单项
+  const defaultOpenKey = find(menus, item =>
+    // 只要子菜单的路径与 pathname 相对应，则当前菜单默认展开
+    // 当前只支持一级菜单的默认展开，不过也可以满足需求了，因为现在并没有 >= 三级菜单的场景
+    (item.children || []).map(child => child.link).includes(pathname)
+  )?.link;
+
+  // 系统管理菜单始终默认展开
+  const systemMenuKey = '/system';
+  const defaultOpenKeys = defaultOpenKey ? [defaultOpenKey, systemMenuKey] : [systemMenuKey];
+
+  const { data } = useRequest(getAgentInfo);
+  const version = data?.data?.version;
+
+  // 根据 isDesktopMode 和 window 类型选择对应的样式类
+  const getLayoutClassName = () => {
+    if (isDesktopMode) {
+      return window === 'mac' ? styles.desktopLayoutMac : styles.desktopLayoutWindows;
+    }
+    return styles.headerExtra;
+  };
+
+  const layoutClassName = getLayoutClassName();
+  return (
+    <div className={layoutClassName}>
+      <OBUIBasicLayout
+        location={location}
+        banner={
+          offsetAlertVisible && (
+            <Alert
+              message={message}
+              type={overThreshold ? 'warning' : 'success'}
+              banner={true}
+              showIcon={true}
+              icon={
+                loading || validating ? (
+                  <LoadingOutlined style={{ color: token.colorPrimary }} />
+                ) : (
+                  false
+                )
+              }
+              action={
+                <a
+                  onClick={() => {
+                    // 由于接口请求较快，为了保证 loading 的展示效果，增加 1s 的持续时间
+                    setValidating(true);
+                    setTimeout(() => {
+                      setValidating(false);
+                    }, 1000);
+                    refresh();
+                  }}
+                >
+                  {formatMessage({
+                    id: 'ocp-express.Layout.BasicLayout.VerifyAgain',
+                    defaultMessage: '再次校验',
+                  })}
+                </a>
+              }
+              // 时间差过大不允许关闭提示
+              closable={overThreshold ? false : true}
+              onClose={() => {
+                setOffsetAlertVisible(false);
+              }}
+            />
+          )
+        }
+        logoUrl={simpleLogoUrl}
+        simpleLogoUrl={simpleLogoUrl}
+        menus={menus}
+        subSideMenus={subSideMenus}
+        subSideMenuProps={subSideMenuProps}
+        defaultOpenKeys={defaultOpenKeys}
+        sideHeader={sideHeader}
+        topHeader={{
+          title: (
+            <div style={{ float: 'right' }}>
+              <Tooltip
+                title={
+                  failedTaskList.length > 0
+                    ? formatMessage(
+                        {
+                          id: 'ocp-express.Layout.BasicLayout.FailedTaskCount',
+                          defaultMessage: '有 {failedTaskCount} 条失败的运维任务',
+                        },
+
+                        { failedTaskCount: failedTaskList.length }
+                      )
+                    : runningTaskList.length > 0
+                    ? formatMessage(
+                        {
+                          id: 'ocp-express.Layout.BasicLayout.RunningTaskCount',
+                          defaultMessage: '有 {runningTaskCount} 条正在运行中的任务',
+                        },
+
+                        { runningTaskCount: runningTaskList.length }
+                      )
+                    : formatMessage({
+                        id: 'ocp-express.Layout.BasicLayout.TaskCenter',
+                        defaultMessage: '任务中心',
+                      })
+                }
+              >
+                <span
+                  data-aspm-click="c304248.d308744"
+                  data-aspm-desc="顶部导航-任务中心入口"
+                  onClick={() => {
+                    history.push('/task');
+                  }}
+                  style={{
+                    cursor: 'pointer',
+                    display: 'inline-block',
+                    textAlign: 'center',
+                    marginRight: 8,
+                    fontSize: 12,
+                  }}
+                >
+                  <Badge
+                    size="small"
+                    offset={[4, 0]}
+                    count={failedTaskList.length || runningTaskList.length}
+                    style={{
+                      backgroundColor:
+                        // 失败任务，展示红色圆点
+                        failedTaskList.length > 0
+                          ? token.colorError
+                          : // 存在执行中的任务，展示蓝色圆点
+                          runningTaskList.length > 0
+                          ? token.colorPrimary
+                          : undefined,
+                    }}
+                  >
+                    <Space>
+                      <UnorderedListOutlined
+                        style={
+                          {
+                            // color: '#5c6b8a',
+                          }
+                        }
+                      />
+
+                      <span
+                        style={{
+                          // color: token.colorTextTertiary,
+                          fontSize: 12,
+                        }}
+                      >
+                        {formatMessage({
+                          id: 'ocp-express.Layout.BasicLayout.Task',
+                          defaultMessage: '任务',
+                        })}
+                      </span>
+                    </Space>
+                  </Badge>
+                </span>
+              </Tooltip>
+            </div>
+          ),
+
+          username: '',
+          userMenu,
+          showLocale: true,
+          locales: ['zh-CN', 'en-US'],
+          appData: {
+            shortName: 'obshell Dashboard',
+            version: version,
+            // releaseTime: formatTime(appInfo.buildTime, DATE_FORMAT_DISPLAY),
+          },
+        }}
+        {...restProps}
+      >
+        <Outlet />
+      </OBUIBasicLayout>
+    </div>
+  );
+};
+
+export default BasicLayout;

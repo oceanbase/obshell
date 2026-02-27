@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React from 'react';
-import { Modal, message } from '@oceanbase/design';
-import { find, flatten, groupBy, isArray, uniq } from 'lodash';
-import { history } from 'umi';
-import moment from 'moment';
-import { directTo, toPercent, joinComponent, formatNumber, formatTime } from '@oceanbase/util';
-import { getFormateForTimes, secondToTime } from '@/util';
 import { nodeHandler } from '@/service/obshell/task';
+import { getFormateForTimes, secondToTime } from '@/util';
+import { formatMessage } from '@/util/intl';
+import { Modal, message } from '@oceanbase/design';
+import { directTo, formatNumber, formatTime, joinComponent, toPercent } from '@oceanbase/util';
+import { history } from '@umijs/max';
+import { find, flatten, groupBy, isArray, uniq } from 'lodash';
+import moment from 'moment';
+import React from 'react';
 
 export function getTaskProgress(task: API.DagDetailDTO) {
   return `${task?.stage || 0}/${task?.max_stage}`;

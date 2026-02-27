@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
-import React from 'react';
-import { Alert, Button } from '@oceanbase/design';
 import Empty from '@/component/Empty';
+import { formatMessage } from '@/util/intl';
+import { Alert, Button } from '@oceanbase/design';
+import { history } from '@umijs/max';
+import React from 'react';
 
 interface ErrorBoundaryProps {
   message?: React.ReactNode;

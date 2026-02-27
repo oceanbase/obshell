@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { useSelector } from 'umi';
+import { useSelector } from '@umijs/max';
 
 export function useDvaLoading() {
   return useSelector((s: DvaEntireState) => s.loading);

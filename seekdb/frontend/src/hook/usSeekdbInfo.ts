@@ -1,4 +1,4 @@
-import { useSelector } from 'umi';
+import { useSelector } from '@umijs/max';
 
 /**
  * 获取 seekdbInfoData 和加载状态的自定义 Hook

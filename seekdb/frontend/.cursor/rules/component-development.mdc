@@ -9,8 +9,7 @@ description: 组件开发规范和最佳实践
 
 每个组件应包含以下文件：
 - `index.tsx`: 组件主文件
-- `index.style.ts`: CSS-in-JS样式（优先）
-- `index.less`: Less样式（必要时）
+- `index.less`: Less 样式文件
 
 ## 通用组件开发
 
@@ -72,7 +71,7 @@ export { MyCard };
 
 ## 样式规范
 
-- 优先使用 CSS-in-JS (styled-components风格)
-- 使用 Ant Design 的设计令牌
+- 使用 Less + CSS Modules
+- 使用 OceanBase Design 主题变量
 - 遵循项目的设计系统
-- 支持深色/浅色主题切换
+- 参考 [styling.mdc](mdc:styling.mdc) 了解详细样式规范

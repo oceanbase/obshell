@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+import PageCard from '@/component/PageCard';
 import { formatMessage } from '@/util/intl';
-import { history } from 'umi';
-import React from 'react';
 import { Button, Result, Space } from '@oceanbase/design';
 import type { ResultProps } from '@oceanbase/design/es/result';
 import { PageContainer } from '@oceanbase/ui';
-import PageCard from '@/component/PageCard';
+import { history } from '@umijs/max';
+import React from 'react';
 import styles from './index.less';
 
 export interface SuccessProps extends ResultProps {

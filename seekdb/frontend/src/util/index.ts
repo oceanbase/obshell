@@ -25,7 +25,26 @@ import {
 import type { MICROSECOND_TYPE } from '@/constant/must-ignore';
 import { MICROSECOND } from '@/constant/must-ignore';
 import { formatMessage } from '@/util/intl';
-import { getLocale } from 'umi';
+import type { WrappedFormUtils } from '@ant-design/compatible/lib/form/Form';
+import type { FormInstance } from '@oceanbase/design/es/form';
+import {
+  byte2GB,
+  byte2KB,
+  byte2MB,
+  byte2PB,
+  byte2TB,
+  formatNumber,
+  isNullValue,
+} from '@oceanbase/util';
+import { getLocale } from '@umijs/max';
+import { useAntdTable } from 'ahooks';
+import type {
+  AntdTableOptions,
+  AntdTableResult,
+  Data,
+  Params,
+} from 'ahooks/lib/useAntdTable/types';
+import { Base64 } from 'js-base64';
 import {
   find,
   isArray,
@@ -39,28 +58,9 @@ import {
   some,
   toNumber,
 } from 'lodash';
-import {
-  byte2GB,
-  byte2KB,
-  byte2MB,
-  byte2PB,
-  byte2TB,
-  formatNumber,
-  isNullValue,
-} from '@oceanbase/util';
-import type { WrappedFormUtils } from '@ant-design/compatible/lib/form/Form';
-import { useAntdTable } from 'ahooks';
-import type {
-  AntdTableOptions,
-  Data,
-  Params,
-  AntdTableResult,
-} from 'ahooks/lib/useAntdTable/types';
-import type { FormInstance } from '@oceanbase/design/es/form';
+import moment from 'moment';
 import sqlFormatter from 'sql-formatter';
 import validator from 'validator';
-import moment from 'moment';
-import { Base64 } from 'js-base64';
 
 const sortOrderMap = {
   ascend: 'asc',
@@ -384,9 +384,9 @@ export function formatSql(sql: string | null | undefined) {
   // 20000 字符的限制是经过实际测试得到的，超过 20000 字符，卡顿效果比较明显，会影响用户使用
   return sql && sql.length <= 20000
     ? sqlFormatter.format(sql || '', {
-        // 使用 PL/SQL 格式对 sql 语句进行格式化
-        language: 'pl/sql',
-      })
+      // 使用 PL/SQL 格式对 sql 语句进行格式化
+      language: 'pl/sql',
+    })
     : sql || '';
 }
 
@@ -410,21 +410,21 @@ export function getTextLengthRule(minLength: number = 0, maxLength: number = 0) 
     message:
       minLength && maxLength
         ? formatMessage(
-            {
-              id: 'ocp-express.src.util.TheLengthIsMinlengthMaxlength',
-              defaultMessage: '长度为 {minLength} ~ {maxLength}',
-            },
+          {
+            id: 'ocp-express.src.util.TheLengthIsMinlengthMaxlength',
+            defaultMessage: '长度为 {minLength} ~ {maxLength}',
+          },
 
-            { minLength, maxLength }
-          )
+          { minLength, maxLength }
+        )
         : formatMessage(
-            {
-              id: 'ocp-express.src.util.TheLengthCannotExceedMaxlength',
-              defaultMessage: '长度不能超过 {maxLength}',
-            },
+          {
+            id: 'ocp-express.src.util.TheLengthCannotExceedMaxlength',
+            defaultMessage: '长度不能超过 {maxLength}',
+          },
 
-            { maxLength }
-          ),
+          { maxLength }
+        ),
   };
 }
 

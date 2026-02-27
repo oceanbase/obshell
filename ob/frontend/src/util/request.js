@@ -15,25 +15,23 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import { getLocale, history, getDvaApp } from 'umi';
 import { message } from '@oceanbase/design';
-import { Base64 } from 'js-base64';
+import { getDvaApp, getLocale, history } from '@umijs/max';
 import CryptoJS from 'crypto-js';
-import React from 'react';
+import { Base64 } from 'js-base64';
 /**
  * request 网络请求工具
  * 提供诸如参数序列号, 缓存, 超时, 字符编码处理, 错误处理等常用功能,
  */
-import { extend } from 'umi-request';
-import Cookies from 'js-cookie';
-import encrypt from '@/util/encrypt';
+import { LOGIN_IV, LOGIN_SECRET_KEY, PUBLIC_KEY, SESSION_ID } from '@/constant/login';
+import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
 import { aesEncrypt, wordArrayToHex } from '@/util/aes';
+import encrypt from '@/util/encrypt';
+import Cookies from 'js-cookie';
 import { cloneDeep } from 'lodash';
 import queryString from 'query-string';
-import { getEncryptLocalStorage, setEncryptLocalStorage } from '@/util';
-import { LOGIN_KEY, LOGIN_SECRET_KEY, LOGIN_IV, SESSION_ID } from '@/constant/login';
+import { extend } from 'umi-request';
 import { getErrorDescription } from './component';
-import { PUBLIC_KEY } from '@/constant/login';
 
 const statusCodeMessage = {
   400: formatMessage({
@@ -95,7 +93,6 @@ const statusCodeMessage = {
   }),
 };
 
-
 /**
  * 异常处理程序
  * response 为浏览器的 Response 对象，而 data 才是后端实际返回的响应数据
@@ -138,7 +135,9 @@ const errorHandler = ({ request, response, data }) => {
     const { errCode, message: errorMessage } = error;
     // 错误展示一定要在 throw err 之前执行，否则抛错之后就无法展示了
     // 优先展示后端返回的错误信息，如果没有，则根据 status 进行展示
-    const msg = errorMessage ? getErrorDescription({ errorMessage, errCode }) || errorMessage : statusCodeMessage[status];
+    const msg = errorMessage
+      ? getErrorDescription({ errorMessage, errCode }) || errorMessage
+      : statusCodeMessage[status];
 
     // 是否隐藏错误信息
     const hideErrorMessage =
@@ -154,7 +153,7 @@ const errorHandler = ({ request, response, data }) => {
     if (status === 403 && SHOULD_ERROR_PAGE) {
       history.push('/error/403');
     } else if (status === 404 && SHOULD_ERROR_PAGE) {
-        history.push('/error/404');
+      history.push('/error/404');
     }
   } // 一定要返回 data，否则就会在错误处理这一层断掉，后续无法获取响应的数据
   return data;
@@ -180,7 +179,6 @@ function base64Encode(key, iv) {
   }
 }
 
-
 // 测试环境不进行加密
 const isTestEnv = process.env.ENV === 'tester';
 
@@ -196,7 +194,6 @@ request.interceptors.request.use((url, options) => {
     options.headers.Accept = '*/*';
   }
 
-
   const dvaApp = getDvaApp();
   const { profile } = dvaApp?._store?.getState?.() || {};
   const { password, publicKey: profilePublicKey } = profile || {};
@@ -209,7 +206,10 @@ request.interceptors.request.use((url, options) => {
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */
   // 对于登录接口，即使 options.data 为空，也要生成 secretKey 和 iv
-  const { encryptedContent, secretKey, iv } = aesEncrypt(isFormData ? undefined : options.data, isLoginApi);
+  const { encryptedContent, secretKey, iv } = aesEncrypt(
+    isFormData ? undefined : options.data,
+    isLoginApi
+  );
 
   const keys = base64Encode(secretKey, iv);
 

@@ -18,31 +18,31 @@ import MyDrawer from '@/component/MyDrawer';
 import MyInput from '@/component/MyInput';
 import MySelect from '@/component/MySelect';
 import SelectAllAndClearRender from '@/component/SelectAllAndClearRender';
+import { obclusterSetParameters } from '@/service/obshell/obcluster';
+import { getTenantOverView } from '@/service/obshell/tenant';
 import {
   getDetailComponentByParameterValue,
   getSimpleComponentByClusterParameterValue,
 } from '@/util/component';
 import { formatMessage } from '@/util/intl';
-import { useSelector, useDispatch } from 'umi';
 import {
   Alert,
   Button,
   Col,
+  Descriptions,
+  DrawerProps,
   Form,
+  message,
   Row,
   Table,
   Tree,
   Typography,
-  Descriptions,
-  message,
-  DrawerProps,
 } from '@oceanbase/design';
-import React, { useEffect, useState } from 'react';
-import { flatten, groupBy, isEqual, unionWith, uniq, uniqBy } from 'lodash';
 import { DeleteOutlined, PlusOutlined } from '@oceanbase/icons';
+import { useDispatch, useSelector } from '@umijs/max';
 import { useRequest } from 'ahooks';
-import { getTenantOverView } from '@/service/obshell/tenant';
-import { obclusterSetParameters } from '@/service/obshell/obcluster';
+import { flatten, groupBy, isEqual, unionWith, uniq, uniqBy } from 'lodash';
+import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 const { Option, OptGroup } = MySelect;

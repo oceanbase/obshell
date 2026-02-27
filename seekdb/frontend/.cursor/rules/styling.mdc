@@ -1,147 +1,751 @@
 ---
-globs: *.less,*.style.ts,src/component/**/*,src/page/**/*
+globs: *.less,src/component/**/*,src/page/**/*
 description: 样式开发规范和主题系统
 ---
 
 # 样式开发规范
 
-## 样式文件类型
+## 样式技术栈
 
-项目支持两种样式方案：
+项目使用 **Less + CSS Modules** 作为样式解决方案。
 
-### 1. CSS-in-JS (推荐)
-**文件**: `index.style.ts`
-
-**优势**:
-- TypeScript 类型检查
-- 动态样式计算
-- 主题变量访问
-- 作用域隔离
-
-**示例**:
-```typescript
-import { createStyles } from 'antd-style';
-
-export const useStyles = createStyles(({ token, css }) => ({
-  container: css`
-    padding: ${token.padding}px;
-    background: ${token.colorBgContainer};
-    border-radius: ${token.borderRadius}px;
-  `,
-
-  title: css`
-    font-size: ${token.fontSizeLG}px;
-    color: ${token.colorTextHeading};
-    margin-bottom: ${token.margin}px;
-  `,
-}));
-```
-
-### 2. Less (特殊场景)
 **文件**: `index.less`
 
-**使用场景**:
-- 复杂的选择器逻辑
-- 第三方组件样式覆盖
-- 全局样式定义
+**优势**:
+- Less 预处理器功能（变量、混合、嵌套）
+- CSS Modules 自动作用域隔离
+- 访问 OceanBase Design 主题变量
+- 与 Ant Design 深度集成
+- 构建时编译，性能更好
 
-## 设计令牌使用
+**基础示例**:
+```less
+// 导入 OceanBase Design 主题变量
+@import '~@oceanbase/design/es/theme/index.less';
 
-### 主要设计令牌
-```typescript
-// 颜色
-token.colorPrimary        // 主色
-token.colorSuccess        // 成功色
-token.colorWarning        // 警告色
-token.colorError          // 错误色
-token.colorTextBase       // 基础文本色
-token.colorBgContainer    // 容器背景色
+.container {
+  padding: 24px;
+  background: @colorBgContainer;
+  border-radius: 6px;
 
-// 尺寸
-token.padding             // 基础内边距
-token.margin              // 基础外边距
-token.borderRadius        // 圆角
-token.fontSize            // 基础字号
-token.fontSizeLG          // 大字号
+  .title {
+    font-size: 16px;
+    font-weight: 500;
+    color: @colorText;
+    margin-bottom: 16px;
+  }
 
-// 阴影
-token.boxShadow           // 基础阴影
+  .content {
+    padding: 16px;
+    color: @colorTextSecondary;
+  }
+}
 ```
 
-## 组件样式模式
-
-### 1. 容器组件
+**组件中使用 (CSS Modules)**:
 ```typescript
-const containerStyles = css`
-  padding: ${token.paddingLG}px;
-  background: ${token.colorBgContainer};
-  border-radius: ${token.borderRadiusLG}px;
-  box-shadow: ${token.boxShadowSecondary};
-`;
+import styles from './index.less';
+
+const MyComponent: React.FC = () => {
+  return (
+    <div className={styles.container}>
+      <h1 className={styles.title}>标题</h1>
+      <div className={styles.content}>内容</div>
+    </div>
+  );
+};
+```
+
+**全局样式覆盖**:
+```less
+.container {
+  // 局部样式（CSS Modules）
+  padding: 24px;
+
+  // 全局样式（覆盖第三方组件）
+  :global {
+    .ant-form-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .ant-table-thead > tr > th {
+      background: @colorBgContainer;
+    }
+  }
+}
+```
+
+## 主题变量使用
+
+项目使用 **OceanBase Design** 主题系统，通过 Less 变量访问设计令牌。
+
+### 导入主题变量
+```less
+// 在 Less 文件顶部导入
+@import '~@oceanbase/design/es/theme/index.less';
+```
+
+### 主要设计变量
+
+#### 颜色系统
+```less
+// 品牌色
+@colorPrimary          // 主色（蓝色）
+@colorSuccess          // 成功色（绿色）
+@colorWarning          // 警告色（橙色）
+@colorError            // 错误色（红色）
+@colorInfo             // 信息色
+
+// 文本颜色
+@colorText             // 主文本色（rgba(0, 0, 0, 0.85)）
+@colorTextSecondary    // 次要文本色（rgba(0, 0, 0, 0.65)）
+@colorTextTertiary     // 第三级文本色（rgba(0, 0, 0, 0.45)）
+@colorTextQuaternary   // 第四级文本色（rgba(0, 0, 0, 0.25)）
+
+// 背景颜色
+@colorBgContainer      // 容器背景（#ffffff）
+@colorBgLayout         // 布局背景（#f5f5f5）
+@colorBgElevated       // 浮层背景
+@colorFillAlter        // 替代填充色
+
+// 边框颜色
+@colorBorder           // 基础边框（#d9d9d9）
+@colorBorderSecondary  // 次要边框（#f0f0f0）
+@colorSplit            // 分割线颜色（#e8e8e8）
+```
+
+#### 间距规范
+```less
+// 标准间距（推荐使用固定值）
+// 内边距
+padding: 8px;          // 小间距
+padding: 12px;         // 较小间距
+padding: 16px;         // 标准间距
+padding: 24px;         // 大间距
+padding: 32px;         // 超大间距
+
+// 外边距
+margin: 8px;           // 小间距
+margin: 12px;          // 较小间距
+margin: 16px;          // 标准间距
+margin: 24px;          // 大间距
+margin: 32px;          // 超大间距
+```
+
+#### 字体系统
+```less
+// 字号
+font-size: 12px;       // 小字号
+font-size: 14px;       // 基础字号（默认）
+font-size: 16px;       // 大字号
+font-size: 18px;       // 较大字号
+font-size: 20px;       // 超大字号
+
+// 标题字号
+font-size: 16px;       // 五级标题
+font-size: 20px;       // 四级标题
+font-size: 24px;       // 三级标题
+font-size: 30px;       // 二级标题
+font-size: 38px;       // 一级标题
+
+// 字重
+font-weight: 400;      // 常规
+font-weight: 500;      // 中等（标题、强调）
+font-weight: 600;      // 半粗体
+```
+
+#### 其他变量
+```less
+// 圆角
+@borderRadius: 6px;           // 基础圆角
+border-radius: 2px;           // 超小圆角
+border-radius: 4px;           // 小圆角
+border-radius: 6px;           // 标准圆角
+border-radius: 8px;           // 大圆角
+
+// 边框
+border: 1px solid @colorBorder;
+border: 1px solid @colorBorderSecondary;
+
+// 阴影
+box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);        // 基础阴影
+box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);       // 次级阴影
+```
+
+## 常用组件样式模式
+
+### 1. 页面容器布局
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.pageContainer {
+  padding: 24px;
+  min-height: 100%;
+  background: @colorBgLayout;
+
+  .contentWrapper {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 24px;
+    background: @colorBgContainer;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+}
 ```
 
 ### 2. 卡片组件
-```typescript
-const cardStyles = css`
-  border: 1px solid ${token.colorBorderSecondary};
-  border-radius: ${token.borderRadius}px;
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.card {
+  background: @colorBgContainer;
+  border: 1px solid @colorBorderSecondary;
+  border-radius: 6px;
   overflow: hidden;
+  transition: box-shadow 0.3s ease;
 
-  .card-header {
-    padding: ${token.padding}px ${token.paddingLG}px;
-    background: ${token.colorFillAlter};
-    border-bottom: 1px solid ${token.colorBorder};
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   }
 
-  .card-body {
-    padding: ${token.paddingLG}px;
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: @colorFillAlter;
+    border-bottom: 1px solid @colorBorder;
+
+    .title {
+      font-size: 16px;
+      font-weight: 500;
+      color: @colorText;
+      font-family: PingFangSC-Medium;
+    }
   }
-`;
+
+  .body {
+    padding: 24px;
+  }
+
+  .footer {
+    padding: 12px 24px;
+    border-top: 1px solid @colorBorder;
+    background: @colorBgLayout;
+    text-align: right;
+  }
+}
 ```
 
-### 3. 表单组件
-```typescript
-const formStyles = css`
-  .ant-form-item {
-    margin-bottom: ${token.marginLG}px;
+### 3. 表单布局
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.formContainer {
+  :global {
+    .ant-form-item {
+      margin-bottom: 24px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 
-  .form-actions {
-    text-align: center;
-    padding-top: ${token.paddingLG}px;
-    border-top: 1px solid ${token.colorBorder};
+  .formSection {
+    padding: 24px;
+    margin-bottom: 24px;
+    background: @colorBgContainer;
+    border: 1px solid @colorBorderSecondary;
+    border-radius: 6px;
+
+    .sectionTitle {
+      margin-bottom: 24px;
+      font-size: 16px;
+      font-weight: 500;
+      color: @colorText;
+    }
   }
-`;
+
+  .formActions {
+    padding-top: 24px;
+    border-top: 1px solid @colorBorder;
+    text-align: center;
+
+    :global {
+      button + button {
+        margin-left: 12px;
+      }
+    }
+  }
+}
+```
+
+### 4. 表格容器
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.tableContainer {
+  background: @colorBgContainer;
+  border-radius: 6px;
+  padding: 24px;
+
+  .tableToolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+  }
+
+  :global {
+    .ant-table-pagination {
+      margin-top: 24px;
+      margin-bottom: 0;
+    }
+  }
+}
+```
+
+### 5. 按钮组和操作区
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.buttonGroup {
+  display: flex;
+  gap: 12px;
+
+  &.vertical {
+    flex-direction: column;
+  }
+}
+
+.actionArea {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+}
 ```
 
 ## 响应式设计
 
-使用 Ant Design 断点：
-```typescript
-const responsiveStyles = css`
+Ant Design 断点系统：
+- `xs`: `<576px` - 超小屏幕（手机）
+- `sm`: `≥576px` - 小屏幕（手机横屏）
+- `md`: `≥768px` - 中屏幕（平板）
+- `lg`: `≥992px` - 大屏幕（桌面）
+- `xl`: `≥1200px` - 超大屏幕（大桌面）
+- `xxl`: `≥1600px` - 超超大屏幕
+
+**响应式样式示例**:
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  padding: 24px;
+
+  // 平板及以下
   @media (max-width: 768px) {
-    padding: ${token.paddingSM}px;
+    padding: 12px;
   }
 
-  @media (min-width: 1200px) {
+  // 桌面及以上
+  @media (min-width: 992px) {
     max-width: 1200px;
     margin: 0 auto;
   }
-`;
+
+  // 大屏
+  @media (min-width: 1600px) {
+    max-width: 1400px;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 576px) {
+    grid-template-columns: 1fr;
+  }
+}
+```
+
+## Less 高级特性
+
+### 变量定义
+```less
+// 局部变量
+@primary-color: @colorPrimary;
+@border-color: @colorBorder;
+@spacing-base: 16px;
+
+.container {
+  color: @primary-color;
+  border: 1px solid @border-color;
+  padding: @spacing-base;
+}
+```
+
+### 混合（Mixins）
+```less
+// 定义混合
+.text-ellipsis() {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.line-clamp(@lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: @lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.flex-center() {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// 使用混合
+.title {
+  .text-ellipsis();
+  font-size: 16px;
+}
+
+.description {
+  .line-clamp(3);
+  color: @colorTextSecondary;
+}
+
+.modal {
+  .flex-center();
+  height: 100vh;
+}
+```
+
+### 嵌套选择器
+```less
+.card {
+  padding: 24px;
+
+  .header {
+    margin-bottom: 16px;
+
+    .title {
+      font-size: 16px;
+      font-weight: 500;
+
+      &:hover {
+        color: @colorPrimary;
+      }
+    }
+  }
+
+  // 伪类
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  // 修饰符类
+  &.active {
+    border-color: @colorPrimary;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+```
+
+### 条件样式（通过类名）
+```less
+.button {
+  padding: 12px 16px;
+  border-radius: 6px;
+
+  &.primary {
+    background: @colorPrimary;
+    color: #fff;
+  }
+
+  &.danger {
+    background: @colorError;
+    color: #fff;
+  }
+
+  &.large {
+    padding: 16px 24px;
+    font-size: 16px;
+  }
+}
+```
+
+```typescript
+// 组件中使用
+import styles from './index.less';
+import classNames from 'classnames';
+
+<button className={classNames(styles.button, styles.primary, styles.large)}>
+  提交
+</button>
 ```
 
 ## 最佳实践
 
-1. **优先使用设计令牌**，避免硬编码颜色和尺寸
-2. **保持样式简洁**，避免过度嵌套
-3. **使用语义化类名**，便于维护
-4. **支持主题切换**，适配深色模式
-5. **性能优化**，避免重复计算样式
+### 1. 始终使用主题变量
+✅ **推荐**:
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  color: @colorPrimary;
+  padding: 24px;
+  font-size: 16px;
+  background: @colorBgContainer;
+  border: 1px solid @colorBorder;
+}
+```
+
+❌ **避免**:
+```less
+.container {
+  color: #1890ff;        // 硬编码颜色
+  background: #ffffff;   // 硬编码背景
+  border: 1px solid #d9d9d9;  // 硬编码边框
+}
+```
+
+### 2. 合理控制嵌套层级（建议不超过 3-4 层）
+✅ **推荐**:
+```less
+.card {
+  padding: 24px;
+
+  .header {
+    margin-bottom: 16px;
+
+    .title {
+      font-size: 16px;
+    }
+  }
+}
+```
+
+❌ **避免** (嵌套过深):
+```less
+.page {
+  .container {
+    .wrapper {
+      .content {
+        .card {
+          .header {
+            .title {
+              // 嵌套太深，难以维护
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### 3. 使用语义化的类名
+✅ **推荐**:
+```less
+.container {
+  .header { }
+  .contentArea { }
+  .actionButtons { }
+  .footer { }
+}
+```
+
+❌ **避免**:
+```less
+.box1 { }
+.div2 { }
+.wrapper3 { }
+.style1 { }
+```
+
+### 4. CSS Modules 使用规范
+```less
+// index.less
+.container {
+  padding: 24px;
+
+  // 局部样式（会被 CSS Modules 处理）
+  .title {
+    font-size: 16px;
+  }
+
+  // 全局样式（不会被 CSS Modules 处理）
+  :global {
+    .ant-form-item {
+      margin-bottom: 24px;
+    }
+  }
+}
+```
+
+```typescript
+// index.tsx
+import styles from './index.less';
+
+const Component = () => (
+  <div className={styles.container}>
+    <h1 className={styles.title}>标题</h1>
+  </div>
+);
+```
+
+### 5. 使用 classNames 库处理动态类名
+```typescript
+import styles from './index.less';
+import classNames from 'classnames';
+
+const Button = ({ type, size, disabled }) => (
+  <button
+    className={classNames(
+      styles.button,
+      {
+        [styles.primary]: type === 'primary',
+        [styles.danger]: type === 'danger',
+        [styles.large]: size === 'large',
+        [styles.disabled]: disabled,
+      }
+    )}
+  >
+    按钮
+  </button>
+);
+```
+
+### 6. 性能优化
+- 避免使用昂贵的 CSS 属性（box-shadow、filter 等）在频繁变化的元素上
+- 优先使用 `transform` 和 `opacity` 做动画
+- 合理使用 CSS 选择器，避免过于复杂的选择器
+
+```less
+// ✅ 推荐：使用 transform 做动画
+.card {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+}
+
+// ❌ 避免：频繁改变 box-shadow
+.card {
+  transition: box-shadow 0.3s ease;
+
+  &:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);  // 性能较差
+  }
+}
+```
+
+### 7. Ant Design 组件样式覆盖
+当需要覆盖 Ant Design 组件样式时，使用 `:global`：
+
+```less
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  // 覆盖表格样式
+  :global {
+    .ant-table-thead > tr > th {
+      background: @colorBgContainer;
+      font-weight: 500;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background: @colorBgLayout;
+    }
+  }
+}
+
+.customSelect {
+  :global {
+    .ant-select-dropdown {
+      .ant-select-item-option-selected {
+        background: @colorPrimaryBg;
+      }
+    }
+  }
+}
+```
+
+### 8. 文件头版权声明
+每个 Less 文件都应包含版权声明：
+
+```less
+/*
+ * Copyright (c) 2024 OceanBase.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+@import '~@oceanbase/design/es/theme/index.less';
+
+.container {
+  // 样式代码
+}
+```
 
 ## 全局样式
 
 全局样式定义在 [global.less](mdc:src/global.less)，包含：
-- 重置样式
-- 基础排版
-- 工具类
-- Ant Design 主题定制
+- 浏览器重置样式
+- 基础排版规则
+- 通用工具类（`.ellipsis`、`.pointable` 等）
+- Ant Design 组件默认样式覆盖
+- OceanBase 设计规范定制
+
+**注意**: 除非必要，避免修改全局样式。优先使用组件级样式。
+
+## 常见问题
+
+### 1. 样式不生效？
+- 检查是否正确导入了样式文件
+- 确认类名是否正确应用到元素上（CSS Modules 需要使用 `styles.className`）
+- 检查是否有更高优先级的样式覆盖
+- 确认是否导入了主题变量 `@import '~@oceanbase/design/es/theme/index.less';`
+
+### 2. 样式命名冲突？
+- Less 使用 CSS Modules 会自动生成唯一的类名，避免冲突
+- 局部样式使用 `styles.className` 方式引用
+- 全局样式使用 `:global { }` 包裹
+
+### 3. 如何覆盖 Ant Design 组件样式？
+- 使用 `:global` 包裹需要覆盖的选择器
+- 使用主题变量保持一致性
+- 避免使用 `!important`，通过提高选择器优先级
+
+### 4. 主题变量不生效？
+- 确保文件顶部导入了 `@import '~@oceanbase/design/es/theme/index.less';`
+- 检查变量名是否正确（使用 `@` 前缀）
+- 确认 `@oceanbase/design` 依赖已安装

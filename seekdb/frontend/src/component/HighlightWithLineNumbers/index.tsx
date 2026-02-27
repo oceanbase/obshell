@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import React from 'react';
-import { useSelector } from 'umi';
+import { useSelector } from '@umijs/max';
 import Highlight, { defaultProps } from 'prism-react-renderer';
-import vsLightTheme from 'prism-react-renderer/themes/vsLight';
-import vsDarkTheme from 'prism-react-renderer/themes/vsDark';
 import Prism from 'prism-react-renderer/prism/index';
+import vsDarkTheme from 'prism-react-renderer/themes/vsDark';
+import vsLightTheme from 'prism-react-renderer/themes/vsLight';
+import React from 'react';
 import javaLog from './languages/javaLog';
 
 Prism.languages.javaLog = javaLog;

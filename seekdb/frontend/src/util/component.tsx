@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-import { history } from 'umi';
 import type { ModalFuncProps } from '@oceanbase/design';
 import { Button, Dropdown, Menu, Popconfirm, Space, Tooltip } from '@oceanbase/design';
-import React from 'react';
-import { EllipsisOutlined } from '@oceanbase/icons';
 import type { ButtonProps } from '@oceanbase/design/es/button';
 import type { PopconfirmProps } from '@oceanbase/design/es/popconfirm';
+import { EllipsisOutlined } from '@oceanbase/icons';
+import { history } from '@umijs/max';
+import React from 'react';
 
 import type { TooltipProps } from '@oceanbase/design/es/tooltip';
 

@@ -3,22 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "analyze": "ANALYZE=1 umi dev",
-    "build": "NODE_OPTIONS=--max_old_space_size=4096 umi build",
-    "build:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 umi build",
-    "cov": "umi test --coverage",
-    "dev": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none umi dev",
-    "devs": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none umi dev",
-    "devs:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none umi dev",
-    "help": "umi help",
-    "lint": "NODE_OPTIONS=--max_old_space_size=4096 umi lint --style --eslint.ext='.ts,.tsx,.jsx,.js'",
-    "lint:fix": "NODE_OPTIONS=--max_old_space_size=4096 umi lint --style --eslint.ext='.ts,.tsx,.jsx,.js' --fix",
+    "analyze": "ANALYZE=1 max dev",
+    "build": "NODE_OPTIONS=--max_old_space_size=4096 max build",
+    "build:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 max build",
+    "cov": "max test --coverage",
+    "dev": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none max dev",
+    "devs": "NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none max dev",
+    "devs:tester": "UMI_ENV=tester NODE_OPTIONS=--max_old_space_size=8192 UMI_UI=none MOCK=none max dev",
+    "help": "max help",
+    "lint": "NODE_OPTIONS=--max_old_space_size=4096 max lint --style --eslint.ext='.ts,.tsx,.jsx,.js'",
+    "lint:fix": "NODE_OPTIONS=--max_old_space_size=4096 max lint --style --eslint.ext='.ts,.tsx,.jsx,.js' --fix",
     "locale:unuseful": "babel-node --presets @babel/preset-env ./script/unuseful-locale-key.js",
     "openapi2ts": "openapi2ts",
-    "pack": "umi pack",
+    "pack": "max pack",
     "prettier": "prettier --write './src/**/*.{js,jsx,ts,tsx}'",
-    "test": "umi test",
-    "version": "umi -v"
+    "test": "max test",
+    "version": "max -v"
   },
   "lint-staged": {
     "*.{js,jsx}": [
@@ -44,7 +44,7 @@
     "@sentry/react": "^7.120.3",
     "@sentry/tracing": "^7.120.3",
     "@umijs/plugin-openapi": "^1.3.3",
-    "@umijs/preset-react": "~1.8.32",
+    "@umijs/max": "^4.1.1",
     "ahooks": "^3.8.4",
     "antd": "^5.24.8",
     "bignumber.js": "^9.3.0",
@@ -69,7 +69,6 @@
     "react-sticky-mouse-tooltip": "0.0.1",
     "scroll-into-view": "^1.16.2",
     "sql-formatter": "^2.3.4",
-    "umi": "^3.5.43",
     "umi-request": "^1.4.0",
     "use-deep-compare-effect": "^1.8.1",
     "validator": "^13.15.0",
@@ -109,10 +108,10 @@
     "xlsx": "npm:xlsx@0.17.5"
   },
   "engines": {
-    "install-node": "v16.19.1",
-    "install-pnpm": "8.15.9",
-    "node": "<=16.20.2",
-    "pnpm": "<=8.15.9"
+    "install-node": "v20.18.0",
+    "install-pnpm": "9.15.0",
+    "node": ">=18.0.0",
+    "pnpm": ">=8.15.9"
   },
   "ci": {
     "type": "aci"

@@ -122,60 +122,33 @@ declare global {
     };
     global: {
       themeMode: 'light' | 'dark';
-      publicKey: string;
+      publicKey?: string;
       uiMode: string;
       // 后端返回的应用信息没有定义类型，需要手动指定
-      appInfo: Global.AppInfo;
-      systemInfo: API.SystemInfo;
-      showCredentialModal: boolean;
+      appInfo?: any;
+      systemInfo?: any;
+      showCredentialModal?: boolean;
+      showTenantAdminPasswordModal?: boolean;
       // 密码箱连接缺失或者连接失败对应的结构化信息
-      credentialErrorData: CredentialError;
+      credentialErrorData?: CredentialError;
+      tenantAdminPasswordErrorData?: any;
     };
     profile: {
       password?: string;
       publicKey?: string;
-      userData: API.AuthenticatedUser;
-    };
-    iam: {
-      userListData: {
-        page?: {
-          totalElements?: number;
-        };
-        contents?: API.User[];
-      };
+      userData?: any;
     };
     cluster: {
-      clusterData: API.ClusterInfo;
+      clusterData?: API.ClusterInfo;
+      clusterListData?: API.ClusterInfo[];
+      tenantListData?: any[];
+      zoneListData?: any[];
+      serverListData?: any[];
+      isSingleMachine?: boolean;
     };
     tenant: {
-      tenantData: API.TenantInfo;
-      unitSpecList: API.UnitSpec[];
-    };
-    obproxy: {
-      obproxyCluster: API.ObproxyCluster;
-    };
-    backup: {
-      storageConfigList: API.ObBackupServiceStorageConfig[];
-    };
-    alarm: {
-      channelListData?: {
-        page?: {
-          totalElements?: number;
-        };
-        contents?: API.OcpChannel[];
-      };
-    };
-    log: {
-      logData: any;
-    };
-    compute: {
-      hostTypeListData: API.PaginatedResponsePaginatedData_HostType_;
-      idcListData: API.PaginatedResponsePaginatedData_Idc_;
-      regionListData: API.PaginatedResponsePaginatedData_Region_;
-    };
-    report: {
-      collapsed: boolean;
-      siderWidth: number;
+      tenantData?: API.TenantInfo;
+      precheckResult?: any;
     };
   }
 }

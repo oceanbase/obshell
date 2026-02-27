@@ -1,5 +1,5 @@
+import { useSelector } from '@umijs/max';
 import { useMemo } from 'react';
-import { useSelector } from 'umi';
 
 const useUiMode = () => {
   const { uiMode } = useSelector((state: DefaultRootState) => state.global);

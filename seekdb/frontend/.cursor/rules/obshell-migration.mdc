@@ -49,7 +49,7 @@ import React, { useEffect, useRef, useState } from '@alipay/bigfish/react';
 import { debounce, filter, find } from '@alipay/bigfish/utils/lodash';
 
 // 迁移后
-import { history, useDispatch, useSelector } from 'umi';
+import { history, useDispatch, useSelector } from '@umijs/max';
 import React, { useEffect, useRef, useState } from 'react';
 import { debounce, filter, find } from 'lodash';
 ```

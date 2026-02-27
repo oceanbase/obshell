@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { getLocale } from 'umi';
+import { getLocale } from '@umijs/max';
 
 // 在应用挂载点后将 locale 信息以 script 标签的形式插入到报告中，以便下载的报告能以默认语言进行展示
 export const insertLocaleScript = (html: string) => {
