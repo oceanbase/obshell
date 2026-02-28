@@ -16,6 +16,7 @@
 
 import { AUTO_FRESH_ITEMS_TYPE } from '@/component/MonitorSearch/AutoFresh';
 import { formatMessage } from '@/util/intl';
+import { DateRanger } from '@oceanbase/ui';
 
 export const MAX_POINTS = 120;
 
@@ -217,3 +218,12 @@ export const Dimension = {
     },
   ],
 };
+
+export const DATE_RANGER_SELECTS = [
+  DateRanger.NEAR_30_MINUTES,
+  DateRanger.NEAR_1_HOURS,
+  DateRanger.NEAR_3_HOURS,
+  DateRanger.NEAR_6_HOURS,
+  DateRanger.LAST_1_DAY,
+  DateRanger.LAST_3_DAYS,
+]

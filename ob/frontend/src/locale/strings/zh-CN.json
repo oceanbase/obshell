@@ -1753,5 +1753,7 @@
   "OBShell.component.MonitorComp.EditMetrics.PleaseEnter": "请输入",
   "OBShell.component.MonitorComp.EditMetrics.SelectAll": "全选",
   "OBShell.component.MonitorComp.EditMetrics.ClearAll": "清除全部",
+  "OBShell.component.MonitorComp.GraphItem.ZoomIn": "放大查看",
+  "OBShell.component.MonitorComp.ZoomInModal.NoData": "暂无数据",
   "OBShell.Overview.ClusterInfo.DataDisk": "数据盘"
 }

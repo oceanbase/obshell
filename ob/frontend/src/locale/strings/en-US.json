@@ -1753,5 +1753,7 @@
   "OBShell.component.MonitorComp.EditMetrics.PleaseEnter": "Please enter",
   "OBShell.component.MonitorComp.EditMetrics.SelectAll": "Select All",
   "OBShell.component.MonitorComp.EditMetrics.ClearAll": "Clear All",
+  "OBShell.component.MonitorComp.GraphItem.ZoomIn": "Zoom In",
+  "OBShell.component.MonitorComp.ZoomInModal.NoData": "No data",
   "OBShell.Overview.ClusterInfo.DataDisk": "Data disk"
 }

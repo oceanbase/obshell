@@ -1,24 +1,32 @@
-import { DATE_TIME_FORMAT } from '@/constant/datetime';
-import { BASE_CHART_COLORS, EXTEND_CHART_COLORS, POINT_NUMBER } from '@/constant/monitor';
+import { DATE_TIME_FORMAT, DATE_TIME_FORMAT_DISPLAY } from '@/constant/datetime';
+import {
+  BASE_CHART_COLORS,
+  DATE_RANGER_SELECTS,
+  EXTEND_CHART_COLORS,
+  POINT_NUMBER,
+} from '@/constant/monitor';
 import { useColorMapping } from '@/hook/useColorMapping';
 import useRequestOfMonitor from '@/hook/useRequestOfMonitor';
 import { queryMetricsReq } from '@/service';
+import { formatMessage } from '@/util/intl';
 import { Line } from '@antv/g2plot';
-import { Empty, Spin } from '@oceanbase/design';
+import { Empty, Modal, Spin } from '@oceanbase/design';
+import { DateRanger } from '@oceanbase/ui';
 import { formatNumber } from '@oceanbase/util';
-import { useInViewport, useUpdateEffect } from 'ahooks';
+import { useUpdateEffect } from 'ahooks';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ChartLegend, { LegendDataProps } from './ChartLegend';
+import styles from './ZoomInModal.less';
 
-interface LineGraphProps {
-  id: string;
+interface ZoomInModalProps {
+  visible: boolean;
+  onCancel: () => void;
+  title: string;
   metrics: API.MetricMeta[];
   labels: Monitor.MetricsLabels;
   queryRange: API.QueryRange;
   groupLabels: Monitor.LabelKeys[];
-  height?: number;
-  isRefresh?: boolean;
   type?: Monitor.MonitorUseTarget;
   useFor: Monitor.MonitorUseFor;
   filterData?: any[];
@@ -26,29 +34,28 @@ interface LineGraphProps {
   activeDimension?: string;
 }
 
-export default function LineGraph({
-  id,
+const chartHeight = 400;
+
+const ZoomInModal: React.FC<ZoomInModalProps> = ({
+  visible,
+  onCancel,
+  title,
   metrics,
   labels,
   queryRange,
   groupLabels,
-  height = 110,
-  isRefresh = false,
   type = 'DETAIL',
   useFor,
   filterData,
   filterQueryMetric,
   activeDimension,
-}: LineGraphProps) {
+}) => {
+  const currentMoment = useRef(dayjs());
   const [isEmpty, setIsEmpty] = useState<boolean>(true);
-  const [isloading, setIsloading] = useState<boolean>(true);
-  const lineGraphRef = useRef(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const lineGraphRef = useRef<HTMLDivElement>(null);
   const lineInstanceRef = useRef<Line | null>(null);
-  const [inViewport] = useInViewport(lineGraphRef);
-  // The number of times to enter the visible area,
-  // only initiate a network request when entering the visible area for the first time
-  const [inViewportCount, setInViewportCount] = useState<number>(0);
-  const lastRequestRef = useRef<string>('');
+  const isInitialOpenRef = useRef<boolean>(false);
 
   // 隐藏的图例列表
   const [hiddenLegends, setHiddenLegends] = useState<string[]>([]);
@@ -57,56 +64,42 @@ export default function LineGraph({
   // 原始图表数据（未过滤隐藏图例）
   const [originalChartData, setOriginalChartData] = useState<any[]>([]);
 
+  // 弹窗内部的时间范围状态
+  const [modalQueryRange, setModalQueryRange] = useState<API.QueryRange>(queryRange);
+
+  // 用于 DateRanger 的受控值
+  const dateRangerValue = useMemo(() => {
+    if (modalQueryRange.start_timestamp && modalQueryRange.end_timestamp) {
+      // queryRange 中的时间戳是秒级的，需要转换为毫秒级
+      return [
+        dayjs(modalQueryRange.start_timestamp * 1000),
+        dayjs(modalQueryRange.end_timestamp * 1000),
+      ];
+    }
+    return undefined;
+  }, [modalQueryRange.start_timestamp, modalQueryRange.end_timestamp]);
+
   // 获取所有指标名称用于颜色映射，使用 useMemo 避免每次渲染都创建新数组
   const metricsName = useMemo(
     () => Array.from(new Set(originalChartData.map(item => item.name))),
     [originalChartData]
   );
-  const colorMapping = useColorMapping(metricsName);
 
-  /**
-   * The overview page only displays the first metrics
-   * and passes empty labels to obtain all clusters/tenants.
-   *
-   * The details page displays all metrics and filters by labels.
-   *
-   * The tenant page in the cluster details needs labels to filter out which cluster the tenant is in.
-   */
+  // 使用 hook 生成颜色映射，基于实际数据的指标
+  const internalColorMapping = useColorMapping(metricsName);
+
   const getQueryParams = () => {
     return {
       group_labels: groupLabels,
-      labels: type === 'OVERVIEW' ? [] : labels, // If empty, query all clusters
+      labels: type === 'OVERVIEW' ? [] : labels,
       type,
       metrics,
-      query_range: queryRange,
+      query_range: modalQueryRange, // 使用弹窗内部的时间范围
       useFor,
       filterData,
       filterQueryMetric,
       activeDimension,
     };
-  };
-
-  // 防重复请求的函数
-  const safeQueryMetrics = () => {
-    const params = getQueryParams();
-    // 生成请求唯一标识，基于实际参数
-    const requestKey = JSON.stringify({
-      labels: params.labels,
-      query_range: params.query_range,
-      metrics: params.metrics,
-      type: params.type,
-      group_labels: params.group_labels,
-      filterQueryMetric: params.filterQueryMetric,
-      isRefresh,
-      inViewport,
-    });
-
-    if (lastRequestRef.current === requestKey) {
-      return;
-    }
-
-    lastRequestRef.current = requestKey;
-    queryMetrics(params);
   };
 
   const lineInstanceRender = (metricsData: any, isLegendToggle = false) => {
@@ -118,11 +111,6 @@ export default function LineGraph({
     // 时间范围是否跨天
     const isCrossDay = dayjs(maxTimestamp).diff(dayjs(minTimestamp), 'day') > 0;
 
-    const values: number[] = [];
-    for (const metric of sortedMetricsData) {
-      values.push(metric.value);
-    }
-
     // 过滤掉隐藏的图例数据
     const filterLegendsData = sortedMetricsData.filter(item => !hiddenLegends.includes(item.name));
 
@@ -130,7 +118,7 @@ export default function LineGraph({
     const uniqueNames = Array.from(new Set(sortedMetricsData.map(item => item.name)));
     const legendCount = uniqueNames.length;
     // 图例超过5个时才启用滚动
-    const needScroll = legendCount > 5;
+    const needScroll = legendCount > 17;
 
     // 根据当前数据计算颜色映射（确保首次渲染就有正确的颜色）
     const chartColors = legendCount > 10 ? EXTEND_CHART_COLORS : BASE_CHART_COLORS;
@@ -143,7 +131,7 @@ export default function LineGraph({
       data: filterLegendsData,
       xField: 'date',
       yField: 'value',
-      height: height,
+      height: chartHeight,
       seriesField: 'name',
       color: (datum: any) => currentColorMapping[datum.name] || '#3D88F2',
       legend: false, // 始终隐藏 G2Plot 自带的图例
@@ -167,14 +155,14 @@ export default function LineGraph({
         domStyles: needScroll
           ? {
               'g2-tooltip': {
-                maxHeight: '100px',
+                maxHeight: '450px',
                 overflowY: 'auto',
                 overflowX: 'hidden',
                 marginTop: '12px',
               },
             }
           : undefined,
-        // 设置tooltip偏移量,让它离鼠标远一点,方便左右滑动查看数据
+        // 设置tooltip偏移量
         offset: needScroll ? 40 : 0,
         // 优化显示效果
         showCrosshairs: true,
@@ -183,7 +171,7 @@ export default function LineGraph({
         enterable: needScroll,
       } as any,
       interactions: [{ type: 'marker-active' }],
-      animation: isLegendToggle ? false : undefined, // 图例切换时禁用动画
+      animation: isLegendToggle ? false : undefined,
     };
 
     // 确保 DOM 元素已挂载
@@ -211,13 +199,13 @@ export default function LineGraph({
   const lineInstanceDestroy = () => {
     lineInstanceRef.current?.destroy();
     lineInstanceRef.current = null;
-    if (isloading) setIsloading(false);
+    if (isLoading) setIsLoading(false);
     if (!isEmpty) setIsEmpty(true);
   };
 
-  // filter metricsData
+  // 获取监控数据
   const { data: metricsData, run: queryMetrics } = useRequestOfMonitor(queryMetricsReq, {
-    isRealTime: isRefresh,
+    isRealTime: false,
     manual: true,
     onSuccess: (metricsData: any) => {
       if (!metricsData || !metricsData.length) {
@@ -227,7 +215,7 @@ export default function LineGraph({
 
       if (metricsData && metricsData.length > 0) {
         setIsEmpty(false);
-        setIsloading(false);
+        setIsLoading(false);
 
         // 按时间戳排序数据
         const sortedMetricsData = [...metricsData].sort((a, b) => a.date - b.date);
@@ -265,8 +253,6 @@ export default function LineGraph({
           {}
         );
         setLegendData(newLegendData);
-
-        lineInstanceRender(metricsData);
       } else {
         lineInstanceDestroy();
       }
@@ -276,64 +262,51 @@ export default function LineGraph({
     },
   });
 
+  // 当数据准备好且 DOM 已挂载时，渲染图表
+  useEffect(() => {
+    if (originalChartData.length > 0 && lineGraphRef.current && !isEmpty) {
+      lineInstanceRender(originalChartData);
+    }
+  }, [originalChartData, isEmpty]);
+
   useUpdateEffect(() => {
     if (!isEmpty && metricsData) {
-      lineInstanceRender(metricsData, true); // 传入 true 表示是图例切换
+      lineInstanceRender(metricsData, true);
     }
   }, [hiddenLegends]);
 
-  useUpdateEffect(() => {
-    if (inViewport) {
-      setInViewportCount(inViewportCount + 1);
-      // 图表进入可视区域时请求数据
-      safeQueryMetrics();
-    }
-  }, [inViewport]);
-
-  // 当ID变化时，重新检查视口状态
-  useUpdateEffect(() => {
-    if (inViewport && inViewportCount === 0) {
-      setInViewportCount(1);
-    }
-  }, [id, inViewport]);
-
-  // Process after turning on real-time mode
-  useUpdateEffect(() => {
-    if (!isRefresh) {
-      if (inViewport) {
-        safeQueryMetrics();
-      } else if (inViewportCount >= 1) {
-        setInViewportCount(0);
-      }
+  // 当弹窗打开时请求数据
+  useEffect(() => {
+    if (visible) {
+      // 弹窗打开时，重置为外部传入的时间范围
+      isInitialOpenRef.current = true;
+      setIsLoading(true);
+      setIsEmpty(true);
+      setModalQueryRange(queryRange);
     } else {
-      // 自动刷新模式下，只有在可视区域内才发送请求
-      if (inViewport) {
-        safeQueryMetrics();
-      }
-    }
-  }, [labels, queryRange, groupLabels, filterQueryMetric, metrics]);
-
-  // 监听ID变化，当tab切换导致ID变化时，重新初始化图表
-  useUpdateEffect(() => {
-    if (lineInstanceRef.current) {
+      // 弹窗关闭时重置状态
+      setHiddenLegends([]);
+      setOriginalChartData([]);
       lineInstanceDestroy();
     }
-    // 重置inViewportCount，确保新tab能触发数据查询
-    setInViewportCount(0);
-    // 立即触发数据查询，不等待视口检测
-    safeQueryMetrics();
-  }, [id]);
+  }, [visible]);
 
-  // 组件卸载时清理图表实例
+  // 当弹窗打开且 modalQueryRange 变化时，请求数据
+  useUpdateEffect(() => {
+    if (visible) {
+      // 只有非初次打开时才需要重新查询（初次打开由下面的 effect 处理）
+      if (!isInitialOpenRef.current) {
+        setIsLoading(true);
+      }
+      queryMetrics(getQueryParams());
+      isInitialOpenRef.current = false;
+    }
+  }, [modalQueryRange]);
+
+  // 组件卸载时清理
   useEffect(() => {
     return () => {
-      if (lineInstanceRef.current) {
-        lineInstanceDestroy();
-      }
-      // 重置状态
-      setInViewportCount(0);
-      setIsEmpty(true);
-      setIsloading(true);
+      lineInstanceDestroy();
     };
   }, []);
 
@@ -344,27 +317,75 @@ export default function LineGraph({
     );
   };
 
+  // DateRanger 变化时更新时间范围
+  const handleDateRangerChange = (dates: any) => {
+    if (dates && Array.isArray(dates) && dates.length === 2) {
+      const [start, end] = dates;
+      if (start && end) {
+        setModalQueryRange({
+          start_timestamp: Math.floor(start.valueOf() / 1000), // 转换为秒级时间戳
+          end_timestamp: Math.floor(end.valueOf() / 1000), // 转换为秒级时间戳
+          step: modalQueryRange.step,
+        });
+      }
+    }
+  };
+
   return (
-    <div>
-      <Spin spinning={isloading}>
-        {isEmpty ? (
-          <div ref={lineGraphRef}>
-            <Empty
-              style={{
-                height: height + 110,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
+    <Modal
+      width="85vw"
+      title={<div className={styles.modalTitle}>{title}</div>}
+      open={visible}
+      destroyOnClose={true}
+      footer={null}
+      onCancel={() => {
+        onCancel?.();
+      }}
+    >
+      <Spin spinning={isLoading}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
+          <div className={styles.dateRangerWrapper}>
+            <DateRanger
+              isMoment={false}
+              selects={DATE_RANGER_SELECTS}
+              hasRewind={true}
+              hasForward={true}
+              hasSync={true}
+              allowClear={false}
+              value={dateRangerValue as any}
+              disabledDate={date => date.isAfter(currentMoment?.current)}
+              format={DATE_TIME_FORMAT_DISPLAY}
+              onChange={handleDateRangerChange}
             />
           </div>
+        </div>
+        {isEmpty ? (
+          <Empty
+            description={formatMessage({
+              id: 'OBShell.component.MonitorComp.ZoomInModal.NoData',
+              defaultMessage: '暂无数据',
+            })}
+            style={{
+              height: chartHeight + 110,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
         ) : (
           <>
-            <div style={{ height: 'auto' }} ref={lineGraphRef}></div>
+            <div style={{ height: chartHeight, minHeight: chartHeight }} ref={lineGraphRef}></div>
             {/* 自定义图例区域 */}
             <ChartLegend
-              colorMapping={colorMapping}
+              colorMapping={internalColorMapping}
               metricsName={metricsName}
               chartData={originalChartData}
               legendData={legendData}
@@ -374,6 +395,8 @@ export default function LineGraph({
           </>
         )}
       </Spin>
-    </div>
+    </Modal>
   );
-}
+};
+
+export default ZoomInModal;

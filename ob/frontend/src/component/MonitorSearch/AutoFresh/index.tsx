@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 import { toString } from 'lodash';
 import React, { useEffect, useState } from 'react';
 
-import { AUTO_FRESH_ITEMS } from '@/constant/monitor';
+import { AUTO_FRESH_ITEMS, DATE_RANGER_SELECTS } from '@/constant/monitor';
 import styles from './index.less';
 
 const FormItem = Form.Item;
@@ -83,9 +83,9 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
               {isRealtime
                 ? frequencyItem?.label
                 : formatMessage({
-                  id: 'OBShell.MonitorSearch.AutoFresh.Close',
-                  defaultMessage: '关闭',
-                })}
+                    id: 'OBShell.MonitorSearch.AutoFresh.Close',
+                    defaultMessage: '关闭',
+                  })}
               <DownOutlined />
             </Space>
           </Button>,
@@ -133,14 +133,7 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
         <Form form={form}>
           <FormItem name="range" style={{ width: '470px', marginRight: 0, marginBottom: 0 }}>
             <DateRanger
-              selects={[
-                DateRanger.NEAR_30_MINUTES,
-                DateRanger.NEAR_1_HOURS,
-                DateRanger.NEAR_3_HOURS,
-                DateRanger.NEAR_6_HOURS,
-                DateRanger.LAST_1_DAY,
-                DateRanger.LAST_3_DAYS,
-              ]}
+              selects={DATE_RANGER_SELECTS}
               hasRewind={false}
               hasForward={false}
               hasSync={false}

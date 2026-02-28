@@ -1,10 +1,13 @@
-import { Card, theme } from '@oceanbase/design';
+import { formatMessage } from '@/util/intl';
+import { Card, theme, Tooltip } from '@oceanbase/design';
+import { FullscreenOutlined } from '@oceanbase/icons';
 import { find, isEmpty } from 'lodash';
 import React, { useState } from 'react';
 import IconTip from '../IconTip';
 import EditMetrics from './EditMetrics';
 import styles from './index.less';
 import LineGraph from './LineGraph';
+import ZoomInModal from './ZoomInModal';
 
 interface GraphItemProps {
   graphContainer: API.MetricGroup;
@@ -64,6 +67,8 @@ const GraphItem: React.FC<GraphItemProps> = ({
 
   // 管理当前显示的指标
   const [metrics, setMetrics] = useState(graphContainer.metrics);
+  // 放大查看弹窗的显示状态
+  const [zoomVisible, setZoomVisible] = useState(false);
 
   const graphTitle = generateGraphTitle(graphContainer, type);
   const graphId = generateGraphId(activeTabKey, graphContainer.name);
@@ -72,41 +77,71 @@ const GraphItem: React.FC<GraphItemProps> = ({
   const metricsName = metrics.map(item => item.name as string);
 
   return (
-    <Card
-      className={styles.monitorItem}
-      key={graphIdx}
-      styles={{
-        body: {
-          padding: 16,
-        },
-      }}
-    >
-      <div className={styles.graphHeader}>
-        <IconTip
-          tip={graphContainer.description}
-          iconProps={{ style: { color: token.colorTextSecondary } }}
-          content={<span className={styles.graphHeaderText}>{graphTitle}</span>}
-        />
-        {!isEmpty(graphContainer.metrics) && (
-          <EditMetrics
-            key={graphId}
-            groupMetrics={graphContainer.metrics}
-            initialKeys={metricsName}
-            onOk={selectedMetrics => {
-              const newMetrics = selectedMetrics.map(item => {
-                return find(graphContainer.metrics, metric => metric.name === item)!;
-              });
-              setMetrics(newMetrics);
-            }}
+    <>
+      <Card
+        className={styles.monitorItem}
+        key={graphIdx}
+        styles={{
+          body: {
+            padding: 16,
+          },
+        }}
+      >
+        <div className={styles.graphHeader}>
+          <IconTip
+            tip={graphContainer.description}
+            iconProps={{ style: { color: token.colorTextSecondary } }}
+            content={<span className={styles.graphHeaderText}>{graphTitle}</span>}
           />
-        )}
-      </div>
-      <LineGraph
-        id={graphId}
-        isRefresh={isRefresh}
-        queryRange={queryRange}
+          <div className={styles.graphHeaderActions}>
+            {!isEmpty(graphContainer.metrics) && (
+              <EditMetrics
+                key={graphId}
+                groupMetrics={graphContainer.metrics}
+                initialKeys={metricsName}
+                onOk={selectedMetrics => {
+                  const newMetrics = selectedMetrics.map(item => {
+                    return find(graphContainer.metrics, metric => metric.name === item)!;
+                  });
+                  setMetrics(newMetrics);
+                }}
+              />
+            )}
+            <Tooltip
+              title={formatMessage({
+                id: 'OBShell.component.MonitorComp.GraphItem.ZoomIn',
+                defaultMessage: '放大查看',
+              })}
+            >
+              <FullscreenOutlined
+                onClick={() => setZoomVisible(true)}
+                className={styles.zoomIcon}
+              />
+            </Tooltip>
+          </div>
+        </div>
+        <LineGraph
+          id={graphId}
+          isRefresh={isRefresh}
+          queryRange={queryRange}
+          metrics={metrics}
+          labels={filterLabel}
+          groupLabels={dynamicGroupLabels}
+          type={type}
+          useFor={useFor}
+          filterData={filterData}
+          filterQueryMetric={filterQueryMetric}
+          activeDimension={activeDimension}
+        />
+      </Card>
+
+      <ZoomInModal
+        visible={zoomVisible}
+        onCancel={() => setZoomVisible(false)}
+        title={graphTitle}
         metrics={metrics}
         labels={filterLabel}
+        queryRange={queryRange}
         groupLabels={dynamicGroupLabels}
         type={type}
         useFor={useFor}
@@ -114,7 +149,7 @@ const GraphItem: React.FC<GraphItemProps> = ({
         filterQueryMetric={filterQueryMetric}
         activeDimension={activeDimension}
       />
-    </Card>
+    </>
   );
 };
 
