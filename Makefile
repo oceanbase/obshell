@@ -41,7 +41,7 @@ build-with-swagger: enable-swagger build-release
 build-for-test: pre-build enable-swagger set-disable-encryption-flags build-debug
 
 frontend-dep:
-	npm i -g pnpm@7
+	npm i -g pnpm@8
 
 seekdb-frontend-build:
 	cd seekdb/frontend && pnpm i && pnpm build && cd ../
