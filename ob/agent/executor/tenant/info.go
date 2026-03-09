@@ -80,11 +80,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	// Optimization: Batch get all tenant variables in one query instead of multiple separate queries
 	// This reduces database round trips from 5 queries (with subqueries) to 1 query
 	variableNames := []string{
-		"ob_tcp_invited_nodes",
+		constant.VARIABLE_OB_TCP_INVITED_NODES,
 		constant.VARIABLE_READ_ONLY,
 		constant.VARIABLE_LOWER_CASE_TABLE_NAMES,
 		constant.VARIABLE_TIME_ZONE,
-		"CHARACTER_SET_SERVER",
+		constant.VARIABLE_CHARACTER_SET_SERVER,
 	}
 	variablesMap, err := tenantService.GetTenantVariablesByNames(tenantName, variableNames)
 	if err != nil {
@@ -92,11 +92,11 @@ func GetTenantInfo(tenantName string) (*bo.TenantInfo, error) {
 	}
 
 	// Extract variables from map
-	whitelist := variablesMap["ob_tcp_invited_nodes"]
+	whitelist := variablesMap[constant.VARIABLE_OB_TCP_INVITED_NODES]
 	readOnly := variablesMap[constant.VARIABLE_READ_ONLY]
 	lowerCaseTableNames := variablesMap[constant.VARIABLE_LOWER_CASE_TABLE_NAMES]
 	timeZone := variablesMap[constant.VARIABLE_TIME_ZONE]
-	charset := variablesMap["CHARACTER_SET_SERVER"]
+	charset := variablesMap[constant.VARIABLE_CHARACTER_SET_SERVER]
 
 	pools := make([]*bo.ResourcePoolWithUnit, 0)
 	poolInfos, err := tenantService.GetTenantResourcePool(tenant.TenantID)
