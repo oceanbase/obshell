@@ -17,8 +17,6 @@
 package agent
 
 import (
-	"time"
-
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
@@ -159,7 +157,7 @@ func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB, oceanbaseTx *gorm.DB
 	if err != nil {
 		return err
 	}
-	if err := s.updateOBConfig(sqliteTx, constant.CONFIG_CREATED_TIME, observer.CreateTime.Format(time.RFC3339)); err != nil {
+	if err := s.updateOBConfig(sqliteTx, constant.CONFIG_CREATED_TIME, observer.CreateTime); err != nil {
 		return err
 	}
 	if err := s.updateObserverObVersion(sqliteTx, obVersion); err != nil {

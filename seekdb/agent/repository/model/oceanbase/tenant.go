@@ -36,8 +36,8 @@ type GvObParameter struct {
 	EditLevel string `gorm:"column:EDIT_LEVEL" json:"edit_level"`
 }
 
+// ObServerResource maps to oceanbase.V$OB_SERVER_STAT (replaces GV$OB_SERVERS)
 type ObServerResource struct {
-	Zone             string  `gorm:"column:ZONE"`
 	SvrIp            string  `gorm:"column:SVR_IP"`
 	SvrPort          int     `gorm:"column:SVR_PORT"`
 	SqlPort          int     `gorm:"column:SQL_PORT"`
@@ -55,7 +55,7 @@ type ObServerResource struct {
 }
 
 func (ObServerResource) TableName() string {
-	return "oceanbase.GV$OB_SERVERS"
+	return "oceanbase.V$OB_SERVER_STAT"
 }
 
 type CdbObMajorCompaction struct {

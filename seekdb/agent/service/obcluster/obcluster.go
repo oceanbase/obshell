@@ -18,7 +18,6 @@ package obcluster
 
 import (
 	"encoding/hex"
-	"fmt"
 	"mime/multipart"
 	"os"
 	"strings"
@@ -38,12 +37,6 @@ func (obclusterService *ObclusterService) ExecuteSql(sql string) (err error) {
 		return err
 	}
 	return oceanbaseDb.Exec(sql).Error
-}
-
-// setSessionObQueryTimeout sets the session-level query timeout for an OceanBase database session.
-// The `time` parameter specifies the timeout duration in microseconds(us).
-func (obclusterService *ObclusterService) setSessionObQueryTimeout(db *gorm.DB, time int) (err error) {
-	return db.Exec(fmt.Sprintf("SET SESSION ob_query_timeout=%d", time)).Error
 }
 
 func (ObclusterService *ObclusterService) GetServerCheckpointScn() (uint64, error) {
@@ -129,7 +122,7 @@ func (obclusterService *ObclusterService) GetOBServer() (observer *oceanbase.OBS
 	if err != nil {
 		return
 	}
-	err = oceanbaseDb.Table(DBA_OB_SERVERS).Scan(&observer).Error
+	err = oceanbaseDb.Table(V_OB_SERVER_STAT).Select("SVR_IP, SQL_PORT, usec_to_time(START_SERVICE_TIME) AS START_SERVICE_TIME, CREATE_TIME").Scan(&observer).Error
 	return
 }
 
@@ -258,7 +251,7 @@ func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []str
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Raw("SELECT SVR_IP, SVR_PORT, ZONE, SCOPE, TENANT_ID, NAME, VALUE FROM oceanbase.GV$OB_PARAMETERS WHERE NAME IN ?", params).Find(&res).Error
+	err = oceanbaseDb.Raw("SELECT SVR_IP, SVR_PORT, ZONE, SCOPE, NAME, VALUE FROM oceanbase.GV$OB_PARAMETERS WHERE NAME IN ?", params).Find(&res).Error
 	if err != nil {
 		return
 	}
@@ -304,6 +297,6 @@ func (ObclusterService) GetObserverResource() (resource *oceanbase.ObServerResou
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(GV_OB_SERVERS).Scan(&resource).Error
+	err = db.Table(V_OB_SERVER_STAT).Scan(&resource).Error
 	return
 }

@@ -115,10 +115,12 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 
 	if observer != nil {
 		info.Port = observer.SqlPort
-		info.InnerStatus = observer.Status
+		info.InnerStatus = "ACTIVE"
 		info.StartTime = &observer.StartServiceTime
-		info.CreatedTime = &observer.CreateTime
 		info.LifeTime = time.Since(observer.StartServiceTime).String()
+		if createTime, err := parse.ParseOBDateTime(observer.CreateTime); err == nil {
+			info.CreatedTime = &createTime
+		}
 	} else {
 		err = agentService.GetObConfig(constant.CONFIG_MYSQL_PORT, &info.Port)
 		if err != nil {

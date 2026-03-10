@@ -21,7 +21,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 )
@@ -146,7 +145,7 @@ func (s *TenantService) GetCompaction() (compaction *oceanbase.CdbObMajorCompact
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Where("tenant_id = ?", constant.TENANT_SYS_ID).Scan(&compaction).Error
+	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Scan(&compaction).Error
 	return
 }
 

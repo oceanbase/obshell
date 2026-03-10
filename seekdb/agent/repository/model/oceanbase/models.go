@@ -16,9 +16,7 @@
 
 package oceanbase
 
-import (
-	"time"
-)
+import "time"
 
 type ObParameters struct {
 	SvrIp        string `gorm:"column:SVR_IP"`
@@ -38,18 +36,15 @@ func (ObParameters) TableName() string {
 	return "oceanbase.GV$OB_PARAMETERS"
 }
 
+// OBServer maps to oceanbase.V$OB_SERVER_STAT (replaces DBA_OB_SERVERS / GV$OB_SERVERS).
+// Query uses usec_to_time(START_SERVICE_TIME) so both are datetime strings from DB.
 type OBServer struct {
-	Id                 int64     `gorm:"column:ID"`
-	SvrIp              string    `gorm:"column:SVR_IP"`
-	SqlPort            int       `gorm:"column:SQL_PORT"`
-	StopTime           time.Time `gorm:"column:STOP_TIME"`
-	StartServiceTime   time.Time `gorm:"column:START_SERVICE_TIME"`
-	CreateTime         time.Time `gorm:"column:CREATE_TIME"`
-	Status             string    `gorm:"column:STATUS"`
-	BuildVersion       string    `gorm:"column:BUILD_VERSION"`
-	BlockMigrateInTime time.Time `gorm:"column:BLOCK_MIGRATE_IN_TIME"`
+	SvrIp            string    `gorm:"column:SVR_IP"`
+	SqlPort          int       `gorm:"column:SQL_PORT"`
+	StartServiceTime time.Time `gorm:"column:START_SERVICE_TIME"`
+	CreateTime       string    `gorm:"column:CREATE_TIME"`
 }
 
 func (OBServer) TableName() string {
-	return "oceanbase.DBA_OB_SERVERS"
+	return "oceanbase.V$OB_SERVER_STAT"
 }

@@ -18,7 +18,6 @@ package observer
 
 import (
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/oceanbase/obshell/seekdb/agent/config"
@@ -80,10 +79,9 @@ func GetStatisticsInfo() *bo.ObclusterStatisticInfo {
 		info.Instances.LogDiskSize = parse.FormatCapacity(observerResource.LogDiskCapacity)
 	}
 
-	item := strings.Split(observer.BuildVersion, "-")
-	if len(item) > 1 {
-		info.Instances.Version = item[0]
-		info.Instances.Revision = item[1]
+	// V$OB_SERVER_STAT has no BUILD_VERSION; get version from cluster
+	if obVersion, err := obclusterService.GetObVersion(); err == nil {
+		info.Instances.Version = obVersion
 	}
 	return info
 }

@@ -70,7 +70,7 @@ func handleInfoIp() {
 	}
 
 	if obHasStarted, err := observer.HasStarted(); obHasStarted {
-		if ip, _ = observer.GetConfFromObConfFile(); ip != "" {
+		if ip, _ = observer.GetConfFromObMeta(); ip != "" {
 			return
 		}
 		if err != nil {

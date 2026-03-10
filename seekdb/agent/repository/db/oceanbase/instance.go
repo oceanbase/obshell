@@ -63,7 +63,7 @@ func GetRestrictedInstance() (db *gorm.DB, err error) {
 
 func checkObAvailable() (bool, error) {
 	var count int = 0
-	err := dbInstance.Raw("select count(*) from oceanbase.GV$OB_SERVER_SCHEMA_INFO where (svr_ip, svr_port) in (select svr_ip, svr_port from oceanbase.GV$OB_LOG_STAT where tenant_id = 1 and role = 'LEADER') and tenant_id = 1 and refreshed_schema_version = received_schema_version").Scan(&count).Error
+	err := dbInstance.Raw("select count(*) from oceanbase.GV$OB_SERVER_SCHEMA_INFO where refreshed_schema_version = received_schema_version").Scan(&count).Error
 	if err != nil {
 		return false, err
 	}

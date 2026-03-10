@@ -17,9 +17,11 @@
 package parse
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 )
@@ -64,4 +66,23 @@ func TimeParse(input string) (int, error) {
 	default:
 		return 0, errors.Occur(errors.ErrCommonInvalidTimeDuration, input, "invalid time unit")
 	}
+}
+
+// ParseOBDateTime parses datetime strings returned by OceanBase (e.g. V$OB_SERVER_STAT),
+// such as "2006-01-02 15:04:05.000000" or "2006-01-02 15:04:05".
+// Returns zero time and nil error for empty string.
+func ParseOBDateTime(s string) (time.Time, error) {
+	if s == "" {
+		return time.Time{}, nil
+	}
+	for _, layout := range []string{
+		"2006-01-02 15:04:05.000000",
+		"2006-01-02 15:04:05",
+		time.RFC3339,
+	} {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("invalid ob datetime: %s", s)
 }

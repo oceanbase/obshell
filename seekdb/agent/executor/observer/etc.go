@@ -17,16 +17,16 @@
 package observer
 
 import (
-	"bufio"
-	"fmt"
 	"os"
-	"regexp"
 	"strconv"
+	"strings"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
-	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
 )
 
@@ -37,9 +37,11 @@ const (
 	ETC_KEY_ALL_SERVER_LIST = "all_server_list"
 )
 
+// isFirstStart returns true when seekdb has not been started (no meta.db yet).
+// Seekdb stores config in ./etc/meta.db table __all_sys_parameter, not in seekdb.config.bin.
 func isFirstStart() (bool, error) {
-	filePath := path.ObConfigPath()
-	if _, err := os.Stat(filePath); err == nil {
+	metaPath := path.MetaDbPath()
+	if _, err := os.Stat(metaPath); err == nil {
 		return false, nil
 	} else if os.IsNotExist(err) {
 		return true, nil
@@ -53,25 +55,35 @@ func HasStarted() (bool, error) {
 	return !isFirstStart, err
 }
 
-func LoadOBConfigFromConfigFile() (err error) {
-	// Load ob port from $homepath/etc/seekdb.config.bin.
-	log.Info("load ob config from config file")
-	filePath := path.ObConfigPath()
-
-	file, err := os.Open(filePath)
+// getParamFromMetaDb reads a parameter value by name from meta.db __all_sys_parameter.
+// Returns empty string and false if meta.db does not exist or the name is not found.
+func getParamFromMetaDb(name string) (string, bool) {
+	metaPath := path.MetaDbPath()
+	db, err := gorm.Open(sqlite.Open(metaPath), &gorm.Config{})
 	if err != nil {
-		return errors.Wrapf(err, "read file %s", filePath)
+		log.WithError(err).Errorf("open meta.db failed: %s", metaPath)
+		return "", false
 	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	if err := scanner.Err(); err != nil {
-		return errors.Wrap(err, "read file failed")
+	sqlDb, err := db.DB()
+	if err != nil {
+		return "", false
 	}
+	defer sqlDb.Close()
 
-	ip, mysqlPort := GetConfFromObConfFile()
+	var value string
+	err = db.Table(constant.OB_SYS_PARAMETER_TABLE).Where("name = ?", name).Select("value").Limit(1).Scan(&value).Error
+	if err != nil || value == "" {
+		return "", false
+	}
+	return value, true
+}
+
+func LoadOBConfigFromConfigFile() (err error) {
+	// Load ob config from ./etc/meta.db table __all_sys_parameter (seekdb does not use seekdb.config.bin).
+	log.Info("load ob config from meta.db __all_sys_parameter")
+	ip, mysqlPort := GetConfFromObMeta()
 	if mysqlPort == 0 {
-		log.Info("load ob config from config file without mysql port, use default mysql port")
+		log.Info("load ob config without mysql port, use default mysql port")
 		mysqlPort = constant.DEFAULT_MYSQL_PORT
 	}
 	if err = agentService.UpdateAgentIP(ip); err != nil {
@@ -80,45 +92,19 @@ func LoadOBConfigFromConfigFile() (err error) {
 	return agentService.UpdatePort(mysqlPort)
 }
 
-func GetConfFromObConfFile() (ip string, mysqlPort int) {
-	f := path.ObConfigPath()
-	log.Info("get conf from ob conf file ", f)
-	file, err := os.Open(f)
-	if err != nil {
-		return
-	}
-	defer file.Close()
+// GetConfFromObMeta reads mysql_port and local_ip from ./etc/meta.db __all_sys_parameter.
+// If meta.db or a parameter is missing, returns constant.LOCAL_IP and 0 for port.
+func GetConfFromObMeta() (ip string, mysqlPort int) {
+	metaPath := path.MetaDbPath()
+	log.Infof("get conf from meta.db %s table %s", metaPath, constant.OB_SYS_PARAMETER_TABLE)
 
-	scanner := bufio.NewScanner(file)
-	if err = scanner.Err(); err != nil {
-		return
-	}
-	re := regexp.MustCompile("\x00*([_a-zA-Z0-9]+)=(.*)")
-
-	var useIPv6 bool
-	for scanner.Scan() {
-		if ip != "" && mysqlPort != 0 {
-			break
-		}
-		line := scanner.Text()
-		match := re.FindStringSubmatch(line)
-
-		fmt.Println(match)
-		if len(match) != 3 {
-			continue
-		}
-
-		switch match[1] {
-		case ETC_KEY_USE_IPV6:
-			useIPv6, _ = strconv.ParseBool(match[2])
-		case ETC_KEY_MYSQL_PORT:
-			mysqlPort, _ = strconv.Atoi(match[2])
-		}
+	if v, ok := getParamFromMetaDb(ETC_KEY_MYSQL_PORT); ok {
+		mysqlPort, _ = strconv.Atoi(v)
 	}
 	ip = constant.LOCAL_IP
-	if useIPv6 {
+	if useIPv6, ok := getParamFromMetaDb(ETC_KEY_USE_IPV6); ok && (useIPv6 == "1" || strings.ToLower(useIPv6) == "true") {
 		ip = constant.LOCAL_IP_V6
 	}
-	log.Infof("get conf from ob conf file, ip: %s, mysqlPort: %d", ip, mysqlPort)
+	log.Infof("get conf from meta.db, ip: %s, mysqlPort: %d", ip, mysqlPort)
 	return
 }
