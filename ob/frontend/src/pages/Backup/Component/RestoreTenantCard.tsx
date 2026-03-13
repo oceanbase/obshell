@@ -1,24 +1,22 @@
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import FormPrimaryZone from '@/component/FormPrimaryZone';
-import ZonesFormItem from '@/component/ZonesFormItem';
 import MyInput from '@/component/MyInput';
 import PageLoading from '@/component/PageLoading';
+import ZonesFormItem from '@/component/ZonesFormItem';
 import { NAME_RULE } from '@/constant';
+import { getUnitConfigLimit, obclusterInfo } from '@/service/obshell/obcluster';
 import { formatMessage } from '@/util/intl';
-import { obclusterInfo, getUnitConfigLimit } from '@/service/obshell/obcluster';
 import { getMinServerCount } from '@/util/tenant';
-import React, { forwardRef, useEffect } from 'react';
-import { uniqueId } from 'lodash';
 import { Card, Col, Form, InputNumber, Row } from '@oceanbase/design';
 import type { FormInstance } from '@oceanbase/design/es/form';
 import { useRequest } from 'ahooks';
+import { uniqueId } from 'lodash';
+import React, { forwardRef, useEffect } from 'react';
 
 export interface RestoreTenantCardProps {
   form: FormInstance;
   title?: string;
   strategyData?: API.OcpBackupSamplingInspectConfig;
-  // 源集群的构建版本号
-  minObBuildVersion?: string;
   useType?: string;
 }
 

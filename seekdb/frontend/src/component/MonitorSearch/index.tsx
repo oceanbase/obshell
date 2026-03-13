@@ -5,7 +5,7 @@ import type { MonitorScope } from '@/pages/Monitor';
 import { formatMessage } from '@/util/intl';
 import { Card, Form } from '@oceanbase/design';
 import { isNullValue, toBoolean } from '@oceanbase/util';
-import { history } from '@umijs/max';
+import { history, useLocation, useSearchParams } from '@umijs/max';
 import { useGetState, useUpdate } from 'ahooks';
 import { groupBy, isEqual, omitBy, toNumber } from 'lodash';
 import moment from 'moment';
@@ -48,10 +48,6 @@ export interface MonitorServer {
 }
 
 interface MonitorSearchProps {
-  location?: {
-    pathname?: string;
-    query?: MonitorSearchQuery;
-  };
   zoneNameList?: string[];
   serverList?: MonitorServer[];
   onSearch?: (queryData: MonitorSearchQueryData) => void;
@@ -87,12 +83,22 @@ function getQueryData(query: MonitorSearchQuery): MonitorSearchQueryData {
 }
 
 const MonitorSearch: React.FC<MonitorSearchProps> = ({
-  location: { query = {}, pathname } = {},
   zoneNameList,
   serverList,
   onSearch,
   monitorScope,
 }) => {
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const pathname = location.pathname;
+  const query = useMemo(() => {
+    const params: MonitorSearchQuery = {};
+    searchParams.forEach((value, key) => {
+      params[key as keyof MonitorSearchQuery] = value;
+    });
+    return params;
+  }, [searchParams]);
+
   const [form] = Form.useForm();
   const { validateFields, setFieldsValue, getFieldsValue } = form;
   const update = useUpdate();

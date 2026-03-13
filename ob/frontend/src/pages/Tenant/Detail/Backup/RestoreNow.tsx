@@ -1,19 +1,9 @@
 import RestoreNow from '@/pages/Backup/Component/RestoreNow';
+import { useParams } from '@umijs/max';
 import React from 'react';
 
-export interface RestoreNowPageProps {
-  match: {
-    params: {
-      tenantName: string;
-    };
-  };
-}
-
-const RestoreNowPage: React.FC<RestoreNowPageProps> = ({
-  match: {
-    params: { tenantName },
-  },
-}) => {
+const RestoreNowPage: React.FC = () => {
+  const { tenantName } = useParams<{ tenantName: string }>();
   // 获取租户的备份详情
   // const { data: backupData } = useRequest(ObTenantBackupController.getRestoreOverview, {
   //   defaultParams: [
@@ -24,13 +14,7 @@ const RestoreNowPage: React.FC<RestoreNowPageProps> = ({
   // });
   // const backupTenant = backupData?.data || {};
 
-  return (
-    <RestoreNow
-      useType="tenant"
-      tenantName={tenantName}
-      // minObBuildVersion={backupTenant.minObBuildVersion}
-    />
-  );
+  return <RestoreNow useType="tenant" tenantName={tenantName} />;
 };
 
 export default RestoreNowPage;

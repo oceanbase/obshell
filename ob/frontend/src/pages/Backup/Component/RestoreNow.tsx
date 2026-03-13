@@ -16,8 +16,6 @@ import {
 } from '@/util/component';
 import { getMicroseconds } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
-import type { FormComponentProps } from '@ant-design/compatible/lib/form';
-import type { WrappedFormUtils } from '@ant-design/compatible/lib/form/Form';
 import {
   Button,
   Card,
@@ -51,27 +49,17 @@ import StorageConfigCard from './StorageConfigCard';
 const { Option } = MySelect;
 
 const TimeScopeType = {
-  label: 'LATEST_SIX_MONTHS' as API.ComOceanbaseOcpBackupEnumsObQueryTimeScopeType,
+  label: 'LATEST_SIX_MONTHS',
   days: 180,
 };
 
-export interface RestoreNowProps extends FormComponentProps {
-  form?: WrappedFormUtils;
+export interface RestoreNowProps {
   tenantName?: string; // 源租户
   useType?: string;
-  // 源集群的构建版本号
-  minObBuildVersion?: string;
   isCopy?: boolean; // 因为具备集群、租户信息，复制等同于从租户视图发起恢复任务
-  taskId?: string;
-  restoreDetail?: API.ComOceanbaseOcpBackupModelRestoreHistoryTask;
 }
 
-const RestoreNow: React.FC<RestoreNowProps> = ({
-  useType,
-  tenantName = '',
-  minObBuildVersion,
-  isCopy,
-}) => {
+const RestoreNow: React.FC<RestoreNowProps> = ({ useType, tenantName = '', isCopy }) => {
   const isGlobalRestore = isNullValue(tenantName);
 
   const restoreTenantRef = useRef();
@@ -572,7 +560,6 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
               <StorageConfigCard
                 form={form}
                 useType={'restore'}
-                obVersion={minObBuildVersion}
                 checkedStatus={checkedStatus}
                 loading={getRestoreSourceTenantInfoLoading}
                 recoveryCheckResult={recoveryCheckResult}
@@ -990,7 +977,6 @@ const RestoreNow: React.FC<RestoreNowProps> = ({
             form={form}
             useType={useType}
             backupCluster={clusterData}
-            minObBuildVersion={minObBuildVersion}
           />
         </Col>
       </Row>

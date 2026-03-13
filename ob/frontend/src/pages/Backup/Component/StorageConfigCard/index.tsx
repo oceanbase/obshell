@@ -1,10 +1,10 @@
-import MyInput from '@/component/MyInput';
 import EditText from '@/component/EditText';
+import MyInput from '@/component/MyInput';
 import { formatMessage } from '@/util/intl';
-import React, { useEffect, useState } from 'react';
-import { Alert, Form, Card, Col, Row, Spin, message } from '@oceanbase/design';
-import type { FormInstance } from '@oceanbase/design/es/form';
+import { Alert, Card, Col, Form, Row } from '@oceanbase/design';
 import type { CardProps } from '@oceanbase/design/es/card';
+import type { FormInstance } from '@oceanbase/design/es/form';
+import React, { useEffect, useState } from 'react';
 
 const FormItem = Form.Item;
 
@@ -19,7 +19,6 @@ export interface StorageConfigCardProps extends CardProps {
   form: FormInstance;
   displayMode?: 'page' | 'component';
   useType?: 'backup' | 'restore';
-  obVersion?: string;
   loading?: boolean;
   className?: string;
   backupConfig?: any;
@@ -34,7 +33,6 @@ const StorageConfigCard: React.FC<StorageConfigCardProps> = ({
   loading,
   useType = 'backup',
   displayMode = 'page',
-  obVersion,
   backupConfig,
   checkedStatus,
   recoveryCheckResult,

@@ -20,31 +20,28 @@ import { formatMessage } from '@/util/intl';
 import { getTaskProgress } from '@/util/task';
 import { Button, Card, Descriptions, Result } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
-import { history } from '@umijs/max';
+import { history, useParams } from '@umijs/max';
 import { useInterval, useRequest } from 'ahooks';
 import React from 'react';
 import styles from './Success.less';
 
 export interface TaskSuccessProps {
-  match?: {
-    params?: {
-      taskId?: number;
-    };
-  };
-
   style?: React.CSSProperties;
   className?: string;
   taskId?: number[] | number;
 }
 
-const TaskSuccess: React.FC<TaskSuccessProps> = ({ match, taskId }) => {
+const TaskSuccess: React.FC<TaskSuccessProps> = ({ taskId }) => {
+  const params = useParams<{ taskId?: string }>();
+  const routeTaskId = params.taskId ? Number(params.taskId) : undefined;
+
   const taskIdList = Array.isArray(taskId) ? taskId : [taskId];
   // 是否为多个任务，当前页面可以同时支持路由传参
-  const isMultipleTask = match?.params?.taskId ? false : taskIdList.length > 1;
+  const isMultipleTask = routeTaskId ? false : taskIdList.length > 1;
 
   let taskInstanceId;
   if (!isMultipleTask) {
-    taskInstanceId = match?.params?.taskId || taskIdList?.[0];
+    taskInstanceId = routeTaskId || taskIdList?.[0];
   }
 
   const {
