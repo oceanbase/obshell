@@ -57,6 +57,15 @@ export GOPATH=`go env GOPATH`
 export PATH=$PATH:$GOROOT/bin
 export PATH=$PATH:$GOPATH/bin
 
+# Only when dist is not .el7: use nvm and Node 18; on el7 do not use nvm
+if ! echo "%{?dist}" | grep -Fq '.el7'; then
+    export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+    if [ -s "$NVM_DIR/nvm.sh" ]; then
+        \. "$NVM_DIR/nvm.sh"
+        nvm use 18 2>/dev/null || nvm use default
+    fi
+fi
+
 cd $SRC_DIR
 
 if [ -n "$OBSHELL_RELEASE" ]; then
@@ -69,6 +78,8 @@ flag="-e VERSION=$OBSHELL_VERSION -e RELEASE=$OBSHELL_RELEASE -e DIST=%{?dist}"
 if [ "$PROXY" ]; then
     flag="$flag -e PROXY=$PROXY"
 fi
+
+echo "Using Node version: $(node -v 2>/dev/null || echo 'node not found')"
 
 make frontend-dep seekdb-frontend-build ob-frontend-build pre-build build-release $flag
 mkdir -p $RPM_BUILD_ROOT/%{_prefix}/oceanbase/bin
