@@ -24,10 +24,10 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 )
 
-// MetaDbPath returns the path to seekdb's meta.db (config store: ./etc/meta.db).
+// MetaDbPath returns the path to seekdb's meta.db (config store: ./store/sstable/meta.db).
 // Config items are stored in table __all_sys_parameter instead of seekdb.config.bin.
 func MetaDbPath() string {
-	return filepath.Join(EtcDir(), constant.OB_META_DB)
+	return filepath.Join(SstableDir(), constant.OB_META_DB)
 }
 
 func IsEtcDirExist() bool {

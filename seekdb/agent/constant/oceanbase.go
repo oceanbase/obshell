@@ -94,13 +94,14 @@ const (
 	OB_DIR_SLOG  = "slog"
 
 	// unconfigurable dir
-	OB_DIR_ETC = "etc"
-	OB_DIR_LOG = "log"
+	OB_DIR_ETC     = "etc"
+	OB_DIR_LOG     = "log"
+	OB_DIR_SSTABLE = "store/sstable"
 
 	// OB_CONFIG_FILE is legacy; seekdb stores config in meta.db table __all_sys_parameter.
-	OB_META_DB            = "meta.db"
+	OB_META_DB             = "meta.db"
 	OB_SYS_PARAMETER_TABLE = "__all_sys_parameter"
-	OB_ADMIN              = "ob_admin"
+	OB_ADMIN               = "ob_admin"
 
 	OB_IMPORT_TIME_ZONE_INFO_SCRIPT = "import_time_zone_info.py"
 	OB_IMPORT_SRS_DATA_SCRIPT       = "import_srs_data.py"

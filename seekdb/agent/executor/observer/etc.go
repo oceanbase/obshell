@@ -38,7 +38,7 @@ const (
 )
 
 // isFirstStart returns true when seekdb has not been started (no meta.db yet).
-// Seekdb stores config in ./etc/meta.db table __all_sys_parameter, not in seekdb.config.bin.
+// Seekdb stores config in ./store/sstable/meta.db table __all_sys_parameter, not in seekdb.config.bin.
 func isFirstStart() (bool, error) {
 	metaPath := path.MetaDbPath()
 	if _, err := os.Stat(metaPath); err == nil {
@@ -79,7 +79,7 @@ func getParamFromMetaDb(name string) (string, bool) {
 }
 
 func LoadOBConfigFromConfigFile() (err error) {
-	// Load ob config from ./etc/meta.db table __all_sys_parameter (seekdb does not use seekdb.config.bin).
+	// Load ob config from ./store/sstable/meta.db table __all_sys_parameter (seekdb does not use seekdb.config.bin).
 	log.Info("load ob config from meta.db __all_sys_parameter")
 	ip, mysqlPort := GetConfFromObMeta()
 	if mysqlPort == 0 {
@@ -92,7 +92,7 @@ func LoadOBConfigFromConfigFile() (err error) {
 	return agentService.UpdatePort(mysqlPort)
 }
 
-// GetConfFromObMeta reads mysql_port and local_ip from ./etc/meta.db __all_sys_parameter.
+// GetConfFromObMeta reads mysql_port and local_ip from ./store/sstable/meta.db __all_sys_parameter.
 // If meta.db or a parameter is missing, returns constant.LOCAL_IP and 0 for port.
 func GetConfFromObMeta() (ip string, mysqlPort int) {
 	metaPath := path.MetaDbPath()
