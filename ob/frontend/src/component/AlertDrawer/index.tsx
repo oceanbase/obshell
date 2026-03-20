@@ -1,6 +1,5 @@
 import { formatMessage } from '@/util/intl';
 import { Button, Drawer, DrawerProps, Space } from '@oceanbase/design';
-import { Outlet } from '@umijs/max';
 import React from 'react';
 
 import styles from './index.less';
@@ -17,7 +16,7 @@ export default function AlertDrawer({ onClose, onSubmit, footer, ...props }: Ale
       maskClosable={false}
       {...props}
     >
-      <Outlet />
+      {props.children}
       <div className={styles.drawerFooter}>
         {footer ? (
           footer
