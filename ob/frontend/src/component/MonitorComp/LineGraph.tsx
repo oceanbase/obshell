@@ -41,7 +41,7 @@ export default function LineGraph({
   activeDimension,
 }: LineGraphProps) {
   const [isEmpty, setIsEmpty] = useState<boolean>(true);
-  const [isloading, setIsloading] = useState<boolean>(true);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const lineGraphRef = useRef(null);
   const lineInstanceRef = useRef<Line | null>(null);
   const [inViewport] = useInViewport(lineGraphRef);
@@ -106,6 +106,7 @@ export default function LineGraph({
     }
 
     lastRequestRef.current = requestKey;
+    setIsLoading(true);
     queryMetrics(params);
   };
 
@@ -211,7 +212,7 @@ export default function LineGraph({
   const lineInstanceDestroy = () => {
     lineInstanceRef.current?.destroy();
     lineInstanceRef.current = null;
-    if (isloading) setIsloading(false);
+    if (isLoading) setIsLoading(false);
     if (!isEmpty) setIsEmpty(true);
   };
 
@@ -225,9 +226,9 @@ export default function LineGraph({
         return;
       }
 
+      setIsLoading(false);
       if (metricsData && metricsData.length > 0) {
         setIsEmpty(false);
-        setIsloading(false);
 
         // 按时间戳排序数据
         const sortedMetricsData = [...metricsData].sort((a, b) => a.date - b.date);
@@ -333,7 +334,7 @@ export default function LineGraph({
       // 重置状态
       setInViewportCount(0);
       setIsEmpty(true);
-      setIsloading(true);
+      setIsLoading(true);
     };
   }, []);
 
@@ -346,7 +347,7 @@ export default function LineGraph({
 
   return (
     <div>
-      <Spin spinning={isloading}>
+      <Spin spinning={!isRefresh && isLoading}>
         {isEmpty ? (
           <div ref={lineGraphRef}>
             <Empty

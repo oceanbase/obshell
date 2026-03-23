@@ -32,6 +32,7 @@ interface ZoomInModalProps {
   filterData?: any[];
   filterQueryMetric?: Monitor.MetricsLabels;
   activeDimension?: string;
+  isRefresh: boolean;
 }
 
 const chartHeight = 400;
@@ -49,6 +50,7 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
   filterData,
   filterQueryMetric,
   activeDimension,
+  isRefresh = false,
 }) => {
   const currentMoment = useRef(dayjs());
   const [isEmpty, setIsEmpty] = useState<boolean>(true);
@@ -275,10 +277,9 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
     }
   }, [hiddenLegends]);
 
-  // 当弹窗打开时请求数据
+  // 当弹窗打开时初始化
   useEffect(() => {
     if (visible) {
-      // 弹窗打开时，重置为外部传入的时间范围
       isInitialOpenRef.current = true;
       setIsLoading(true);
       setIsEmpty(true);
@@ -291,10 +292,16 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
     }
   }, [visible]);
 
-  // 当弹窗打开且 modalQueryRange 变化时，请求数据
+  // 监听外部 queryRange 变化（自动刷新时父组件会更新这个值）
   useUpdateEffect(() => {
     if (visible) {
-      // 只有非初次打开时才需要重新查询（初次打开由下面的 effect 处理）
+      setModalQueryRange(queryRange);
+    }
+  }, [queryRange]);
+
+  // 当 modalQueryRange 变化时，请求数据
+  useUpdateEffect(() => {
+    if (visible) {
       if (!isInitialOpenRef.current) {
         setIsLoading(true);
       }
@@ -342,7 +349,7 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
         onCancel?.();
       }}
     >
-      <Spin spinning={isLoading}>
+      <Spin spinning={!isRefresh && isLoading}>
         <div
           style={{
             display: 'flex',
@@ -352,18 +359,21 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
           }}
         >
           <div className={styles.dateRangerWrapper}>
-            <DateRanger
-              isMoment={false}
-              selects={DATE_RANGER_SELECTS}
-              hasRewind={true}
-              hasForward={true}
-              hasSync={true}
-              allowClear={false}
-              value={dateRangerValue as any}
-              disabledDate={date => date.isAfter(currentMoment?.current)}
-              format={DATE_TIME_FORMAT_DISPLAY}
-              onChange={handleDateRangerChange}
-            />
+            {!isRefresh && (
+              <DateRanger
+                isMoment={false}
+                selects={DATE_RANGER_SELECTS}
+                hasRewind={true}
+                hasForward={true}
+                hasSync={true}
+                allowClear={false}
+                value={dateRangerValue as any}
+                stickRangeName={true}
+                disabledDate={date => date.isAfter(currentMoment?.current)}
+                format={DATE_TIME_FORMAT_DISPLAY}
+                onChange={handleDateRangerChange}
+              />
+            )}
           </div>
         </div>
         {isEmpty ? (

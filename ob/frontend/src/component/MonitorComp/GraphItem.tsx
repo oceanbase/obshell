@@ -136,6 +136,7 @@ const GraphItem: React.FC<GraphItemProps> = ({
       </Card>
 
       <ZoomInModal
+        isRefresh={isRefresh}
         visible={zoomVisible}
         onCancel={() => setZoomVisible(false)}
         title={graphTitle}

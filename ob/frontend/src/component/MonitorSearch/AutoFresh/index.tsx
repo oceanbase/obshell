@@ -138,6 +138,7 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
               hasForward={false}
               hasSync={false}
               allowClear={false}
+              stickRangeName={true}
               defaultQuickValue={DateRanger.NEAR_1_HOURS.name}
               disabledDate={date => (currentMoment ? date.isAfter(currentMoment) : false)}
               format={DATE_TIME_FORMAT_DISPLAY}
