@@ -123,6 +123,7 @@ var (
 	ErrAgentOceanbaseUesless            = NewErrorCode("Agent.OceanBase.Useless", unexpected, "err.agent.oceanbase.useless")
 	ErrAgentOceanbaseDBNotOcs           = NewErrorCode("Agent.OceanBase.DB.NotOcs", unexpected, "err.agent.oceanbase.db.not.ocs")
 	ErrAgentSqliteDBNotInit             = NewErrorCode("Agent.Sqlite.DB.NotInit", unexpected, "err.agent.sqlite.db.not.init")
+	ErrAgentSecureDecryptRootPwdBeforeRSAKeyRotation = NewErrorCode("Agent.Secure.DecryptRootPwdBeforeRSAKeyRotation", unexpected, "err.agent.secure.decrypt.root.pwd.before.rsa.key.rotation")
 	ErrAgentResponseDataEmpty           = NewErrorCode("Agent.Response.DataEmpty", unexpected, "err.agent.response.data.empty")
 	ErrAgentResponseDataFormatInvalid   = NewErrorCode("Agent.Response.DataFormatInvalid", unexpected, "err.agent.response.data.format.invalid")
 	ErrAgentIdentifyNotSupportOperation = NewErrorCode("Agent.Identify.NotSupportOperation", badRequest, "err.agent.identify.not.support.operation")

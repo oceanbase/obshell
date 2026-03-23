@@ -21,7 +21,6 @@ import (
 
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
-	"github.com/oceanbase/obshell/seekdb/agent/secure"
 )
 
 func Rebuild(agentInstance *meta.AgentInstance) error {
@@ -35,10 +34,6 @@ func Rebuild(agentInstance *meta.AgentInstance) error {
 	if agentInstance.GetVersion() != meta.OCS_AGENT.GetVersion() {
 		log.Errorf("agent version is not the same, agent version in all_agents: %s, agent version now: %s", agentInstance.GetVersion(), meta.OCS_AGENT.GetVersion())
 		return errors.Occur(errors.ErrAgentRebuildVersionNotSame, agentInstance.GetVersion(), meta.OCS_AGENT.GetVersion())
-	}
-
-	if err := agentService.UpdateAgentPublicKey(secure.Public()); err != nil {
-		return err
 	}
 
 	// Rebuild sqlite.

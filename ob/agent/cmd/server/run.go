@@ -46,6 +46,10 @@ func (a *Agent) run() (err error) {
 		return errors.Wrap(err, "statr oceanbase connect module failed")
 	}
 
+	// Sync public key to OB in background so that when this agent is a remote task target,
+	// the maintainer can get our pk from OB and build the request header before sending continue RPC.
+	go a.syncPublicKeyToOBWhenReady()
+
 	a.handleOBMeta()
 	return nil
 }
@@ -78,6 +82,10 @@ func (a *Agent) restoreSecure() (err error) {
 			log.WithError(err).Error("reinit secure failed")
 			return err
 		}
+	}
+	if err = secure.EnsureKeySize(); err != nil {
+		log.WithError(err).Error("ensure RSA key size failed")
+		return err
 	}
 
 	log.Info("restore secure info successed, check password of root@sys in sqlite")
@@ -146,6 +154,26 @@ func (a *Agent) startConnenctModule() (err error) {
 		}
 	}
 	return nil
+}
+
+// syncPublicKeyToOBWhenReady retries UpdateAgentPublicKey until success or max retries, so that when this agent
+// is a remote task target (e.g. RestartAgentTask continue sent via RPC from maintainer), the maintainer can get
+// our pk from OB and build the request header. Otherwise the RPC would fail with "header not found" and this agent
+// would never receive the continued task to run UpdateAgentPublicKey.
+func (a *Agent) syncPublicKeyToOBWhenReady() {
+	const retries = 15
+	const interval = 2 * time.Second
+	for i := 0; i < retries; i++ {
+		if i > 0 {
+			time.Sleep(interval)
+		}
+		if err := agentService.UpdateAgentPublicKey(secure.Public()); err == nil {
+			log.Info("sync agent public key to oceanbase success")
+			return
+		}
+		log.Debugf("sync agent public key to oceanbase retry [%d/%d]", i+1, retries)
+	}
+	log.Warn("sync agent public key to oceanbase failed after retries")
 }
 
 func (a *Agent) handleOBMeta() {

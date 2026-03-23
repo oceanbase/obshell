@@ -24,6 +24,7 @@ import (
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/ob/agent/secure"
 	"github.com/oceanbase/obshell/ob/agent/service/agent"
 )
 
@@ -46,6 +47,11 @@ func HandleOBMeta() (err error) {
 	if err = oceanbase.AutoMigrateObTables(true); err != nil {
 		log.WithError(err).Error("auto migrate ob tables failed")
 		return
+	}
+
+	log.Info("try to sync agent public key to oceanbase")
+	if err = agentService.UpdateAgentPublicKey(secure.Public()); err != nil {
+		log.WithError(err).Warn("update agent public key in oceanbase failed")
 	}
 
 	log.Info("try to update agent version")

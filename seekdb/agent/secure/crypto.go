@@ -17,7 +17,9 @@
 package secure
 
 import (
-	"errors"
+	"fmt"
+	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -25,6 +27,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
+	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/crypto"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
@@ -71,6 +74,80 @@ func RestoreKey() error {
 	}
 	log.Info("restore private key from sqlite successed")
 	return nil
+}
+
+// setGodebugRsa1024Min sets GODEBUG to include rsa1024min=value (0 allows legacy 512-bit keys for decryption).
+func setGodebugRsa1024Min(value int) (restore func()) {
+	old := os.Getenv("GODEBUG")
+	newVal := mergeGodebug(old, "rsa1024min", fmt.Sprintf("%d", value))
+	os.Setenv("GODEBUG", newVal)
+	return func() { os.Setenv("GODEBUG", old) }
+}
+
+func mergeGodebug(env, key, value string) string {
+	if env == "" {
+		return key + "=" + value
+	}
+	var parts []string
+	for _, p := range strings.Split(env, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if strings.HasPrefix(p, key+"=") {
+			continue
+		}
+		parts = append(parts, p)
+	}
+	parts = append(parts, key+"="+value)
+	return strings.Join(parts, ",")
+}
+
+// EnsureKeySize checks whether the current key size is crypto.KEY_SIZE. If not, decrypts root password from sqlite
+// with the old key, regenerates a new key pair, and re-encrypts and saves in a single sqlite transaction.
+func EnsureKeySize() error {
+	if Crypter == nil {
+		return nil
+	}
+	if Crypter.KeySizeBits() == crypto.KEY_SIZE {
+		return nil
+	}
+	log.Infof("RSA key size is %d, regenerating to %d bits and re-encrypting passwords in sqlite", Crypter.KeySizeBits(), crypto.KEY_SIZE)
+	restoreGodebug := setGodebugRsa1024Min(0)
+	defer restoreGodebug()
+
+	rootPwdPlain, err := decryptStoredPasswords()
+	if err != nil {
+		return err
+	}
+
+	var newErr error
+	Crypter, newErr = crypto.NewRSACrypto()
+	if newErr != nil {
+		return newErr
+	}
+	if newErr = reGenerateRSACryptoAndreEncrypt(rootPwdPlain); newErr != nil {
+		return newErr
+	}
+	if rootPwdPlain != "" {
+		meta.SetOceanbasePwd(rootPwdPlain)
+	}
+	log.Info("RSA key regenerated, dumped to sqlite, and passwords re-encrypted")
+	return nil
+}
+
+// decryptStoredPasswords reads encrypted root password from sqlite and decrypts with current Crypter.
+func decryptStoredPasswords() (rootPwd string, err error) {
+	var cipher string
+	if err = getOBConifg(constant.CONFIG_ROOT_PWD, &cipher); err == nil && cipher != "" {
+		rootPwd, err = Crypter.Decrypt(cipher)
+		if err != nil {
+			return "", errors.Occur(errors.ErrAgentSecureDecryptRootPwdBeforeRSAKeyRotation, err.Error())
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	return rootPwd, err
 }
 
 // Public will return thecurrent public key.

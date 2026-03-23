@@ -84,15 +84,51 @@ func updateOCSInfo(key string, value interface{}) (err error) {
 	if err != nil {
 		return
 	}
+	return updateOCSInfoInTransaction(db, key, value)
+}
+
+func updateOCSInfoInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
 	data := map[string]interface{}{
 		"name":  key,
 		"value": value,
 	}
-	err = db.Model(ocsInfoModel).Clauses(clause.OnConflict{
+	return tx.Model(ocsInfoModel).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(data).Error
-	return
+}
+
+// reEncryptAndSavePasswordsInTransaction encrypts root password with current Crypter and saves via tx.
+func reEncryptAndSavePasswordsInTransaction(tx *gorm.DB, rootPwd string) error {
+	if rootPwd != "" {
+		cipher, err := Crypter.Encrypt(rootPwd)
+		if err != nil {
+			return err
+		}
+		return updateOBConifgInTransaction(tx, constant.CONFIG_ROOT_PWD, cipher)
+	}
+	return nil
+}
+
+// reGenerateRSACryptoAndreEncrypt persists the current Crypter (private key, public key in sqlite) and
+// re-encrypted root password in a single sqlite transaction. Caller must set Crypter to the new key before calling.
+func reGenerateRSACryptoAndreEncrypt(rootPwdPlain string) error {
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	return sqliteDb.Transaction(func(tx *gorm.DB) error {
+		if err := updateOCSInfoInTransaction(tx, constant.AGENT_PRIVATE_KEY, Crypter.Private()); err != nil {
+			return err
+		}
+		if err := reEncryptAndSavePasswordsInTransaction(tx, rootPwdPlain); err != nil {
+			return err
+		}
+		if rootPwdPlain == "" {
+			_ = updateOBConifgInTransaction(tx, constant.CONFIG_ROOT_PWD, "")
+		}
+		return nil
+	})
 }
 
 func getCipherPassword() (cipherPassword string, err error) {

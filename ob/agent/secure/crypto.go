@@ -18,6 +18,9 @@ package secure
 
 import (
 	"errors"
+	"fmt"
+	"os"
+	"strings"
 	"syscall"
 	"time"
 
@@ -35,7 +38,7 @@ var (
 	Crypter *crypto.RSACrypto
 )
 
-// Init will initialize secure module.
+// Init will initialize secure module. EnsureKeySize is not called here; it runs in restoreSecure() after key restore.
 func Init() (err error) {
 	if err = initSessionManager(); err != nil {
 		return err
@@ -73,6 +76,153 @@ func RestoreKey() error {
 		return err
 	}
 	log.Info("restore private key from sqlite successed")
+	return nil
+}
+
+// setGodebugRsa1024Min sets GODEBUG to include rsa1024min=value (0 allows legacy 512-bit keys for decryption).
+// Returns a restore func that restores the original GODEBUG; call it when done (e.g. defer restoreGodebug()).
+func setGodebugRsa1024Min(value int) (restore func()) {
+	old := os.Getenv("GODEBUG")
+	// Merge: replace existing rsa1024min=* or append rsa1024min=value
+	newVal := mergeGodebug(old, "rsa1024min", fmt.Sprintf("%d", value))
+	os.Setenv("GODEBUG", newVal)
+	return func() { os.Setenv("GODEBUG", old) }
+}
+
+func mergeGodebug(env, key, value string) string {
+	if env == "" {
+		return key + "=" + value
+	}
+	var parts []string
+	for _, p := range strings.Split(env, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		if strings.HasPrefix(p, key+"=") {
+			continue
+		}
+		parts = append(parts, p)
+	}
+	parts = append(parts, key+"="+value)
+	return strings.Join(parts, ",")
+}
+
+// EnsureKeySize checks whether the current key size is crypto.KEY_SIZE. If not, decrypts
+// OB/agent/obproxy passwords from sqlite with the old key, regenerates a new key pair,
+// dumps the private key to sqlite, re-encrypts and saves those passwords with the new key,
+// and updates the agent's public_key in sqlite.
+func EnsureKeySize() error {
+	if Crypter == nil {
+		return nil
+	}
+	if Crypter.KeySizeBits() == crypto.KEY_SIZE {
+		return nil
+	}
+	log.Infof("RSA key size is %d, regenerating to %d bits and re-encrypting passwords in sqlite", Crypter.KeySizeBits(), crypto.KEY_SIZE)
+	// Temporarily allow legacy 512-bit key for decryption (Go 1.22+ rejects it by default).
+	restoreGodebug := setGodebugRsa1024Min(0)
+	defer restoreGodebug()
+
+	// Decrypt with old key before replacing Crypter.
+	rootPwdPlain, agentPwdPlain, obproxyPwdPlain, err := decryptStoredPasswords()
+	if err != nil {
+		return err
+	}
+
+	var newErr error
+	Crypter, newErr = crypto.NewRSACrypto()
+	if newErr != nil {
+		return newErr
+	}
+
+	if newErr = reGenerateRSACryptoAndreEncrypt(rootPwdPlain, agentPwdPlain, obproxyPwdPlain); newErr != nil {
+		return newErr
+	}
+
+	if rootPwdPlain != "" {
+		setOceanbasePwd(rootPwdPlain)
+	}
+	if agentPwdPlain != "" {
+		setAgentPassword(agentPwdPlain)
+	}
+	log.Info("RSA key regenerated, dumped to sqlite, and passwords re-encrypted")
+	return nil
+}
+
+// decryptStoredPasswords reads encrypted root/agent/obproxy passwords from sqlite and decrypts with current Crypter.
+func decryptStoredPasswords() (rootPwd, agentPwd, obproxyPwd string, err error) {
+	var cipher string
+	if err = getOBConifg(constant.CONFIG_ROOT_PWD, &cipher); err == nil && cipher != "" {
+		rootPwd, err = Crypter.Decrypt(cipher)
+		if err != nil {
+			log.WithError(err).Warn("decrypt CONFIG_ROOT_PWD with old key failed, skip re-encrypt")
+			rootPwd = ""
+			err = nil
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	if err != nil {
+		return "", "", "", err
+	}
+	cipher = ""
+	if err = getOCSInfo(constant.CONFIG_AGENT_PASSWORD, &cipher); err == nil && cipher != "" {
+		agentPwd, err = Crypter.Decrypt(cipher)
+		if err != nil {
+			log.WithError(err).Warn("decrypt CONFIG_AGENT_PASSWORD with old key failed, skip re-encrypt")
+			agentPwd = ""
+			err = nil
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	if err != nil {
+		return "", "", "", err
+	}
+	cipher = ""
+	if err = getOBConifg(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, &cipher); err == nil && cipher != "" {
+		obproxyPwd, err = Crypter.Decrypt(cipher)
+		if err != nil {
+			log.WithError(err).Warn("decrypt OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD with old key failed, skip re-encrypt")
+			obproxyPwd = ""
+			err = nil
+		}
+	} else if errors.Is(err, gorm.ErrRecordNotFound) {
+		err = nil
+	}
+	return rootPwd, agentPwd, obproxyPwd, err
+}
+
+// reEncryptAndSavePasswordsInTransaction encrypts plaintext passwords with current Crypter and saves via tx.
+func reEncryptAndSavePasswordsInTransaction(tx *gorm.DB, rootPwd, agentPwd, obproxyPwd string) error {
+	if rootPwd != "" {
+		cipher, err := Crypter.Encrypt(rootPwd)
+		if err != nil {
+			return err
+		}
+		if err = updateOBConifgInTransaction(tx, constant.CONFIG_ROOT_PWD, cipher); err != nil {
+			return err
+		}
+	}
+	if agentPwd != "" {
+		cipher, err := Crypter.Encrypt(agentPwd)
+		if err != nil {
+			return err
+		}
+		if err = updateOCSInfoInTransaction(tx, constant.CONFIG_AGENT_PASSWORD, cipher); err != nil {
+			return err
+		}
+	}
+	if obproxyPwd != "" {
+		cipher, err := Crypter.Encrypt(obproxyPwd)
+		if err != nil {
+			return err
+		}
+		if err = updateObproxyConfigInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, cipher); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -150,7 +300,10 @@ func LoadAgentPassword() error {
 	if pwd != "" {
 		pwd, err = Crypter.Decrypt(pwd)
 		if err != nil {
-			return err
+			log.WithError(err).Warn("decrypt CONFIG_AGENT_PASSWORD failed (e.g. cipher encrypted with old key), clear stale value in sqlite")
+			_ = updateOCSInfo(constant.CONFIG_AGENT_PASSWORD, "")
+			setAgentPassword("")
+			return nil
 		}
 	}
 	setAgentPassword(pwd)
@@ -189,8 +342,10 @@ func CheckObPasswordInSqlite() error {
 	if password != "" {
 		password, err = Decrypt(password)
 		if err != nil {
-			log.WithError(err).Error("decrypt password failed")
-			return err
+			log.WithError(err).Warn("decrypt password failed (e.g. cipher encrypted with old key), clear stale CONFIG_ROOT_PWD in sqlite")
+			_ = updateOBConifg(constant.CONFIG_ROOT_PWD, "")
+			setOceanbasePwd("")
+			return nil
 		}
 	}
 	setOceanbasePwd(password)

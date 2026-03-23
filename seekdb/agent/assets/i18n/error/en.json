@@ -26,6 +26,7 @@
   "err.agent.serve.on.tcp.socket.failed": "Serve on tcp listener failed",
   "err.agent.serve.on.unix.socket.failed": "Serve on unix listener failed",
   "err.agent.sqlite.db.not.init": "The SQLite database is not initialized",
+  "err.agent.secure.decrypt.root.pwd.before.rsa.key.rotation": "Failed to decrypt stored root password before RSA key rotation: %s. If using a legacy short RSA key, start the agent with GODEBUG=rsa1024min=0.",
   "err.agent.start.observer.failed": "Start seekdb via flag failed",
   "err.agent.start.with.invalid.info": "Agent start with invalid info: %v.",
   "err.agent.take.over.failed": "Take over or rebuild failed",

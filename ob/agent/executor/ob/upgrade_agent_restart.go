@@ -31,6 +31,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/lib/system"
 	"github.com/oceanbase/obshell/ob/agent/meta"
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/ob/agent/secure"
 )
 
 type RestartAgentTask struct {
@@ -67,6 +68,10 @@ func (t *RestartAgentTask) Execute() (err error) {
 		if err = agentService.UpdateAgentVersion(); err != nil {
 			return
 		}
+		t.ExecuteLog("Syncing agent public key to oceanbase.")
+		if err = t.syncPublicKeyToOB(); err != nil {
+			return err
+		}
 		return nil
 	}
 	t.ExecuteLog("restart agent")
@@ -87,6 +92,21 @@ func (t *RestartAgentTask) getOcsInstance() (err error) {
 		t.TimeoutCheck()
 	}
 	return errors.Wrap(err, "get ocs instance failed")
+}
+
+// syncPublicKeyToOB syncs current agent public key to OB with retries, so that other obshell get pk from OB first.
+func (t *RestartAgentTask) syncPublicKeyToOB() (err error) {
+	const retries = 5
+	const interval = 2 * time.Second
+	for i := 1; i <= retries; i++ {
+		if err = agentService.UpdateAgentPublicKey(secure.Public()); err == nil {
+			return nil
+		}
+		log.Warnf("sync agent public key to oceanbase failed: %v, retry [%d/%d]", err, i, retries)
+		time.Sleep(interval)
+		t.TimeoutCheck()
+	}
+	return errors.Wrap(err, "sync agent public key to oceanbase failed")
 }
 
 func (t *RestartAgentTask) getParams() (err error) {

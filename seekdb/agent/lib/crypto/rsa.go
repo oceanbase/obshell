@@ -21,13 +21,19 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"fmt"
+	"strings"
 
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 )
 
 func sectionalEncrypt(raw []byte, pub *rsa.PublicKey) (string, error) {
-	// Sectional encryption.
-	blockSize := KEY_SIZE/8 - 11
+	// Sectional encryption: block size depends on actual key size for compatibility (e.g. 512-bit vs 1024-bit).
+	keySizeInBytes := (pub.N.BitLen() + 7) / 8
+	blockSize := keySizeInBytes - 11
+	if blockSize <= 0 {
+		blockSize = 1
+	}
 	numBlocks := (len(raw) + blockSize - 1) / blockSize
 	ciphertext := make([]byte, 0)
 	for i := 0; i < numBlocks; i++ {
@@ -69,7 +75,9 @@ type RSACrypto struct {
 }
 
 const (
-	KEY_SIZE    = 512
+	// KEY_SIZE is used only when generating new keys. Decryption and sectional encryption use actual key size for compatibility.
+	// For decrypting with legacy 512-bit keys under Go 1.22+, use GODEBUG=rsa1024min=0 when starting the process or in EnsureKeySize.
+	KEY_SIZE    = 1024
 	ERR_NO_INIT = "rsa crypto not initialized"
 )
 
@@ -133,6 +141,9 @@ func (r *RSACrypto) DecryptAndReturnBytes(raw string) ([]byte, error) {
 		}
 		decrypted, err := rsa.DecryptPKCS1v15(rand.Reader, r.pk, decRaw[start:end])
 		if err != nil {
+			if strings.Contains(err.Error(), "insecure") || strings.Contains(err.Error(), "512-bit") {
+				return nil, fmt.Errorf("%w; for legacy 512-bit keys set GODEBUG=rsa1024min=0 when starting the process", err)
+			}
 			return nil, err
 		}
 		ciphertext = append(ciphertext, decrypted...)
@@ -162,6 +173,14 @@ func (r *RSACrypto) TryDecrypt(raw string) string {
 		return raw
 	}
 	return s
+}
+
+// KeySizeBits returns the RSA key size in bits (e.g. 512 or 1024). Returns 0 if not initialized.
+func (r *RSACrypto) KeySizeBits() int {
+	if r == nil || r.pk == nil {
+		return 0
+	}
+	return r.pk.N.BitLen()
 }
 
 func (r *RSACrypto) Private() string {

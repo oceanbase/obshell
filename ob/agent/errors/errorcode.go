@@ -345,7 +345,7 @@ var (
 	ErrSecurityUserPermissionDenied                      = NewErrorCode("Security.User.PermissionDenied", unauthorized, "err.security.user.permission.denied")
 	ErrSecurityAuthenticationUnauthorized                = NewErrorCode("Security.Authentication.Unauthorized", unauthorized, "err.security.authentication.unauthorized", 10008)
 	ErrSecurityAuthenticationFileSha256Mismatch          = NewErrorCode("Security.Authentication.File.Sha256Mismatch", unauthorized, "err.security.authentication.file.sha256.mismatch")
-	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unauthorized, "err.security.authentication.header.decrypt.failed")
+	ErrSecurityAuthenticationHeaderDecryptFailed         = NewErrorCode("Security.Authentication.Header.DecryptFailed", unauthorized, "err.security.authentication.header.decrypt.failed", 1)
 	ErrSecurityAuthenticationHeaderUriMismatch           = NewErrorCode("Security.Authentication.Header.UriMismatch", unauthorized, "err.security.authentication.header.uri.mismatch", 10008)
 	ErrSecurityAuthenticationWithAgentPassword           = NewErrorCode("Security.Authentication.WithAgentPassword", unauthorized, "err.security.authentication.with.agent.password", 10008)
 	ErrSecurityAuthenticationIncorrectAgentPassword      = NewErrorCode("Security.Authentication.IncorrectAgentPassword", unauthorized, "err.security.authentication.incorrect.agent.password", 10008)

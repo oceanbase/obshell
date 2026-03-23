@@ -27,7 +27,6 @@ import (
 	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
-	"github.com/oceanbase/obshell/seekdb/agent/secure"
 )
 
 func (s *AgentService) GetAgentInstanceByIpAndRpcPortFromOB(ip string, mysqlPort int) (agent *meta.AgentInstance, err error) {
@@ -40,15 +39,6 @@ func (s *AgentService) GetAgentInstanceByIpAndRpcPortFromOB(ip string, mysqlPort
 		return
 	}
 	err = oceanbaseDb.Model(&oceanbase.AllAgent{}).Where("ip=? and mysql_port=?", ip, mysqlPort).Scan(&agent).Error
-	return
-}
-
-func (s *AgentService) UpdateAgentPublicKey(publicKey string) (err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return
-	}
-	err = oceanbaseDb.Model(&oceanbase.AllAgent{}).Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Update(constant.AGENT_PUBLIC_KEY, publicKey).Error
 	return
 }
 
@@ -69,7 +59,6 @@ func (s *AgentService) TakeOver() (err error) {
 		HomePath:     global.HomePath,
 		MysqlPort:    meta.MYSQL_PORT,
 		Version:      meta.OCS_AGENT.GetVersion(),
-		PublicKey:    secure.Public(),
 		Identity:     string(meta.CLUSTER_AGENT),
 	}
 	err = oceanbaseDb.Transaction(func(oceanbaseTx *gorm.DB) error {

@@ -79,11 +79,15 @@ func updateObproxyConfig(key string, value interface{}) (err error) {
 	if err != nil {
 		return
 	}
+	return updateObproxyConfigInTransaction(db, key, value)
+}
+
+func updateObproxyConfigInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
 	data := map[string]interface{}{
 		"name":  key,
 		"value": value,
 	}
-	err = db.Model(obConfigModel).Clauses(clause.OnConflict{
+	err = tx.Model(obConfigModel).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(data).Error
@@ -116,11 +120,15 @@ func updateOCSInfo(key string, value interface{}) (err error) {
 	if err != nil {
 		return
 	}
+	return updateOCSInfoInTransaction(db, key, value)
+}
+
+func updateOCSInfoInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
 	data := map[string]interface{}{
 		"name":  key,
 		"value": value,
 	}
-	err = db.Model(ocsInfoModel).Clauses(clause.OnConflict{
+	err = tx.Model(ocsInfoModel).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(data).Error
@@ -194,7 +202,43 @@ func updateAgentPublicKey(agent meta.AgentInfoInterface, publicKey string) (err 
 	if err != nil {
 		return
 	}
-	return sqliteDb.Model(agentModelSqlite).Where("ip=? and port=?", agent.GetIp(), agent.GetPort()).Update("public_key", publicKey).Error
+	return updateAgentPublicKeyInTransaction(sqliteDb, agent, publicKey)
+}
+
+func updateAgentPublicKeyInTransaction(tx *gorm.DB, agent meta.AgentInfoInterface, publicKey string) (err error) {
+	return tx.Model(agentModelSqlite).Where("ip=? and port=?", agent.GetIp(), agent.GetPort()).Update("public_key", publicKey).Error
+}
+
+// reGenerateRSACryptoAndreEncrypt persists the current Crypter (private key, public key in sqlite) and
+// re-encrypted passwords in a single sqlite transaction. Caller must set Crypter to the new key before calling.
+// Caller should also sync public key to OB (e.g. agentService.UpdateAgentPublicKey) so other obshell get pk from OB first.
+// rootPwdPlain, agentPwdPlain, obproxyPwdPlain are the decrypted passwords; empty means clear that config.
+func reGenerateRSACryptoAndreEncrypt(rootPwdPlain, agentPwdPlain, obproxyPwdPlain string) error {
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	return sqliteDb.Transaction(func(tx *gorm.DB) error {
+		if err := updateOCSInfoInTransaction(tx, constant.AGENT_PRIVATE_KEY, Crypter.Private()); err != nil {
+			return err
+		}
+		if err := updateAgentPublicKeyInTransaction(tx, meta.OCS_AGENT, Crypter.Public()); err != nil {
+			return err
+		}
+		if err := reEncryptAndSavePasswordsInTransaction(tx, rootPwdPlain, agentPwdPlain, obproxyPwdPlain); err != nil {
+			return err
+		}
+		if rootPwdPlain == "" {
+			_ = updateOBConifgInTransaction(tx, constant.CONFIG_ROOT_PWD, "")
+		}
+		if agentPwdPlain == "" {
+			_ = updateOCSInfoInTransaction(tx, constant.CONFIG_AGENT_PASSWORD, "")
+		}
+		if obproxyPwdPlain == "" {
+			_ = updateObproxyConfigInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, "")
+		}
+		return nil
+	})
 }
 
 func getTokenByAgentInfo(agent meta.AgentInfoInterface) (token string, err error) {

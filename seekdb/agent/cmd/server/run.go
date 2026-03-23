@@ -79,6 +79,10 @@ func (a *Agent) restoreSecure() (err error) {
 			return err
 		}
 	}
+	if err = secure.EnsureKeySize(); err != nil {
+		log.WithError(err).Error("ensure RSA key size failed")
+		return err
+	}
 
 	log.Info("restore secure info successed, check password of root@sys in sqlite")
 	err = secure.LoadOceanbasePassword(a.GetRootPassword())
