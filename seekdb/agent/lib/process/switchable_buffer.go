@@ -52,9 +52,13 @@ func (b *switchableBuffer) Write(p []byte) (n int, err error) {
 	return buf.Write(p)
 }
 
-func (b *switchableBuffer) Flush() (err error) {
+func (b *switchableBuffer) Flush() (n int, err error) {
 	str := b.memBuf.Bytes()
 	b.memBuf.Reset()
-	_, err = b.out.Write(str)
+	n, err = b.out.Write(str)
 	return
+}
+
+func (b *switchableBuffer) BufferLen() int {
+	return b.memBuf.Len()
 }

@@ -19,7 +19,9 @@ package daemon
 import (
 	"net/http"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -51,6 +53,16 @@ func NewDaemonCmd() *cobra.Command {
 		opts.HiddenPassword()
 		ocsagentlog.InitLogger(config.DefaultDaemonLoggerConifg())
 		global.InitGlobalVariable()
+		// Ignore SIGPIPE to prevent the daemon from being killed when the parent
+		// admin process exits and closes the stdout/stderr pipes. Writes to broken
+		// pipes will fail silently instead of terminating the process.
+		sigpipeCh := make(chan os.Signal, 10)
+		signal.Notify(sigpipeCh, syscall.SIGPIPE)
+		go func() {
+			for range sigpipeCh {
+				log.Warn("received SIGPIPE: a write to a broken pipe was attempted (parent process likely closed stdout/stderr)")
+			}
+		}()
 		daemon := newDaemon(opts)
 		if err = daemon.Start(); err != nil {
 			process.ExitWithError(constant.EXIT_CODE_ERROR_DAEMON_START_FAILED, errors.WrapRetain(errors.ErrAgentDaemonStartFailed, err))

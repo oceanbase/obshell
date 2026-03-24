@@ -24,6 +24,8 @@ import (
 	"syscall"
 	"time"
 
+	log "github.com/sirupsen/logrus"
+
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 )
 
@@ -174,8 +176,12 @@ func (p *Process) signal(s os.Signal) error {
 
 func (p *Process) SwitchToLogMode() {
 	if p.stderrBuffer != nil {
+		bufLen := p.stderrBuffer.BufferLen()
+		log.Infof("SwitchToLogMode: flushing stderr buffer (%d bytes) to stderr", bufLen)
 		p.stderrBuffer.memModel = false
-		p.stderrBuffer.Flush()
+		if _, err := p.stderrBuffer.Flush(); err != nil {
+			log.Warnf("SwitchToLogMode: failed to flush stderr buffer: %v (likely SIGPIPE - parent process has closed the stderr pipe)", err)
+		}
 	}
 }
 
