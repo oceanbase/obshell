@@ -199,7 +199,7 @@
   "err.ob.upgrade.path.not.exist": "无法找到从当前版本 %s 到目标版本 %s 的升级路径，请检查升级依赖的 YAML 文件",
   "err.ob.upgrade.to.deprecated.version": "目标版本 %s 已弃用",
   "err.ob.upgrade.to.lower.version": "目标版本 %s 不高于当前版本 %s。请验证参数是否正确填写",
-  "err.ob.upgrade.unable.to.rolling.upgrade": "当 zone 数量小于 3 时不支持轮转升级",
+  "err.ob.upgrade.unable.to.rolling.upgrade": "轮转升级需要至少 3 个 zone（共享存储模式需至少 2 个 zone）",
   "err.ob.upgrade.tenants.schema.not.refreshed": "存在未刷新 schema 的租户：%s",
   "err.ob.upgrade.tablet.in.merging": "有 %d 个 tablet 处于合并中",
   "err.ob.upgrade.tenant.in.major.compaction": "有 %d 个租户处于 major compaction 中",
@@ -332,5 +332,10 @@
   "err.credential.host.already.exists": "主机 %s 已存在凭据",
   "err.credential.name.already.exists": "凭据名称 %s 已存在",
   "err.credential.host.not.in.all.agent": "主机 %s 在 all_agent 表中不存在",
-  "err.credential.ssh.invalid.port": "SSH 端口 '%s' 无效，必须在 [1, 65535] 范围内"
+  "err.credential.ssh.invalid.port": "SSH 端口 '%s' 无效，必须在 [1, 65535] 范围内",
+  "err.shared.storage.not.supported": "集群不支持共享存储模式",
+  "err.shared.storage.key.validate.failed": "共享存储密钥验证失败: %s",
+  "err.shared.storage.key.validate.timeout": "共享存储密钥验证超时",
+  "err.shared.storage.bucket.access.denied": "存储桶不存在或访问被拒绝",
+  "err.shared.storage.info.not.found": "在 DBA_OB_ZONE_STORAGE 中未找到共享存储信息"
 }

@@ -400,7 +400,15 @@ func checkUpgradeMode(param *param.ObUpgradeParam) error {
 	if err != nil {
 		return err
 	}
-	if zoneCount < 3 {
+	isSharedStorage, err := obclusterService.IsSharedStorageMode()
+	if err != nil {
+		return err
+	}
+	minZones := 3
+	if isSharedStorage {
+		minZones = 2
+	}
+	if zoneCount < minZones {
 		return errors.Occur(errors.ErrObUpgradeUnableToRollingUpgrade)
 	}
 	return nil

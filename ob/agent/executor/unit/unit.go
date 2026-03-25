@@ -47,6 +47,18 @@ func validateCreateResourceUnitConfigParams(param param.CreateResourceUnitConfig
 			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "log_disk_size", *param.LogDiskSize)
 		}
 	}
+	if param.DataDiskSize != nil {
+		isSharedStorage, err := obclusterService.IsSharedStorageMode()
+		if err != nil {
+			return err
+		}
+		if !isSharedStorage {
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "data_disk_size", "DATA_DISK_SIZE is only supported in shared storage mode.")
+		}
+		if _, pass := parse.CapacityParser(*param.DataDiskSize); !pass {
+			return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "data_disk_size", *param.DataDiskSize)
+		}
+	}
 
 	if *param.MaxCpu <= 0 {
 		return errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "max_cpu", "max_cpu should be positive.")

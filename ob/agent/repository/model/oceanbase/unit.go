@@ -29,6 +29,7 @@ type DbaObUnitConfig struct {
 	MinCpu       float64   `gorm:"column:min_cpu" json:"min_cpu"`
 	MemorySize   int64     `gorm:"column:memory_size" json:"memory_size"`
 	LogDiskSize  int64     `gorm:"column:log_disk_size" json:"log_disk_size"`
+	DataDiskSize int64     `gorm:"column:data_disk_size" json:"data_disk_size"`
 	MaxIops      uint      `gorm:"column:max_iops" json:"max_iops"`
 	MinIops      uint      `gorm:"column:min_iops" json:"min_iops"`
 	GmtCreate    time.Time `gorm:"column:create_time" json:"create_time"`
@@ -45,6 +46,7 @@ func ConvertDbaObUnitConfigToObUnit(unit *DbaObUnitConfig) *bo.ObUnitConfig {
 		MinCpu:       unit.MinCpu,
 		MemorySize:   unit.MemorySize,
 		LogDiskSize:  unit.LogDiskSize,
+		DataDiskSize: unit.DataDiskSize,
 		MaxIops:      unit.MaxIops,
 		MinIops:      unit.MinIops,
 	}

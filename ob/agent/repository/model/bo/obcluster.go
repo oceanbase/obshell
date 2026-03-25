@@ -23,19 +23,21 @@ import (
 )
 
 type BaseResourceStats struct {
-	CpuCoreTotal           float64 `json:"cpu_core_total"`
-	CpuCoreAssigned        float64 `json:"cpu_core_assigned"`
-	CpuCoreAssignedPercent float64 `json:"cpu_core_assigned_percent"`
-	MemoryTotal            string  `json:"memory_total"`
-	MemoryAssigned         string  `json:"memory_assigned"`
-	MemoryInBytesTotal     int64   `json:"memory_in_bytes_total"`
-	MemoryInBytesAssigned  int64   `json:"memory_in_bytes_assigned"`
-	MemoryAssignedPercent  float64 `json:"memory_assigned_percent"`
-	DiskTotal              string  `json:"disk_total"`
-	DiskAssigned           string  `json:"disk_assigned"`
-	DiskInBytesTotal       int64   `json:"disk_in_bytes_total"`
-	DiskInBytesAssigned    int64   `json:"disk_in_bytes_assigned"`
-	DiskAssignedPercent    float64 `json:"disk_assigned_percent"`
+	CpuCoreTotal             float64 `json:"cpu_core_total"`
+	CpuCoreAssigned          float64 `json:"cpu_core_assigned"`
+	CpuCoreAssignedPercent   float64 `json:"cpu_core_assigned_percent"`
+	MemoryTotal              string  `json:"memory_total"`
+	MemoryAssigned           string  `json:"memory_assigned"`
+	MemoryInBytesTotal       int64   `json:"memory_in_bytes_total"`
+	MemoryInBytesAssigned    int64   `json:"memory_in_bytes_assigned"`
+	MemoryAssignedPercent    float64 `json:"memory_assigned_percent"`
+	DiskTotal                string  `json:"disk_total"`
+	DiskAssigned             string  `json:"disk_assigned"`
+	DiskInBytesTotal         int64   `json:"disk_in_bytes_total"`
+	DiskInBytesAssigned      int64   `json:"disk_in_bytes_assigned"`
+	DiskAssignedPercent      float64 `json:"disk_assigned_percent"`
+	SharedStorageUsed        string  `json:"shared_storage_used,omitempty"`
+	SharedStorageInBytesUsed int64   `json:"shared_storage_in_bytes_used,omitempty"`
 }
 
 func (r *BaseResourceStats) Add(stats *BaseResourceStats) {
@@ -95,6 +97,7 @@ type Observer struct {
 	Architecture   string              `json:"architecture"`
 	DataDir        string              `json:"data_dir"`
 	RedoDir        string              `json:"redo_dir"`
+	LogDir         string              `json:"log_dir"`
 	LocalTaskId    string              `json:"local_task_id,omitempty"`
 	ObshellPort    int                 `json:"obshell_port"`
 }
@@ -132,23 +135,29 @@ type ClusterTopology struct {
 }
 
 type ClusterBasicInfo struct {
-	ClusterName              string `json:"cluster_name"`
-	ClusterId                int    `json:"cluster_id"`
-	Status                   string `json:"status"`
-	IsCommunityEdition       bool   `json:"is_community_edition"`
-	IsStandalone             bool   `json:"is_standalone"`
-	ObVersion                string `json:"ob_version"`
-	DeadLockDetectionEnabled bool   `json:"dead_lock_detection_enabled"`
+	ClusterName              string             `json:"cluster_name"`
+	ClusterId                int                `json:"cluster_id"`
+	Status                   string             `json:"status"`
+	IsCommunityEdition       bool               `json:"is_community_edition"`
+	IsStandalone             bool               `json:"is_standalone"`
+	ObVersion                string             `json:"ob_version"`
+	DeadLockDetectionEnabled bool               `json:"dead_lock_detection_enabled"`
+	StartupMode              string             `json:"startup_mode"`
+	IsSharedStorage          bool               `json:"is_shared_storage"`
+	SharedStorageInfo        *SharedStorageInfo `json:"shared_storage_info,omitempty"`
 }
 
 type TenantResourceStat struct {
-	TenantId           int     `json:"tenant_id"`
-	TenantName         string  `json:"tenant_name"`
-	CpuUsedPercent     float64 `json:"cpu_used_percent"`
-	MemoryUsedPercent  float64 `json:"memory_used_percent"`
-	DataDiskUsage      int64   `json:"data_disk_usage"`
-	CpuCoreTotal       float64 `json:"cpu_core_total"`
-	MemoryInBytesTotal int64   `json:"memory_in_bytes_total"`
+	TenantId            int      `json:"tenant_id"`
+	TenantName          string   `json:"tenant_name"`
+	CpuUsedPercent      float64  `json:"cpu_used_percent"`
+	MemoryUsedPercent   float64  `json:"memory_used_percent"`
+	DataDiskUsage       int64    `json:"data_disk_usage"`
+	DataDiskSizeTotal   *int64   `json:"data_disk_size_total,omitempty"`
+	DataDiskUsedPercent *float64 `json:"data_disk_used_percent,omitempty"`
+	SharedStorageUsage  int64    `json:"shared_storage_usage,omitempty"`
+	CpuCoreTotal        float64  `json:"cpu_core_total"`
+	MemoryInBytesTotal  int64    `json:"memory_in_bytes_total"`
 }
 
 type ClusterParameter struct {

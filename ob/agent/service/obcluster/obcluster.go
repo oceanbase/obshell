@@ -17,6 +17,7 @@
 package obcluster
 
 import (
+	"context"
 	"encoding/hex"
 	"fmt"
 	"mime/multipart"
@@ -712,6 +713,257 @@ func (obclusterService *ObclusterService) RestoreParamsForUpgrade(params []ocean
 		return nil
 	})
 	return
+}
+
+func (ObclusterService) GetSharedStorageClusterStats() (observerResourceMap map[meta.ObserverSvrInfo]oceanbase.ObServerResource, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var serverResources []oceanbase.ObServerResource
+	err = oceanbaseDb.Table("oceanbase.GV$OB_SERVERS").
+		Select("SVR_IP, SVR_PORT, ZONE, CPU_CAPACITY, CPU_ASSIGNED, " +
+			"round(MEM_CAPACITY/1024/1024/1024, 2) as MEM_CAPACITY, " +
+			"round(MEM_ASSIGNED/1024/1024/1024, 2) as MEM_ASSIGNED, " +
+			"round(LOG_DISK_CAPACITY/1024/1024/1024, 2) as LOG_DISK_CAPACITY, " +
+			"round(LOG_DISK_ASSIGNED/1024/1024/1024, 2) as LOG_DISK_ASSIGNED, " +
+			"round(LOG_DISK_IN_USE/1024/1024/1024, 2) as LOG_DISK_IN_USE, " +
+			"round(DATA_DISK_CAPACITY/1024/1024/1024, 2) as DATA_DISK_CAPACITY, " +
+			"round(DATA_DISK_ASSIGNED/1024/1024/1024, 2) as DATA_DISK_ASSIGNED, " +
+			"round(DATA_DISK_IN_USE/1024/1024/1024, 2) as DATA_DISK_IN_USE, " +
+			"round(MEMORY_LIMIT/1024/1024/1024, 2) as MEMORY_LIMIT, " +
+			"round(DATA_DISK_ALLOCATED/1024/1024/1024, 2) as DATA_DISK_ALLOCATED").
+		Scan(&serverResources).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	observerResourceMap = make(map[meta.ObserverSvrInfo]oceanbase.ObServerResource)
+	for _, serverResource := range serverResources {
+		observerResourceMap[meta.ObserverSvrInfo{
+			Ip:   serverResource.SvrIp,
+			Port: serverResource.SvrPort,
+		}] = serverResource
+	}
+
+	return observerResourceMap, nil
+}
+
+func (obclusterService *ObclusterService) GetSharedStorageTenantStats(tenantId int) (tenantStats *oceanbase.GvObUnitsAggregated, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var tenantStatsSlice []oceanbase.GvObUnitsAggregated
+	err = oceanbaseDb.Table("oceanbase.GV$OB_UNITS").
+		Select("svr_ip, svr_port, unit_id, tenant_id, zone, "+
+			"iops_weight, net_bandwidth_weight, "+
+			"round(memory_size/1024/1024/1024, 2) as memory_size, "+
+			"round(log_disk_size/1024/1024/1024, 2) as log_disk_size, "+
+			"round(log_disk_in_use/1024/1024/1024, 2) as log_disk_in_use, "+
+			"round(data_disk_in_use/1024/1024/1024, 2) as data_disk_in_use, "+
+			"round(data_disk_size/1024/1024/1024, 2) as data_disk_size").
+		Where("tenant_id = ?", tenantId).
+		Scan(&tenantStatsSlice).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tenantStatsSlice) == 0 {
+		return nil, errors.Occur(errors.ErrObTenantNotExist, tenantId)
+	}
+
+	aggregatedStats := &oceanbase.GvObUnitsAggregated{}
+	for _, stats := range tenantStatsSlice {
+		aggregatedStats.IopsWeight += stats.IopsWeight
+		aggregatedStats.NetBandwidthWeight += stats.NetBandwidthWeight
+		aggregatedStats.MemorySize += stats.MemorySize
+		aggregatedStats.LogDiskSize += stats.LogDiskSize
+		aggregatedStats.LogDiskInUse += stats.LogDiskInUse
+		aggregatedStats.DataDiskInUse += stats.DataDiskInUse
+		aggregatedStats.DataDiskSize += stats.DataDiskSize
+	}
+	aggregatedStats.TenantId = tenantId
+
+	return aggregatedStats, nil
+}
+
+func (obclusterService *ObclusterService) GetSharedStorageTenantDataDiskStats() (sizeTotalMap map[int]int64, inUseMap map[int]int64, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var results []struct {
+		DisplayTenantId int   `gorm:"column:DISPLAY_TENANT_ID"`
+		DataDiskSize    int64 `gorm:"column:DATA_DISK_SIZE_TOTAL"`
+		DataDiskInUse   int64 `gorm:"column:DATA_DISK_IN_USE_TOTAL"`
+	}
+
+	// META tenant resources roll into USER tenant (META tenant_id = USER tenant_id - 1)
+	sql := "SELECT CASE WHEN t.tenant_type = 'META' THEN t.tenant_id + 1 ELSE t.tenant_id END AS DISPLAY_TENANT_ID, " +
+		"sum(u.data_disk_size) AS DATA_DISK_SIZE_TOTAL, sum(u.data_disk_in_use) AS DATA_DISK_IN_USE_TOTAL " +
+		"FROM " + GV_OB_UNITS + " u " +
+		"JOIN oceanbase.DBA_OB_TENANTS t ON u.tenant_id = t.tenant_id " +
+		"WHERE t.tenant_type IN ('SYS', 'USER', 'META') " +
+		"GROUP BY DISPLAY_TENANT_ID"
+	err = oceanbaseDb.Raw(sql).Scan(&results).Error
+	if err != nil {
+		return nil, nil, err
+	}
+
+	sizeTotalMap = make(map[int]int64)
+	inUseMap = make(map[int]int64)
+	for _, r := range results {
+		sizeTotalMap[r.DisplayTenantId] = r.DataDiskSize
+		inUseMap[r.DisplayTenantId] = r.DataDiskInUse
+	}
+	return sizeTotalMap, inUseMap, nil
+}
+
+// GetSharedStorageTenantCpuMemoryStats returns per-tenant CPU and memory from GV$OB_UNITS.
+// META tenant resources roll into USER tenant (display_tenant_id = META tenant_id + 1).
+func (obclusterService *ObclusterService) GetSharedStorageTenantCpuMemoryStats() (cpuMap map[int]float64, memoryMap map[int]int64, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, nil, err
+	}
+	var results []struct {
+		DisplayTenantId int     `gorm:"column:DISPLAY_TENANT_ID"`
+		MaxCpuTotal     float64 `gorm:"column:MAX_CPU_TOTAL"`
+		MemoryTotal     int64   `gorm:"column:MEMORY_TOTAL"`
+	}
+	sql := "SELECT CASE WHEN t.tenant_type = 'META' THEN t.tenant_id + 1 ELSE t.tenant_id END AS DISPLAY_TENANT_ID, " +
+		"sum(ifnull(u.max_cpu, 0)) AS MAX_CPU_TOTAL, sum(ifnull(u.memory_size, 0)) AS MEMORY_TOTAL " +
+		"FROM " + GV_OB_UNITS + " u " +
+		"JOIN oceanbase.DBA_OB_TENANTS t ON u.tenant_id = t.tenant_id " +
+		"WHERE t.tenant_type IN ('SYS', 'USER', 'META') " +
+		"GROUP BY DISPLAY_TENANT_ID"
+	err = oceanbaseDb.Raw(sql).Scan(&results).Error
+	if err != nil {
+		return nil, nil, err
+	}
+	cpuMap = make(map[int]float64)
+	memoryMap = make(map[int]int64)
+	for _, r := range results {
+		cpuMap[r.DisplayTenantId] = r.MaxCpuTotal
+		memoryMap[r.DisplayTenantId] = r.MemoryTotal
+	}
+	return cpuMap, memoryMap, nil
+}
+
+func (obclusterService *ObclusterService) GetSharedStorageTenantStatsMap() (dataDiskUsageMap map[int]int64, err error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var results []struct {
+		TenantId   int   `gorm:"column:TENANT_ID"`
+		UsageBytes int64 `gorm:"column:USAGE_BYTES"`
+	}
+
+	err = oceanbaseDb.Table("oceanbase.CDB_OB_SPACE_USAGE").
+		Select("TENANT_ID, sum(USAGE_BYTES) as USAGE_BYTES").
+		Where("SPACE_TYPE = 'Shared Data'").
+		Group("TENANT_ID").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	dataDiskUsageMap = make(map[int]int64)
+	for _, result := range results {
+		dataDiskUsageMap[result.TenantId] = result.UsageBytes
+	}
+
+	return dataDiskUsageMap, nil
+}
+
+func (obclusterService *ObclusterService) GetSharedStorageTotalUsageBytes() (int64, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return 0, err
+	}
+
+	var result struct {
+		TotalUsageBytes int64 `gorm:"column:TOTAL_USAGE_BYTES"`
+	}
+
+	err = oceanbaseDb.Table("oceanbase.CDB_OB_SPACE_USAGE").Where("SPACE_TYPE = 'Shared Data'").Select("sum(USAGE_BYTES) as TOTAL_USAGE_BYTES").Scan(&result).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.TotalUsageBytes, nil
+}
+
+func (obclusterService *ObclusterService) GetSharedStorageInfo() (*oceanbase.DbaObZoneStorage, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+
+	var sharedStorageInfo oceanbase.DbaObZoneStorage
+	err = oceanbaseDb.Table("oceanbase.DBA_OB_ZONE_STORAGE").
+		Where("USED_FOR = ?", "ALL").
+		Select("CREATE_TIME, MODIFY_TIME, ZONE, PATH, ENDPOINT, USED_FOR, " +
+			"STORAGE_ID, AUTHORIZATION, MAX_IOPS, MAX_BANDWIDTH, STATE, EXTENSION").
+		First(&sharedStorageInfo).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &sharedStorageInfo, nil
+}
+
+func (obclusterService *ObclusterService) IsSharedStorageMode() (bool, error) {
+	param, err := obclusterService.GetParameterByName(constant.PARAMETER_OB_STARTUP_MODE)
+	if err != nil {
+		return false, err
+	}
+
+	return strings.EqualFold(param.Value, constant.OB_STARTUP_MODE_SHARED_STORAGE), nil
+}
+
+func (obclusterService *ObclusterService) GetCurrentStorageConfig() (*oceanbase.DbaObZoneStorage, error) {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return nil, err
+	}
+	var storageInfo oceanbase.DbaObZoneStorage
+	err = oceanbaseDb.Table("oceanbase.DBA_OB_ZONE_STORAGE").
+		Where("USED_FOR = ?", "ALL").
+		First(&storageInfo).Error
+	if err != nil {
+		return nil, err
+	}
+	return &storageInfo, nil
+}
+
+// escapeSQLSingleQuotedString escapes a value embedded in a single-quoted OceanBase SQL literal.
+func escapeSQLSingleQuotedString(s string) string {
+	return strings.ReplaceAll(s, "'", "''")
+}
+
+func (obclusterService *ObclusterService) UpdateSharedStorageConfig(ctx context.Context, fullPath, accessInfo string) error {
+	oceanbaseDb, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	sql := fmt.Sprintf(
+		"ALTER SYSTEM ALTER SHARED_STORAGE_DEST PATH='%s' SET ACCESS_INFO='%s'",
+		escapeSQLSingleQuotedString(fullPath),
+		escapeSQLSingleQuotedString(accessInfo),
+	)
+	return oceanbaseDb.WithContext(ctx).Exec(sql).Error
 }
 
 func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []string) (res []oceanbase.ObParameters, err error) {

@@ -53,6 +53,9 @@ func (u *UnitService) CreateUnit(param param.CreateResourceUnitConfigParams) err
 	if param.LogDiskSize != nil {
 		sql += fmt.Sprintf(", LOG_DISK_SIZE '%s'", *param.LogDiskSize)
 	}
+	if param.DataDiskSize != nil {
+		sql += fmt.Sprintf(", DATA_DISK_SIZE '%s'", *param.DataDiskSize)
+	}
 	return db.Exec(sql).Error
 }
 
@@ -80,7 +83,7 @@ func (u *UnitService) GetAllUnitConfig() (units []oceanbaseModel.DbaObUnitConfig
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops").Scan(&units).Error
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Scan(&units).Error
 	return
 }
 
@@ -89,7 +92,7 @@ func (u *UnitService) GetUnitConfigByName(name string) (unit *oceanbaseModel.Dba
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops").Where("NAME = ?", name).Scan(&unit).Error
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Where("NAME = ?", name).Scan(&unit).Error
 	return
 }
 
@@ -98,7 +101,7 @@ func (u *UnitService) GetUnitConfigById(id int) (unit *oceanbaseModel.DbaObUnitC
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops").Where("UNIT_CONFIG_ID = ?", id).Scan(&unit).Error
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Where("UNIT_CONFIG_ID = ?", id).Scan(&unit).Error
 	return
 }
 
@@ -116,7 +119,7 @@ func (u *UnitService) GetUnitConfigsByIds(ids []int) (unitConfigsMap map[int]*oc
 
 	var units []oceanbaseModel.DbaObUnitConfig
 	err = db.Table(DBA_OB_UNIT_CONFIGS).
-		Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops").
+		Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").
 		Where("UNIT_CONFIG_ID IN ?", ids).Scan(&units).Error
 	if err != nil {
 		return nil, err

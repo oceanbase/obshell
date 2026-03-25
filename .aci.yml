@@ -93,7 +93,7 @@ jobs:
     stage: 代码检查
     component: golang-sast
     inputs:
-      excludes: 
+      excludes:
         - "**_test.go**"
     config:
       execute:

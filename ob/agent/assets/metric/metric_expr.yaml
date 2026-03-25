@@ -329,3 +329,17 @@ request_total_sequence: sum(rate(odp_sql_request_total{sqlType="SEQUENCE", @LABE
 request_total_slow: sum(rate(odp_sql_request_total{slowQuery = "true", @LABELS}[@INTERVAL])) by (@GBLABELS)
 request_total_update: sum(rate(odp_sql_request_total{sqlType="UPDATE", @LABELS}[@INTERVAL])) by (@GBLABELS)
 transaction_total: sum(rate(odp_transaction_total{@LABELS}[@INTERVAL])) by (@GBLABELS)
+ss_micro_cache_hit_ratio: 100 * sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_micro_cache",@LABELS}[@INTERVAL])) by (@GBLABELS) / (sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_micro_cache",@LABELS}[@INTERVAL])) by (@GBLABELS) + sum(rate(ob_ss_local_cache_total_miss_cnt{cache_name="ss_micro_cache",@LABELS}[@INTERVAL])) by (@GBLABELS))
+ss_tmpfile_hit_ratio: 100 * sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_tmpfile",@LABELS}[@INTERVAL])) by (@GBLABELS) / (sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_tmpfile",@LABELS}[@INTERVAL])) by (@GBLABELS) + sum(rate(ob_ss_local_cache_total_miss_cnt{cache_name="ss_local_cache_tmpfile",@LABELS}[@INTERVAL])) by (@GBLABELS))
+ss_shared_macro_hit_ratio: 100 * sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_shared_macro",@LABELS}[@INTERVAL])) by (@GBLABELS) / (sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_shared_macro",@LABELS}[@INTERVAL])) by (@GBLABELS) + sum(rate(ob_ss_local_cache_total_miss_cnt{cache_name="ss_local_cache_shared_macro",@LABELS}[@INTERVAL])) by (@GBLABELS))
+ss_private_macro_hit_ratio: 100 * sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_private_macro",@LABELS}[@INTERVAL])) by (@GBLABELS) / (sum(rate(ob_ss_local_cache_total_hit_cnt{cache_name="ss_local_cache_private_macro",@LABELS}[@INTERVAL])) by (@GBLABELS) + sum(rate(ob_ss_local_cache_total_miss_cnt{cache_name="ss_local_cache_private_macro",@LABELS}[@INTERVAL])) by (@GBLABELS))
+ss_micro_cache_size: sum(ob_sysstat{stat_id="245002",@LABELS}) by (@GBLABELS) / 1048576
+ss_macro_cache_size: sum(ob_sysstat{stat_id="245058",@LABELS}) by (@GBLABELS) / 1048576
+ss_micro_cache_used_disk_size: sum(ob_sysstat{stat_id="240019",@LABELS}) by (@GBLABELS) / 1048576
+ss_tablet_meta_cache_used_size: sum(ob_sysstat{stat_id="245023",@LABELS}) by (@GBLABELS) / 1048576
+ss_tmpfile_cache_used_size: sum(ob_sysstat{stat_id="245029",@LABELS}) by (@GBLABELS) / 1048576
+ss_macro_block_cache_used_size: sum(ob_sysstat{stat_id="245035",@LABELS}) by (@GBLABELS) / 1048576
+ss_hot_tablet_macro_block_cache_used_size: sum(ob_sysstat{stat_id="245041",@LABELS}) by (@GBLABELS) / 1048576
+ss_micro_cache_add_failure_count: sum(rate(ob_sysstat{stat_id="240003",@LABELS}[@INTERVAL])) by (@GBLABELS)
+ss_write_cache_size: sum(ob_sysstat{stat_id="245059",@LABELS}) by (@GBLABELS) / 1048576
+ss_data_size: sum(ob_ss_space_usage_usage_bytes{@LABELS}) by (@GBLABELS) / 1073741824

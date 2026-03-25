@@ -999,6 +999,59 @@ OBTENANT:
       name: location_cache
       unit: '%'
     name: Cache hit rate
+  - description: Shared storage cache hit rate
+    metrics:
+    - description: Micro block cache hit rate
+      key: ss_micro_cache_hit_ratio
+      name: ss_micro_cache_hit_ratio
+      unit: '%'
+    - description: Tmpfile cache hit rate
+      key: ss_tmpfile_hit_ratio
+      name: ss_tmpfile_hit_ratio
+      unit: '%'
+    - description: Shared data cache hit rate
+      key: ss_shared_macro_hit_ratio
+      name: ss_shared_macro_hit_ratio
+      unit: '%'
+    - description: Private data cache hit rate
+      key: ss_private_macro_hit_ratio
+      name: ss_private_macro_hit_ratio
+      unit: '%'
+    name: Shared storage cache hit rate
+  - description: Shared storage cache size
+    metrics:
+    - description: Micro block cache size
+      key: ss_micro_cache_size
+      name: ss_micro_cache_size
+      unit: MB
+    - description: Macro block cache size
+      key: ss_macro_cache_size
+      name: ss_macro_cache_size
+      unit: MB
+    - description: Tablet meta cache used size
+      key: ss_tablet_meta_cache_used_size
+      name: ss_tablet_meta_cache_used_size
+      unit: MB
+    - description: Tmpfile cache used size
+      key: ss_tmpfile_cache_used_size
+      name: ss_tmpfile_cache_used_size
+      unit: MB
+    - description: Macro block cache used size
+      key: ss_macro_block_cache_used_size
+      name: ss_macro_block_cache_used_size
+      unit: MB
+    - description: Hot tablet macro block cache used size
+      key: ss_hot_tablet_macro_block_cache_used_size
+      name: ss_hot_tablet_macro_block_cache_used_size
+      unit: MB
+    name: Shared storage cache size
+  - description: Shared data size
+    metrics:
+    - description: Shared data size
+      key: ss_data_size
+      name: ss_data_size
+      unit: GiB
+    name: Shared data size
   - description: Cache request total count
     metrics:
     - description: Block cache total request count

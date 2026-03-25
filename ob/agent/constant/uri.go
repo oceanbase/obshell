@@ -197,4 +197,9 @@ const (
 
 	URI_PARAM_ID      = "id"
 	URI_PATH_PARAM_ID = "/:" + URI_PARAM_ID
+
+	//Used for shared storage
+	URI_SHAREDSTORAGE = "/shared-storage"
+	URI_VALIDATE_KEY  = "/validate-key"
+	URI_SAVE_KEY      = "/save-key"
 )

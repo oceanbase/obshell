@@ -84,6 +84,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	recyclebin := v1.Group(constant.URI_RECYCLEBIN_GROUP)
 	zone := v1.Group(constant.URI_ZONE_GROUP)
 	pkg := v1.Group(constant.URI_PACKAGE)
+	sharedStorage := obcluster.Group(constant.URI_SHAREDSTORAGE)
 
 	if !isLocalRoute {
 		ob.Use(common.Verify())
@@ -167,6 +168,10 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	obcluster.POST(constant.URI_INSPECTION, triggerInspectionHandler)
 	obcluster.GET(constant.URI_INSPECTION+constant.URI_REPORTS, getInspectionHistoryHandler)
 	obcluster.GET(constant.URI_INSPECTION+constant.URI_REPORT+constant.URI_PATH_PARAM_ID, getInspectionReportHandler)
+
+	//sharedStorage routes
+	sharedStorage.POST(constant.URI_VALIDATE_KEY, validateSharedStorageKeyHandler)
+	sharedStorage.POST(constant.URI_SAVE_KEY, saveSharedStorageKeyHandler)
 
 	// observer routes
 	observer.PUT(constant.URI_CONFIG, obServerConfigHandler(true))

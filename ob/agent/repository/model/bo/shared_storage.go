@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package obcluster
+package bo
 
-type ObserverService struct{}
-type ObclusterService struct{}
-
-const (
-	ob_parameters_view = "oceanbase.V$OB_PARAMETERS"
-
-	COLLATIONS          = "information_schema.collations"
-	DBA_OB_SERVERS      = "oceanbase.DBA_OB_SERVERS"
-	DBA_OB_ZONES        = "oceanbase.DBA_OB_ZONES"
-	DBA_OB_UNITS        = "oceanbase.DBA_OB_UNITS"
-	GV_OB_LOG_STAT      = "oceanbase.GV$OB_LOG_STAT"
-	GV_OB_PARAMETERS    = "oceanbase.GV$OB_PARAMETERS"
-	GV_OB_SERVERS       = "oceanbase.GV$OB_SERVERS"
-	GV_OB_UNITS         = "oceanbase.GV$OB_UNITS"
-	CDB_OB_LS_LOCATIONS = "oceanbase.CDB_OB_LS_LOCATIONS"
-)
+type SharedStorageInfo struct {
+	StoragePath  string `json:"storage_path"`
+	AccessDomain string `json:"access_domain"`
+	Region       string `json:"region"`
+	AccessKey    string `json:"access_key"`
+	// Advanced fields (delete mode, checksum, addressing, limits).
+	DeleteMode      string `json:"delete_mode"`
+	ChecksumType    string `json:"checksum_type"`
+	AddressingModel string `json:"addressing_model"`
+	MaxIOPS         int64  `json:"max_iops"`
+	MaxBandwidth    string `json:"max_bandwidth"`
+}

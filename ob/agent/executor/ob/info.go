@@ -199,11 +199,16 @@ func getClusterConfig() (resp *param.ClusterConfig, err error) {
 		zoneMap[server.Zone] = append(zoneMap[server.Zone], svrInfo)
 	}
 
+	isSharedStorage := false
+	if v, err := obclusterService.IsSharedStorageMode(); err == nil {
+		isSharedStorage = v
+	}
 	return &param.ClusterConfig{
-		ClusterID:   clusterID,
-		ClusterName: clusterName,
-		Version:     obVersion,
-		ZoneConfig:  zoneMap,
+		ClusterID:       clusterID,
+		ClusterName:     clusterName,
+		Version:         obVersion,
+		ZoneConfig:      zoneMap,
+		IsSharedStorage: isSharedStorage,
 	}, nil
 }
 

@@ -138,6 +138,7 @@ type DbaObUnit struct {
 	MinCpu         float64 `gorm:"column:MIN_CPU" json:"min_cpu"`
 	MemorySize     int64   `gorm:"column:MEMORY_SIZE" json:"memory_size"`
 	LogDiskSize    int64   `gorm:"column:LOG_DISK_SIZE" json:"log_disk_size"`
+	DataDiskSize   int64   `gorm:"column:DATA_DISK_SIZE" json:"data_disk_size"`
 	MaxIops        uint    `gorm:"column:MAX_IOPS" json:"max_iops"`
 	MinIops        uint    `gorm:"column:MIN_IOPS" json:"min_iops"`
 }

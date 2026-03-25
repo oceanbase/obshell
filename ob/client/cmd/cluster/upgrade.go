@@ -152,12 +152,16 @@ func checkFlagsForUpgrade(opts *clusterUpgradeFlags) (err error) {
 	mode := strings.ToUpper(opts.mode)
 	switch mode {
 	case ob.PARAM_ROLLING_UPGRADE:
-		stdio.Verbose("Checking if the number of zones is greater than 3.")
+		stdio.Verbose("Checking if the number of zones meets rolling upgrade requirement.")
 		obInfo, err := api.GetObInfo()
 		if err != nil {
 			return err
 		}
-		if len(obInfo.Config.ZoneConfig) < 3 {
+		minZones := 3
+		if obInfo.Config.IsSharedStorage {
+			minZones = 2
+		}
+		if len(obInfo.Config.ZoneConfig) < minZones {
 			return errors.Occur(errors.ErrObUpgradeUnableToRollingUpgrade)
 		}
 	case ob.PARAM_STOP_SERVICE_UPGRADE:

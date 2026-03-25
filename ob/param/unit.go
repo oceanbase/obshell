@@ -17,13 +17,14 @@
 package param
 
 type CreateResourceUnitConfigParams struct {
-	Name        *string  `json:"name" binding:"required"`        // unit config name
-	MemorySize  *string  `json:"memory_size" binding:"required"` // memory size, greater than or equal to '1G'
-	MaxCpu      *float64 `json:"max_cpu" binding:"required"`     // max cpu cores, greater than 0
-	MinCpu      *float64 `json:"min_cpu"`                        // min cpu cores, smaller than or equal 'max_cpu_cores'
-	MaxIops     *int     `json:"max_iops"`                       // max iops, greater than or equal to 1024
-	MinIops     *int     `json:"min_iops"`                       // min iops, smaller than or equal to 'max_iops'
-	LogDiskSize *string  `json:"log_disk_size"`                  // log disk size, greater than or equal to '2G'
+	Name         *string  `json:"name" binding:"required"`        // unit config name
+	MemorySize   *string  `json:"memory_size" binding:"required"` // memory size, greater than or equal to '1G'
+	MaxCpu       *float64 `json:"max_cpu" binding:"required"`     // max cpu cores, greater than 0
+	MinCpu       *float64 `json:"min_cpu"`                        // min cpu cores, smaller than or equal 'max_cpu_cores'
+	MaxIops      *int     `json:"max_iops"`                       // max iops, greater than or equal to 1024
+	MinIops      *int     `json:"min_iops"`                       // min iops, smaller than or equal to 'max_iops'
+	LogDiskSize  *string  `json:"log_disk_size"`                  // log disk size, greater than or equal to '2G'
+	DataDiskSize *string  `json:"data_disk_size"`                 // data disk size for shared storage mode, like "10G"
 }
 
 type ClusterUnitConfigLimit struct {

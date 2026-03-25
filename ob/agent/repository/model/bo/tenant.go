@@ -102,6 +102,7 @@ type ObUnitConfig struct {
 	MinCpu       float64   `json:"min_cpu"`
 	MemorySize   int64     `json:"memory_size"`
 	LogDiskSize  int64     `json:"log_disk_size"`
+	DataDiskSize int64     `json:"data_disk_size"`
 	MaxIops      uint      `json:"max_iops"`
 	MinIops      uint      `json:"min_iops"`
 }

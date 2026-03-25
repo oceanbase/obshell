@@ -35,10 +35,11 @@ type ObInfoResp struct {
 }
 
 type ClusterConfig struct {
-	ClusterID   int                        `json:"id"`
-	ClusterName string                     `json:"name"`
-	Version     string                     `json:"version"`
-	ZoneConfig  map[string][]*ServerConfig `json:"topology"`
+	ClusterID       int                        `json:"id"`
+	ClusterName     string                     `json:"name"`
+	Version         string                     `json:"version"`
+	ZoneConfig      map[string][]*ServerConfig `json:"topology"`
+	IsSharedStorage bool                       `json:"is_shared_storage"`
 }
 
 type ServerConfig struct {

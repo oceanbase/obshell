@@ -888,3 +888,61 @@ func observerInfoHandler(c *gin.Context) {
 	observerInfo, err := ob.GetLocalObserverInfo()
 	common.SendResponse(c, observerInfo, err)
 }
+
+// @ID validateSharedStorageKey
+// @Summary validate shared storage key
+// @Description validate shared storage access key and access key secret
+// @Tags obcluster
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.ValidateSharedStorageKeyParam true "shared storage validation params"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/shared-storage/validate-key [post]
+func validateSharedStorageKeyHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+
+	var params param.ValidateSharedStorageKeyParam
+	if err := c.BindJSON(&params); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	err := ob.ValidateSharedStorageKey(&params)
+	common.SendResponse(c, nil, err)
+}
+
+// @ID saveSharedStorageKey
+// @Summary save shared storage key
+// @Description update shared storage access key and secret key
+// @Tags obcluster
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "Authorization"
+// @Param body body param.SaveSharedStorageKeyParam true "shared storage save params"
+// @Success 200 object http.OcsAgentResponse
+// @Failure 400 object http.OcsAgentResponse
+// @Failure 401 object http.OcsAgentResponse
+// @Failure 500 object http.OcsAgentResponse
+// @Router /api/v1/obcluster/shared-storage/save-key [post]
+func saveSharedStorageKeyHandler(c *gin.Context) {
+	if !meta.OCS_AGENT.IsClusterAgent() {
+		common.SendResponse(c, nil, errors.Occur(errors.ErrAgentIdentifyNotSupportOperation, meta.OCS_AGENT.String(), meta.OCS_AGENT.GetIdentity(), meta.CLUSTER_AGENT))
+		return
+	}
+
+	var params param.SaveSharedStorageKeyParam
+	if err := c.BindJSON(&params); err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+
+	err := ob.SaveSharedStorageKey(c, &params)
+	common.SendResponse(c, nil, err)
+}

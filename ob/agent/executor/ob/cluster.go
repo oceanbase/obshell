@@ -95,7 +95,16 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	taskIdMap := buildTaskIdMap(&info)
 	mainDagTaskInfo := getMainDagTaskInfoWithName()
 
-	zones, rootServers, serverResourceMap, allAgentsBo, err := getZonesAndAgents(fromLocal)
+	var isSharedStorage bool
+	if !fromLocal {
+		isSharedStorage, info.StartupMode, err = getStartupMode()
+		if err != nil {
+			return &info, errors.Occurf(errors.ErrCommonUnexpected, "Failed to get startup mode: %v", err)
+		}
+		info.IsSharedStorage = isSharedStorage
+	}
+
+	zones, rootServers, serverResourceMap, allAgentsBo, err := getZonesAndAgents(fromLocal, isSharedStorage)
 	if err != nil {
 		if !fromLocal {
 			// Return partial info (basic cluster info) so caller can still use it; Zones will be empty
@@ -106,9 +115,17 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	buildZonesIntoInfo(&info, zones, allAgentsBo, rootServers, serverResourceMap, taskIdMap, mainDagTaskInfo, fromLocal)
 
 	if !fromLocal {
-		_ = calculateClusterStats(&info)
 		_ = calculateTenantStats(&info)
 		_ = buildLicenseInfo(&info)
+
+		if isSharedStorage {
+			err = GetObclusterSummaryWithSharedStorage(&info)
+			if err != nil {
+				return &info, err
+			}
+		} else {
+			_ = calculateClusterStats(&info)
+		}
 	}
 
 	return &info, nil
@@ -132,11 +149,12 @@ func buildDegradedClusterInfo() (*bo.ClusterInfo, error) {
 
 	taskIdMap := buildTaskIdMap(&info)
 	mainDagTaskInfo := getMainDagTaskInfoWithName()
-	zones, rootServers, serverResourceMap, allAgentsBo, _ := getZonesAndAgents(true)
+	zones, rootServers, serverResourceMap, allAgentsBo, _ := getZonesAndAgents(true, false)
 	buildZonesIntoInfo(&info, zones, allAgentsBo, rootServers, serverResourceMap, taskIdMap, mainDagTaskInfo, true)
 
 	// Tenants and TenantStats will be empty (require OB queries)
 	// License will be nil (requires OB query)
+	// In degraded mode (OB unavailable), we don't attempt to get shared storage info
 
 	return &info, nil
 }
@@ -167,6 +185,7 @@ func buildObserverInfoLocal(server *bo.Observer, zoneName string, allAgents []bo
 		obState = oceanbase.GetStateQuick()
 		server.DataDir = getLocalObserverDataDirFast()
 		server.RedoDir = getLocalObserverRedoDir()
+		server.LogDir = getLocalObserverLogDir()
 		agentPort = meta.OCS_AGENT.GetPort()
 	} else {
 		// Remote observer: request info from agent, fall back to basic info on failure
@@ -179,6 +198,7 @@ func buildObserverInfoLocal(server *bo.Observer, zoneName string, allAgents []bo
 		} else {
 			server.DataDir = observerInfo.DataDir
 			server.RedoDir = observerInfo.RedoDir
+			server.LogDir = observerInfo.LogDir
 			obState = observerInfo.ObStatus
 		}
 	}
@@ -199,11 +219,17 @@ func GetObclusterTopology() (*bo.ClusterTopology, error) {
 		return buildDegradedTopology()
 	}
 
+	isSharedStorage, _, err := getStartupMode()
+	if err != nil {
+		log.Warnf("Failed to get startup mode: %v", err)
+		isSharedStorage = false
+	}
+
 	info := bo.ClusterInfo{}
 	taskIdMap := buildTaskIdMap(&info)
 	mainDagTaskInfo := getMainDagTaskInfoWithName()
 
-	zones, rootServers, serverResourceMap, allAgentsBo, err := getZonesAndAgents(false)
+	zones, rootServers, serverResourceMap, allAgentsBo, err := getZonesAndAgents(false, isSharedStorage)
 	if err != nil {
 		if isClusterUnavailableError(err) {
 			log.Warnf("Failed to collect zone and server data: %v", err)
@@ -220,7 +246,7 @@ func buildDegradedTopology() (*bo.ClusterTopology, error) {
 	info := bo.ClusterInfo{}
 	taskIdMap := buildTaskIdMap(&info)
 	mainDagTaskInfo := getMainDagTaskInfoWithName()
-	zones, rootServers, serverResourceMap, allAgentsBo, _ := getZonesAndAgents(true)
+	zones, rootServers, serverResourceMap, allAgentsBo, _ := getZonesAndAgents(true, false)
 	log.Infof("[buildDegradedTopology] collect zone and server data from local: %v", zones)
 	buildZonesIntoInfo(&info, zones, allAgentsBo, rootServers, serverResourceMap, taskIdMap, mainDagTaskInfo, true)
 	return &bo.ClusterTopology{Zones: info.Zones}, nil
@@ -271,8 +297,10 @@ func buildBasicClusterInfo() (info bo.ClusterInfo, err error) {
 	return info, nil
 }
 
-// collectZoneAndServerData collects zones, root servers, resource maps, and agent architecture data
-func collectZoneAndServerData() (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, err error) {
+// collectZoneAndServerData collects zones, root servers, resource maps, and agent architecture data.
+// When isSharedStorage is true, uses GetSharedStorageClusterStats (GV$OB_SERVERS with DATA_DISK_ASSIGNED);
+// otherwise uses GetAllObserverResourceMap (GV$OB_SERVERS raw columns).
+func collectZoneAndServerData(isSharedStorage bool) (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, err error) {
 	rootServers, err = obclusterService.GetAllZoneRootServers()
 	if err != nil {
 		return nil, nil, nil, err
@@ -318,15 +346,32 @@ func collectZoneAndServerData() (zones []bo.Zone, rootServers map[string]modeloc
 		zones = append(zones, zone)
 	}
 
-	serverResourceMap, err = obclusterService.GetAllObserverResourceMap()
-	if err != nil {
-		return nil, nil, nil, err
+	if isSharedStorage {
+		sharedStatsMap, err2 := obclusterService.GetSharedStorageClusterStats()
+		if err2 != nil {
+			return nil, nil, nil, err2
+		}
+		serverResourceMap = make(map[meta.ObserverSvrInfo]*bo.BaseResourceStats, len(sharedStatsMap))
+		for k, v := range sharedStatsMap {
+			boStats := v.ToBO()
+			serverResourceMap[k] = &boStats
+		}
+	} else {
+		capacityMap, err2 := obclusterService.GetAllObserverResourceMap()
+		if err2 != nil {
+			return nil, nil, nil, err2
+		}
+		serverResourceMap = make(map[meta.ObserverSvrInfo]*bo.BaseResourceStats, len(capacityMap))
+		for k, v := range capacityMap {
+			boStats := v.ToBO()
+			serverResourceMap[k] = &boStats
+		}
 	}
 
 	return zones, rootServers, serverResourceMap, nil
 }
 
-func collectZoneAndServerDataFromLocal() (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, err error) {
+func collectZoneAndServerDataFromLocal() (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, err error) {
 	allAgentsSqlite, err := agentService.GetAllAgentsDO()
 	if err != nil {
 		return nil, nil, nil, err
@@ -359,7 +404,8 @@ func collectZoneAndServerDataFromLocal() (zones []bo.Zone, rootServers map[strin
 
 // getZonesAndAgents returns zones, rootServers, serverResourceMap and allAgentsBo.
 // When fromLocal is true, data comes from SQLite (rootServers and serverResourceMap are nil); otherwise from OB.
-func getZonesAndAgents(fromLocal bool) (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, allAgentsBo []bo.AllAgent, err error) {
+// When isSharedStorage is true and !fromLocal, serverResourceMap uses GetSharedStorageClusterStats; otherwise GetAllObserverResourceMap.
+func getZonesAndAgents(fromLocal bool, isSharedStorage bool) (zones []bo.Zone, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, allAgentsBo []bo.AllAgent, err error) {
 	if fromLocal {
 		zones, rootServers, serverResourceMap, err = collectZoneAndServerDataFromLocal()
 		if err != nil {
@@ -369,7 +415,7 @@ func getZonesAndAgents(fromLocal bool) (zones []bo.Zone, rootServers map[string]
 		allAgentsBo = agentsToBoFromSQLite(allAgents)
 		return zones, rootServers, serverResourceMap, allAgentsBo, nil
 	}
-	zones, rootServers, serverResourceMap, err = collectZoneAndServerData()
+	zones, rootServers, serverResourceMap, err = collectZoneAndServerData(isSharedStorage)
 	if err != nil {
 		return nil, nil, nil, nil, err
 	}
@@ -379,7 +425,7 @@ func getZonesAndAgents(fromLocal bool) (zones []bo.Zone, rootServers map[string]
 }
 
 // buildZonesIntoInfo fills info.Zones from zones and agents; fromLocal selects buildZonesInfoLocal vs buildZonesInfo.
-func buildZonesIntoInfo(info *bo.ClusterInfo, zones []bo.Zone, allAgentsBo []bo.AllAgent, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo, fromLocal bool) {
+func buildZonesIntoInfo(info *bo.ClusterInfo, zones []bo.Zone, allAgentsBo []bo.AllAgent, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo, fromLocal bool) {
 	if fromLocal {
 		buildZonesInfoLocal(info, zones, allAgentsBo, taskIdMap, mainDagTaskInfo)
 		return
@@ -408,7 +454,7 @@ func buildTaskIdMap(info *bo.ClusterInfo) map[string]string {
 
 // buildZonesInfo builds the zones and observers information
 // When zones is nil or empty, it will build observer info from agents (cluster unavailable scenario)
-func buildZonesInfo(info *bo.ClusterInfo, zones []bo.Zone, allAgents []bo.AllAgent, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo) error {
+func buildZonesInfo(info *bo.ClusterInfo, zones []bo.Zone, allAgents []bo.AllAgent, rootServers map[string]modeloceanbase.RootServer, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo) error {
 	for _, zone := range zones {
 		zone.Status = zoneStatusMap[fixZoneStatus(&zone, mainDagTaskInfo)]
 		if rootServers != nil {
@@ -430,7 +476,7 @@ func buildZonesInfo(info *bo.ClusterInfo, zones []bo.Zone, allAgents []bo.AllAge
 }
 
 // buildObserverInfo builds the observer information for a single server
-func buildObserverInfo(server *bo.Observer, zoneName string, allAgents []bo.AllAgent, serverResourceMap map[meta.ObserverSvrInfo]modeloceanbase.ObServerCapacity, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo) {
+func buildObserverInfo(server *bo.Observer, zoneName string, allAgents []bo.AllAgent, serverResourceMap map[meta.ObserverSvrInfo]*bo.BaseResourceStats, taskIdMap map[string]string, mainDagTaskInfo *MainDagTaskInfo) {
 	obState := oceanbase.STATE_PROCESS_NOT_RUNNING
 	var agentPort int
 	if server.Ip == meta.OCS_AGENT.GetIp() && server.SvrPort == meta.RPC_PORT {
@@ -438,6 +484,7 @@ func buildObserverInfo(server *bo.Observer, zoneName string, allAgents []bo.AllA
 		obState = oceanbase.GetStateQuick()
 		server.DataDir = getLocalObserverDataDirFast()
 		server.RedoDir = getLocalObserverRedoDir()
+		server.LogDir = getLocalObserverLogDir()
 		agentPort = meta.OCS_AGENT.GetPort()
 	} else {
 		agentPort = server.ObshellPort
@@ -452,6 +499,7 @@ func buildObserverInfo(server *bo.Observer, zoneName string, allAgents []bo.AllA
 		} else {
 			server.DataDir = observerInfo.DataDir
 			server.RedoDir = observerInfo.RedoDir
+			server.LogDir = observerInfo.LogDir
 			obState = observerInfo.ObStatus
 		}
 	}
@@ -467,7 +515,7 @@ func buildObserverInfo(server *bo.Observer, zoneName string, allAgents []bo.AllA
 		Ip:   server.Ip,
 		Port: server.SvrPort,
 	}]; ok {
-		server.Stats.BaseResourceStats = baseResourceStat.ToBO()
+		server.Stats.BaseResourceStats = *baseResourceStat
 		server.Stats.FillExtendDiskStats()
 		server.Stats.Zone = zoneName
 		server.Stats.Ip = server.Ip
@@ -485,18 +533,57 @@ func calculateClusterStats(info *bo.ClusterInfo) error {
 	return nil
 }
 
+// mergeTenantSysStats merges USER + META tenant stats for shared storage display
+func mergeTenantSysStats(m map[int]map[int64]modeloceanbase.SysStat, displayTenantId int, isSharedStorage bool) map[int64]modeloceanbase.SysStat {
+	out := make(map[int64]modeloceanbase.SysStat)
+	add := func(tenantId int) {
+		for statId, s := range m[tenantId] {
+			existing := out[statId]
+			out[statId] = modeloceanbase.SysStat{ConId: s.ConId, StatId: s.StatId, Value: existing.Value + s.Value}
+		}
+	}
+	add(displayTenantId)
+	if isSharedStorage && displayTenantId > 1 {
+		add(displayTenantId - 1)
+	}
+	return out
+}
+
 // calculateTenantStats calculates and sets the tenant resource statistics
 func calculateTenantStats(info *bo.ClusterInfo) error {
-	tenantDataDiskUsageMap, err := tenantService.GetTenantDataDiskUsageMap()
-	if err != nil {
-		return err
+	var tenantDataDiskUsageMap map[int]int64
+	var tenantDataDiskSizeTotalMap map[int]int64
+
+	if info.IsSharedStorage {
+		sizeTotalMap, inUseMap, err := obclusterService.GetSharedStorageTenantDataDiskStats()
+		if err != nil {
+			return err
+		}
+		tenantDataDiskSizeTotalMap = sizeTotalMap
+		tenantDataDiskUsageMap = inUseMap
+	} else {
+		var err error
+		tenantDataDiskUsageMap, err = tenantService.GetTenantDataDiskUsageMap()
+		if err != nil {
+			return err
+		}
 	}
 
 	// Optimization: Batch get all tenant sys stats in one query instead of multiple separate queries
 	if len(info.Tenants) > 0 {
-		tenantIds := make([]int, 0, len(info.Tenants))
+		tenantIds := make([]int, 0, len(info.Tenants)*2)
+		tenantIdSet := make(map[int]struct{})
 		for _, tenant := range info.Tenants {
 			tenantIds = append(tenantIds, tenant.Id)
+			tenantIdSet[tenant.Id] = struct{}{}
+			// Shared storage: USER tenant includes META (tenant_id - 1)
+			if info.IsSharedStorage && tenant.Id > 1 {
+				metaId := tenant.Id - 1
+				if _, ok := tenantIdSet[metaId]; !ok {
+					tenantIds = append(tenantIds, metaId)
+					tenantIdSet[metaId] = struct{}{}
+				}
+			}
 		}
 
 		statIds := []int{SYS_STAT_CPU_USAGE_STAT_ID, SYS_STAT_MEMORY_USAGE_STAT_ID, SYS_STAT_MAX_CPU_STAT_ID, SYS_STAT_MEMORY_SIZE_STAT_ID}
@@ -506,10 +593,7 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 		}
 
 		for _, tenant := range info.Tenants {
-			tenantSysStatsMap := tenantStatsMap[tenant.Id]
-			if tenantSysStatsMap == nil {
-				tenantSysStatsMap = make(map[int64]modeloceanbase.SysStat)
-			}
+			tenantSysStatsMap := mergeTenantSysStats(tenantStatsMap, tenant.Id, info.IsSharedStorage)
 
 			var tenantResourceStat bo.TenantResourceStat
 			tenantResourceStat.TenantId = tenant.Id
@@ -518,12 +602,12 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_CPU_USAGE_STAT_ID]; ok {
 				cpuUsage = float64(sysStat.Value)
 			}
-			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MAX_CPU_STAT_ID]; ok {
-				maxCpu = float64(sysStat.Value)
-				tenantResourceStat.CpuCoreTotal = (maxCpu / 100)
-			}
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_USAGE_STAT_ID]; ok {
 				memoryUsage = float64(sysStat.Value)
+			}
+			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MAX_CPU_STAT_ID]; ok {
+				maxCpu = float64(sysStat.Value)
+				tenantResourceStat.CpuCoreTotal = maxCpu / 100
 			}
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_SIZE_STAT_ID]; ok {
 				memorySize = float64(sysStat.Value)
@@ -536,6 +620,13 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 				tenantResourceStat.MemoryUsedPercent = memoryUsage / memorySize * 100
 			}
 			tenantResourceStat.DataDiskUsage = tenantDataDiskUsageMap[tenant.Id]
+			if info.IsSharedStorage && tenantDataDiskSizeTotalMap != nil {
+				if dataDiskSizeTotal := tenantDataDiskSizeTotalMap[tenant.Id]; dataDiskSizeTotal > 0 {
+					tenantResourceStat.DataDiskSizeTotal = &dataDiskSizeTotal
+					pct := float64(tenantResourceStat.DataDiskUsage) / float64(dataDiskSizeTotal) * 100
+					tenantResourceStat.DataDiskUsedPercent = &pct
+				}
+			}
 			info.TenantStats = append(info.TenantStats, tenantResourceStat)
 		}
 	}
@@ -596,6 +687,16 @@ func getLocalObserverRedoDir() string {
 	return realPath
 }
 
+func getLocalObserverLogDir() string {
+	logPath := filepath.Join(global.HomePath, constant.OB_DIR_LOG)
+	realPath, err := filepath.EvalSymlinks(logPath)
+	if err != nil {
+		log.Warnf("Failed to resolve log dir symlink: %v", err)
+		return logPath
+	}
+	return realPath
+}
+
 func GetLocalObserverInfo() (*bo.Observer, error) {
 	svrInfo := meta.ObserverSvrInfo{
 		Ip:   meta.OCS_AGENT.GetIp(),
@@ -623,6 +724,7 @@ func GetLocalObserverInfo() (*bo.Observer, error) {
 	// Use fast local methods that don't query OB
 	observerBo.DataDir = getLocalObserverDataDirFast()
 	observerBo.RedoDir = getLocalObserverRedoDir()
+	observerBo.LogDir = getLocalObserverLogDir()
 	observerBo.ObStatus = oceanbase.GetStateQuick()
 
 	return &observerBo, nil

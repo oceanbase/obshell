@@ -84,8 +84,15 @@ func ScaleOutTenantReplicas(tenantName string, param *param.ScaleOutTenantReplic
 		return nil, err
 	}
 
-	if err := CheckResourceEnough(param.ZoneList); err != nil {
+	// Only check resource for non-shared-storage mode
+	isSharedStorage, err := obclusterService.IsSharedStorageMode()
+	if err != nil {
 		return nil, err
+	}
+	if !isSharedStorage {
+		if err := CheckResourceEnough(param.ZoneList); err != nil {
+			return nil, err
+		}
 	}
 
 	// Create 'Scale out tenant replicas' dag instance.

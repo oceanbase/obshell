@@ -20,6 +20,9 @@ const (
 	PARAMETER_ENABLE_REBALANCE               = "enable_rebalance"
 	PARAMETER_GLOBAL_INDEX_AUTO_SPLIT_POLICY = "global_index_auto_split_policy"
 	PARAMETER_MIN_FULL_RESOURCE_POOL_MEMORY  = "__min_full_resource_pool_memory"
+	PARAMETER_OB_STARTUP_MODE                = "ob_startup_mode"
+
+	OB_STARTUP_MODE_SHARED_STORAGE = "SHARED_STORAGE"
 
 	VARIABLE_TIME_ZONE              = "time_zone"
 	VARIABLE_CHARACTER_SET_SERVER   = "character_set_server"

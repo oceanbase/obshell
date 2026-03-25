@@ -999,6 +999,59 @@ OBTENANT:
       name: location_cache
       unit: '%'
     name: "缓存命中率"
+  - description: "共享存储缓存命中率"
+    metrics:
+    - description: "微块缓存命中率"
+      key: ss_micro_cache_hit_ratio
+      name: ss_micro_cache_hit_ratio
+      unit: '%'
+    - description: "临时文件缓存命中率"
+      key: ss_tmpfile_hit_ratio
+      name: ss_tmpfile_hit_ratio
+      unit: '%'
+    - description: "共享数据缓存命中率"
+      key: ss_shared_macro_hit_ratio
+      name: ss_shared_macro_hit_ratio
+      unit: '%'
+    - description: "私有数据缓存命中率"
+      key: ss_private_macro_hit_ratio
+      name: ss_private_macro_hit_ratio
+      unit: '%'
+    name: "共享存储缓存命中率"
+  - description: "共享存储缓存大小"
+    metrics:
+    - description: "微块缓存大小"
+      key: ss_micro_cache_size
+      name: ss_micro_cache_size
+      unit: MB
+    - description: "宏块缓存大小"
+      key: ss_macro_cache_size
+      name: ss_macro_cache_size
+      unit: MB
+    - description: "tablet_meta 使用大小"
+      key: ss_tablet_meta_cache_used_size
+      name: ss_tablet_meta_cache_used_size
+      unit: MB
+    - description: "临时文件缓存使用大小"
+      key: ss_tmpfile_cache_used_size
+      name: ss_tmpfile_cache_used_size
+      unit: MB
+    - description: "宏块文件缓存使用大小"
+      key: ss_macro_block_cache_used_size
+      name: ss_macro_block_cache_used_size
+      unit: MB
+    - description: "热点分区宏块缓存使用大小"
+      key: ss_hot_tablet_macro_block_cache_used_size
+      name: ss_hot_tablet_macro_block_cache_used_size
+      unit: MB
+    name: "共享存储缓存大小"
+  - description: "共享数据大小"
+    metrics:
+    - description: "共享数据大小"
+      key: ss_data_size
+      name: ss_data_size
+      unit: GiB
+    name: "共享数据大小"
   - description: "缓存请求次数"
     metrics:
     - description: "块缓存请求次数"

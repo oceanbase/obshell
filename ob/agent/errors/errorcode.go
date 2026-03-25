@@ -422,6 +422,13 @@ var (
 	ErrCliUnixSocketRequestFailed               = NewErrorCode("Cli.UnixSocket.RequestFailed", unexpected, "err.cli.unix.socket.request.failed")                                // "request unix-socket [%s]%s failed: %v"
 	ErrEmpty                                    = NewErrorCode("Empty", unexpected, "err.empty")                                                                                // this error code won't be display
 
+	// Shared Storage
+	ErrSharedStorageNotSupported       = NewErrorCode("SharedStorage.NotSupported", badRequest, "err.shared.storage.not.supported")
+	ErrSharedStorageKeyValidateTimeout = NewErrorCode("SharedStorage.KeyValidateTimeout", unexpected, "err.shared.storage.key.validate.timeout")
+	ErrSharedStorageKeyValidateFailed  = NewErrorCode("SharedStorage.KeyValidateFailed", badRequest, "err.shared.storage.key.validate.failed")
+	ErrSharedStorageBucketAccessDenied = NewErrorCode("SharedStorage.BucketAccessDenied", badRequest, "err.shared.storage.bucket.access.denied")
+	ErrSharedStorageInfoNotFound       = NewErrorCode("SharedStorage.InfoNotFound", notFound, "err.shared.storage.info.not.found")
+
 	// 启动相关
 	ErrAgentUnixSocketListenerCreateFailed = NewErrorCode("Agent.Unix.Socket.Listener.CreateFailed", unexpected, "err.agent.unix.socket.listener.create.failed") // "create unix socket listerner failed"
 	ErrAgentTCPListenerCreateFailed        = NewErrorCode("Agent.TCP.Listener.CreateFailed", unexpected, "err.agent.tcp.listener.create.failed")                 // "create tcp listerner failed"

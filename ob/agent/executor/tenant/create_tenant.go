@@ -318,10 +318,11 @@ func checkZoneResourceForUnit(zone string, unitName string, unitNum int) error {
 }
 
 type gatheredUnitInfo struct {
-	MinCpu      float64
-	MaxCpu      float64
-	MemorySize  int64
-	LogDiskSize int64
+	MinCpu       float64
+	MaxCpu       float64
+	MemorySize   int64
+	LogDiskSize  int64
+	DataDiskSize int64
 }
 
 func gatherAllUnitsOnServer(svrIp string, svrPort int) (*gatheredUnitInfo, error) {
@@ -335,6 +336,7 @@ func gatherAllUnitsOnServer(svrIp string, svrPort int) (*gatheredUnitInfo, error
 		used.MinCpu += unit.MinCpu
 		used.MemorySize += unit.MemorySize
 		used.LogDiskSize += unit.LogDiskSize
+		used.DataDiskSize += unit.DataDiskSize
 	}
 	return used, nil
 }
@@ -365,8 +367,15 @@ func CreateTenant(param *param.CreateTenantParam) (*task.DagDetailDTO, error) {
 		return nil, err
 	}
 
-	if err := CheckResourceEnough(param.ZoneList); err != nil {
+	// Only check resource for non-shared-storage mode
+	isSharedStorage, err := obclusterService.IsSharedStorageMode()
+	if err != nil {
 		return nil, err
+	}
+	if !isSharedStorage {
+		if err := CheckResourceEnough(param.ZoneList); err != nil {
+			return nil, err
+		}
 	}
 
 	// Create 'Create tenant' dag instance.

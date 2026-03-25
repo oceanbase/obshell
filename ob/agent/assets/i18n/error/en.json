@@ -215,7 +215,7 @@
   "err.ob.upgrade.path.not.exist": "Cannot find the upgrade path from the current version %s to the target version %s, please check the upgrade dependency YAML file",
   "err.ob.upgrade.to.deprecated.version": "Target version %s is deprecated",
   "err.ob.upgrade.to.lower.version": "Target version %s is not greater than current version %s. Please verify if the parameters have been filled out correctly",
-  "err.ob.upgrade.unable.to.rolling.upgrade": "Rolling upgrade is not supported when zone number is lower than 3",
+  "err.ob.upgrade.unable.to.rolling.upgrade": "Rolling upgrade requires at least 3 zones (or 2 zones for shared storage mode)",
   "err.ob.upgrade.tenants.schema.not.refreshed": "There are tenants with unfreshed schema: %s",
   "err.ob.upgrade.tablet.in.merging": "There are %d tablets merging",
   "err.ob.upgrade.tenant.in.major.compaction": "There are %s tenants merging",
@@ -348,5 +348,10 @@
   "err.credential.host.already.exists": "Host %s already has a credential",
   "err.credential.name.already.exists": "Credential name %s already exists",
   "err.credential.host.not.in.all.agent": "Host %s is not found in all_agent table",
-  "err.credential.ssh.invalid.port": "The SSH port '%s' is invalid, must be in [1, 65535]"
+  "err.credential.ssh.invalid.port": "The SSH port '%s' is invalid, must be in [1, 65535]",
+  "err.shared.storage.not.supported": "Cluster does not support shared storage mode",
+  "err.shared.storage.key.validate.failed": "Shared storage key validation failed: %s",
+  "err.shared.storage.key.validate.timeout": "Shared storage key validation timeout",
+  "err.shared.storage.bucket.access.denied": "Bucket does not exist or access denied",
+  "err.shared.storage.info.not.found": "Shared storage info not found in DBA_OB_ZONE_STORAGE"
 }

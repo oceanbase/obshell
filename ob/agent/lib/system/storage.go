@@ -40,12 +40,13 @@ import (
 )
 
 const (
-	host       = "host"
-	accessID   = "access_id"
-	accessKey  = "access_key"
-	appID      = "appid"
-	s3Region   = "s3_region"
-	deleteMode = "delete_mode"
+	host           = "host"
+	accessID       = "access_id"
+	accessKey      = "access_key"
+	appID          = "appid"
+	s3Region       = "s3_region"
+	deleteMode     = "delete_mode"
+	forcePathStyle = "force_path_style"
 )
 
 type StorageInterface interface {
@@ -205,7 +206,8 @@ func (c *COSConfig) CheckWritePermission() error {
 
 type S3Config struct {
 	BaseConf
-	S3Region string
+	S3Region       string
+	ForcePathStyle bool
 }
 
 func (c *S3Config) NewWithObjectKey(subpath string) StorageInterface {
@@ -251,11 +253,15 @@ func (c *S3Config) CheckWritePermission() (err error) {
 			Credentials: credentials.NewStaticCredentials(c.AccessID, c.AccessKey, ""),
 		})
 	} else {
-		sess, err = session.NewSession(&aws.Config{
+		awsConfig := &aws.Config{
 			Region:      aws.String("auto"),
 			Endpoint:    aws.String(c.Host),
 			Credentials: credentials.NewStaticCredentials(c.AccessID, c.AccessKey, ""),
-		})
+		}
+		if c.ForcePathStyle {
+			awsConfig.S3ForcePathStyle = aws.Bool(true)
+		}
+		sess, err = session.NewSession(awsConfig)
 	}
 	if err != nil {
 		return errors.Wrap(err, "create s3 session")
@@ -403,6 +409,9 @@ func GetS3Storage(url string) (StorageInterface, error) {
 		return nil, errors.Wrap(err, "parse s3 config")
 	}
 	conf.S3Region = params.Get(s3Region)
+	if params.Get(forcePathStyle) == "true" {
+		conf.ForcePathStyle = true
+	}
 	return conf, nil
 }
 
