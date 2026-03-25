@@ -4,7 +4,7 @@ import useDocumentTitle from '@/hook/useDocumentTitle';
 import useReload from '@/hook/useReload';
 import useUiMode from '@/hook/useUiMode';
 import { obStart, obStop } from '@/service/obshell/ob';
-import { obclusterInfo, obclusterSetParameters } from '@/service/obshell/obcluster';
+import { obclusterSetParameters } from '@/service/obshell/obcluster';
 import { getAgentMainDags } from '@/service/obshell/task';
 import { formatMessage } from '@/util/intl';
 import {
@@ -22,7 +22,7 @@ import {
 } from '@oceanbase/design';
 import { EllipsisOutlined } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
-import { history, useDispatch, useModel } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { useRafInterval, useRequest } from 'ahooks';
 import { flatten, isEmpty } from 'lodash';
 import React, { useEffect, useState } from 'react';
@@ -38,7 +38,6 @@ import ZoneListOrTopo from './ZoneListOrTopo';
 
 const Detail: React.FC = () => {
   const { token } = theme.useToken();
-  const dispatch = useDispatch();
   const { isDesktopMode } = useUiMode();
 
   useDocumentTitle(
@@ -46,29 +45,12 @@ const Detail: React.FC = () => {
   );
 
   const { getTopologyInfo, refreshTopologyInfo, topologyInfoLoading } = useModel('topologyInfo');
+  const { clusterData, getObclusterInfo, refreshClusterData, clusterDataLoading } =
+    useModel('cluster');
 
-  const {
-    data: obclusterInfoRes,
-    refresh: refreshObclusterInfo,
-    loading: obclusterInfoLoading,
-  } = useRequest(
-    () =>
-      obclusterInfo({
-        HIDE_ERROR_MESSAGE: true,
-      }),
-    {
-      onSuccess: res => {
-        if (res.successful) {
-          dispatch({
-            type: 'cluster/update',
-            payload: {
-              clusterData: res.data,
-            },
-          });
-        }
-      },
-    }
-  );
+  useEffect(() => {
+    getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
+  }, []);
 
   const { runAsync: runAgentMainDags, loading: agentMainDagsLoading } = useRequest(
     getAgentMainDags,
@@ -78,7 +60,7 @@ const Detail: React.FC = () => {
   );
 
   const refresh = () => {
-    refreshObclusterInfo();
+    refreshClusterData();
     refreshTopologyInfo();
   };
 
@@ -86,12 +68,11 @@ const Detail: React.FC = () => {
     getTopologyInfo();
   }, []);
 
-  const clusterData: API.ClusterInfo = obclusterInfoRes?.data || {};
-  const isAbnormal = obclusterInfoRes?.data ? clusterData.status !== 'AVAILABLE' : false;
+  const isAbnormal = clusterData ? clusterData.status !== 'AVAILABLE' : false;
 
   useRafInterval(
     () => {
-      if (obclusterInfoLoading || topologyInfoLoading) return;
+      if (clusterDataLoading || topologyInfoLoading) return;
       refresh();
     },
     isAbnormal ? 10000 : undefined
@@ -553,7 +534,7 @@ const Detail: React.FC = () => {
 
   return (
     <PageContainer
-      loading={reloading || (!isAbnormal && obclusterInfoLoading)}
+      loading={reloading || (!isAbnormal && clusterDataLoading)}
       ghost={true}
       header={{
         title: (
@@ -659,7 +640,7 @@ const Detail: React.FC = () => {
       <LicenseAlert clusterData={clusterData} />
       <Row gutter={[16, 16]}>
         <Col span={24}>
-          <BaseInfo clusterData={clusterData} />
+          <BaseInfo />
         </Col>
         {overviewStatusType.map(item => {
           return (
@@ -702,10 +683,10 @@ const Detail: React.FC = () => {
           <CompactionTimeTop3 />
         </Col>
         <Col span={24}>
-          <ClusterInfo clusterData={clusterData} />
+          <ClusterInfo />
         </Col>
         <Col span={24}>
-          <TenantResourceTop3 clusterData={clusterData} />
+          <TenantResourceTop3 />
         </Col>
         <Col span={24}>
           <ZoneListOrTopo />

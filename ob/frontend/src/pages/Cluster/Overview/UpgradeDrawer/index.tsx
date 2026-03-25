@@ -14,7 +14,7 @@ import MySelect from '@/component/MySelect';
 import PackageSelect, { PackageSelectRef } from '@/component/PackageSelect';
 import UploadPackageDrawer from '@/component/UploadPackageDrawer';
 import { obUpgrade } from '@/service/obshell/upgrade';
-import { useCluster } from '@/hook/useCluster';
+import { useModel } from '@umijs/max';
 
 const { Option } = MySelect;
 
@@ -37,7 +37,7 @@ const UpgradeDrawer: React.FC<UpgradeDrawerProps> = ({
   const [form] = Form.useForm();
   const { validateFields } = form;
 
-  const { isStandalone, isDistributedBusiness } = useCluster();
+  const { isStandalone, isDistributedBusiness } = useModel('cluster');
 
   const packageSelectRef = useRef<PackageSelectRef>();
 

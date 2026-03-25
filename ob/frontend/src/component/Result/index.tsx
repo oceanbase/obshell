@@ -52,7 +52,7 @@ const Success: React.FC<SuccessProps> = ({
             <Space>
               <Button
                 onClick={() => {
-                  history.goBack();
+                  history.back();
                 }}
               >
                 {formatMessage({

@@ -9,7 +9,7 @@ import { Space, Tooltip } from '@oceanbase/design';
 import type { SelectProps } from '@oceanbase/design/es/select';
 import { useRequest } from 'ahooks';
 import { upgradePkgInfo } from '@/service/obshell/upgrade';
-import { useCluster } from '@/hook/useCluster';
+import { useModel } from '@umijs/max';
 
 const { Option } = MySelect;
 
@@ -73,7 +73,7 @@ const PackageSelect = React.forwardRef<PackageSelectRef, PackageSelectProps>(
 
     ref
   ) => {
-    const { isStandalone, isDistributedBusiness } = useCluster();
+    const { isStandalone, isDistributedBusiness } = useModel('cluster');
 
     const [visible, setVisible] = useState(false);
 

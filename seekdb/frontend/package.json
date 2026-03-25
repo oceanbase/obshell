@@ -115,7 +115,7 @@
       "uglify-js": "3.19.3",
       "ramda": "0.32.0",
       "axios": "1.13.5",
-      "node-fetch": "3.3.2",
+      "node-fetch": "2.7.0",
       "d3-color": "3.1.0",
       "immer": "10.1.1",
       "cross-spawn": "7.0.6",

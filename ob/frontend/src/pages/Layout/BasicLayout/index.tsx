@@ -7,7 +7,7 @@ import { Alert, Badge, Menu, Modal, Space, theme, Tooltip } from '@oceanbase/des
 import { LoadingOutlined, UnorderedListOutlined } from '@oceanbase/icons';
 import { BasicLayout as OBUIBasicLayout } from '@oceanbase/ui';
 import type { BasicLayoutProps as OBUIBasicLayoutProps } from '@oceanbase/ui/es/BasicLayout';
-import { history, Outlet, useDispatch, useLocation } from '@umijs/max';
+import { history, Outlet, useLocation, useModel } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import { find, isEmpty } from 'lodash';
 import moment from 'moment';
@@ -21,8 +21,8 @@ interface BasicLayoutProps extends OBUIBasicLayoutProps {
 const BasicLayout: React.FC<BasicLayoutProps> = props => {
   const { token } = theme.useToken();
 
-  const dispatch = useDispatch();
   const { isDesktopMode } = useUiMode();
+  const { getObclusterInfo } = useModel('cluster');
 
   // 全局菜单
   const basicMenus = useBasicMenu();
@@ -46,9 +46,7 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
 
   useEffect(() => {
     // 获取集群信息
-    dispatch({
-      type: 'cluster/getClusterData',
-    });
+    getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
   }, []);
 
   const { refresh, loading } = useRequest(getTime, {

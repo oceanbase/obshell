@@ -54,27 +54,55 @@ import {
   Tooltip,
   Typography,
   message,
-  token,
+  theme,
 } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
 import { InfoCircleFilled } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
 import { findBy, isNullValue } from '@oceanbase/util';
-import { history } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import { uniq, uniqWith, uniqueId } from 'lodash';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
+import ReplicaFormTitle from './ReplicaFormTitle';
 
 const { Option } = MySelect;
 const { Text } = Typography;
 
 interface NewProps {}
 
-const New: React.FC<NewProps> = ({}) => {
-  const [form] = Form.useForm();
-  const { getFieldValue, validateFields, setFieldsValue } = form;
+interface ZoneFormItem {
+  checked: boolean;
+  name: string;
+  replicaType: 'FULL' | 'READONLY' | string;
+  unitNum: number;
+  cpuCore: number;
+  memorySize: number;
+  dataDiskSize?: number;
+}
 
+interface TenantFormValues {
+  zones: ZoneFormItem[];
+  zonesUnitCount?: number;
+  primaryZone: string;
+  rootPassword: string;
+  lowerCaseTableNames?: number;
+  timeZone?: string;
+  parameters?: Array<{ name: string; value: any }>;
+  mode: string;
+  name: string;
+  charset: string;
+  collation?: string;
+  scenario?: string;
+  whitelist?: string;
+}
+
+const New: React.FC<NewProps> = ({}) => {
+  const [form] = Form.useForm<TenantFormValues>();
+  const { getFieldValue, validateFields, setFieldsValue } = form;
+  const { token } = theme.useToken();
+  const { isSharedStorage } = useModel('cluster');
   const [passed, setPassed] = useState(true);
   const [currentMode, setCurrentMode] = useState('MYSQL');
   const [collations, setCollations] = useState<API.Collation[]>([]);
@@ -86,6 +114,8 @@ const New: React.FC<NewProps> = ({}) => {
   // 参数设置开关
   const [advanceSettingSwitch, setAdvanceSettingSwitch] = useState(false);
   const [compatibleOracleAlret, setCompatibleOracleAlret] = useState(false);
+
+  const sharedStorageColSpan = isSharedStorage ? 4 : 5;
 
   // 推荐
   useDocumentTitle(
@@ -103,9 +133,9 @@ const New: React.FC<NewProps> = ({}) => {
     manual: false,
   });
 
-  const zones = obclusterInfoRes?.data?.zones || [];
+  const zones: API.Zone[] = obclusterInfoRes?.data?.zones || [];
 
-  const clusterData = obclusterInfoRes?.data || {};
+  const clusterData: API.ClusterInfo = obclusterInfoRes?.data || {};
   const minServerCount = getMinServerCount(zones);
 
   // 获取 unit 规格的限制规则
@@ -157,7 +187,7 @@ const New: React.FC<NewProps> = ({}) => {
         checked: true,
         name: item.name,
         replicaType: 'FULL',
-        unitCount: 1,
+        unitNum: 1,
       })),
 
       mode: 'MYSQL',
@@ -195,8 +225,16 @@ const New: React.FC<NewProps> = ({}) => {
         parameters = [],
         ...restValues
       } = values;
-      const realParameters = {};
-      const zoneUnitMap = {};
+      const realParameters: Record<string, string> = {};
+      const zoneUnitMap: Record<
+        string,
+        {
+          name: string;
+          cpuCore: number;
+          memorySize: string;
+          dataDiskSize?: string;
+        }
+      > = {};
       const checkZones = zones.filter(item => !!item.checked);
 
       parameters.forEach(parameter => {
@@ -204,21 +242,29 @@ const New: React.FC<NewProps> = ({}) => {
       });
 
       uniqWith(checkZones, (a, b) => {
-        return a.cpuCore === b.cpuCore && a.memorySize === b.memorySize;
-      }).map(({ cpuCore, memorySize }) => {
-        zoneUnitMap['' + cpuCore + memorySize] = {
+        return (
+          a.cpuCore === b.cpuCore &&
+          a.memorySize === b.memorySize &&
+          (isSharedStorage ? a.dataDiskSize === b.dataDiskSize : true)
+        );
+      }).forEach(({ cpuCore, memorySize, dataDiskSize }) => {
+        zoneUnitMap[`${cpuCore}${memorySize}${isSharedStorage ? dataDiskSize : ''}`] = {
           name: `tenant_unit_${Date.now()}_${uniqueId()}`,
           cpuCore: Number(cpuCore),
-          memorySize: memorySize + 'GB',
+          memorySize: `${memorySize}GB`,
+          dataDiskSize: isSharedStorage ? `${dataDiskSize}GB` : undefined,
         };
       });
 
-      const zoneList = checkZones?.map(zone => {
+      const zoneList: API.ZoneParam[] = checkZones?.map(zone => {
         return {
           name: zone.name,
           replica_type: zone.replicaType,
-          unit_config_name: zoneUnitMap['' + zone.cpuCore + zone.memorySize]?.name,
-          unit_num: zone.unitCount,
+          unit_config_name:
+            zoneUnitMap[
+              `${zone.cpuCore}${zone.memorySize}${isSharedStorage ? zone.dataDiskSize : ''}`
+            ]?.name,
+          unit_num: zone.unitNum,
         };
       });
 
@@ -232,6 +278,7 @@ const New: React.FC<NewProps> = ({}) => {
           return unitConfigCreate({
             max_cpu: item.cpuCore,
             memory_size: item.memorySize,
+            data_disk_size: isSharedStorage ? item.dataDiskSize : undefined,
             name: item.name,
           });
         })
@@ -328,7 +375,7 @@ const New: React.FC<NewProps> = ({}) => {
         id: 'ocp-express.Tenant.New.UnitQuantity',
         defaultMessage: 'Unit 数量',
       }),
-      dataIndex: 'unitCount',
+      dataIndex: 'unitNum',
     },
   ];
 
@@ -785,7 +832,7 @@ const New: React.FC<NewProps> = ({}) => {
                             setFieldsValue({
                               zones: currentZones?.map(item => ({
                                 ...item,
-                                unitCount: value,
+                                unitNum: value,
                               })),
                             });
                           }}
@@ -799,7 +846,12 @@ const New: React.FC<NewProps> = ({}) => {
                     </Col>
                   </Row>
                 )}
-
+                <div className={styles.replicaTitle}>
+                  {formatMessage({
+                    id: 'OBShell.Tenant.New.CopySettings',
+                    defaultMessage: '副本设置',
+                  })}
+                </div>
                 {obclusterInfoRes?.data ? (
                   <Form.Item style={{ marginBottom: 24 }}>
                     <Form.List
@@ -832,7 +884,7 @@ const New: React.FC<NewProps> = ({}) => {
                               let idleMemoryInBytes = 0;
                               if (isSingleServer) {
                                 const { idleCpuCoreTotal, idleMemoryInBytesTotal } =
-                                  getUnitSpecLimit(zoneData?.servers[0]?.stats);
+                                  getUnitSpecLimit(zoneData?.servers?.[0]?.stats || {});
                                 idleCpuCore = idleCpuCoreTotal || 0;
                                 idleMemoryInBytes = idleMemoryInBytesTotal || 0;
                               }
@@ -840,320 +892,269 @@ const New: React.FC<NewProps> = ({}) => {
                               const { cpuLowerLimit, memoryLowerLimit } = clusterUnitSpecLimit;
 
                               return (
-                                <div
-                                  key={field.key}
-                                  style={{
-                                    display: 'flex',
-                                  }}
-                                >
-                                  <Form.Item
-                                    style={{ marginBottom: 8, width: 24 }}
-                                    {...field}
-                                    label={index === 0 && ' '}
-                                    name={[field.name, 'checked']}
-                                    rules={[
-                                      {
-                                        required: true,
-                                      },
-                                    ]}
-                                    valuePropName="checked"
-                                  >
-                                    <Checkbox />
-                                  </Form.Item>
-                                  <Row
-                                    gutter={16}
+                                <>
+                                  {index === 0 && (
+                                    <ReplicaFormTitle
+                                      replicaTypeTooltipConfig={replicaTypeTooltipConfig}
+                                    />
+                                  )}
+                                  <div
+                                    key={field.key}
                                     style={{
-                                      flex: 1,
+                                      display: 'flex',
                                     }}
                                   >
-                                    <Col span={5}>
-                                      <Form.Item
-                                        style={{ marginBottom: 8 }}
-                                        {...field}
-                                        label={
-                                          index === 0 &&
-                                          formatMessage({
-                                            id: 'ocp-express.Tenant.New.ZoneName',
-                                            defaultMessage: 'Zone 名称',
-                                          })
-                                        }
-                                        name={[field.name, 'name']}
-                                        rules={[
-                                          {
-                                            // 仅勾选行需要必填
-                                            required: currentChecked,
-                                          },
-                                        ]}
-                                      >
-                                        <MyInput disabled={true} />
-                                      </Form.Item>
-                                    </Col>
-                                    <Col span={5}>
-                                      <Form.Item
-                                        style={{ marginBottom: 8 }}
-                                        {...field}
-                                        label={
-                                          index === 0 &&
-                                          formatMessage({
-                                            id: 'ocp-express.Tenant.New.ReplicaType',
-                                            defaultMessage: '副本类型',
-                                          })
-                                        }
-                                        tooltip={replicaTypeTooltipConfig}
-                                        name={[field.name, 'replicaType']}
-                                        rules={[
-                                          {
-                                            // 仅勾选行需要必填
-                                            required: currentChecked,
-                                            message: formatMessage({
-                                              id: 'ocp-express.Tenant.New.SelectAReplicaType',
-                                              defaultMessage: '请选择副本类型',
-                                            }),
-                                          },
-                                        ]}
-                                      >
-                                        <MySelect
-                                          disabled={!currentChecked}
-                                          optionLabelProp="label"
+                                    <Form.Item
+                                      style={{ marginBottom: 8, width: 24 }}
+                                      {...field}
+                                      label={index === 0 && ' '}
+                                      name={[field.name, 'checked']}
+                                      rules={[
+                                        {
+                                          required: true,
+                                        },
+                                      ]}
+                                      valuePropName="checked"
+                                    >
+                                      <Checkbox />
+                                    </Form.Item>
+                                    <Row
+                                      gutter={16}
+                                      style={{
+                                        flex: 1,
+                                      }}
+                                    >
+                                      <Col span={sharedStorageColSpan}>
+                                        <Form.Item
+                                          {...field}
+                                          label={index === 0 && ' '}
+                                          name={[field.name, 'name']}
+                                          rules={[
+                                            {
+                                              // 仅勾选行需要必填
+                                              required: currentChecked,
+                                            },
+                                          ]}
                                         >
-                                          {REPLICA_TYPE_LIST.map(item => (
-                                            <Option
-                                              key={item.value}
-                                              value={item.value}
-                                              label={item.label}
-                                            >
-                                              <Tooltip
-                                                placement="right"
-                                                title={item.description}
-                                                overlayStyle={{
-                                                  maxWidth: 400,
-                                                }}
+                                          <MyInput disabled={true} />
+                                        </Form.Item>
+                                      </Col>
+                                      <Col span={sharedStorageColSpan}>
+                                        <Form.Item
+                                          {...field}
+                                          label={index === 0 && ' '}
+                                          name={[field.name, 'replicaType']}
+                                          rules={[
+                                            {
+                                              // 仅勾选行需要必填
+                                              required: currentChecked,
+                                              message: formatMessage({
+                                                id: 'ocp-express.Tenant.New.SelectAReplicaType',
+                                                defaultMessage: '请选择副本类型',
+                                              }),
+                                            },
+                                          ]}
+                                        >
+                                          <MySelect
+                                            disabled={!currentChecked}
+                                            optionLabelProp="label"
+                                          >
+                                            {REPLICA_TYPE_LIST.map(item => (
+                                              <Option
+                                                key={item.value}
+                                                value={item.value}
+                                                label={item.label}
                                               >
-                                                <div style={{ width: '100%' }}>{item.label}</div>
-                                              </Tooltip>
-                                            </Option>
-                                          ))}
-                                        </MySelect>
-                                      </Form.Item>
-                                    </Col>
-                                    <Col span={5}>
-                                      <Form.Item
-                                        style={{ marginBottom: 8 }}
-                                        {...field}
-                                        label={
-                                          index === 0 &&
-                                          formatMessage({
-                                            id: 'ocp-express.Tenant.New.UnitSpecifications',
-                                            defaultMessage: 'Unit 规格',
-                                          })
-                                        }
-                                        extra={
-                                          isSingleServer &&
-                                          (cpuLowerLimit < idleCpuCore!
-                                            ? formatMessage(
-                                                {
-                                                  id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                                                  defaultMessage:
-                                                    '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                                                },
-                                                {
-                                                  cpuLowerLimit: cpuLowerLimit,
-                                                  idleCpuCore: idleCpuCore,
-                                                }
-                                              )
-                                            : formatMessage({
-                                                id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                defaultMessage: '当前可配置资源不足',
-                                              }))
-                                        }
-                                        initialValue={
-                                          getResourcesLimit({
-                                            idleCpuCore,
-                                            idleMemoryInBytes,
-                                          })
-                                            ? 4
-                                            : null
-                                        }
-                                        name={[field.name, 'cpuCore']}
-                                        rules={[
-                                          {
-                                            // 仅勾选行需要必填
-                                            required: currentChecked,
-                                            message: formatMessage({
-                                              id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
-                                              defaultMessage: '请输入 unit 规格',
-                                            }),
-                                          },
-                                          ...(isSingleServer
-                                            ? [
-                                                {
-                                                  type: 'number' as const,
-                                                  min: cpuLowerLimit,
-                                                  max: idleCpuCore,
-                                                  message:
-                                                    cpuLowerLimit < idleCpuCore!
-                                                      ? formatMessage(
-                                                          {
-                                                            id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueCpulowerlimitIdlecpucore',
-                                                            defaultMessage:
-                                                              '当前可配置范围值 {cpuLowerLimit}~{idleCpuCore}',
-                                                          },
-                                                          {
-                                                            cpuLowerLimit: cpuLowerLimit,
-                                                            idleCpuCore: idleCpuCore,
-                                                          }
-                                                        )
-                                                      : formatMessage({
-                                                          id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                          defaultMessage: '当前可配置资源不足',
-                                                        }),
-                                                },
-                                              ]
-                                            : []),
-                                        ]}
-                                      >
-                                        <InputNumber
-                                          disabled={!currentChecked}
-                                          addonAfter={formatMessage({
-                                            id: 'ocp-express.Tenant.New.Nuclear',
-                                            defaultMessage: '核',
-                                          })}
-                                          step={0.5}
-                                          style={{ width: '100%' }}
-                                        />
-                                      </Form.Item>
-                                    </Col>
-                                    <Col span={5} style={{ paddingLeft: 0 }}>
-                                      <Form.Item
-                                        style={{ marginBottom: 8 }}
-                                        {...field}
-                                        label={index === 0 && ' '}
-                                        name={[field.name, 'memorySize']}
-                                        extra={
-                                          isSingleServer &&
-                                          (memoryLowerLimit < idleMemoryInBytes!
-                                            ? formatMessage(
-                                                {
-                                                  id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                                                  defaultMessage:
-                                                    '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                                                },
-                                                {
-                                                  memoryLowerLimit: memoryLowerLimit,
-                                                  idleMemoryInBytes: idleMemoryInBytes,
-                                                }
-                                              )
-                                            : formatMessage({
-                                                id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                defaultMessage: '当前可配置资源不足',
-                                              }))
-                                        }
-                                        initialValue={
-                                          getResourcesLimit({
-                                            idleCpuCore,
-                                            idleMemoryInBytes,
-                                          })
-                                            ? 8
-                                            : null
-                                        }
-                                        rules={[
-                                          {
-                                            // 仅勾选行需要必填
-                                            required: currentChecked,
-                                            message: formatMessage({
-                                              id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
-                                              defaultMessage: '请输入 unit 规格',
-                                            }),
-                                          },
-                                          ...(isSingleServer
-                                            ? [
-                                                {
-                                                  type: 'number' as const,
-                                                  min: memoryLowerLimit || 0,
-                                                  max: idleMemoryInBytes || 0,
-                                                  message:
-                                                    memoryLowerLimit < idleMemoryInBytes
-                                                      ? formatMessage(
-                                                          {
-                                                            id: 'ocp-express.Tenant.New.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes',
-                                                            defaultMessage:
-                                                              '当前可配置范围值 {memoryLowerLimit}~{idleMemoryInBytes}',
-                                                          },
-                                                          {
-                                                            memoryLowerLimit: memoryLowerLimit,
-                                                            idleMemoryInBytes: idleMemoryInBytes,
-                                                          }
-                                                        )
-                                                      : formatMessage({
-                                                          id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
-                                                          defaultMessage: '当前可配置资源不足',
-                                                        }),
-                                                },
-                                              ]
-                                            : []),
-                                        ]}
-                                      >
-                                        <InputNumber
-                                          disabled={!currentChecked}
-                                          style={{ width: '100%' }}
-                                          addonAfter="GB"
-                                        />
-                                      </Form.Item>
-                                    </Col>
-                                    <Col span={3}>
-                                      <Form.Item noStyle shouldUpdate={true}>
-                                        {() => {
-                                          return (
-                                            <Form.Item
-                                              style={{ marginBottom: 8 }}
-                                              {...field}
-                                              label={
-                                                index === 0 &&
-                                                formatMessage({
-                                                  id: 'ocp-express.Tenant.New.UnitQuantity',
-                                                  defaultMessage: 'Unit 数量',
-                                                })
-                                              }
-                                              initialValue={1}
-                                              name={[field.name, 'unitCount']}
-                                              rules={[
-                                                {
-                                                  required: true,
-                                                  message: formatMessage({
-                                                    id: 'ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty',
-                                                    defaultMessage: '请输入 Unit 数量',
-                                                  }),
-                                                },
-                                                {
-                                                  validator: (rule, value, callback) =>
-                                                    validateUnitCount(
-                                                      rule,
-                                                      value,
-                                                      callback,
-                                                      findBy(zones || [], 'name', currentZoneName)
-                                                    ),
-                                                },
-                                              ]}
-                                            >
-                                              <InputNumber
-                                                min={1}
-                                                // 设为只读模式，会去掉 InputNumber 的大部分样式
-                                                readOnly={true}
-                                                // 其余样式需要手动去掉
-                                                className="input-number-readonly"
-                                                style={{ width: '100%' }}
-                                                placeholder={formatMessage({
-                                                  id: 'ocp-express.Tenant.New.Enter',
-                                                  defaultMessage: '请输入',
-                                                })}
-                                              />
-                                            </Form.Item>
-                                          );
-                                        }}
-                                      </Form.Item>
-                                    </Col>
-                                  </Row>
-                                </div>
+                                                <Tooltip
+                                                  placement="right"
+                                                  title={item.description}
+                                                  overlayStyle={{
+                                                    maxWidth: 400,
+                                                  }}
+                                                >
+                                                  <div style={{ width: '100%' }}>{item.label}</div>
+                                                </Tooltip>
+                                              </Option>
+                                            ))}
+                                          </MySelect>
+                                        </Form.Item>
+                                      </Col>
+                                      <Col span={sharedStorageColSpan}>
+                                        <Form.Item
+                                          {...field}
+                                          label={index === 0 && 'CPU'}
+                                          extra={
+                                            isSingleServer &&
+                                            (cpuLowerLimit < idleCpuCore!
+                                              ? `[${cpuLowerLimit}，${idleCpuCore}]`
+                                              : formatMessage({
+                                                  id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                  defaultMessage: '当前可配置资源不足',
+                                                }))
+                                          }
+                                          initialValue={
+                                            getResourcesLimit({
+                                              idleCpuCore,
+                                              idleMemoryInBytes,
+                                            })
+                                              ? 4
+                                              : null
+                                          }
+                                          name={[field.name, 'cpuCore']}
+                                          rules={[
+                                            {
+                                              // 仅勾选行需要必填
+                                              required: currentChecked,
+                                              message: formatMessage({
+                                                id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
+                                                defaultMessage: '请输入 unit 规格',
+                                              }),
+                                            },
+                                          ]}
+                                        >
+                                          <InputNumber
+                                            disabled={!currentChecked}
+                                            addonAfter={formatMessage({
+                                              id: 'ocp-express.Tenant.New.Nuclear',
+                                              defaultMessage: '核',
+                                            })}
+                                            step={0.5}
+                                            min={isSingleServer ? cpuLowerLimit : 0}
+                                            max={isSingleServer ? idleCpuCore : undefined}
+                                            style={{ width: '100%' }}
+                                          />
+                                        </Form.Item>
+                                      </Col>
+                                      <Col span={sharedStorageColSpan} style={{ paddingLeft: 0 }}>
+                                        <Form.Item
+                                          style={{ marginBottom: 8 }}
+                                          {...field}
+                                          label={
+                                            index === 0 &&
+                                            formatMessage({
+                                              id: 'OBShell.Tenant.New.Memory',
+                                              defaultMessage: '内存',
+                                            })
+                                          }
+                                          name={[field.name, 'memorySize']}
+                                          extra={
+                                            isSingleServer &&
+                                            (memoryLowerLimit < idleMemoryInBytes!
+                                              ? `[${memoryLowerLimit}，${idleMemoryInBytes}]`
+                                              : formatMessage({
+                                                  id: 'ocp-express.component.UnitSpec.CurrentConfigurableRangeValueMemorylowerlimitIdlememoryinbytes2',
+                                                  defaultMessage: '当前可配置资源不足',
+                                                }))
+                                          }
+                                          initialValue={
+                                            getResourcesLimit({
+                                              idleCpuCore,
+                                              idleMemoryInBytes,
+                                            })
+                                              ? 8
+                                              : null
+                                          }
+                                          rules={[
+                                            {
+                                              // 仅勾选行需要必填
+                                              required: currentChecked,
+                                              message: formatMessage({
+                                                id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
+                                                defaultMessage: '请输入 unit 规格',
+                                              }),
+                                            },
+                                          ]}
+                                        >
+                                          <InputNumber
+                                            min={isSingleServer ? memoryLowerLimit : 0}
+                                            max={isSingleServer ? idleMemoryInBytes : undefined}
+                                            disabled={!currentChecked}
+                                            style={{ width: '100%' }}
+                                            addonAfter="GB"
+                                          />
+                                        </Form.Item>
+                                      </Col>
+                                      {isSharedStorage && (
+                                        <Col span={4} style={{ paddingLeft: 0 }}>
+                                          <Form.Item
+                                            style={{ marginBottom: 8 }}
+                                            {...field}
+                                            label={
+                                              index === 0 &&
+                                              formatMessage({
+                                                id: 'OBShell.Tenant.New.DataCaching',
+                                                defaultMessage: '数据缓存',
+                                              })
+                                            }
+                                            name={[field.name, 'dataDiskSize']}
+                                            rules={[
+                                              {
+                                                // 仅勾选行需要必填
+                                                required: currentChecked,
+                                                message: formatMessage({
+                                                  id: 'ocp-express.Tenant.New.EnterTheUnitSpecification',
+                                                  defaultMessage: '请输入 unit 规格',
+                                                }),
+                                              },
+                                            ]}
+                                          >
+                                            <InputNumber
+                                              min={0}
+                                              disabled={!currentChecked}
+                                              style={{ width: '100%' }}
+                                              addonAfter="GB"
+                                            />
+                                          </Form.Item>
+                                        </Col>
+                                      )}
+                                      <Col span={3}>
+                                        <Form.Item noStyle shouldUpdate={true}>
+                                          {() => {
+                                            return (
+                                              <Form.Item
+                                                {...field}
+                                                label={index === 0 && ' '}
+                                                initialValue={1}
+                                                name={[field.name, 'unitNum']}
+                                                rules={[
+                                                  {
+                                                    required: true,
+                                                    message: formatMessage({
+                                                      id: 'ocp-express.component.FormZoneReplicaTable.UnitQuantityCannotBeEmpty',
+                                                      defaultMessage: '请输入 Unit 数量',
+                                                    }),
+                                                  },
+                                                  {
+                                                    validator: (rule, value, callback) =>
+                                                      validateUnitCount(
+                                                        rule,
+                                                        value,
+                                                        callback,
+                                                        findBy(zones || [], 'name', currentZoneName)
+                                                      ),
+                                                  },
+                                                ]}
+                                              >
+                                                <InputNumber
+                                                  min={1}
+                                                  // 设为只读模式，会去掉 InputNumber 的大部分样式
+                                                  readOnly={true}
+                                                  // 其余样式需要手动去掉
+                                                  className="input-number-readonly"
+                                                  style={{ width: '100%' }}
+                                                  placeholder={formatMessage({
+                                                    id: 'ocp-express.Tenant.New.Enter',
+                                                    defaultMessage: '请输入',
+                                                  })}
+                                                />
+                                              </Form.Item>
+                                            );
+                                          }}
+                                        </Form.Item>
+                                      </Col>
+                                    </Row>
+                                  </div>
+                                </>
                               );
                             })}
                           </>
@@ -1179,8 +1180,8 @@ const New: React.FC<NewProps> = ({}) => {
                     const uniqueCheckedUnitCountList = uniq(
                       checkedZones
                         // 去掉空值
-                        .filter(item => !isNullValue(item.unitCount))
-                        .map(item => item.unitCount)
+                        .filter(item => !isNullValue(item.unitNum))
+                        .map(item => item.unitNum)
                     );
 
                     // 勾选 Zone 的副本类型或副本数量不同时，展示 alert 提示

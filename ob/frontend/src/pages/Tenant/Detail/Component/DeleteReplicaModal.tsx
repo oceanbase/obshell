@@ -17,6 +17,7 @@
 import { tenantRemoveReplicas } from '@/service/obshell/tenant';
 import { formatMessage } from '@/util/intl';
 import { taskSuccess } from '@/util/task';
+import { TenantZone } from '@/util/tenant';
 import { Alert, Descriptions, Modal } from '@oceanbase/design';
 import type { ModalProps } from '@oceanbase/design/es/modal';
 import { connect } from '@umijs/max';
@@ -26,7 +27,7 @@ import React from 'react';
 export interface DeleteReplicaModalProps extends ModalProps {
   dispatch: any;
   tenantData: API.TenantInfo;
-  tenantZones: API.TenantZone[];
+  tenantZones: TenantZone[];
   onSuccess: () => void;
 }
 
@@ -67,7 +68,7 @@ const DeleteReplicaModal: React.FC<DeleteReplicaModalProps> = ({
       onOk={() => {
         deleteReplica(
           {
-            name: tenantData.tenant_name,
+            name: tenantData.tenant_name!,
           },
           {
             zones: tenantZones.map(item => item.name),

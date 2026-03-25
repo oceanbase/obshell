@@ -2,7 +2,7 @@ import { POINT_NUMBER } from '@/constant/monitor';
 import { formatMessage } from '@/util/intl';
 import { getZonesFromTenant } from '@/util/tenant';
 import { Card, Select } from '@oceanbase/design';
-import { useSelector } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { useUpdateEffect } from 'ahooks';
 import dayjs from 'dayjs';
 import React, { useEffect, useState } from 'react';
@@ -46,9 +46,7 @@ export default function DataFilter({
   ]);
   const [isExternalUpdate, setIsExternalUpdate] = useState(false);
 
-  const { isSingleMachine, tenantListData } = useSelector(
-    (state: DefaultRootState) => state.cluster
-  );
+  const { isSingleMachine, tenantListData } = useModel('cluster');
 
   const clearLabel = (current: Monitor.LabelType[], key: Monitor.Label): Monitor.LabelType[] => {
     const newLabel = [...current];

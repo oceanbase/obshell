@@ -1,7 +1,7 @@
 import MonitorDetail from '@/component/MonitorDetail';
 import { formatMessage } from '@/util/intl';
 import { PageContainer } from '@oceanbase/ui';
-import { useSelector } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { useDeepCompareEffect } from 'ahooks';
 import { useState } from 'react';
 
@@ -17,7 +17,7 @@ export interface ClusterMonitorProps {
 
 const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ monitorScope }) => {
   const [reloading, reload] = useReload(false);
-  const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
+  const { clusterData } = useModel('cluster');
   const [filterData, setFilterData] = useState<Monitor.FilterDataType>({
     zoneList: [],
     serverList: [],

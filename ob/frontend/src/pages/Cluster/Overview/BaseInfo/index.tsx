@@ -1,12 +1,9 @@
 import MyCard from '@/component/MyCard';
 import { formatMessage } from '@/util/intl';
 import { Badge, Descriptions, theme } from '@oceanbase/design';
-import React from 'react';
-
-export interface BaseInfoProps {
-  clusterData: API.ClusterInfo;
-}
-
+import { useModel } from '@umijs/max';
+import React, { useState } from 'react';
+import SharedStorageModal from './SharedStorageModal';
 
 const unavailableStatus = {
   label: formatMessage({
@@ -24,8 +21,10 @@ const availableStatus = {
   badgeStatus: 'success',
 };
 
-const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
+const BaseInfo: React.FC = () => {
   const { token } = theme.useToken();
+  const { clusterData, isSharedStorage } = useModel('cluster');
+  const [sharedStorageVisible, setSharedStorageVisible] = useState(false);
 
   const statusItem = clusterData.status === 'AVAILABLE' ? availableStatus : unavailableStatus;
 
@@ -53,11 +52,18 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
         >
           {clusterData.cluster_name}
         </Descriptions.Item>
+        {isSharedStorage && (
+          <Descriptions.Item
+            label={formatMessage({
+              id: 'OBShell.Overview.BaseInfo.ClusterId',
+              defaultMessage: '集群ID',
+            })}
+          >
+            {clusterData.cluster_id}
+          </Descriptions.Item>
+        )}
         <Descriptions.Item
-          label={formatMessage({
-            id: 'OBShell.Overview.BaseInfo.ClusterStatus',
-            defaultMessage: '集群状态',
-          })}
+          label={formatMessage({ id: 'OBShell.Overview.BaseInfo.Status', defaultMessage: '状态' })}
         >
           <Badge
             status={statusItem.badgeStatus}
@@ -80,7 +86,35 @@ const BaseInfo: React.FC<BaseInfoProps> = ({ clusterData }) => {
         >
           {clusterData.ob_version}
         </Descriptions.Item>
+        {isSharedStorage && (
+          <>
+            <Descriptions.Item
+              label={formatMessage({
+                id: 'OBShell.Overview.BaseInfo.NumberOfRegions',
+                defaultMessage: 'Region 数量',
+              })}
+            >
+              {clusterData.zones?.length}
+            </Descriptions.Item>
+            <Descriptions.Item
+              label={formatMessage({
+                id: 'OBShell.Overview.BaseInfo.SharedStorage',
+                defaultMessage: '共享存储',
+              })}
+            >
+              <a onClick={() => setSharedStorageVisible(true)}>
+                {clusterData.shared_storage_info?.storage_path}
+              </a>
+            </Descriptions.Item>
+          </>
+        )}
       </Descriptions>
+      <SharedStorageModal
+        visible={sharedStorageVisible}
+        setSharedStorageVisible={setSharedStorageVisible}
+        sharedStorageInfo={clusterData?.shared_storage_info}
+        onCancel={() => setSharedStorageVisible(false)}
+      />
     </MyCard>
   );
 };

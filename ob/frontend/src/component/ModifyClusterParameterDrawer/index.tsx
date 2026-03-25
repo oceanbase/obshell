@@ -39,7 +39,7 @@ import {
   Typography,
 } from '@oceanbase/design';
 import { DeleteOutlined, PlusOutlined } from '@oceanbase/icons';
-import { useDispatch, useSelector } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import { flatten, groupBy, isEqual, unionWith, uniq, uniqBy } from 'lodash';
 import React, { useEffect, useState } from 'react';
@@ -103,19 +103,11 @@ const ModifyClusterParameterDrawer: React.FC<ModifyClusterParameterDrawerProps> 
   // 判断是否有当前参数对应多个生效对象
   let hasSameScope = false;
 
-  const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
-  const dispatch = useDispatch();
-
-  const getClusterData = () => {
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-    });
-  };
+  const { clusterData, getObclusterInfo } = useModel('cluster');
 
   useEffect(() => {
     if (!clusterData?.name) {
-      getClusterData();
+      getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
     }
   }, []);
 

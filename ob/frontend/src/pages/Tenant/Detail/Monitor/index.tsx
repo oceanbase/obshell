@@ -10,7 +10,7 @@ import { MonitorScope } from '@/pages/Monitor';
 import MonitorConfig from '@/pages/Monitor/MonitorConfig';
 import { getSystemExternalPrometheus } from '@/service/obshell/system';
 import { PageContainer } from '@ant-design/pro-components';
-import { useSelector } from '@umijs/max';
+import { useModel, useSelector } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import { isEmpty } from 'lodash';
 
@@ -20,7 +20,7 @@ export interface MonitorProps {
 
 const Monitor: React.FC<MonitorProps> = ({ monitorScope }) => {
   const [reloading, reload] = useReload(false);
-  const { clusterData } = useSelector((state: DefaultRootState) => state.cluster);
+  const { clusterData } = useModel('cluster');
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
   const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
     {

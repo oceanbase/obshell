@@ -7,7 +7,7 @@ import { getTenantOverView } from '@/service/obshell/tenant';
 import type { TabsProps } from '@oceanbase/design';
 import { Divider, Tabs } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
-import { history, Outlet, useDispatch, useLocation, useModel } from '@umijs/max';
+import { history, Outlet, useLocation, useModel } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import React, { useEffect } from 'react';
 import AlertConfig from './AlertConfig';
@@ -55,7 +55,6 @@ const TAB_ITEMS: TabsProps['items'] = [
 ];
 
 export default function Alert({ children }: { children: React.ReactNode }) {
-  const dispatch = useDispatch();
   const location = useLocation();
   const searchParams = location.pathname.split('/');
   const currentKey = searchParams[searchParams.length - 1] || 'event';
@@ -63,6 +62,7 @@ export default function Alert({ children }: { children: React.ReactNode }) {
   const [reloading, reload] = useReload(false);
 
   const { setClusterList, setTenantList } = useModel('alarm');
+  const { clusterData, getObclusterInfo } = useModel('cluster');
 
   const onChange = (key: string) => {
     history.push(`/alert/${key}`);
@@ -88,18 +88,19 @@ export default function Alert({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // 预先获取集群列表
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-      onSuccess: (data: API.ClusterInfo) => {
-        setClusterList([data]);
-      },
-    });
+    getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
     // 预先获取租户列表
     listTenantsRun({}).then((res: API.OcsAgentResponse & { data?: API.DbaObTenant[] }) => {
       setTenantList(res?.data?.contents || []);
     });
   }, []);
+
+  // 当 clusterData 更新时，同步到 alarm model
+  useEffect(() => {
+    if (clusterData?.cluster_name) {
+      setClusterList([clusterData]);
+    }
+  }, [clusterData]);
 
   return (
     <PageContainer

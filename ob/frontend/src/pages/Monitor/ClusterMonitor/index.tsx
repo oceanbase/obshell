@@ -1,7 +1,7 @@
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import ClusterMonitor from '@/pages/Cluster/Monitor/index';
 import { formatMessage } from '@/util/intl';
-import { useDispatch } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import React, { useEffect } from 'react';
 
 export interface MonitorProps {}
@@ -14,14 +14,11 @@ const Monitor: React.FC<MonitorProps> = () => {
     })
   );
 
-  const dispatch = useDispatch();
+  const { getObclusterInfo } = useModel('cluster');
 
   useEffect(() => {
     // 预先获取集群列表
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-    });
+    getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
   }, []);
 
   return (

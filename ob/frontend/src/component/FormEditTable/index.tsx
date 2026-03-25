@@ -15,19 +15,19 @@
  */
 
 import { formatMessage } from '@/util/intl';
-import React from 'react';
-import { PlusOutlined, DeleteOutlined } from '@oceanbase/icons';
-import { Button, Popconfirm, Space, Table } from '@oceanbase/design';
 import { Form } from '@ant-design/compatible';
 import '@ant-design/compatible/assets/index.css';
+import type { WrappedFormUtils } from '@ant-design/compatible/lib/form/Form';
+import { Button, Popconfirm, Space, Table } from '@oceanbase/design';
 import type { ButtonProps } from '@oceanbase/design/es/button';
 import type { GetFieldDecoratorOptions } from '@oceanbase/design/es/form';
-import type { WrappedFormUtils } from '@ant-design/compatible/lib/form/Form';
-import type { TableProps, ColumnProps } from '@oceanbase/design/es/table';
+import type { ColumnProps, TableProps } from '@oceanbase/design/es/table';
+import { DeleteOutlined, PlusOutlined } from '@oceanbase/icons';
 import classNames from 'classnames';
 import { uniqueId } from 'lodash';
-import EditRow, { EditContext } from './EditRow';
+import React from 'react';
 import EditCell from './EditCell';
+import EditRow, { EditContext } from './EditRow';
 import styles from './index.less';
 
 export interface EditColumnProps<T> extends ColumnProps<T> {
@@ -267,7 +267,7 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                         }, 0);
                       }}
                     >
-                      <Button type="link" loading={saveLoading}>
+                      <Button size="small" loading={saveLoading}>
                         {formatMessage({
                           id: 'ocp-express.component.FormEditTable.Determine',
                           defaultMessage: '确定',
@@ -278,7 +278,7 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                 </EditContext.Consumer>
 
                 <Button
-                  type="link"
+                  size="small"
                   onClick={() => {
                     setTimeout(() => {
                       this.handleCancel(record.key);
@@ -298,12 +298,16 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                   disabled,
                 })}
               >
-                <a disabled={!!editingKey} onClick={() => this.handleEditing(record.key)}>
+                <Button
+                  size="small"
+                  disabled={!!editingKey}
+                  onClick={() => this.handleEditing(record.key)}
+                >
                   {formatMessage({
                     id: 'ocp-express.component.FormEditTable.Editing',
                     defaultMessage: '编辑',
                   })}
-                </a>
+                </Button>
 
                 {showDeletePopconfirm ? (
                   <Popconfirm
@@ -332,15 +336,16 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                       }
                     }}
                   >
-                    <a disabled={!!editingKey}>
+                    <Button size="small" disabled={!!editingKey}>
                       {formatMessage({
                         id: 'ocp-express.component.FormEditTable.Delete',
                         defaultMessage: '删除',
                       })}
-                    </a>
+                    </Button>
                   </Popconfirm>
                 ) : (
-                  <a
+                  <Button
+                    size="small"
                     disabled={!!editingKey}
                     onClick={() => {
                       if (onDelete) {
@@ -354,7 +359,7 @@ class FormEditTable<T> extends React.Component<FormEditTableProps<T>, FormEditTa
                       id: 'ocp-express.component.FormEditTable.Delete',
                       defaultMessage: '删除',
                     })}
-                  </a>
+                  </Button>
                 )}
               </Space>
             );

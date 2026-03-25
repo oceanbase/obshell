@@ -71,20 +71,8 @@
 
 .editing {
   :global {
-    .ant-table-tbody > tr > td {
-      // 设置单元格的直接子元素的最小高度为 40px，与表单对齐
-      > * {
-        display: block;
-        min-height: 40px;
-      }
-
-      .ant-legacy-form-item {
-        min-height: 60px;
-      }
-
-      .ant-form-item {
-        min-height: 60px;
-      }
+    .ant-table-row {
+      height: 130px !important;
     }
   }
 }
@@ -147,7 +135,9 @@
     // 列表模式，去掉列头之间的分隔线
     .ant-table-thead
       > tr
-      > th:not(:last-child):not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell):not([colspan])::before {
+      > th:not(:last-child):not(.ant-table-selection-column):not(
+        .ant-table-row-expand-icon-cell
+      ):not([colspan])::before {
       width: 0;
     }
   }

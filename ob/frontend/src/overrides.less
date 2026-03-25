@@ -1,4 +1,448 @@
-// 覆盖 DateRanger 的样式
+@import '~@oceanbase/design/es/theme/index.less';
+
+/* TODO: 后续待 Access 组件替换完成后，需要移除以下两个 .ant-btn-link 的全局样式覆盖 */
+.ant-btn-link {
+  /* 链接按钮的 padding 设为 0，作为普通链接使用，不附带额外的样式 */
+  padding: 0;
+}
+
+.ant-table-filter-dropdown {
+  .ant-table-filter-dropdown-btns {
+    .ant-btn-link {
+      padding: 0 7px;
+    }
+  }
+}
+
+.ant-tag .ant-typography {
+  font-size: 12px;
+}
+
+/* antd3 更新到 antd4 之后, form 使用 .ant-form-item-has-error 属性进行处理, 此次对 Antd3Form 下 Select 组件做特殊处理 */
+.has-error .ant-select-selector {
+  border-color: @colorError !important;
+}
+
+.ant-layout {
+  /* 覆盖 antd 默认的 min-height: 0 的样式，否则会引起很多问题，比如子元素无法撑满父元素 */
+  min-height: auto;
+}
+
+.ant-tag {
+  /* 业务侧进行覆盖border的弱化效果 */
+  border-color: #cdd5e466;
+
+  &-checkable,
+  &-borderless {
+    border: transparent;
+  }
+}
+
+.ant-tooltip {
+  max-width: 300px;
+
+  .ant-tooltip-inner {
+    max-height: 300px;
+    overflow: auto;
+    font-size: 14px;
+    white-space: normal;
+  }
+}
+
+/* popover 的 overlayStyle 会修改 ant-popover 上的属性 */
+
+/* 使用 overlayStyle 设置 popver 宽度时, 需要带上 max-width:  none , 在设置 width:  numberPx */
+.ant-popover {
+  max-width: 300px;
+}
+
+.ant-dropdown {
+  /* OB 设计规范 */
+  min-width: 120px;
+}
+
+/* 卡片中的 Table 分页器的 margin-bottom 为 0，避免下边的间距过大 */
+.ant-card {
+  .ant-card-head {
+    /* 卡片头部中表单的字体不加粗 */
+    .ant-legacy-form-item {
+      font-weight: normal;
+    }
+
+    /* 卡片头部中表单的字体不加粗 */
+    .ant-form-item {
+      font-weight: normal;
+    }
+  }
+
+  .ant-card-body {
+    .ant-card {
+      box-shadow: none;
+    }
+
+    .ant-table-pagination.ant-pagination {
+      margin-bottom: 0;
+    }
+
+    .ant-descriptions {
+      .ant-descriptions-view {
+        tbody {
+          .ant-descriptions-row:last-child {
+            & > th,
+            td {
+              /* 设置卡片内容区的 Descriptions 的最后一行的单元格 padding-bottom: 0，避免叠加卡片的 padding-bottom 导致下间距过大 */
+              padding-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+.ant-table-wrapper .ant-table .ant-table-tbody .ant-table-placeholder td {
+  border-bottom: 1px solid #e2e8f3;
+}
+
+.ant-table-wrapper .ant-table-pagination .ant-table-batch-operation-bar {
+  .ant-table-batch-operation-selection {
+    font-weight: 400;
+    color: #132039;
+  }
+}
+
+.ant-card-grid {
+  .ant-card {
+    box-shadow: none !important;
+  }
+}
+
+.ant-card-type-inner .ant-card-head-title {
+  font-size: 16px;
+}
+
+/* 行内表单的间距设为 24px */
+.ant-form-inline .ant-form-item {
+  margin-right: 24px;
+
+  .ant-form-item-label {
+    line-height: 32px;
+
+    label {
+      height: 32px;
+    }
+  }
+
+  .ant-form-item-control {
+    line-height: 32px;
+  }
+}
+
+.ant-form-item .ant-form-item-extra {
+  font-size: 12px;
+}
+
+.ant-legacy-form-inline .ant-legacy-form-item {
+  margin-right: 24px;
+
+  .ant-legacy-form-item-label {
+    padding-bottom: 0;
+    line-height: 32px;
+
+    label {
+      height: 32px;
+    }
+  }
+
+  .ant-legacy-form-item-control {
+    line-height: 32px;
+  }
+}
+
+.ant-form-horizontal {
+  .ant-form-item-label {
+    line-height: 32px;
+
+    label {
+      height: 32px;
+    }
+  }
+}
+
+.ant-legacy-form-vertical .ant-legacy-form-item {
+  padding-bottom: 0 !important;
+}
+
+.ant-legacy-form-horizontal {
+  /* Form 的直接子表单项，最后一个的底部 margin 为 0 */
+
+  /* 说明: 必须是直接子元素，因为可能表单项会被 Grid 布局包裹，那个时候就每个表单项都是 last-child，样式会出现问题 */
+  > .ant-legacy-form-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .ant-legacy-form-item-label {
+    line-height: 32px;
+
+    label {
+      height: 32px;
+    }
+  }
+
+  .ant-legacy-form-item-control {
+    line-height: 32px;
+  }
+
+  /* antd3 的水平表单 extra 和校验信息都会加上 margin-top: -2px，不合理，这里 OCP 做下修正 */
+  .ant-legacy-form-explain,
+  .ant-legacy-form-extra {
+    margin-top: 0;
+  }
+}
+
+.ant-form-vertical .ant-form-item {
+  padding-bottom: 0;
+}
+
+.ant-legacy-form-item-label > label {
+  color: @colorText !important;
+}
+
+.ant-legacy-form-explain {
+  color: @colorError !important;
+}
+
+.ant-legacy-form-extra {
+  color: @colorTextTertiary !important;
+  font-size: 12px;
+}
+
+.ant-calendar-picker-container {
+  .ant-calendar-range .ant-calendar-footer-extra {
+    .ant-tag {
+      cursor: pointer;
+    }
+  }
+}
+
+/* 由于 RangePicker 无法根据格式自适应宽度，对于中文的日期时间会展示不全，因此需要手动设置宽度 */
+
+/* 对于其他格式的场景，可以通过差异化 style 来设置不同的宽度 */
 .ant-picker.ant-picker-range {
   width: 400px !important;
+}
+
+/* 设置锚点导航的全局样式 */
+.ant-anchor {
+  /* 设置锚点间距 */
+  .ant-anchor-link:not(:last-child) {
+    padding: 8px 0 8px 16px;
+
+    .ant-anchor-link:not(:last-child) {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+  }
+
+  /* 设置锚点字体颜色 */
+  .ant-anchor-link-title {
+    color: @colorTextSecondary;
+
+    &:hover {
+      color: @colorInfo;
+    }
+  }
+
+  .ant-anchor-ink {
+    &::before {
+      background-color: @colorBorder;
+    }
+
+    /* 设置选中锚点的样式 (圆点 => inkbar) */
+    .ant-anchor-ink-ball {
+      width: 0;
+      height: 30px;
+      margin-top: -10px;
+      border-width: 1px;
+    }
+  }
+}
+
+/* 覆盖 tech-ui 的全局样式 */
+
+/* 由于 TechUI  FullScreen 组件的默认 z-index 为 9999，大于绝大多数 antd 组件的 z-index，导致 tooltip、dropdown 等在全屏模式下无法正常展示，因此将其 z-index 降低至合理值 */
+.tech-fullscreen-box-fullscreen {
+  z-index: 99;
+
+  .tech-fullscreen-box-header-extra {
+    padding: 20px 24px;
+    line-height: normal;
+  }
+}
+
+/* 覆盖 OBUI 的全局样式 */
+
+/* Ranger 组件样式是采用 scoped styles 实现，但目前是通过 css modules 引入，导致打包后样式不生效，这里先手动覆盖 */
+.ob-ranger {
+  .ob-ranger-quick-picker.ob-ranger-quick-picker-select {
+    margin-right: -1px;
+  }
+}
+
+/* 自定义 icon 交互 灰色 -> 蓝 */
+.icon-custom-color {
+  color: @colorTextTertiary;
+
+  &:hover {
+    color: @colorPrimary;
+  }
+}
+
+/* 设置 Mentions 组件下拉选项的全局样式 */
+.mentions-option-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  span {
+    &:nth-child(2) {
+      margin-left: 16px;
+      color: @colorTextQuaternary;
+    }
+  }
+}
+
+.ant-message {
+  .ant-message-notice-content {
+    max-width: 90vw;
+    word-break: break-all;
+  }
+
+  .ant-message-error {
+    & > span:nth-child(2) {
+      display: -webkit-box;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      -webkit-line-clamp: 3; /* 可以显示的行数，超出部分用...表示 */
+      -webkit-box-orient: vertical;
+    }
+  }
+}
+
+// Select 多选且 tag 模式时，覆盖 OB/Tag 组件的样式，与原本的 tag 样式保持一致
+.ant-select-multiple {
+  .ant-tag {
+    height: 24px;
+    padding-right: 4px;
+    line-height: 22px;
+  }
+
+  .ant-select-selection-item-content .ant-tag {
+    height: initial;
+    line-height: initial;
+  }
+
+  .ant-tag .ant-typography {
+    font-size: 14px;
+  }
+
+  .ant-tag > span + .anticon {
+    margin-left: 4px;
+  }
+}
+
+.ant-table-wrapper .ant-table .ant-table-container .ant-table-tbody .ant-table-empty-wrapper {
+  min-height: 150px;
+}
+
+// 全局 Card 中二级 tab 分段器的样式表征
+.ant-card-body .ant-segmented {
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+// 分段器选中样式
+.ant-segmented .ant-segmented-item .ant-segmented-item-label[aria-selected*='true'],
+.ant-segmented .ant-segmented-item.ant-segmented-item-selected .ant-segmented-item-label {
+  color: @colorPrimary;
+  font-weight: 600;
+}
+
+.ant-segmented
+  .ant-segmented-item:not(.ant-segmented-item-selected)
+  .ant-segmented-item-label[aria-selected*='false'] {
+  font-weight: 400;
+}
+
+// 新版时间选择器移除快捷时间选择阴影
+.ob-date-ranger-dropdown-picker {
+  .ant-dropdown-menu {
+    box-shadow: none;
+  }
+}
+
+// 强行定义新版时间选择器的时间部分宽度，避免 formItem 中宽度占不满的情况
+.ob-date-ranger {
+  > .ant-space-item {
+    > .ant-space,
+    > .ant-space > .ant-space-item:first-child {
+      width: 100%;
+    }
+
+    .ob-date-ranger-wrapper > span {
+      width: calc(100% - 68px);
+    }
+  }
+}
+
+// Badge 组件图标模式
+.ant-badge.ant-badge-status .ant-badge-status-icon {
+  background: transparent;
+}
+
+// 全局 description.item 颜色修改
+.ant-descriptions .ant-descriptions-item-label {
+  color: #5c6b8a;
+}
+
+// 全局禁用表单必填符号 *
+.ant-form-item
+  .ant-form-item-label
+  > label.ant-form-item-required:not(.ant-form-item-required-mark-optional)::before {
+  display: none;
+}
+
+// 嵌套子表格样式
+.ant-table-expanded-row {
+  // 第一列 padding 调整
+  .ant-table-thead > tr > th:first-child:not(.ant-table-selection-column),
+  .ant-table-tbody
+    > tr
+    > td:first-child:not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell) {
+    padding-left: 16px !important;
+  }
+  // 背景色
+  & > .ant-table-cell,
+  .ant-table-thead .ant-table-cell,
+  .ant-table-tbody .ant-table-cell {
+    background-color: #f8fafe !important;
+  }
+
+  .ant-table-tbody {
+    .ant-table-row:not(:last-child) {
+      .ant-table-cell {
+        border-bottom: 1px solid #e2e8f3 !important;
+      }
+    }
+  }
+}
+
+.ant-alert {
+  .ant-alert-action {
+    margin-left: 16px;
+  }
+}
+
+.ant-descriptions .ant-descriptions-header {
+  margin-bottom: 16px;
 }

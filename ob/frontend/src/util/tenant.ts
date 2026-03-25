@@ -16,7 +16,6 @@
 
 import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
 import { byte2GB } from '@oceanbase/util';
-import { formatMessage } from '@/util/intl';
 import { min } from 'lodash';
 
 // 获取集群各个 Zone 中 OBServer 数量的最小值，用于限制 OB 4.0 版本中可设置 Unit 的最大数量
@@ -27,30 +26,22 @@ export function getMinServerCount(zones: API.Zone[]) {
   return 0;
 }
 
-// 根据  unitSpecLimit 说明不推荐使用的原因
-export function getUnitSpecLimitText(unitSpecLimit: API.UnitSpecUnitSpecLimit) {
-  const { memoryLowerLimit, cpuLowerLimit } = unitSpecLimit;
-  if (memoryLowerLimit) {
-    return formatMessage(
-      {
-        id: 'ocp-express.src.util.tenant.OnlyUnitSpecificationsWithAMemoryOfNo',
-        defaultMessage: '仅可选择内存不小于 {memoryLowerLimit}G 的 Unit 规格',
-      },
-      { memoryLowerLimit: memoryLowerLimit }
-    );
-  }
-  if (cpuLowerLimit) {
-    return formatMessage(
-      {
-        id: 'ocp-express.src.util.tenant.OnlyUnitSpecificationsWithCpuNoLessThan',
-        defaultMessage: '仅可选择 CPU 不小于 {cpuLowerLimit}C 的 Unit 规格',
-      },
-      { cpuLowerLimit: cpuLowerLimit }
-    );
-  }
+export interface TenantZone extends API.Zone {
+  replicaType?: string;
+  name: string;
+  unitNum?: number;
+  resourcePool: {
+    unitConfig: {
+      cpuCore?: number;
+      memorySize?: number;
+      dataDiskSize?: number;
+    } & API.ObUnitConfig;
+  } & API.ResourcePoolWithUnit;
 }
 
-export const getZonesFromTenant = (tenantData: API.TenantInfo) => {
+export const getZonesFromTenant: (tenantData: API.TenantInfo) => TenantZone[] = (
+  tenantData: API.TenantInfo
+) => {
   return (
     tenantData?.locality?.split(',')?.map(str => {
       const [replicaTypeStr, zoneName] = str?.split('@');
@@ -61,6 +52,7 @@ export const getZonesFromTenant = (tenantData: API.TenantInfo) => {
       return {
         replicaType,
         name: zoneName,
+        unitNum: resourcePool?.unit_num,
         resourcePool: {
           ...resourcePool,
           unitConfig: {

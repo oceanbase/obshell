@@ -96,6 +96,36 @@ export async function obclusterSetParameters(
   });
 }
 
+/** save shared storage key update shared storage access key and secret key POST /api/v1/obcluster/shared-storage/save-key */
+export async function saveSharedStorageKey(
+  body: API.SaveSharedStorageKeyParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse>('/api/v1/obcluster/shared-storage/save-key', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** validate shared storage key validate shared storage access key and access key secret POST /api/v1/obcluster/shared-storage/validate-key */
+export async function validateSharedStorageKey(
+  body: API.ValidateSharedStorageKeyParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse>('/api/v1/obcluster/shared-storage/validate-key', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** get obcluster topology info get obcluster topology info GET /api/v1/obcluster/topology/info */
 export async function obclusterTopologyInfo(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.ClusterTopology }>(

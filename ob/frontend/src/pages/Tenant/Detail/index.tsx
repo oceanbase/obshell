@@ -25,7 +25,15 @@ import { formatMessage } from '@/util/intl';
 import { Badge, Tooltip } from '@oceanbase/design';
 import { CaretDownFilled } from '@oceanbase/icons';
 import { findByValue, jsonParse } from '@oceanbase/util';
-import { history, Outlet, useDispatch, useLocation, useParams, useSelector } from '@umijs/max';
+import {
+  history,
+  Outlet,
+  useDispatch,
+  useLocation,
+  useModel,
+  useParams,
+  useSelector,
+} from '@umijs/max';
 import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
@@ -41,6 +49,7 @@ const Detail: React.FC = () => {
   );
 
   const dispatch = useDispatch();
+  const { getObclusterInfo } = useModel('cluster');
 
   const menus = useTenantMenu(tenantName, tenantData?.mode);
 
@@ -53,10 +62,7 @@ const Detail: React.FC = () => {
         name: tenantName,
       },
     });
-    dispatch({
-      type: 'cluster/getClusterData',
-      payload: {},
-    });
+    getObclusterInfo({ HIDE_ERROR_MESSAGE: true });
 
     return () => {
       dispatch({

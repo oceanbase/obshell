@@ -24,9 +24,10 @@ import React from 'react';
 const FormItem = Form.Item;
 
 export interface ModifyWhitelistModalProps {
+  visible: boolean;
   tenantData: API.TenantInfo;
   onSuccess: () => void;
-  loading: boolean;
+  onCancel: () => void;
 }
 
 const ModifyWhitelistModal: React.FC<ModifyWhitelistModalProps> = ({

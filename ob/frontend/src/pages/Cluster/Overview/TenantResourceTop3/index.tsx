@@ -7,17 +7,13 @@ import { formatMessage } from '@/util/intl';
 import { toPercent } from '@oceanbase/charts/es/util/number';
 import { Col, Descriptions, Empty, Row, theme } from '@oceanbase/design';
 import { isNullValue } from '@oceanbase/util';
-import { max } from 'lodash';
+import { useModel } from '@umijs/max';
 import React from 'react';
 
-export interface TenantResourceTop3Props {
-  clusterData: API.ClusterInfo;
-}
-
-const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) => {
+const TenantResourceTop3: React.FC = () => {
   const { token } = theme.useToken();
-
-  const tenantStats = clusterData?.tenant_stats || [];
+  const { clusterData, isSharedStorage } = useModel('cluster');
+  const tenantStats: API.TenantResourceStat[] = clusterData?.tenant_stats || [];
 
   const tenantMetricList = [
     {
@@ -34,9 +30,14 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'OBShell.Overview.TenantResourceTop3.Consumed',
         defaultMessage: '已消耗',
       }),
+      totalName: formatMessage({
+        id: 'OBShell.Overview.TenantResourceTop3.TotalCpu',
+        defaultMessage: 'CPU 总量',
+      }),
       chartData: tenantStats
         .map(item => ({
           ...item,
+          totalValue: `${item.cpu_core_total} C`,
           percentValue: item.cpu_used_percent,
         }))
         .sort((a, b) => (b?.percentValue || 0) - (a?.percentValue || 0))
@@ -57,9 +58,14 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'OBShell.Overview.TenantResourceTop3.Consumed',
         defaultMessage: '已消耗',
       }),
+      totalName: formatMessage({
+        id: 'OBShell.Overview.TenantResourceTop3.TotalMemory',
+        defaultMessage: '内存总量',
+      }),
       chartData: tenantStats
         .map(item => ({
           ...item,
+          totalValue: formatSize(item.memory_in_bytes_total),
           percentValue: item.memory_used_percent,
         }))
         .sort((a, b) => (b?.percentValue || 0) - (a?.percentValue || 0))
@@ -68,10 +74,15 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
 
     {
       key: 'ob_tenant_disk_usage',
-      title: formatMessage({
-        id: 'ocp-express.Component.TenantResourceTop3.DataVolume',
-        defaultMessage: '数据量',
-      }),
+      title: isSharedStorage
+        ? formatMessage({
+            id: 'OBShell.Overview.TenantResourceTop3.DataCaching',
+            defaultMessage: '数据缓存',
+          })
+        : formatMessage({
+            id: 'ocp-express.Component.TenantResourceTop3.DataVolume',
+            defaultMessage: '数据量',
+          }),
       description: formatMessage({
         id: 'ocp-express.Component.TenantResourceTop3.TenantDataSizeAndPercentageOfClusterDisk',
         defaultMessage: '租户数据量大小，以及占集群磁盘容量的百分比',
@@ -80,19 +91,53 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
         id: 'OBShell.Overview.TenantResourceTop3.Used',
         defaultMessage: '已使用',
       }),
+      totalName: formatMessage({
+        id: 'OBShell.Overview.TenantResourceTop3.TotalData',
+        defaultMessage: '数据总量',
+      }),
       chartData: tenantStats
         .map(item => ({
           ...item,
           usedValue: item.data_disk_usage,
-          percentValue:
-            ((item?.data_disk_usage || 0) / (clusterData?.stats?.disk_in_bytes_total || 0)) * 100,
+          totalValue: formatSize(
+            isSharedStorage ? item.data_disk_size_total : item.data_disk_usage
+          ),
+          percentValue: isSharedStorage
+            ? item.data_disk_used_percent
+            : ((item?.data_disk_usage || 0) / (clusterData?.stats?.disk_in_bytes_total || 0)) * 100,
         }))
         .sort((a, b) => (b?.percentValue || 0) - (a?.percentValue || 0))
         .slice(0, 3),
     },
+    ...(isSharedStorage
+      ? [
+          {
+            key: 'shared_storage',
+            title: formatMessage({
+              id: 'OBShell.Overview.TenantResourceTop3.SharedStorage',
+              defaultMessage: '共享存储',
+            }),
+            description: formatMessage({
+              id: 'OBShell.Overview.TenantResourceTop3.SizeOfSharedStorageFootprint',
+              defaultMessage: '集群维度共享存储占用空间大小',
+            }),
+            usedName: formatMessage({
+              id: 'OBShell.Overview.TenantResourceTop3.Used',
+              defaultMessage: '已使用',
+            }),
+            chartData: tenantStats
+              .sort((a, b) => (b?.shared_storage_usage || 0) - (a?.shared_storage_usage || 0))
+              .slice(0, 3)
+              .map((item, index, array) => ({
+                ...item,
+                usedValue: item.shared_storage_usage,
+                percentValue: undefined,
+                totalValue: undefined,
+              })),
+          },
+        ]
+      : []),
   ];
-
-  const tenantCount = max(tenantMetricList.map(item => item.chartData?.length)) || 3;
 
   const getStrokeColor = (percent: number, textFlag: boolean = true) => {
     if (percent >= 90) {
@@ -105,27 +150,30 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
   };
 
   const getAffix = (item: any, dataItem: any) => {
-    let totalValue = '';
     let usedValue = '';
+    // 共享存储
+    if (item.key === 'shared_storage') {
+      return `${item.usedName}：${formatSize(dataItem.usedValue)}`;
+    }
     // 数据量
     if (item.key === 'ob_tenant_disk_usage') {
-      totalValue = formatSize(dataItem.usedValue) as string;
-      usedValue = `${isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
-        }%`;
+      usedValue = `${
+        isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
+      }%`;
     }
 
     // 内存消耗比
     if (item?.key === 'ob_memory_percent') {
-      totalValue = formatSize(dataItem.memory_in_bytes_total) as string;
-      usedValue = `${isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
-        }%`;
+      usedValue = `${
+        isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
+      }%`;
     }
 
     // CPU 消耗比
     if (item?.key === 'ob_cpu_percent') {
-      totalValue = `${dataItem?.cpu_core_total} C`;
-      usedValue = `${isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
-        }%`;
+      usedValue = `${
+        isNullValue(dataItem.percentValue) ? '-' : toPercent(dataItem.percentValue / 100, 1)
+      }%`;
     }
 
     return (
@@ -136,7 +184,7 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
               id: 'OBShell.Overview.TenantResourceTop3.TotalTotalvalue',
               defaultMessage: '总：{totalValue}',
             },
-            { totalValue: totalValue }
+            { totalValue: dataItem.totalValue }
           )}
         </span>
         ｜{item.usedName}：
@@ -155,13 +203,10 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
       }}
       bordered={false}
     >
-      <Row gutter={16}>
+      <Row gutter={[16, 16]}>
         {tenantMetricList.map((item, index) => {
           return (
-            <Col
-              key={item.key}
-              span={8}
-            >
+            <Col key={item.key} span={isSharedStorage ? 12 : 8}>
               <MyCard
                 title={
                   <div
@@ -219,34 +264,31 @@ const TenantResourceTop3: React.FC<TenantResourceTop3Props> = ({ clusterData }) 
                                   >
                                     {dataItem.tenant_name}
                                   </Descriptions.Item>
-                                  <Descriptions.Item
-                                    label={`${item.key === 'ob_cpu_percent'
-                                      ? 'CPU '
-                                      : item.key === 'ob_memory_percent'
-                                        ? '内存'
-                                        : '数据'
-                                      }总量`}
-                                  >
-                                    {item.key === 'ob_cpu_percent'
-                                      ? `${dataItem.cpu_core_total} C`
-                                      : item.key === 'ob_memory_percent'
-                                        ? formatSize(dataItem.memory_in_bytes_total)
-                                        : formatSize(dataItem.data_disk_usage)}
-                                  </Descriptions.Item>
-                                  <Descriptions.Item
-                                    label={formatMessage({
-                                      id: 'OBShell.Overview.TenantResourceTop3.ConsumedPercentage',
-                                      defaultMessage: '已消耗占比',
-                                    })}
-                                    contentStyle={{
-                                      color: getStrokeColor(Number(dataItem.percentValue)),
-                                    }}
-                                  >
-                                    {isNullValue(dataItem.percentValue)
-                                      ? '-'
-                                      : toPercent((dataItem.percentValue || 0) / 100, 1)}
-                                    %
-                                  </Descriptions.Item>
+                                  {item.key === 'shared_storage' ? (
+                                    <Descriptions.Item label={item.usedName}>
+                                      {formatSize(dataItem.usedValue)}
+                                    </Descriptions.Item>
+                                  ) : (
+                                    <Descriptions.Item label={item.totalName}>
+                                      {dataItem.totalValue}
+                                    </Descriptions.Item>
+                                  )}
+                                  {item.key !== 'shared_storage' && (
+                                    <Descriptions.Item
+                                      label={formatMessage({
+                                        id: 'OBShell.Overview.TenantResourceTop3.ConsumedPercentage',
+                                        defaultMessage: '已消耗占比',
+                                      })}
+                                      contentStyle={{
+                                        color: getStrokeColor(Number(dataItem.percentValue)),
+                                      }}
+                                    >
+                                      {isNullValue(dataItem.percentValue)
+                                        ? '-'
+                                        : toPercent((dataItem.percentValue || 0) / 100, 1)}
+                                      %
+                                    </Descriptions.Item>
+                                  )}
                                 </Descriptions>
                               </Col>
                             </Row>

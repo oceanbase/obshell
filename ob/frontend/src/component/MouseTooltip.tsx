@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import React, { useState, useRef } from 'react';
 import { theme } from '@oceanbase/design';
-import ReactStickyMouseTooltip from 'react-sticky-mouse-tooltip';
 import { useMouse, useSize } from 'ahooks';
+import React, { useRef, useState } from 'react';
+import ReactStickyMouseTooltip from 'react-sticky-mouse-tooltip';
 
 interface MouseTooltipProps {
   children: React.ReactElement;
@@ -51,9 +51,20 @@ const MouseTooltip: React.FC<MouseTooltipProps> = ({
   const pageWidth = document.body.scrollWidth || 0;
   const pageHeight = document.body.scrollHeight || 0;
 
-  // 避免横向超出浏览器，需要计算出横向偏移量，24 为多留出的间隙
-  const offsetWidth =
-    mouse.pageX + tooltipWidth > pageWidth ? mouse.pageX + tooltipWidth - pageWidth + 24 : 0;
+  // 判断 tooltip 尺寸是否已经计算完成，避免首次渲染时尺寸为 0 导致位置判断错误
+  const isSizeReady = size && size.width > 0;
+
+  // 判断右侧是否有足够空间，如果没有则显示在鼠标左侧
+  const rightSpace = pageWidth - mouse.pageX;
+  const hasEnoughRightSpace = rightSpace > tooltipWidth + 24;
+
+  // 计算横向偏移量
+  let offsetX = 15;
+  if (!hasEnoughRightSpace) {
+    // 显示在左侧，需要负偏移
+    offsetX = -(tooltipWidth + 15);
+  }
+
   // 避免纵向超出浏览器，需要计算出纵向偏移量，16 为多留出的间隙
   const offsetHeight =
     mouse.pageY + tooltipHeight > pageHeight ? mouse.pageY + tooltipHeight - pageHeight + 16 : 0;
@@ -74,7 +85,7 @@ const MouseTooltip: React.FC<MouseTooltipProps> = ({
       {realChildren}
       <ReactStickyMouseTooltip
         visible={visible}
-        offsetX={15 - offsetWidth}
+        offsetX={offsetX}
         offsetY={10 - offsetHeight}
         style={{
           // 需要大于 Popover 的 1030 index 值，否则会被遮挡
@@ -84,6 +95,9 @@ const MouseTooltip: React.FC<MouseTooltipProps> = ({
           borderRadius: token.borderRadius,
           background: token.colorBgContainer,
           maxWidth: 300,
+          // 在尺寸未准备好时隐藏，避免位置跳动
+          opacity: isSizeReady ? 1 : 0,
+          transition: 'none',
           ...style,
         }}
         {...restProps}

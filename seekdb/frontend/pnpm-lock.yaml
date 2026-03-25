@@ -19,7 +19,7 @@ overrides:
   uglify-js: 3.19.3
   ramda: 0.32.0
   axios: 1.13.5
-  node-fetch: 3.3.2
+  node-fetch: 2.7.0
   d3-color: 3.1.0
   immer: 10.1.1
   cross-spawn: 7.0.6
@@ -328,6 +328,7 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
     transitivePeerDependencies:
+      - encoding
       - prop-types
     dev: false
 
@@ -5441,6 +5442,7 @@ packages:
       - '@types/react'
       - antd
       - date-fns
+      - encoding
       - luxon
       - rc-field-form
     dev: false
@@ -6484,7 +6486,7 @@ packages:
     resolution: {integrity: sha512-hy8b7Y1J8OGe6LbAjj3xniQrj3v6lsivCcrmf4TzSgPzLkhIeKgc5IZnT7ReIqmEuodjfO8EYAuoFvIrHi/+jQ==}
     deprecated: This is a stub types definition. history provides its own type definitions, so you do not need this installed.
     dependencies:
-      history: 4.10.1
+      history: 5.3.0
     dev: false
 
   /@types/hoist-non-react-statics@3.3.7(@types/react@17.0.52):
@@ -6665,7 +6667,7 @@ packages:
     dependencies:
       '@types/history': 5.0.0
       '@types/react': 17.0.52
-      '@types/react-router': 5.1.12
+      '@types/react-router': 5.1.20
     dev: false
 
   /@types/react-router-redux@5.0.27:
@@ -6674,7 +6676,7 @@ packages:
       '@types/history': 4.7.11
       '@types/react': 17.0.52
       '@types/react-router': 5.1.20
-      redux: 3.7.2
+      redux: 4.2.1
     dev: false
 
   /@types/react-router@5.1.12:
@@ -7498,6 +7500,7 @@ packages:
       - bufferutil
       - debug
       - dva
+      - encoding
       - fibers
       - jest
       - jiti
@@ -7557,7 +7560,7 @@ packages:
       memoizee: 0.4.17
       mock.js: 0.2.0
       mockjs: 1.1.0
-      node-fetch: 3.3.2
+      node-fetch: 2.7.0
       number-to-words: 1.2.4
       nunjucks: 3.2.4
       openapi3-ts: 2.0.2
@@ -7568,6 +7571,7 @@ packages:
       tiny-pinyin: 1.3.2
     transitivePeerDependencies:
       - chokidar
+      - encoding
       - typescript
 
   /@umijs/plugin-openapi@1.3.3(typescript@4.9.5)(umi@3.5.43):
@@ -7581,6 +7585,7 @@ packages:
       umi: 3.5.43(react-router@7.13.0)
     transitivePeerDependencies:
       - chokidar
+      - encoding
       - supports-color
       - typescript
     dev: false
@@ -7905,6 +7910,7 @@ packages:
       isomorphic-unfetch: 4.0.2
     transitivePeerDependencies:
       - '@babel/core'
+      - encoding
       - supports-color
     dev: false
 
@@ -10070,7 +10076,9 @@ packages:
   /cross-fetch@3.2.0:
     resolution: {integrity: sha512-Q+xVJLoGOeIMXZmbUK4HYk+69cQH6LudR0Vu/pRm2YlU/hDV9CiS0gKUMaWY5f2NeUH9C1nV3bsTlCo0FsTV1Q==}
     dependencies:
-      node-fetch: 3.3.2
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /cross-spawn@7.0.6:
@@ -10457,10 +10465,6 @@ packages:
       graphlib: 2.1.8
       lodash: 4.17.23
     dev: false
-
-  /data-uri-to-buffer@4.0.1:
-    resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
-    engines: {node: '>= 12'}
 
   /data-urls@2.0.0:
     resolution: {integrity: sha512-X5eWTSXO/BJmpdIKCRuKUgSCgAN0OwliVK3yPKbwIWU1Tdw5BRajxlzMidvh+gwko9AfQ9zIj52pzF91Q3YAvQ==}
@@ -10916,6 +10920,8 @@ packages:
       object-assign: 4.1.1
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /drange@1.1.1:
@@ -11010,6 +11016,8 @@ packages:
       react-router-dom: 4.3.1(react-dom@18.3.1)(react@18.3.1)
       react-router-redux: 5.0.0-alpha.9(react-dom@18.3.1)(react@18.3.1)
       redux: 3.7.2
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /earcut@2.2.4:
@@ -11925,6 +11933,8 @@ packages:
     resolution: {integrity: sha512-KWKaceCwKQU0+HPoop6gn4eOHk50bBv/VxjJtGMfwmJt3D29JpN4H4eisCtIPA+a8GVBam+ldMMpMjJUvpDyHw==}
     dependencies:
       fbjs: 3.0.5
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /fbjs-css-vars@1.0.2:
@@ -11941,6 +11951,8 @@ packages:
       promise: 7.3.1
       setimmediate: 1.0.5
       ua-parser-js: 0.7.41
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /fbjs@3.0.5:
@@ -11953,6 +11965,8 @@ packages:
       promise: 7.3.1
       setimmediate: 1.0.5
       ua-parser-js: 1.0.41
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /fdir@6.5.0(picomatch@4.0.3):
@@ -11970,13 +11984,6 @@ packages:
   /fecha@4.2.3:
     resolution: {integrity: sha512-OP2IUU6HeYKJi3i0z4A19kHMQoLVs4Hc+DPqqxI2h/DPZHTm/vjsfC6P0b4jCMy14XizLBqvndQ+UilD7707Jw==}
     dev: false
-
-  /fetch-blob@3.2.0:
-    resolution: {integrity: sha512-7yAQpD2UMJzLi1Dqv7qFYnPbaPx7ZfFK6PiIxQ4PfkGPyNyl2Ugx+a/umUonmKqjhM4DnfbMvdX6otXq83soQQ==}
-    engines: {node: ^12.20 || >= 14.13}
-    dependencies:
-      node-domexception: 1.0.0
-      web-streams-polyfill: 3.3.3
 
   /fflate@0.8.2:
     resolution: {integrity: sha512-cPJU47OaAoCbg0pBvzsgpTPhmhqI5eJjh/JIu8tPj5q+T7iLvW/JAYUqmE7KOB4R1ZyEhzBaIQpQpardBF5z8A==}
@@ -12118,6 +12125,8 @@ packages:
       fbemitter: 3.0.0
       fbjs: 3.0.5
       react: 18.3.1
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /fmin@0.0.2:
@@ -12197,12 +12206,6 @@ packages:
       hasown: 2.0.2
       mime-types: 2.1.35
     dev: false
-
-  /formdata-polyfill@4.0.10:
-    resolution: {integrity: sha512-buewHzMvYL29jdeQTVILecSaZKnt/RJWjoZCF5OW60Z67/GmSLBkOFM7qh1PI3zFNtJbaZL5eQu1vLfazOwj4g==}
-    engines: {node: '>=12.20.0'}
-    dependencies:
-      fetch-blob: 3.2.0
 
   /forwarded@0.2.0:
     resolution: {integrity: sha512-buRG0fpBtRHSTCOASe6hD258tEubFoRLb4ZNA6NxMVHNw2gOcwHo9wyablzMzOA5z9xA9L1KNjk/Nt6MT9aYow==}
@@ -13518,8 +13521,10 @@ packages:
   /isomorphic-fetch@2.2.1:
     resolution: {integrity: sha512-9c4TNAKYXM5PRyVcwUZrF3W09nQ+sO7+jydgs4ZGW9dhsLG2VOlISJABombdQqQRXCwuYG3sYV/puGf5rp0qmA==}
     dependencies:
-      node-fetch: 3.3.2
+      node-fetch: 2.7.0
       whatwg-fetch: 3.6.20
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /isomorphic-rslog@0.0.7:
@@ -13530,8 +13535,10 @@ packages:
   /isomorphic-unfetch@4.0.2:
     resolution: {integrity: sha512-1Yd+CF/7al18/N2BDbsLBcp6RO3tucSW+jcLq24dqdX5MNbCNTw1z4BsGsp4zNmjr/Izm2cs/cEqZPp4kvWSCA==}
     dependencies:
-      node-fetch: 3.3.2
+      node-fetch: 2.7.0
       unfetch: 5.0.0
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /isstream@0.1.2:
@@ -15448,11 +15455,6 @@ packages:
     resolution: {integrity: sha512-AGK2yQKIjRuqnc6VkX2Xj5d+QW8xZ87pa1UK6yA6ouUyuxfHuMP6umE5QK7UmTeOAymo+Zx1Fxiuw9rVx8taHQ==}
     dev: false
 
-  /node-domexception@1.0.0:
-    resolution: {integrity: sha512-/jKZoMpw0F8GRwl4/eLROPA3cfcXtLApP0QzLmUT/HuPCZWyB7IY9ZrMeKw2O/nFIqPQB3PVM9aYm0F312AXDQ==}
-    engines: {node: '>=10.5.0'}
-    deprecated: Use your platform's native DOMException instead
-
   /node-environment-flags@1.0.6:
     resolution: {integrity: sha512-5Evy2epuL+6TM0lCQGpFIj6KwiEsGh1SrHUhTbNX+sLbBtjidPZFAnVK9y5yU1+h//RitLbRHTIMyxQPtxMdHw==}
     dependencies:
@@ -15476,13 +15478,16 @@ packages:
     dependencies:
       http2-client: 1.3.5
 
-  /node-fetch@3.3.2:
-    resolution: {integrity: sha512-dRB78srN/l6gqWulah9SrxeYnxeddIG30+GOqK/9OlLVyLg3HPnr6SqOWTWOXKRwC2eGYCkZ59NNuSgvSrpgOA==}
-    engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
+  /node-fetch@2.7.0:
+    resolution: {integrity: sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==}
+    engines: {node: 4.x || >=6.0.0}
+    peerDependencies:
+      encoding: ^0.1.0
+    peerDependenciesMeta:
+      encoding:
+        optional: true
     dependencies:
-      data-uri-to-buffer: 4.0.1
-      fetch-blob: 3.2.0
-      formdata-polyfill: 4.0.10
+      whatwg-url: 5.0.0
 
   /node-int64@0.4.0:
     resolution: {integrity: sha512-O5lz91xSOeoXP6DulyHfllpq+Eg00MWitZIbtPfoSEvqIHdl5gfcY6hYzDWnj0qD5tz52PI08u9qUvSVeUBeHw==}
@@ -17177,6 +17182,8 @@ packages:
     dependencies:
       react: 18.3.1
       recompose: 0.22.0(react@18.3.1)
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /prism-redux@1.0.2:
@@ -17189,6 +17196,7 @@ packages:
       prism-react: 1.0.2(react@18.3.1)
       prism-redux: 1.0.2
     transitivePeerDependencies:
+      - encoding
       - react
     dev: false
 
@@ -17702,6 +17710,8 @@ packages:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       setimmediate: 1.0.5
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /rc-editor-mention@1.1.13(react-dom@18.3.1)(react@18.3.1):
@@ -17720,6 +17730,8 @@ packages:
       rc-editor-core: 0.8.10(react-dom@18.3.1)(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /rc-field-form@1.38.2(react-dom@18.3.1)(react@18.3.1):
@@ -18739,6 +18751,7 @@ packages:
       react-textarea-autosize: 8.5.9(@types/react@17.0.52)(react@18.3.1)
     transitivePeerDependencies:
       - '@types/react'
+      - encoding
     dev: false
 
   /react-konva@19.2.3(@types/react@17.0.52)(konva@10.2.0)(react-dom@18.3.1)(react@18.3.1):
@@ -19251,6 +19264,8 @@ packages:
       hoist-non-react-statics: 1.2.0
       react: 18.3.1
       symbol-observable: 1.2.0
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /redux-saga@0.16.2:
@@ -20817,7 +20832,7 @@ packages:
     hasBin: true
     dependencies:
       call-me-maybe: 1.0.2
-      node-fetch: 3.3.2
+      node-fetch: 2.7.0
       node-fetch-h2: 2.3.0
       node-readfiles: 0.2.0
       oas-kit-common: 1.0.8
@@ -20827,6 +20842,8 @@ packages:
       reftools: 1.1.9
       yaml: 1.10.2
       yargs: 17.7.2
+    transitivePeerDependencies:
+      - encoding
 
   /swr@2.4.1(react@18.3.1):
     resolution: {integrity: sha512-2CC6CiKQtEwaEeNiqWTAw9PGykW8SR5zZX8MZk6TeAvEAnVS7Visz8WzphqgtQ8v2xz/4Q5K+j+SeMaKXeeQIA==}
@@ -21097,6 +21114,9 @@ packages:
       url-parse: 1.5.10
     dev: true
 
+  /tr46@0.0.3:
+    resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
   /tr46@2.1.0:
     resolution: {integrity: sha512-15Ih7phfcdP5YxqiB+iDtLoaTz4Nd35+IiAv0kQ5FNKHzXgdWqPoTIqEDDJmXceQt4JZk6lVPT8lnDlPpGDppw==}
     engines: {node: '>=8'}
@@ -21306,6 +21326,8 @@ packages:
     dependencies:
       isomorphic-fetch: 2.2.1
       qs: 6.14.1
+    transitivePeerDependencies:
+      - encoding
     dev: false
 
   /umi@3.5.43(react-router@7.13.0):
@@ -21352,6 +21374,7 @@ packages:
       - '@volar/vue-language-plugin-pug'
       - '@volar/vue-typescript'
       - bufferutil
+      - encoding
       - eslint
       - fibers
       - jest
@@ -21843,13 +21866,12 @@ packages:
       minimalistic-assert: 1.0.1
     dev: false
 
-  /web-streams-polyfill@3.3.3:
-    resolution: {integrity: sha512-d2JWLCivmZYTSIoge9MsgFCZrt571BikcWGYkjC1khllbTeDlGqZ2D8vD8E/lJa8WGWbb7Plm8/XJYV7IJHZZw==}
-    engines: {node: '>= 8'}
-
   /web-worker-helper@0.0.3:
     resolution: {integrity: sha512-/TllNPjGenDwjE67M16TD9ALwuY847/zIoH7r+e5rSeG4kEa3HiMTAsUDj80yzIzhtshkv215KfsnQ/RXR3nVA==}
     dev: false
+
+  /webidl-conversions@3.0.1:
+    resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
   /webidl-conversions@5.0.0:
     resolution: {integrity: sha512-VlZwKPCkYKxQgeSbH5EyngOmRp7Ww7I9rQLERETtf5ofd9pGeswWiOtogpEO850jziPRarreGxn5QIiTqpb2wA==}
@@ -21942,6 +21964,12 @@ packages:
   /whatwg-mimetype@2.3.0:
     resolution: {integrity: sha512-M4yMwr6mAnQz76TbJm914+gPpB/nCwvZbJU28cUD6dR004SAxDLOOSUaB1JDRqLtaOV/vi0IC5lEAGFgrjGv/g==}
     dev: true
+
+  /whatwg-url@5.0.0:
+    resolution: {integrity: sha512-saE57nupxk6v3HY35+jzBwYa0rKSy0XR8JSxZPwgLr7ys0IBzhGviA1/TUGJLmSVqs8pb9AnvICXEuOHLprYTw==}
+    dependencies:
+      tr46: 0.0.3
+      webidl-conversions: 3.0.1
 
   /whatwg-url@8.7.0:
     resolution: {integrity: sha512-gAojqb/m9Q8a5IV96E3fHJM70AzCkgt4uXYX2O7EmuyOnLrViCQlsEBmF9UQIu3/aeAIp2U17rtbpZWNntQqdg==}

@@ -193,6 +193,8 @@ declare namespace API {
     memory_in_bytes_assigned?: number;
     memory_in_bytes_total?: number;
     memory_total?: string;
+    shared_storage_in_bytes_used?: number;
+    shared_storage_used?: string;
   };
 
   type BatchDeleteCredentialParam = {
@@ -285,11 +287,14 @@ declare namespace API {
     cluster_name?: string;
     dead_lock_detection_enabled?: boolean;
     is_community_edition?: boolean;
+    is_shared_storage?: boolean;
     is_standalone?: boolean;
     /** only for standalone cluster */
     license?: ObLicense;
     local_task_id?: string;
     ob_version?: string;
+    shared_storage_info?: SharedStorageInfo;
+    startup_mode?: string;
     stats?: BaseResourceStats;
     status?: string;
     tenant_stats?: TenantResourceStat[];
@@ -370,6 +375,8 @@ declare namespace API {
   };
 
   type CreateResourceUnitConfigParams = {
+    /** data disk size for shared storage mode, like "10G" */
+    data_disk_size?: string;
     /** log disk size, greater than or equal to '2G' */
     log_disk_size?: string;
     /** max cpu cores, greater than 0 */
@@ -541,6 +548,7 @@ declare namespace API {
 
   type DbaObUnitConfig = {
     create_time?: string;
+    data_disk_size?: number;
     log_disk_size?: number;
     max_cpu?: number;
     max_iops?: number;
@@ -1355,6 +1363,7 @@ declare namespace API {
     inner_status?: string;
     ip?: string;
     local_task_id?: string;
+    log_dir?: string;
     /** oceanbase.STATE_PROCESS_NOT_RUNNING, oceanbase.STATE_PROCESS_RUNNING, oceanbase.STATE_CONNECTION_RESTRICTED, oceanbase.STATE_CONNECTION_AVAILABLE */
     ob_status?: number;
     obshell_port?: number;
@@ -1406,6 +1415,7 @@ declare namespace API {
 
   type ObUnitConfig = {
     create_time?: string;
+    data_disk_size?: number;
     log_disk_size?: number;
     max_cpu?: number;
     max_iops?: number;
@@ -1770,6 +1780,13 @@ declare namespace API {
 
   type RuleType = 'built-in' | 'customized';
 
+  type SaveSharedStorageKeyParam = {
+    access_key: string;
+    endpoint: string;
+    path: string;
+    secret_key: string;
+  };
+
   type ScaleInTenantReplicasParam = {
     zones: string[];
   };
@@ -1815,6 +1832,8 @@ declare namespace API {
     memory_in_bytes_total?: number;
     memory_total?: string;
     port?: number;
+    shared_storage_in_bytes_used?: number;
+    shared_storage_used?: string;
     zone?: string;
   };
 
@@ -1845,6 +1864,19 @@ declare namespace API {
   };
 
   type Severity = 'critical' | 'major' | 'minor' | 'warning' | 'info';
+
+  type SharedStorageInfo = {
+    access_domain?: string;
+    access_key?: string;
+    addressing_model?: string;
+    checksum_type?: string;
+    /** 高级配置 */
+    delete_mode?: string;
+    max_bandwidth?: string;
+    max_iops?: number;
+    region?: string;
+    storage_path?: string;
+  };
 
   type SilencerFilter = {
     instance?: OBInstance;
@@ -2076,9 +2108,12 @@ declare namespace API {
   type TenantResourceStat = {
     cpu_core_total?: number;
     cpu_used_percent?: number;
+    data_disk_size_total?: number;
     data_disk_usage?: number;
+    data_disk_used_percent?: number;
     memory_in_bytes_total?: number;
     memory_used_percent?: number;
+    shared_storage_usage?: number;
     tenant_id?: number;
     tenant_name?: string;
   };
@@ -2276,6 +2311,13 @@ declare namespace API {
     ssh_credential_property: SshCredentialProperty;
     /** Target type, currently only supports "HOST" */
     target_type: string;
+  };
+
+  type ValidateSharedStorageKeyParam = {
+    access_key: string;
+    endpoint: string;
+    path: string;
+    secret_key: string;
   };
 
   type ValidationDetail = {

@@ -5,7 +5,7 @@ import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@
 import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
 import { newPkgUpload } from '@/service/obshell/package';
-import { useCluster } from '@/hook/useCluster';
+import { useModel } from '@umijs/max';
 import { calculateFileSHA256 } from '@/util/package';
 import styles from './index.less';
 
@@ -36,7 +36,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   onSuccess,
   ...restProps
 }) => {
-  const { isStandalone, isDistributedBusiness } = useCluster();
+  const { isStandalone, isDistributedBusiness } = useModel('cluster');
 
   const [fileList, setFileList] = useState<ExtendedUploadFile[]>([]);
 

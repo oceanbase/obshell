@@ -5,7 +5,7 @@ import { useRequest } from 'ahooks';
 import { Dimension } from '@/constant/monitor';
 import { listAllMetrics } from '@/service/obshell/metric';
 import { findBy } from '@oceanbase/util';
-import { useSelector } from '@umijs/max';
+import { useModel } from '@umijs/max';
 import { isEmpty } from 'lodash';
 import React, { useEffect, useMemo, useState } from 'react';
 import MonitorUnitSelect from '../MonitorUnitSelect';
@@ -50,7 +50,7 @@ export default function MonitorComp({
 }: MonitorCompProps) {
   const [activeTabKey, setActiveTabKey] = useState<string>('');
   const [activeDimension, setActiveDimension] = useState<string>('');
-  const { isSingleMachine } = useSelector((state: DefaultRootState) => state.cluster);
+  const { isSingleMachine } = useModel('cluster');
 
   const [selectedUnit, setSelectedUnit] = useState<Monitor.OptionType>();
 

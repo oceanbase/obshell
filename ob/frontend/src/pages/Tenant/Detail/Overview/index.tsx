@@ -28,13 +28,12 @@ import {
 import { QuestionCircleOutlined } from '@oceanbase/icons';
 import { PageContainer } from '@oceanbase/ui';
 import { byte2GB, findByValue } from '@oceanbase/util';
-import { history, useDispatch, useParams } from '@umijs/max';
+import { history, useDispatch, useModel, useParams } from '@umijs/max';
 import { useInterval, useRequest } from 'ahooks';
 import { find, uniqueId } from 'lodash';
 import moment from 'moment';
 import React, { useEffect, useState } from 'react';
 import AddReplicaModal from '../Component/AddReplicaModal';
-import BatchModifyUnitModal from '../Component/BatchModifyUnitModal';
 import DeleteReplicaModal from '../Component/DeleteReplicaModal';
 import DeleteTenantModal from '../Component/DeleteTenantModal';
 import ModifyPrimaryZoneDrawer from '../Component/ModifyPrimaryZoneDrawer';
@@ -53,34 +52,33 @@ import OBProxyAndConnectionStringModal from '../Component/OBProxyAndConnectionSt
 
 import { getUnitConfigLimit, obclusterInfo } from '@/service/obshell/obcluster';
 import { unitConfigCreate } from '@/service/obshell/unit';
-import { getZonesFromTenant } from '@/util/tenant';
+import { getZonesFromTenant, TenantZone } from '@/util/tenant';
 const { Text } = Typography;
 
 const Detail: React.FC = () => {
   const dispatch = useDispatch();
   const { tenantName = '' } = useParams<{ tenantName: string }>();
-
+  const { isSharedStorage } = useModel('cluster');
   const [form] = Form.useForm();
   const { setFieldsValue } = form;
 
   const [showAddReplicaModal, setShowAddReplicaModal] = useState(false);
   const [showDeleteReplicaModal, setShowDeleteReplicaModal] = useState(false);
-  const [showBatchModifyUnitModal, setShowBatchModifyUnitModal] = useState(false);
 
   const [showDeleteTenantModal, setShowDeleteTenantModal] = useState(false);
   const [showWhitelistModal, setShowWhitelistModal] = useState(false);
   const [showModifyPrimaryZoneDrawer, setShowModifyPrimaryZoneDrawer] = useState(false);
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
 
-  const [currentTenantZone, setCurrentTenantZone] = useState(null);
-  const [selectedRows, setSelectedRows] = useState([]);
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [currentTenantZone, setCurrentTenantZone] = useState<TenantZone | null>(null);
+  const [selectedRows, setSelectedRows] = useState<TenantZone[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
   const { data: clusterInfo } = useRequest(obclusterInfo, {
     defaultParams: [{}],
   });
 
-  const clusterData = clusterInfo?.data || {};
+  const clusterData: API.ClusterInfo = clusterInfo?.data || {};
   const clusterZones = clusterData?.zones || [];
 
   const {
@@ -275,24 +273,31 @@ const Detail: React.FC = () => {
     manual: true,
   });
 
-  const handleModifyReplica = async (value: API.TenantZone, onSuccess: () => void) => {
+  const handleModifyReplica = async (value: TenantZone, onSuccess: () => void) => {
     const { name, replicaType, resourcePool } = value || {};
     const currentModifyTenantZone = find(zones, item => item.name === name);
 
-    const maxMemorySizeGB = byte2GB(currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size);
+    const maxMemorySizeGB = byte2GB(
+      currentModifyTenantZone?.resourcePool?.unitConfig?.memory_size || 0
+    );
+    const maxDataDiskSizeGB = byte2GB(
+      currentModifyTenantZone?.resourcePool?.unitConfig?.data_disk_size || 0
+    );
 
-    let unitName: string = currentModifyTenantZone?.resourcePool?.unitConfig?.name;
+    let unitName = currentModifyTenantZone?.resourcePool?.unitConfig?.name;
     if (
       resourcePool &&
       (resourcePool.unitConfig?.cpuCore !==
         currentModifyTenantZone?.resourcePool?.unitConfig?.max_cpu ||
-        resourcePool.unitConfig?.memorySize !== maxMemorySizeGB)
+        resourcePool.unitConfig?.memorySize !== maxMemorySizeGB ||
+        resourcePool.unitConfig?.dataDiskSize !== maxDataDiskSizeGB)
     ) {
       unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
       const res = await unitConfigCreateFn({
         name: unitName,
         max_cpu: Number(resourcePool.unitConfig?.cpuCore),
         memory_size: `${resourcePool.unitConfig?.memorySize}GB`,
+        data_disk_size: `${resourcePool.unitConfig?.dataDiskSize}GB`,
       });
       if (!res.successful) {
         return;
@@ -314,7 +319,7 @@ const Detail: React.FC = () => {
           {
             zone_name: name!,
             replica_type: replicaType,
-            unit_num: resourcePool?.unitCount || currentModifyTenantZone?.resourcePool?.unit_num,
+            unit_num: resourcePool?.unit_num || currentModifyTenantZone?.resourcePool?.unit_num,
             unit_config_name: unitName,
           },
         ],
@@ -327,16 +332,17 @@ const Detail: React.FC = () => {
         }
       }
     });
+    return;
   };
 
-  const handleDeleteReplica = (record: API.TenantZone) => {
+  const handleDeleteReplica = (record: TenantZone) => {
     setShowDeleteReplicaModal(true);
     setCurrentTenantZone(record);
   };
 
   const rowSelection = {
     selectedRowKeys,
-    onChange: (newSelectedRowKeys: string[], newSelectedRows: API.TenantZone[]) => {
+    onChange: (newSelectedRowKeys: string[], newSelectedRows: TenantZone[]) => {
       setSelectedRowKeys(newSelectedRowKeys);
       setSelectedRows(newSelectedRows);
     },
@@ -630,18 +636,6 @@ const Detail: React.FC = () => {
               id: 'ocp-express.Tenant.Detail.CopyDetails',
               defaultMessage: '副本详情',
             })}
-            extra={
-              <Button
-                onClick={() => {
-                  setShowBatchModifyUnitModal(true);
-                }}
-              >
-                {formatMessage({
-                  id: 'ocp-express.Detail.Overview.ModifyUnit',
-                  defaultMessage: '修改 Unit',
-                })}
-              </Button>
-            }
           >
             <Form form={form} preserve={false} layout="vertical" hideRequiredMark={true}>
               <Form.Item name="zones" initialValue={[]}>
@@ -650,13 +644,13 @@ const Detail: React.FC = () => {
                   onDelete={handleDeleteReplica}
                   saveLoading={modifyUnitLoading}
                   showDeletePopconfirm={false}
-                  tenantData={tenantData}
                   zones={zones}
                   clusterData={clusterData}
                   tenantName={tenantName}
                   rowSelection={rowSelection}
                   rowKey={record => record.name}
                   unitSpecLimit={clusterUnitSpecLimit}
+                  isSharedStorage={isSharedStorage}
                 />
               </Form.Item>
             </Form>
@@ -859,7 +853,6 @@ const Detail: React.FC = () => {
 
       <AddReplicaModal
         visible={showAddReplicaModal}
-        tenantName={tenantName}
         tenantData={tenantData}
         tenantZones={zones}
         clusterZones={clusterZones}
@@ -884,23 +877,6 @@ const Detail: React.FC = () => {
         onSuccess={() => {
           setShowDeleteReplicaModal(false);
           setCurrentTenantZone(null);
-          refresh();
-        }}
-      />
-
-      <BatchModifyUnitModal
-        visible={showBatchModifyUnitModal}
-        tenantData={tenantData}
-        clusterZones={clusterZones}
-        tenantZones={zones}
-        unitSpecLimit={clusterUnitSpecLimit}
-        onCancel={() => {
-          setShowBatchModifyUnitModal(false);
-        }}
-        onSuccess={() => {
-          setShowBatchModifyUnitModal(false);
-          setSelectedRows([]);
-          setSelectedRowKeys([]);
           refresh();
         }}
       />

@@ -14,26 +14,28 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React from 'react';
-import { InputNumber } from '@oceanbase/design';
-import { findByValue, findBy, byte2GB } from '@oceanbase/util';
-import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
-import { getUnitSpecLimit } from '@/util/cluster';
 import type { FormEditTableProps } from '@/component/FormEditTable';
 import FormEditTable from '@/component/FormEditTable';
 import MySelect from '@/component/MySelect';
 import UnitSpec from '@/component/UnitSpec';
+import { REPLICA_TYPE_LIST } from '@/constant/oceanbase';
+import { getUnitSpecLimit } from '@/util/cluster';
+import { formatMessage } from '@/util/intl';
+import { TenantZone } from '@/util/tenant';
+import { InputNumber } from '@oceanbase/design';
+import { byte2GB, findBy, findByValue } from '@oceanbase/util';
+import React from 'react';
 
 const { Option } = MySelect;
 
 export interface FormEditZoneReplicaTableProps<T> extends FormEditTableProps<T> {
-  className?: string;
   value: T[];
   tenantData: API.TenantInfo;
   unitSpecLimit?: any;
   saveLoading?: boolean;
+  clusterData?: API.ClusterInfo;
   dispatch?: any;
+  isSharedStorage?: boolean;
 }
 
 class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTableProps<T>> {
@@ -52,7 +54,7 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
   };
 
   public render() {
-    const { saveLoading, clusterData, unitSpecLimit } = this.props;
+    const { saveLoading, clusterData, unitSpecLimit, isSharedStorage } = this.props;
 
     const columns = [
       {
@@ -95,9 +97,7 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
           </MySelect>
         ),
 
-        render: (text: API.ReplicaType) => (
-          <span>{findByValue(REPLICA_TYPE_LIST, text).label}</span>
-        ),
+        render: (text: string) => <span>{findByValue(REPLICA_TYPE_LIST, text).label}</span>,
       },
       {
         title: formatMessage({
@@ -107,12 +107,13 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
         dataIndex: 'resourcePool.unitConfig',
         width: '40%',
         editable: true,
-        fieldComponent: (text, record) => {
+        fieldComponent: (_, record: TenantZone) => {
           const zoneData = findBy(clusterData?.zones || [], 'name', record.name);
 
           let idleCpuCore, idleMemoryInBytes;
           // 当前 zone 只有一个 observer，获取 observer 的剩余资源, 并展示提示
-          if (zoneData?.servers?.length === 1) {
+          const isSingleServer = zoneData?.servers?.length === 1;
+          if (isSingleServer) {
             const { idleCpuCoreTotal, idleMemoryInBytesTotal } = getUnitSpecLimit(
               zoneData?.servers[0]?.stats
             );
@@ -123,21 +124,23 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
 
           return (
             <UnitSpec
+              isSingleServer={isSingleServer}
+              isSharedStorage={isSharedStorage}
               unitSpecLimit={unitSpecLimit}
               idleUnitSpec={{ idleCpuCore, idleMemoryInBytes }}
               defaultUnitSpec={{
-                ...record?.resourcePool?.unitConfig,
+                ...record?.resourcePool?.unit_config,
               }}
             />
           );
         },
 
-        render: (text: string, record: API.TenantZone) => {
-          const { unitConfig } = (record.resourcePool as API.ResourcePool) || {};
-          const { max_cpu: maxCpuCoreCount, memory_size } = (unitConfig as API.UnitConfig) || {};
+        render: (text: string, record: TenantZone) => {
+          const { unit_config } = (record.resourcePool as API.ResourcePoolWithUnit) || {};
+          const { max_cpu: maxCpuCoreCount, memory_size, data_disk_size } = unit_config || {};
 
-          const maxMemorySizeGB = byte2GB(memory_size);
-
+          const maxMemorySizeGB = byte2GB(memory_size || 0);
+          const dataDiskSizeGB = byte2GB(data_disk_size || 0);
           return (
             <ul>
               <li>
@@ -160,6 +163,17 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
                   { maxMemorySizeGB }
                 )}
               </li>
+              {isSharedStorage && (
+                <li>
+                  {formatMessage(
+                    {
+                      id: 'OBShell.component.FormEditZoneReplicaTable.DataCacheGbDatadisksizegb',
+                      defaultMessage: '数据缓存（GB）：{dataDiskSizeGB}',
+                    },
+                    { dataDiskSizeGB: dataDiskSizeGB }
+                  )}
+                </li>
+              )}
             </ul>
           );
         },
@@ -170,7 +184,6 @@ class FormEditZoneReplicaTable<T> extends FormEditTable<FormEditZoneReplicaTable
           id: 'ocp-express.component.FormEditZoneReplicaTable.UnitQuantity',
           defaultMessage: 'Unit 数量',
         }),
-
         dataIndex: 'resourcePool.unit_num',
         editable: false,
         fieldProps: () => ({

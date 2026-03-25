@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@import '~@oceanbase/design/es/theme/index.less';
 
 .container {
   .parameters {
@@ -24,6 +25,7 @@
       }
     }
   }
+
   .table {
     margin-bottom: 24px;
     :global {
@@ -36,9 +38,17 @@
       // 列表模式，去掉列头之间的分隔线
       .ant-table-thead
         > tr
-        > th:not(:last-child):not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell):not([colspan])::before {
+        > th:not(:last-child):not(.ant-table-selection-column):not(
+          .ant-table-row-expand-icon-cell
+        ):not([colspan])::before {
         width: 0;
       }
     }
+  }
+
+  .replicaTitle {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: @colorText;
   }
 }

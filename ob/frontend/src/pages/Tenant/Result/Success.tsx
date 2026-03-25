@@ -32,16 +32,15 @@ export interface TaskSuccessProps {
 }
 
 const TaskSuccess: React.FC<TaskSuccessProps> = ({ taskId }) => {
-  const params = useParams<{ taskId?: string }>();
-  const routeTaskId = params.taskId ? Number(params.taskId) : undefined;
-
   const taskIdList = Array.isArray(taskId) ? taskId : [taskId];
+  const { taskId: taskIdParam } = useParams<{ taskId: string }>();
+
   // 是否为多个任务，当前页面可以同时支持路由传参
-  const isMultipleTask = routeTaskId ? false : taskIdList.length > 1;
+  const isMultipleTask = taskIdParam ? false : taskIdList.length > 1;
 
   let taskInstanceId;
   if (!isMultipleTask) {
-    taskInstanceId = routeTaskId || taskIdList?.[0];
+    taskInstanceId = taskIdParam || taskIdList?.[0];
   }
 
   const {

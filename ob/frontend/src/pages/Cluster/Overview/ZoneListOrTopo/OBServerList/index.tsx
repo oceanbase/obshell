@@ -21,6 +21,7 @@ export interface OBServerListProps {
 
 const OBServerList: React.FC<OBServerListProps> = ({ zoneRecord }) => {
   const { zoneList, refreshTopologyInfo } = useModel('topologyInfo');
+  const { isSharedStorage } = useModel('cluster');
   const { servers } = zoneRecord;
   const [statusList, setStatusList] = useState<string[]>([]);
 
@@ -100,23 +101,43 @@ const OBServerList: React.FC<OBServerListProps> = ({ zoneRecord }) => {
       width: 100,
     },
     {
-      title: formatMessage({
-        id: 'OBShell.ZoneListOrTopo.OBServerList.DataDiskPath',
-        defaultMessage: '数据盘路径',
-      }),
+      title: !isSharedStorage
+        ? formatMessage({
+            id: 'OBShell.ZoneListOrTopo.OBServerList.DataDiskPath',
+            defaultMessage: '数据盘路径',
+          })
+        : formatMessage({
+            id: 'OBShell.ZoneListOrTopo.OBServerList.DataCachePath',
+            defaultMessage: '数据缓存路径',
+          }),
+
       width: 110,
       ellipsis: true,
       dataIndex: 'data_dir',
     },
-    {
-      title: formatMessage({
-        id: 'OBShell.ZoneListOrTopo.OBServerList.LogDiskPath',
-        defaultMessage: '日志盘路径',
-      }),
-      width: 110,
-      ellipsis: true,
-      dataIndex: 'redo_dir',
-    },
+    ...(!isSharedStorage
+      ? [
+          {
+            title: formatMessage({
+              id: 'OBShell.ZoneListOrTopo.OBServerList.LogDiskPath',
+              defaultMessage: '日志盘路径',
+            }),
+            width: 110,
+            ellipsis: true,
+            dataIndex: 'redo_dir',
+          },
+        ]
+      : [
+          {
+            title: formatMessage({
+              id: 'OBShell.ZoneListOrTopo.OBServerList.LogPath',
+              defaultMessage: '日志路径',
+            }),
+            width: 110,
+            ellipsis: true,
+            dataIndex: 'log_dir',
+          },
+        ]),
 
     {
       title: formatMessage({
