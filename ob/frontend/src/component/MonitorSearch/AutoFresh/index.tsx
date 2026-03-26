@@ -7,7 +7,7 @@ import { DateRanger } from '@oceanbase/ui';
 import { useInterval } from 'ahooks';
 import dayjs from 'dayjs';
 import { toString } from 'lodash';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 import { AUTO_FRESH_ITEMS, DATE_RANGER_SELECTS } from '@/constant/monitor';
 import styles from './index.less';
@@ -30,7 +30,6 @@ interface AutoFreshProps {
   withRanger?: boolean;
   onMenuClick: (key: string) => void;
   onRefreshClick: () => void;
-  onRangeChange?: (range: dayjs.Dayjs[] | null) => void;
   customRefreshItems?: AUTO_FRESH_ITEMS_TYPE[];
 }
 
@@ -44,19 +43,10 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
   withRanger = true,
   onMenuClick,
   onRefreshClick,
-  onRangeChange,
   customRefreshItems,
 }) => {
   const [second, setSecond] = useState<number>(0);
   const [loading, setLoading] = useState(false);
-  const [form] = Form.useForm();
-
-  // 同步 queryRange 到表单
-  useEffect(() => {
-    if (queryRange) {
-      form.setFieldsValue({ range: queryRange });
-    }
-  }, [queryRange, form]);
 
   useInterval(
     () => {
@@ -130,28 +120,23 @@ const AutoFresh: React.FC<AutoFreshProps> = ({
       </Dropdown.Button>
 
       {withRanger && (
-        <Form form={form}>
-          <FormItem name="range" style={{ width: '470px', marginRight: 0, marginBottom: 0 }}>
-            <DateRanger
-              selects={DATE_RANGER_SELECTS}
-              hasRewind={false}
-              hasForward={false}
-              hasSync={false}
-              allowClear={false}
-              stickRangeName={true}
-              defaultQuickValue={DateRanger.NEAR_1_HOURS.name}
-              disabledDate={date => (currentMoment ? date.isAfter(currentMoment) : false)}
-              format={DATE_TIME_FORMAT_DISPLAY}
-              style={{ width: '100%' }}
-              onChange={(dates, dateStrings) => {
-                if (dates && onRangeChange) {
-                  const dayjsRange = Array.isArray(dates) ? (dates as dayjs.Dayjs[]) : null;
-                  onRangeChange(dayjsRange);
-                }
-              }}
-            />
-          </FormItem>
-        </Form>
+        <FormItem
+          name="range"
+          initialValue={queryRange}
+          style={{ width: '470px', marginRight: 0, marginBottom: 0 }}
+        >
+          <DateRanger
+            selects={DATE_RANGER_SELECTS}
+            hasRewind={false}
+            hasForward={false}
+            hasSync={false}
+            allowClear={false}
+            defaultQuickValue={DateRanger.NEAR_1_HOURS.name}
+            disabledDate={date => (currentMoment ? date.isAfter(currentMoment) : false)}
+            format={DATE_TIME_FORMAT_DISPLAY}
+            style={{ width: '100%' }}
+          />
+        </FormItem>
       )}
     </div>
   );

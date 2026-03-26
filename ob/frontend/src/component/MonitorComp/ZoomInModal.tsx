@@ -16,6 +16,7 @@ import { formatNumber } from '@oceanbase/util';
 import { useUpdateEffect } from 'ahooks';
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { caculateStep } from '../MonitorDetail/helper';
 import ChartLegend, { LegendDataProps } from './ChartLegend';
 import styles from './ZoomInModal.less';
 
@@ -287,6 +288,7 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
     } else {
       // 弹窗关闭时重置状态
       setHiddenLegends([]);
+      setModalQueryRange({});
       setOriginalChartData([]);
       lineInstanceDestroy();
     }
@@ -328,11 +330,13 @@ const ZoomInModal: React.FC<ZoomInModalProps> = ({
   const handleDateRangerChange = (dates: any) => {
     if (dates && Array.isArray(dates) && dates.length === 2) {
       const [start, end] = dates;
+      const startTimestamp = Math.floor(start.valueOf() / 1000); // 转换为秒级时间戳
+      const endTimestamp = Math.floor(end.valueOf() / 1000); // 转换为秒级时间戳
       if (start && end) {
         setModalQueryRange({
-          start_timestamp: Math.floor(start.valueOf() / 1000), // 转换为秒级时间戳
-          end_timestamp: Math.floor(end.valueOf() / 1000), // 转换为秒级时间戳
-          step: modalQueryRange.step,
+          start_timestamp: startTimestamp,
+          end_timestamp: endTimestamp,
+          step: caculateStep(startTimestamp, endTimestamp, POINT_NUMBER),
         });
       }
     }

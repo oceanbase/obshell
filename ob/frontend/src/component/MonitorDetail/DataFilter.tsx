@@ -1,7 +1,7 @@
 import { POINT_NUMBER } from '@/constant/monitor';
 import { formatMessage } from '@/util/intl';
 import { getZonesFromTenant } from '@/util/tenant';
-import { Card, Select } from '@oceanbase/design';
+import { Card, Form, Select } from '@oceanbase/design';
 import { useModel } from '@umijs/max';
 import { useUpdateEffect } from 'ahooks';
 import dayjs from 'dayjs';
@@ -34,6 +34,8 @@ export default function DataFilter({
   setServerOption,
   isHostPerformanceTab = false,
 }: DataFilterProps) {
+  const [form] = Form.useForm();
+  const { setFieldsValue } = form;
   const [zoneOption, setZoneOption] = useState<Monitor.OptionType[]>([]);
   const [tenantOption, setTenantOption] = useState<Monitor.OptionType[]>([]);
   const [selectZone, setSelectZone] = useState<string>();
@@ -112,10 +114,10 @@ export default function DataFilter({
 
       if (typeof val === 'undefined') {
         if (selectTenant) {
-          const tenant = tenantListData.find(
+          const tenant = tenantListData?.find(
             (tenant: API.TenantInfo) => tenant.tenant_name === selectTenant
           );
-          const zonesName = getZonesFromTenant(tenant).map(zone => zone.name) || [];
+          const zonesName = getZonesFromTenant(tenant!).map(zone => zone.name) || [];
           serversList = filterData.serverList.filter(server =>
             zonesName.includes(server.zone as string)
           );
@@ -170,6 +172,7 @@ export default function DataFilter({
 
         setIsExternalUpdate(true); // 标记为外部更新
         setQueryRangeState([newStartTime, newEndTime]);
+        setFieldsValue({ range: [newStartTime, newEndTime] });
       }
     }
   };
@@ -187,13 +190,7 @@ export default function DataFilter({
     const startTime = dayjs().subtract(1, 'hours');
     setIsExternalUpdate(false); // 用户手动刷新
     setQueryRangeState([startTime, endTime]);
-  };
-
-  const handleRangeChange = (range: dayjs.Dayjs[] | null) => {
-    if (range) {
-      setIsExternalUpdate(false); // 用户手动更改
-      setQueryRangeState(range);
-    }
+    setFieldsValue({ range: [startTime, endTime] });
   };
 
   // 同步外部 queryRange 变化到内部状态
@@ -225,7 +222,7 @@ export default function DataFilter({
 
   useEffect(() => {
     if (selectTenant) {
-      const tenant = tenantListData.find(
+      const tenant = tenantListData?.find(
         (tenant: API.TenantInfo) => tenant.tenant_name === selectTenant
       );
       const zonesName = getZonesFromTenant(tenant).map(zone => zone.name) || [];
@@ -281,7 +278,7 @@ export default function DataFilter({
     if (isExternalUpdate) {
       setIsExternalUpdate(false);
     }
-  }, [queryRangeState, setQueryRange, isExternalUpdate]);
+  }, [queryRangeState, isExternalUpdate]);
 
   return (
     <Card
@@ -292,17 +289,27 @@ export default function DataFilter({
       }}
     >
       <div style={{ display: 'flex', flexDirection: 'row', gap: 24, flexWrap: 'wrap' }}>
-        <AutoFresh
-          onRefresh={handleRefresh}
-          isRealtime={isRefresh}
-          queryRange={queryRangeState}
-          frequency={frequency}
-          currentMoment={dayjs()}
-          onMenuClick={handleMenuClick}
-          onRefreshClick={handleRefreshClick}
-          onRangeChange={handleRangeChange}
-          withRanger={true}
-        />
+        <Form
+          form={form}
+          onValuesChange={changedValues => {
+            if (changedValues?.range) {
+              const dayjsRange = changedValues.range as dayjs.Dayjs[];
+              setIsExternalUpdate(false); // 用户手动更改
+              setQueryRangeState(dayjsRange);
+            }
+          }}
+        >
+          <AutoFresh
+            onRefresh={handleRefresh}
+            isRealtime={isRefresh}
+            queryRange={queryRangeState}
+            frequency={frequency}
+            currentMoment={dayjs()}
+            onMenuClick={handleMenuClick}
+            onRefreshClick={handleRefreshClick}
+            withRanger={true}
+          />
+        </Form>
 
         {filterData.tenantList && (
           <div>

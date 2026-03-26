@@ -270,6 +270,7 @@ const Detail: React.FC = () => {
                   <Progress
                     type="circle"
                     percent={Number(item.percentValue)}
+                    status="normal"
                     size={70}
                     strokeWidth={8}
                     strokeColor={getStrokeColor(Number(item.percentValue))}
