@@ -131,7 +131,10 @@
       "svgo": "2.8.1",
       "immutable": "5.1.5",
       "rollup": "4.60.0",
-      "@babel/runtime": "7.28.6"
+      "@babel/runtime": "7.28.6",
+      "picomatch": "4.0.4",
+      "yaml": "2.8.3",
+      "brace-expansion": "1.1.13"
     }
   },
   "engines": {
