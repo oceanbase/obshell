@@ -18,6 +18,7 @@ package web
 
 import (
 	"context"
+	"crypto/tls"
 	"io"
 	"io/fs"
 	"net"
@@ -189,6 +190,16 @@ func (s *Server) ListenTcpSocket() (err error) {
 		Handler:      s.Router,
 		ReadTimeout:  60 * time.Minute,
 		WriteTimeout: 60 * time.Minute,
+	}
+	if global.EnableHTTPS && global.EnableClientAuth {
+		// Require and verify client certificates (mTLS).
+		// CaCertPool is used as the trusted CA pool for client certificate validation.
+		s.HttpServer.TLSConfig = &tls.Config{
+			ClientAuth: tls.RequireAndVerifyClientCert,
+			ClientCAs:  global.CaCertPool,
+			MinVersion: tls.VersionTLS12,
+		}
+		log.Info("client certificate verification enabled (mTLS)")
 	}
 	log.Infof("listen tcp socket on %s", s.Config.Address)
 	s.TcpListener, err = http2.NewTcpListener(s.Config.Address)

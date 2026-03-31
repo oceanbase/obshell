@@ -137,10 +137,14 @@ func SendRequestAndBuildReturn(agentInfo meta.AgentInfoInterface, uri string, me
 func NewClient() *resty.Client {
 	client := resty.New().SetTimeout(TCP_DEFAULT_TIME_OUT).SetAllowGetMethodPayload(true)
 
-	if global.EnableHTTPS {
+	if global.Protocol == "https" {
 		tlsConfig := &tls.Config{
 			RootCAs:            global.CaCertPool,
+			MinVersion:         tls.VersionTLS12,
 			InsecureSkipVerify: global.SkipVerify,
+		}
+		if global.EnableClientAuth {
+			tlsConfig.Certificates = []tls.Certificate{global.OutboundMTLSKeyPair}
 		}
 		client.SetTLSClientConfig(tlsConfig)
 	}

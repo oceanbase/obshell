@@ -17,9 +17,11 @@
 package global
 
 import (
+	"crypto/tls"
 	"crypto/x509"
 	"os"
 	"runtime"
+	"syscall"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -30,18 +32,21 @@ import (
 )
 
 var (
-	HomePath        string
-	Uid             uint32
-	Gid             uint32
-	Pid             = os.Getpid()
-	StartAt         = time.Now().UnixNano()
-	Protocol        = "http"
-	CaCertPool      *x509.CertPool
-	SkipVerify      bool
-	EnableHTTPS     bool
-	EnableTelemetry bool
-	Architecture    string
-	Os              string
+	HomePath         string
+	Uid              uint32
+	Gid              uint32
+	Pid              = os.Getpid()
+	StartAt          = time.Now().UnixNano()
+	Protocol         = "http"
+	CaCertPool       *x509.CertPool
+	SkipVerify       bool
+	EnableHTTPS      bool
+	EnableClientAuth bool // require and verify client certificates (mTLS) when true
+	// OutboundMTLSKeyPair is loaded in init() when EnableClientAuth is true; used by HTTP clients.
+	OutboundMTLSKeyPair tls.Certificate
+	EnableTelemetry  bool
+	Architecture     string
+	Os               string
 )
 
 var (
@@ -81,4 +86,32 @@ func InitGlobalVariable() {
 	initArchitecture()
 	initTelemetry()
 	Os = runtime.GOOS
+}
+
+func init() {
+	keyFile, certFile := path.ObshellCertificateAndKeyPaths()
+	if keyFile == "" || certFile == "" {
+		return
+	}
+	pool := x509.NewCertPool()
+	for _, cert := range path.ObshellCertificatePaths() {
+		caCert, err := os.ReadFile(cert)
+		if err != nil {
+			log.WithError(err).Warn("read ca cert file failed")
+			return
+		}
+		pool.AppendCertsFromPEM(caCert)
+	}
+	CaCertPool = pool
+	Protocol = "https"
+	EnableHTTPS = true
+	_, SkipVerify = syscall.Getenv(constant.SKIP_VERIFY)
+	_, EnableClientAuth = syscall.Getenv(constant.ENABLE_CLIENT_AUTH)
+	if EnableClientAuth {
+		pair, err := tls.LoadX509KeyPair(certFile, keyFile)
+		if err != nil {
+			log.WithError(err).Fatal("enable_client_auth requires a valid TLS key/cert pair for outbound mTLS")
+		}
+		OutboundMTLSKeyPair = pair
+	}
 }

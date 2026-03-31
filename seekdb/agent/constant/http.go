@@ -25,5 +25,6 @@ const (
 )
 
 const (
-	SKIL_VERIFY = "skip_verify"
+	SKIP_VERIFY        = "skip_verify"
+	ENABLE_CLIENT_AUTH = "enable_client_auth"
 )
