@@ -28,6 +28,9 @@ const (
 	AGENT_AUTH_EXPIRED_DURATION   = "auth_expired_duration"
 	CONFIG_SESSION_TIMEOUT        = "session_timeout"
 	CONFIG_SESSION_GC_INTERVAL    = "session_gc_interval"
+	// SQLite ocs_config: SSO one-time jump token lifetime and cleanup ticker (values are seconds, same as session_*).
+	CONFIG_SSO_TOKEN_EXPIRY_SEC     = "sso_token_expiry_sec"
+	CONFIG_SSO_TOKEN_GC_INTERVAL_SEC = "sso_token_gc_interval_sec"
 	DEFAULT_AUTH_EXPIRED_DURATION = 10 * time.Second
 	GET_PASSWORD_RPC_TIMEOUT      = 1 * time.Second
 	CREDENTIAL_AES_KEY_CONFIG     = "credential_aes_key"

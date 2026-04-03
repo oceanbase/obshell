@@ -43,6 +43,9 @@ func Init() (err error) {
 	if err = initSessionManager(); err != nil {
 		return err
 	}
+	if err = initSSOTokenManager(); err != nil {
+		return err
+	}
 	if Crypter == nil {
 		if err = RestoreKey(); err != nil {
 			return New()

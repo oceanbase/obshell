@@ -69,3 +69,12 @@ export async function getTime(options?: { [key: string]: any }) {
     ...(options || {}),
   });
 }
+
+/** exchange SSO token for session_id GET /api/v1/sso/exchange (token in X-OCS-Header, response data is AES-encrypted session_id) */
+export async function ssoExchange(token: string, options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: string }>('/api/v1/sso/exchange', {
+    method: 'GET',
+    ssoToken: token,
+    ...(options || {}),
+  });
+}

@@ -84,3 +84,38 @@ func logoutHandler(c *gin.Context) {
 	}
 	common.SendResponse(c, nil, nil)
 }
+
+// @ID ssoToken
+// @Summary create SSO token
+// @Description create one-time SSO token for passwordless jump, returns AES encrypted token (same format as login)
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Success 200 object http.OcsAgentResponse{data=string}
+// @Router /api/v1/sso/token [post]
+func ssoTokenHandler(c *gin.Context) {
+	encryptedToken, err := session.CreateSSOToken(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, encryptedToken, nil)
+}
+
+// @ID ssoExchange
+// @Summary exchange SSO token for session
+// @Description exchange SSO token from header for session_id, returns AES encrypted session_id (auth via ROUTE_SSO_EXCHANGE: ssotoken and Keys in header)
+// @Tags v1
+// @Accept application/json
+// @Produce application/json
+// @Param X-OCS-Header header string true "encrypted header with ssotoken and Keys"
+// @Success 200 object http.OcsAgentResponse{data=string}
+// @Router /api/v1/sso/exchange [get]
+func ssoExchangeHandler(c *gin.Context) {
+	encryptedSessionID, err := session.ExchangeSSOToken(c)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
+	common.SendResponse(c, encryptedSessionID, nil)
+}

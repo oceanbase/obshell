@@ -16,6 +16,11 @@
 
 export default [
   {
+    path: '/sso',
+    component: 'SSOLogin',
+    name: 'SSO 跳转',
+  },
+  {
     path: '/',
     component: 'Layout',
     name: '系统布局',

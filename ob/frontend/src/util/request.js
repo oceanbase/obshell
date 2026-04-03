@@ -203,19 +203,20 @@ request.interceptors.request.use((url, options) => {
   const sessionId = getEncryptLocalStorage(SESSION_ID);
   const isFormData = options.data instanceof FormData;
   const isLoginApi = url.includes('/api/v1/login');
+  const isSsoExchangeApi =
+    url.includes('/api/v1/sso/exchange') && options.ssoToken != null && options.ssoToken !== '';
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */
-  // 对于登录接口，即使 options.data 为空，也要生成 secretKey 和 iv
+  // 对于登录接口或 SSO exchange，即使 options.data 为空，也要生成 secretKey 和 iv
   const { encryptedContent, secretKey, iv } = aesEncrypt(
     isFormData ? undefined : options.data,
-    isLoginApi
+    isLoginApi || isSsoExchangeApi
   );
 
   const keys = base64Encode(secretKey, iv);
 
-  // 对于登录接口，保存 secretKey 和 iv 到 localStorage，用于后续解密响应
-  if (isLoginApi && secretKey && iv) {
-    // 同时保存十六进制字符串格式，方便直接用于解密
+  // 对于登录接口或 SSO exchange，保存 secretKey 和 iv 到 localStorage，用于后续解密响应
+  if ((isLoginApi || isSsoExchangeApi) && secretKey && iv) {
     const secretKeyHex = wordArrayToHex(secretKey);
     const ivHex = wordArrayToHex(iv);
     setEncryptLocalStorage(LOGIN_SECRET_KEY, secretKeyHex);
@@ -224,46 +225,50 @@ request.interceptors.request.use((url, options) => {
 
   const X_OCS_File_SHA256 = encrypt(options.sha256sum, publicKey);
 
-  const ocsHeader = isTestEnv
-    ? JSON.stringify({
-        // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-        Auth: password,
-        // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-        Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-        // 请求的 URI
-        Uri: `${url}${
-          Object.keys(options.params).length > 0
-            ? `?${queryString.stringify(options.params, { sort: false })}`
-            : ''
-        }`,
-        session_id: sessionId,
-      })
-    : Base64.decode(
-        Base64.encode(
-          encrypt(
-            JSON.stringify({
-              // 集群 root@sys 密码: 从登录成功后保存的全局状态中获取
-              Auth: password,
-              // Auth 的有效时间戳: 最近一次请求的 30 分钟之内有效
-              Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
-              // 请求的 URI
-              Uri: `${url}${
-                Object.keys(options.params).length > 0
-                  ? `?${queryString.stringify(options.params, { sort: false })}`
-                  : ''
-              }`,
-
-              // 加密 HTTP 请求的 Body (Body 使用 data 参数)时，使用的 AES 加密算法的 key 和 IV
-              // 对于登录接口，即使 options.data 为空，也要返回 Keys
-              ...(options.data || isLoginApi ? { Keys: keys } : {}),
-              session_id: sessionId,
-            }),
-            publicKey
-          )
+  // SSO exchange: 仅携带 ssotoken、Ts、Uri、Keys，不携带 Auth/session_id
+  const ocsHeader = isSsoExchangeApi
+    ? publicKey
+      ? encrypt(
+          JSON.stringify({
+            ssotoken: options.ssoToken,
+            Ts: `${Math.round(new Date().getTime() / 1000)}`,
+            Uri: url,
+            Keys: keys,
+          }),
+          publicKey
         )
-      );
+      : ''
+    : isTestEnv
+      ? JSON.stringify({
+          Auth: password,
+          Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+          Uri: `${url}${
+            Object.keys(options.params || {}).length > 0
+              ? `?${queryString.stringify(options.params, { sort: false })}`
+              : ''
+          }`,
+          session_id: sessionId,
+        })
+      : Base64.decode(
+          Base64.encode(
+            encrypt(
+              JSON.stringify({
+                Auth: password,
+                Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+                Uri: `${url}${
+                  Object.keys(options.params || {}).length > 0
+                    ? `?${queryString.stringify(options.params, { sort: false })}`
+                    : ''
+                }`,
+                ...(options.data || isLoginApi ? { Keys: keys } : {}),
+                session_id: sessionId,
+              }),
+              publicKey
+            )
+          )
+        );
 
-  // url list to skip auth validation
+  // url list to skip auth validation (no X-OCS-Header sent). sso/exchange 需要携带加密 Header，故不跳过
   const skipUrlList = ['/api/v1/secret'];
 
   // 对 GET 请求，将 data 转换为 params

@@ -40,6 +40,7 @@ type HttpHeader struct {
 	Auth         string
 	Ts           string
 	Token        string
+	SSOToken     string `json:"ssotoken"` // SSO one-time token for /api/v1/sso/exchange
 	Uri          string
 	Keys         []byte
 	Sha256       string

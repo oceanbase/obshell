@@ -57,6 +57,9 @@ const (
 	URI_PASSWORD = "/password"
 	URI_TOKEN    = "/token"
 
+	URI_SSO_GROUP = "/sso"
+	URI_EXCHANGE  = "/exchange"
+
 	URI_SYNC_BIN = "/sync-bin"
 
 	URI_DAG        = "/dag"

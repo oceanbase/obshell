@@ -200,7 +200,7 @@ var (
 	ErrObClusterInspectionObdiagVersionNotSupported     = NewErrorCode("OB.Cluster.Inspection.Obdiag.Version.NotSupported", badRequest, "err.ob.cluster.inspection.obdiag.version.not.supported")         // "obdiag version %s in OCS is not supported, must be greater than 3.7.2"
 	ErrObClusterInspectionHostPasswordlessNotConfigured = NewErrorCode("OB.Cluster.Inspection.Host.Passwordless.NotConfigured", badRequest, "err.ob.cluster.inspection.host.passwordless.not.configured") // "host passwordless login not configured and no credential found"
 	ErrObClusterInspectionHostCredentialNotFound        = NewErrorCode("OB.Cluster.Inspection.Host.Credential.NotFound", badRequest, "err.ob.cluster.inspection.host.credential.not.found")               // "host credential not found in credential management"
-	ErrObClusterTenantReplicaInvalid                    = NewErrorCode("OB.Cluster.Tenant.Replica.Invalid", illegalArgument, "err.ob.cluster.tenant.replica.invalid")                                   // "when zone '%s' is stopped, tenants %v will not satisfy majority condition"
+	ErrObClusterTenantReplicaInvalid                    = NewErrorCode("OB.Cluster.Tenant.Replica.Invalid", illegalArgument, "err.ob.cluster.tenant.replica.invalid")                                     // "when zone '%s' is stopped, tenants %v will not satisfy majority condition"
 
 	// OB.Server
 	ErrObServerDeleteSelf         = NewErrorCode("OB.Server.DeleteSelf", illegalArgument, "err.ob.server.delete.self")
@@ -358,6 +358,11 @@ var (
 	ErrSecurityAuthenticationAgentPasswordNotInitialized = NewErrorCode("Security.Authentication.AgentPasswordNotInitialized", unauthorized, "err.security.authentication.agent.password.not.initialized", 10008)
 	ErrSecurityAuthenticationSessionInvalid              = NewErrorCode("Security.Authentication.SessionInvalid", unauthorized, "err.security.authentication.session.invalid", 10008)
 	ErrSecurityAuthenticationSessionExpired              = NewErrorCode("Security.Authentication.SessionExpired", unauthorized, "err.security.authentication.session.expired", 10008)
+	ErrSecuritySSOTokenMissing                           = NewErrorCode("Security.SSO.Token.Missing", unauthorized, "err.security.sso.token.missing")
+	ErrSecuritySSOTokenNotFound                          = NewErrorCode("Security.SSO.Token.NotFound", unauthorized, "err.security.sso.token.not.found")
+	ErrSecuritySSOTokenAlreadyUsed                       = NewErrorCode("Security.SSO.Token.AlreadyUsed", unauthorized, "err.security.sso.token.already.used")
+	ErrSecuritySSOTokenExpired                           = NewErrorCode("Security.SSO.Token.Expired", unauthorized, "err.security.sso.token.expired")
+	ErrSecuritySSOTokenManagerNotReady                   = NewErrorCode("Security.SSO.Token.ManagerNotReady", unexpected, "err.security.sso.token.manager.not.ready")
 
 	// Task
 	ErrTaskExpired                         = NewErrorCode("Task.Expired", known, "err.task.expired")

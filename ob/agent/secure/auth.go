@@ -37,6 +37,7 @@ const (
 	ROUTE_OBPROXY
 	ROUTE_TASK
 	ROUTE_LOGIN
+	ROUTE_SSO_EXCHANGE // SSO exchange: validate token from header, response encrypted with header Keys
 
 	OCEANBASE_PASSWORD VerifyType = iota
 	AGENT_PASSWORD

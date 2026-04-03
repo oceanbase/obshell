@@ -111,6 +111,9 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	if !isLocalRoute {
 		v1.POST(constant.URI_LOGIN, common.Verify(secure.ROUTE_LOGIN), loginHandler)
 		v1.POST(constant.URI_LOGOUT, common.Verify(), logoutHandler)
+		// SSO: create token (auth via password), exchange: token and Keys in header, returns AES encrypted session_id
+		v1.POST(constant.URI_SSO_GROUP+constant.URI_TOKEN, common.Verify(secure.ROUTE_LOGIN), ssoTokenHandler)
+		v1.GET(constant.URI_SSO_GROUP+constant.URI_EXCHANGE, common.Verify(secure.ROUTE_SSO_EXCHANGE), ssoExchangeHandler)
 	} else {
 		v1.POST(constant.URI_LOGIN, loginHandler)
 		v1.POST(constant.URI_LOGOUT, logoutHandler)

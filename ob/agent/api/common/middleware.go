@@ -656,6 +656,27 @@ func VerifySession(c *gin.Context, curTs int64, header *secure.HttpHeader) {
 	}
 }
 
+// VerifySSOToken verifies SSO exchange request: timestamp, then validates SSO token (exists, not used, not expired) and Keys in header.
+func VerifySSOToken(c *gin.Context, curTs int64, header *secure.HttpHeader) {
+	if secure.VerifyTimeStamp(header.Ts, curTs) != nil {
+		c.Abort()
+		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationTimestampInvalid, header.Ts, curTs))
+		return
+	}
+	if header.SSOToken == "" {
+		log.WithContext(NewContextWithTraceId(c)).Error("SSO exchange: ssotoken not found in header")
+		c.Abort()
+		SendResponse(c, nil, errors.Occur(errors.ErrSecuritySSOTokenMissing))
+		return
+	}
+	if err := secure.ValidateSSOToken(header.SSOToken); err != nil {
+		log.WithContext(NewContextWithTraceId(c)).Errorf("SSO exchange: token validation failed, err: %v", err)
+		c.Abort()
+		SendResponse(c, nil, err)
+		return
+	}
+}
+
 func calculateSHA256(reader io.Reader) string {
 	hash := sha256.New()
 
@@ -757,6 +778,17 @@ func Verify(routeType ...secure.RouteType) func(*gin.Context) {
 
 		if c.Request.RequestURI == constant.URI_AGENT_API_PREFIX+constant.URI_PASSWORD {
 			VerifyForSetAgentPassword(c, curTs, &header, passwordType)
+			c.Next()
+			return
+		}
+		if len(routeType) != 0 && routeType[0] == secure.ROUTE_SSO_EXCHANGE {
+			// SSO exchange: verify like session (timestamp + ssotoken + Keys), then set context and pass to handler
+			VerifySSOToken(c, curTs, &header)
+			if c.IsAborted() {
+				return
+			}
+			c.Set(constant.HTTP_HEADER_SSO_TOKEN, header.SSOToken)
+			c.Set(constant.HTTP_HEADER_AES_KEY, header.Keys)
 			c.Next()
 			return
 		}
