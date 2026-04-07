@@ -17,6 +17,7 @@
 package path
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -66,6 +67,33 @@ func isAgentStartCommand() bool {
 		}
 	}
 	return false
+}
+
+// fetchLocalAgentInfo calls the local obshell /api/v1/info to resolve agent home.
+// When the agent listens on HTTPS only, a plain HTTP request fails; we then retry over TLS.
+// InsecureSkipVerify is used because the CA bundle lives under the agent home path we are resolving
+// (importing global/lib/http here would create an init cycle with global).
+func fetchLocalAgentInfo(agentInfo meta.AgentInfo) (*resty.Response, error) {
+	host := agentInfo.String()
+	urlHTTP := fmt.Sprintf("http://%s/api/v1/info", host)
+	urlHTTPS := fmt.Sprintf("https://%s/api/v1/info", host)
+
+	resp, err := resty.New().R().Get(urlHTTP)
+	if err == nil && !resp.IsError() {
+		return resp, nil
+	}
+	httpsClient := resty.New().SetTLSClientConfig(&tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		InsecureSkipVerify: true,
+	})
+	resp2, err2 := httpsClient.R().Get(urlHTTPS)
+	if err2 != nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, err2
+	}
+	return resp2, nil
 }
 
 func getMyPathByArgs() (string, error) {
@@ -188,12 +216,12 @@ func getMyPathByArgs() (string, error) {
 		var agentInfo meta.AgentInfo
 		agentInfo.Ip = ip
 		agentInfo.Port = obshellPort
-		resp, err := resty.New().R().Get(fmt.Sprintf("http://%s/api/v1/info", agentInfo.String()))
+		resp, err := fetchLocalAgentInfo(agentInfo)
 		if err != nil {
 			return "", err
 		}
 		if resp.IsError() {
-			return "", errors.New("failed to get agent info")
+			return "", errors.Occurf(errors.ErrCommonUnexpected, "failed to get agent info: %v", resp.Error())
 		}
 		err = json.Unmarshal(resp.Body(), &respStruct)
 		if err != nil {
