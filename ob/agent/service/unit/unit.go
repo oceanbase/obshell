@@ -21,6 +21,7 @@ import (
 
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	oceanbaseModel "github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/ob/agent/service/obcluster"
 	"github.com/oceanbase/obshell/ob/param"
 )
 
@@ -78,12 +79,31 @@ func (u *UnitService) DropUnit(unit_name string) error {
 	return db.Exec(sql).Error
 }
 
+// buildSelectFields returns the SELECT field list for DBA_OB_UNIT_CONFIGS queries.
+// data_disk_size is only available in shared storage mode; querying it on a
+// non-shared-storage OceanBase instance causes "Unknown column" errors.
+func buildSelectFields() (string, error) {
+	isSharedStorage, err := (&obcluster.ObclusterService{}).IsSharedStorageMode()
+	if err != nil {
+		return "", err
+	}
+	fields := "create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops"
+	if isSharedStorage {
+		fields += ",data_disk_size"
+	}
+	return fields, nil
+}
+
 func (u *UnitService) GetAllUnitConfig() (units []oceanbaseModel.DbaObUnitConfig, err error) {
 	db, err := oceanbase.GetInstance()
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Scan(&units).Error
+	fields, err := buildSelectFields()
+	if err != nil {
+		return nil, err
+	}
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select(fields).Scan(&units).Error
 	return
 }
 
@@ -92,7 +112,11 @@ func (u *UnitService) GetUnitConfigByName(name string) (unit *oceanbaseModel.Dba
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Where("NAME = ?", name).Scan(&unit).Error
+	fields, err := buildSelectFields()
+	if err != nil {
+		return nil, err
+	}
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select(fields).Where("NAME = ?", name).Scan(&unit).Error
 	return
 }
 
@@ -101,12 +125,16 @@ func (u *UnitService) GetUnitConfigById(id int) (unit *oceanbaseModel.DbaObUnitC
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(DBA_OB_UNIT_CONFIGS).Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").Where("UNIT_CONFIG_ID = ?", id).Scan(&unit).Error
+	fields, err := buildSelectFields()
+	if err != nil {
+		return nil, err
+	}
+	err = db.Table(DBA_OB_UNIT_CONFIGS).Select(fields).Where("UNIT_CONFIG_ID = ?", id).Scan(&unit).Error
 	return
 }
 
-// GetUnitConfigsByIds batch gets multiple unit configs by IDs in one query
-// This is more efficient than calling GetUnitConfigById multiple times
+// GetUnitConfigsByIds batch gets multiple unit configs by IDs in one query.
+// This is more efficient than calling GetUnitConfigById multiple times.
 func (u *UnitService) GetUnitConfigsByIds(ids []int) (unitConfigsMap map[int]*oceanbaseModel.DbaObUnitConfig, err error) {
 	if len(ids) == 0 {
 		return make(map[int]*oceanbaseModel.DbaObUnitConfig), nil
@@ -117,9 +145,14 @@ func (u *UnitService) GetUnitConfigsByIds(ids []int) (unitConfigsMap map[int]*oc
 		return nil, err
 	}
 
+	fields, err := buildSelectFields()
+	if err != nil {
+		return nil, err
+	}
+
 	var units []oceanbaseModel.DbaObUnitConfig
 	err = db.Table(DBA_OB_UNIT_CONFIGS).
-		Select("create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,data_disk_size,max_iops,min_iops").
+		Select(fields).
 		Where("UNIT_CONFIG_ID IN ?", ids).Scan(&units).Error
 	if err != nil {
 		return nil, err

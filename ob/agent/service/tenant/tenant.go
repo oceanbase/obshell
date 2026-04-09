@@ -31,6 +31,7 @@ import (
 	oceanbasedb "github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	bo "github.com/oceanbase/obshell/ob/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/ob/agent/service/obcluster"
 )
 
 func (t *TenantService) TryExecute(sql string) error {
@@ -699,7 +700,15 @@ func (s *TenantService) GetUnitConfigByName(name string) (res *oceanbase.DbaObUn
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Table(DBA_OB_UNIT_CONFIGS).Where("name = ?", name).Scan(&res).Error
+	isSharedStorage, err := (&obcluster.ObclusterService{}).IsSharedStorageMode()
+	if err != nil {
+		return nil, err
+	}
+	fields := "create_time,modify_time,unit_config_id,name,max_cpu,min_cpu,memory_size,log_disk_size,max_iops,min_iops"
+	if isSharedStorage {
+		fields += ",data_disk_size"
+	}
+	err = oceanbaseDb.Table(DBA_OB_UNIT_CONFIGS).Select(fields).Where("name = ?", name).Scan(&res).Error
 	return
 }
 
