@@ -1,3 +1,4 @@
+import { formatMessage } from '@/util/intl';
 /*
  * Copyright (c) 2024 OceanBase.
  *
@@ -65,8 +66,16 @@ const SSOLoginPage: React.FC = () => {
 
   if (!done) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
-        <Spin size="large" tip="正在跳转..." />
+      <div
+        style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}
+      >
+        <Spin
+          size="large"
+          tip={formatMessage({
+            id: 'OBShell.pages.SSOLogin.Redirecting',
+            defaultMessage: '正在跳转...',
+          })}
+        />
       </div>
     );
   }

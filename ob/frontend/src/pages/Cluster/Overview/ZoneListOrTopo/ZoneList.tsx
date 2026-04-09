@@ -241,7 +241,7 @@ const ZoneList: React.FC = () => {
     },
 
     {
-      title: 'Root Server',
+      title: 'Root Service',
       key: 'rootServer',
       dataIndex: 'root_server',
       render: (text?: API.RootServer) => {
