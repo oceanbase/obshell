@@ -646,7 +646,7 @@ func VerifyTaskRoutes(c *gin.Context, curTs int64, header *secure.HttpHeader, pa
 func VerifySession(c *gin.Context, curTs int64, header *secure.HttpHeader) {
 	if secure.VerifyTimeStamp(header.Ts, curTs) != nil {
 		c.Abort()
-		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationTimestampInvalid, header.Ts, curTs))
+		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationExpired))
 		return
 	}
 	if err := secure.ValidateSession(header.SessionID); err != nil {
@@ -660,7 +660,7 @@ func VerifySession(c *gin.Context, curTs int64, header *secure.HttpHeader) {
 func VerifySSOToken(c *gin.Context, curTs int64, header *secure.HttpHeader) {
 	if secure.VerifyTimeStamp(header.Ts, curTs) != nil {
 		c.Abort()
-		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationTimestampInvalid, header.Ts, curTs))
+		SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationExpired))
 		return
 	}
 	if header.SSOToken == "" {

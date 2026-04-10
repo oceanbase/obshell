@@ -181,6 +181,7 @@ function base64Encode(key, iv) {
 
 // 测试环境不进行加密
 const isTestEnv = process.env.ENV === 'tester';
+const AUTH_HEADER_EXPIRE_SECONDS = 30 * 60;
 
 request.interceptors.request.use((url, options) => {
   // 由于 one-api 接口生成能力不足，需要对日志下载的接口手动设置 responseType 和 Accept 字段
@@ -205,6 +206,7 @@ request.interceptors.request.use((url, options) => {
   const isLoginApi = url.includes('/api/v1/login');
   const isSsoExchangeApi =
     url.includes('/api/v1/sso/exchange') && options.ssoToken != null && options.ssoToken !== '';
+  const expiresAtTs = `${Math.round(new Date().getTime() / 1000) + AUTH_HEADER_EXPIRE_SECONDS}`;
 
   /* OBShell 接口混合加密: https://www.oceanbase.com/docs/common-oceanbase-database-cn-1000000002016169 */
   // 对于登录接口或 SSO exchange，即使 options.data 为空，也要生成 secretKey 和 iv
@@ -231,7 +233,7 @@ request.interceptors.request.use((url, options) => {
       ? encrypt(
           JSON.stringify({
             ssotoken: options.ssoToken,
-            Ts: `${Math.round(new Date().getTime() / 1000)}`,
+            Ts: expiresAtTs,
             Uri: url,
             Keys: keys,
           }),
@@ -241,7 +243,7 @@ request.interceptors.request.use((url, options) => {
     : isTestEnv
       ? JSON.stringify({
           Auth: password,
-          Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+          Ts: expiresAtTs,
           Uri: `${url}${
             Object.keys(options.params || {}).length > 0
               ? `?${queryString.stringify(options.params, { sort: false })}`
@@ -254,7 +256,7 @@ request.interceptors.request.use((url, options) => {
             encrypt(
               JSON.stringify({
                 Auth: password,
-                Ts: `${Math.round(new Date().getTime() / 1000, 1000) + 30 * 60}`,
+                Ts: expiresAtTs,
                 Uri: `${url}${
                   Object.keys(options.params || {}).length > 0
                     ? `?${queryString.stringify(options.params, { sort: false })}`
