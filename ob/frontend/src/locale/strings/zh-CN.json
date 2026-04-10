@@ -1801,5 +1801,9 @@
   "OBShell.Tenant.New.CopySettings": "副本设置",
   "OBShell.Tenant.New.Memory": "内存",
   "OBShell.Tenant.New.DataCaching": "数据缓存",
-  "OBShell.pages.SSOLogin.Redirecting": "正在跳转..."
+  "OBShell.pages.SSOLogin.Redirecting": "正在跳转...",
+  "OBShell.ZoneListOrTopo.OBServerList.DataCaching": "数据缓存",
+  "OBShell.pages.Inspection.Failed": "失败:",
+  "OBShell.pages.Inspection.HighRisk": "高风险:",
+  "OBShell.pages.Inspection.MediumRisk": "中风险:"
 }

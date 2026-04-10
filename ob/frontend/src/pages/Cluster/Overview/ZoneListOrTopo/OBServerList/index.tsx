@@ -158,7 +158,7 @@ const OBServerList: React.FC<OBServerListProps> = ({ zoneRecord }) => {
           disk_total: diskTotal = 0,
           disk_used_percent: diskUsedPercent = 0,
         } = text || {};
-        const prefixWidth = isEnglish() ? 50 : 30;
+        const prefixWidth = isEnglish() || isSharedStorage ? 50 : 30;
         return (
           <span className={styles.stats}>
             <MyProgress
@@ -196,10 +196,17 @@ const OBServerList: React.FC<OBServerListProps> = ({ zoneRecord }) => {
             <MyProgress
               strokeLinecap="round"
               showInfo={false}
-              prefix={formatMessage({
-                id: 'ocp-express.Component.OBServerList.Disk',
-                defaultMessage: '磁盘',
-              })}
+              prefix={
+                isSharedStorage
+                  ? formatMessage({
+                      id: 'OBShell.ZoneListOrTopo.OBServerList.DataCaching',
+                      defaultMessage: '数据缓存',
+                    })
+                  : formatMessage({
+                      id: 'ocp-express.Component.OBServerList.Disk',
+                      defaultMessage: '磁盘',
+                    })
+              }
               prefixWidth={prefixWidth}
               // 磁盘使用率一般不高，已使用量和总量可能差距较大，因此这里展示时不统一单位
               affix={`${diskUsed || 0}/${diskTotal || 0}`}

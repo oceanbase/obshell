@@ -24,7 +24,7 @@ import {
 } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { findByValue, formatTime, sortByMoment } from '@oceanbase/util';
-import { history } from '@umijs/max';
+import { history, useModel } from '@umijs/max';
 import { useInterval, useRequest } from 'ahooks';
 import React from 'react';
 
@@ -37,6 +37,7 @@ const Tenant: React.FC = () => {
   );
 
   const { isDesktopMode } = useUiMode();
+  const { isSharedStorage } = useModel('cluster');
 
   // 预先获取租户列表
   const {
@@ -381,7 +382,7 @@ const Tenant: React.FC = () => {
 
         extra: (
           <Space>
-            {!isDesktopMode && (
+            {!isDesktopMode && !isSharedStorage && (
               <Button
                 onClick={() => {
                   history.push(`/tenant/restore`);

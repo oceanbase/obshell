@@ -1,3 +1,4 @@
+import { ReactComponent as SharedStorageIcon } from '@/asset/sharedStorage.svg';
 import ContentWithQuestion from '@/component/ContentWithQuestion';
 import MouseTooltip from '@/component/MouseTooltip';
 import MyCard from '@/component/MyCard';
@@ -265,7 +266,7 @@ const Detail: React.FC = () => {
             >
               <div className={styles.progressWrapper}>
                 {item.key === 'shared_storage' ? (
-                  <Progress type="circle" percent={0} showInfo={false} size={70} strokeWidth={8} />
+                  <SharedStorageIcon width={70} height={70} />
                 ) : (
                   <Progress
                     type="circle"

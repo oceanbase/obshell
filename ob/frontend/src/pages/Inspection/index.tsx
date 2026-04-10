@@ -151,11 +151,24 @@ export default function HistoryList() {
         }
         return (
           <div>
-            <div style={{ color: token.colorError }}>{`失败:${record?.failed_count || 0}`}</div>
-            <div style={{ color: 'rgba(166,29,36,1)' }}>{`高风险:${
-              record?.critical_count || 0
-            }`}</div>
-            <div style={{ color: 'orange' }}>{`中风险:${record?.warning_count || 0}`}</div>
+            <div style={{ color: token.colorError }}>
+              {formatMessage({ id: 'OBShell.pages.Inspection.Failed', defaultMessage: '失败:' })}
+              {record?.failed_count || 0}
+            </div>
+            <div style={{ color: 'rgba(166,29,36,1)' }}>
+              {formatMessage({
+                id: 'OBShell.pages.Inspection.HighRisk',
+                defaultMessage: '高风险:',
+              })}
+              {record?.critical_count || 0}
+            </div>
+            <div style={{ color: 'orange' }}>
+              {formatMessage({
+                id: 'OBShell.pages.Inspection.MediumRisk',
+                defaultMessage: '中风险:',
+              })}
+              {record?.warning_count || 0}
+            </div>
           </div>
         );
       },

@@ -14,22 +14,23 @@
  * limitations under the License.
  */
 
-import { formatMessage } from '@/util/intl';
-import React from 'react';
-import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
-import Icon from '@oceanbase/icons';
-import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
-import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
 import { ReactComponent as AlarmSvg } from '@/asset/alarm.svg';
 import { ReactComponent as AlarmSelectedSvg } from '@/asset/alarm_selected.svg';
-import { ReactComponent as TenantSvg } from '@/asset/tenant.svg';
-import { ReactComponent as TenantSelectedSvg } from '@/asset/tenant_selected.svg';
 import { ReactComponent as ClusterSvg } from '@/asset/cluster.svg';
 import { ReactComponent as ClusterSelectedSvg } from '@/asset/cluster_selected.svg';
-import { ReactComponent as SystemSvg } from '@/asset/system.svg';
-import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
 import { ReactComponent as InspectionSvg } from '@/asset/inspection.svg';
 import { ReactComponent as InspectionSelectedSvg } from '@/asset/inspection_selected.svg';
+import { ReactComponent as MonitorSvg } from '@/asset/monitor.svg';
+import { ReactComponent as MonitorSelectedSvg } from '@/asset/monitor_selected.svg';
+import { ReactComponent as SystemSvg } from '@/asset/system.svg';
+import { ReactComponent as SystemSelectedSvg } from '@/asset/system_selected.svg';
+import { ReactComponent as TenantSvg } from '@/asset/tenant.svg';
+import { ReactComponent as TenantSelectedSvg } from '@/asset/tenant_selected.svg';
+import { formatMessage } from '@/util/intl';
+import Icon from '@oceanbase/icons';
+import type { MenuItem } from '@oceanbase/ui/es/BasicLayout';
+import { useModel } from '@umijs/max';
+import React from 'react';
 import useUiMode from './useUiMode';
 
 export const useBasicMenu = (): MenuItem[] => {
@@ -117,8 +118,9 @@ export const useBasicMenu = (): MenuItem[] => {
   ];
 };
 
-export const useTenantMenu = (tenantName: string, tenantMode: API.TenantMode): MenuItem[] => {
+export const useTenantMenu = (tenantName: string, tenantMode: string): MenuItem[] => {
   const { isDesktopMode } = useUiMode();
+  const { isSharedStorage } = useModel('cluster');
   const menus = [
     {
       link: `/cluster/tenant/${tenantName}`,
@@ -159,14 +161,18 @@ export const useTenantMenu = (tenantName: string, tenantMode: API.TenantMode): M
       }),
       key: 'SESSION',
     },
-    {
-      link: `/cluster/tenant/${tenantName}/backup`,
-      title: formatMessage({
-        id: 'OBShell.src.hook.useMenu.BackupRecovery',
-        defaultMessage: '备份恢复',
-      }),
-      hidden: tenantName === 'sys' || isDesktopMode,
-    },
+    ...(isSharedStorage
+      ? []
+      : [
+          {
+            link: `/cluster/tenant/${tenantName}/backup`,
+            title: formatMessage({
+              id: 'OBShell.src.hook.useMenu.BackupRecovery',
+              defaultMessage: '备份恢复',
+            }),
+            hidden: tenantName === 'sys' || isDesktopMode,
+          },
+        ]),
     {
       link: `/cluster/tenant/${tenantName}/parameter`,
       title: formatMessage({
