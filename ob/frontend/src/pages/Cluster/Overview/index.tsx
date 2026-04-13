@@ -565,13 +565,7 @@ const Detail: React.FC = () => {
                         id: 'ocp-v2.Cluster.Overview.ClusterStatusIsAbnormal',
                         defaultMessage: '集群状态异常',
                       })
-                    : formatMessage(
-                        {
-                          id: 'ocp-express.Cluster.Overview.Obversion',
-                          defaultMessage: '{obVersion} 版本',
-                        },
-                        { obVersion: obVersion }
-                      )}
+                    : obVersion}
                 </Tag>
               }
               spin={reloading}
