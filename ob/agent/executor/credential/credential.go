@@ -19,6 +19,7 @@ package credential
 import (
 	"encoding/base64"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -350,6 +351,20 @@ func BatchDeleteCredential(ids []int64) error {
 
 // ListCredentials lists credentials with filtering, pagination, and sorting, and wraps paginated response.
 func ListCredentials(query *param.ListCredentialQueryParam) (*bo.PaginatedCredentialResponse, error) {
+	// Validate sort field against whitelist to prevent SQL injection.
+	allowedSortFields := map[string]bool{
+		"id": true, "name": true, "access_target": true,
+		"create_time": true, "update_time": true,
+	}
+	sortField := query.Sort
+	if sortField != "" && !allowedSortFields[strings.ToLower(sortField)] {
+		sortField = ""
+	}
+	sortOrder := query.SortOrder
+	if strings.ToUpper(sortOrder) != "DESC" {
+		sortOrder = "ASC"
+	}
+
 	// Convert param to service query
 	serviceQuery := &credentialservice.ListQuery{
 		CredentialId: int64(query.CredentialId),
@@ -357,8 +372,8 @@ func ListCredentials(query *param.ListCredentialQueryParam) (*bo.PaginatedCreden
 		KeyWord:      query.KeyWord,
 		Page:         query.Page,
 		PageSize:     query.PageSize,
-		Sort:         query.Sort,
-		SortOrder:    query.SortOrder,
+		Sort:         sortField,
+		SortOrder:    sortOrder,
 	}
 
 	credentials, total, err := credentialService.List(serviceQuery)

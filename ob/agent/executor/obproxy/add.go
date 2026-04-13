@@ -37,6 +37,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/secure"
 	"github.com/oceanbase/obshell/ob/param"
 	"github.com/oceanbase/obshell/ob/utils"
+
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -380,12 +381,12 @@ func (t *StartObproxyTask) Execute() error {
 			return err
 		}
 
-		startCmd = fmt.Sprintf("cd %s; ./bin/obproxy -o %s", t.homePath, t.optionsStr)
+		startCmd = fmt.Sprintf("cd %s; ./bin/obproxy -o %s", utils.ShellQuote(t.homePath), utils.ShellQuote(t.optionsStr))
 		if t.appName != "" {
-			startCmd = fmt.Sprintf("%s -n %s", startCmd, t.appName)
+			startCmd = fmt.Sprintf("%s -n %s", startCmd, utils.ShellQuote(t.appName))
 		}
 		if t.clusterName != "" {
-			startCmd = fmt.Sprintf("%s -c %s", startCmd, t.clusterName)
+			startCmd = fmt.Sprintf("%s -c %s", startCmd, utils.ShellQuote(t.clusterName))
 		}
 	}
 	t.ExecuteLogf("start obproxy cmd: %s", startCmd)
@@ -421,6 +422,9 @@ func (t *StartObproxyTask) buildStartOptionStr() error {
 
 	optionStrs := make([]string, 0, len(parameters))
 	for k, v := range parameters {
+		if !utils.IsValidParamKey(k) {
+			return errors.Occurf(errors.ErrCommonIllegalArgument, "invalid parameter key: %s", k)
+		}
 		optionStrs = append(optionStrs, fmt.Sprintf("%s=%s", k, v))
 	}
 	t.optionsStr = strings.Join(optionStrs, ",")
@@ -428,7 +432,7 @@ func (t *StartObproxyTask) buildStartOptionStr() error {
 }
 
 func (t *StartObproxyTask) buildAtartObproxyWithoutOptionsCmd(homePath string) string {
-	return fmt.Sprintf("cd %s; ./bin/obproxy", homePath)
+	return fmt.Sprintf("cd %s; ./bin/obproxy", utils.ShellQuote(homePath))
 }
 
 func (t *StartObproxyTask) healthCheck() error {

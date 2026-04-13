@@ -39,6 +39,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/ob/agent/secure"
 	"github.com/oceanbase/obshell/ob/param"
+	"github.com/oceanbase/obshell/ob/utils"
 )
 
 type StartObserverTask struct {
@@ -279,11 +280,7 @@ func generateStartOpitonCmd(config map[string]string) string {
 	agentIp := config[constant.CONFIG_LOCAL_IP]
 	for name, value := range startOptionsMap {
 		if val, ok := config[name]; ok {
-			if name == constant.CONFIG_RS_LIST {
-				cmd += fmt.Sprintf("%s '%s' ", value, val)
-			} else {
-				cmd += fmt.Sprintf("%s %s ", value, val)
-			}
+			cmd += fmt.Sprintf("%s %s ", value, utils.ShellQuote(val))
 			delete(config, name)
 		}
 	}
@@ -301,12 +298,16 @@ func generateAdditionalStartCmd(config map[string]string) string {
 		delete(config, name)
 	}
 	for k, v := range config {
+		if !utils.IsValidParamKey(k) {
+			log.Warnf("skip invalid config key: %s", k)
+			continue
+		}
 		additionalOpts = append(additionalOpts, fmt.Sprintf("%s=%s", k, v))
 	}
 	if len(additionalOpts) == 0 {
 		return ""
 	}
-	return fmt.Sprintf("-o '%s'", strings.Join(additionalOpts, ","))
+	return fmt.Sprintf("-o %s", utils.ShellQuote(strings.Join(additionalOpts, ",")))
 }
 
 func execStartCmd(bash string) error {

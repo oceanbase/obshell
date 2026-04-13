@@ -29,6 +29,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/lib/pkg"
 	"github.com/oceanbase/obshell/ob/agent/lib/system"
+	"github.com/oceanbase/obshell/ob/utils"
 )
 
 type InstallAllRequiredPkgsTask struct {
@@ -162,7 +163,7 @@ func (t *InstallAllRequiredPkgsTask) checkObserverBinAvailable(pkgInfo rpmPacakg
 	if err = os.Chmod(observerBinPath, 0755); err != nil {
 		return
 	}
-	bash := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s -V", pkgInfo.RpmPkgHomepath, observerBinPath)
+	bash := fmt.Sprintf("export LD_LIBRARY_PATH=%s; %s -V", utils.ShellQuote(pkgInfo.RpmPkgHomepath+"/lib"), utils.ShellQuote(observerBinPath))
 	t.ExecuteLogf("The test command is %s", bash)
 	cmd := exec.Command("/bin/bash", "-c", bash)
 	if stderr, err := cmd.CombinedOutput(); err != nil {

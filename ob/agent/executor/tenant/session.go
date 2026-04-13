@@ -27,7 +27,26 @@ import (
 	"github.com/oceanbase/obshell/ob/param"
 )
 
+// allowedSessionSortFields defines valid ORDER BY columns for tenant sessions.
+var allowedSessionSortFields = map[string]bool{
+	"ID": true, "SVR_IP": true, "SVR_PORT": true, "SQL_PORT": true,
+	"USER": true, "DB": true, "TENANT": true, "HOST": true,
+	"USER_CLIENT_IP": true, "COMMAND": true, "TIME": true,
+	"STATE": true, "INFO": true, "PROXY_SESSID": true,
+	"ACTION": true, "MODULE": true, "CLIENT_INFO": true,
+	"LEVEL": true, "SAMPLE_PERCENTAGE": true, "RECORD_POLICY": true,
+}
+
 func GetTenantSessions(tenantName string, p *param.QueryTenantSessionParam) (*bo.PaginatedTenantSessions, error) {
+	// Validate sort fields to prevent SQL injection.
+	if p.SortBy != "" && !allowedSessionSortFields[strings.ToUpper(p.SortBy)] {
+		p.SortBy = ""
+		p.SortOrder = ""
+	}
+	if p.SortOrder != "" && strings.ToUpper(p.SortOrder) != "DESC" && strings.ToUpper(p.SortOrder) != "ASC" {
+		p.SortOrder = "ASC"
+	}
+
 	sessions, err := tenantService.GetSessions(tenantName, p)
 	if err != nil {
 		return nil, err
