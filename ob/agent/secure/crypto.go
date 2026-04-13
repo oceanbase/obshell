@@ -299,19 +299,22 @@ func LoadAgentPassword() error {
 		}
 		return err
 	}
+	if pwd == "" {
+		log.Info("agent password in sqlite is empty, skip")
+		return nil
+	}
 	// Decrypt password
-	if pwd != "" {
-		pwd, err = Crypter.Decrypt(pwd)
-		if err != nil {
-			log.WithError(err).Warn("decrypt CONFIG_AGENT_PASSWORD failed (e.g. cipher encrypted with old key), clear stale value in sqlite")
-			_ = updateOCSInfo(constant.CONFIG_AGENT_PASSWORD, "")
-			setAgentPassword("")
-			return nil
-		}
+	pwd, err = Crypter.Decrypt(pwd)
+	if err != nil {
+		log.WithError(err).Warn("decrypt CONFIG_AGENT_PASSWORD failed (e.g. cipher encrypted with old key), clear stale value in sqlite")
+		_ = updateOCSInfo(constant.CONFIG_AGENT_PASSWORD, "")
+		return nil
+	}
+	if pwd == "" {
+		return nil
 	}
 	setAgentPassword(pwd)
 	return nil
-
 }
 
 func dumpTempObPassword(pwd string) {
