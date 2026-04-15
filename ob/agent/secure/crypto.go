@@ -149,6 +149,9 @@ func EnsureKeySize() error {
 	if agentPwdPlain != "" {
 		setAgentPassword(agentPwdPlain)
 	}
+	if obproxyPwdPlain != "" {
+		meta.OBPROXY_SYS_PWD = obproxyPwdPlain
+	}
 	log.Info("RSA key regenerated, dumped to sqlite, and passwords re-encrypted")
 	return nil
 }
@@ -184,15 +187,22 @@ func decryptStoredPasswords() (rootPwd, agentPwd, obproxyPwd string, err error) 
 		return "", "", "", err
 	}
 	cipher = ""
-	if err = getOBConifg(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, &cipher); err == nil && cipher != "" {
+	// Try obproxy_info first (the real source of truth used by initObproxy),
+	// fall back to ob_config for backward compatibility.
+	if e := getObproxyInfo(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, &cipher); e != nil || cipher == "" {
+		cipher = ""
+		if err = getOBConifg(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, &cipher); err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", "", "", err
+		}
+		err = nil
+	}
+	if cipher != "" {
 		obproxyPwd, err = Crypter.Decrypt(cipher)
 		if err != nil {
 			log.WithError(err).Warn("decrypt OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD with old key failed, skip re-encrypt")
 			obproxyPwd = ""
 			err = nil
 		}
-	} else if errors.Is(err, gorm.ErrRecordNotFound) {
-		err = nil
 	}
 	return rootPwd, agentPwd, obproxyPwd, err
 }
@@ -222,8 +232,8 @@ func reEncryptAndSavePasswordsInTransaction(tx *gorm.DB, rootPwd, agentPwd, obpr
 		if err != nil {
 			return err
 		}
-		if err = updateObproxyConfigInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, cipher); err != nil {
-			return err
+		if err = updateObproxyInfoInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, cipher); err != nil {
+			log.WithError(err).Warn("update obproxy_info with re-encrypted password failed, obproxy_info may not exist yet")
 		}
 	}
 	return nil
@@ -372,18 +382,6 @@ func dumpPassword() error {
 	return updateOBConifg(constant.CONFIG_ROOT_PWD, passwrod)
 }
 
-func dumpObproxyPassword() error {
-	passwrod := meta.OBPROXY_SYS_PWD
-	if meta.OBPROXY_SYS_PWD != "" {
-		cipherPassword, err := Crypter.Encrypt(meta.OBPROXY_SYS_PWD)
-		if err != nil {
-			log.WithError(err).Error("encrypt password failed")
-			return err
-		}
-		passwrod = cipherPassword
-	}
-	return updateObproxyConfig(constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, passwrod)
-}
 
 func EncryptPwdInObConfigs(configs []sqlite.ObConfig) (err error) {
 	for i := range configs {

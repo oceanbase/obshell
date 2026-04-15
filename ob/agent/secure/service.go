@@ -42,6 +42,7 @@ var (
 	obConfigModel    = &sqlitemodel.ObConfig{}
 	ocsConfigModel   = &sqlitemodel.OcsConfig{}
 	ocsInfoModel     = &sqlitemodel.OcsInfo{}
+	obproxyInfoModel = &sqlitemodel.ObproxyInfo{}
 	agentModelSqlite = &sqlitemodel.AllAgent{}
 	agentModelOB     = &oceanbasemodel.AllAgent{}
 )
@@ -74,20 +75,22 @@ func updateOBConifg(key string, value interface{}) (err error) {
 	return updateOBConifgInTransaction(db, key, value)
 }
 
-func updateObproxyConfig(key string, value interface{}) (err error) {
+
+func getObproxyInfo(key string, value interface{}) (err error) {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return
 	}
-	return updateObproxyConfigInTransaction(db, key, value)
+	err = db.Model(obproxyInfoModel).Select("value").Where("name=?", key).First(value).Error
+	return
 }
 
-func updateObproxyConfigInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
+func updateObproxyInfoInTransaction(tx *gorm.DB, key string, value interface{}) (err error) {
 	data := map[string]interface{}{
 		"name":  key,
 		"value": value,
 	}
-	err = tx.Model(obConfigModel).Clauses(clause.OnConflict{
+	err = tx.Model(obproxyInfoModel).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "name"}},
 		DoUpdates: clause.AssignmentColumns([]string{"value"}),
 	}).Create(data).Error
@@ -235,7 +238,7 @@ func reGenerateRSACryptoAndreEncrypt(rootPwdPlain, agentPwdPlain, obproxyPwdPlai
 			_ = updateOCSInfoInTransaction(tx, constant.CONFIG_AGENT_PASSWORD, "")
 		}
 		if obproxyPwdPlain == "" {
-			_ = updateObproxyConfigInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, "")
+			_ = updateObproxyInfoInTransaction(tx, constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD, "")
 		}
 		return nil
 	})

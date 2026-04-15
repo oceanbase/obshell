@@ -408,10 +408,6 @@ func (t *StartObproxyTask) Execute() error {
 
 func (t *StartObproxyTask) buildStartOptionStr() error {
 	parameters := t.parameters
-	// Add single quotes to rs_list.
-	if rsList, ok := parameters[constant.OBPROXY_CONFIG_RS_LIST]; ok && !strings.HasPrefix(rsList, "'") && !strings.HasSuffix(rsList, "'") {
-		parameters[constant.OBPROXY_CONFIG_RS_LIST] = fmt.Sprintf("'%s'", rsList)
-	}
 
 	if t.obproxySysPassword != "" {
 		parameters[constant.OBPROXY_CONFIG_OBPROXY_SYS_PASSWORD] = utils.Sha1(t.obproxySysPassword)
@@ -445,12 +441,15 @@ func (t *StartObproxyTask) healthCheck() error {
 	}
 	t.ExecuteLog("start obproxy health check")
 	dsConfig := config.NewObproxyDataSourceConfig().SetPort(t.sqlPort).SetPassword(t.obproxySysPassword)
+	var lastErr error
 	for retryCount := 1; retryCount <= obproxydb.WAIT_OBPROXY_CONNECTED_MAX_TIMES; retryCount++ {
 		time.Sleep(obproxydb.WAIT_OBPROXY_CONNECTED_MAX_INTERVAL)
 		if err := obproxydb.LoadObproxyInstanceForHealthCheck(dsConfig); err != nil {
-			t.ExecuteWarnLogf("obproxy health check failed: %v", err)
-			if strings.Contains(err.Error(), "connection refused") {
-				return err
+			t.ExecuteWarnLogf("obproxy health check failed(retry %d): %v", retryCount, err)
+			lastErr = err
+			if _, pidErr := process.FindPIDByPort(uint32(t.sqlPort)); pidErr != nil {
+				t.ExecuteWarnLogf("no process listening on port %d, obproxy may have exited", t.sqlPort)
+				return errors.Wrapf(lastErr, "obproxy process not found on port %d", t.sqlPort)
 			}
 			continue
 		}

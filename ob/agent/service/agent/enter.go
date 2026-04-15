@@ -20,6 +20,7 @@ import (
 	"strconv"
 
 	"github.com/mattn/go-sqlite3"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
@@ -114,7 +115,9 @@ func (s *AgentService) initObproxy() (err error) {
 		return err
 	}
 	if meta.OBPROXY_SYS_PWD, err = secure.Decrypt(encryptedSysPwd); err != nil {
-		return err
+		log.WithError(err).Warn("decrypt obproxy sys password failed (e.g. cipher encrypted with old RSA key), will be fixed by EnsureKeySize")
+		meta.OBPROXY_SYS_PWD = ""
+		err = nil
 	}
 
 	return nil
