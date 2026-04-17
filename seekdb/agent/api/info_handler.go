@@ -29,10 +29,14 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/lib/http"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/service/obcluster"
 	"github.com/oceanbase/obshell/seekdb/agent/service/task"
 )
 
-var localTaskService = task.NewLocalTaskService()
+var (
+	localTaskService = task.NewLocalTaskService()
+	clusterService   = obcluster.ObclusterService{}
+)
 
 // TimeHandler returns the current time
 //
@@ -60,7 +64,10 @@ func TimeHandler(c *gin.Context) {
 // @Router /api/v1/info [get]
 func InfoHandler(s *http.State) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		obVersion, _, _ := binary.GetMyOBVersion() // when occur err, obVersion is empty
+		obVersion, _ := clusterService.GetObVersion()
+		if obVersion == "" {
+			obVersion, _, _ = binary.GetMyOBVersion()
+		}
 		agentStatus := meta.NewAgentStatus(meta.OCS_AGENT, global.Pid, s.GetState(), global.StartAt, global.HomePath, obVersion)
 		agentStatus.Architecture = global.Architecture
 		common.SendResponse(c, agentStatus, nil)
