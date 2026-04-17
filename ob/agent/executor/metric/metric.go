@@ -29,11 +29,14 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/executor/external"
 	metricconstant "github.com/oceanbase/obshell/ob/agent/executor/metric/constant"
+	"github.com/oceanbase/obshell/ob/agent/service/obcluster"
 	"github.com/oceanbase/obshell/ob/model/common"
 	model "github.com/oceanbase/obshell/ob/model/metric"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 )
+
+var obclusterService = obcluster.ObclusterService{}
 
 var metricExprConfig map[string]string
 
@@ -75,7 +78,41 @@ func ListMetricClasses(scope, language string) ([]model.MetricClass, error) {
 	if !found {
 		err = errors.Occur(errors.ErrMetricConfigNotFound, scope)
 	}
+
+	isSharedStorage, ssErr := obclusterService.IsSharedStorageMode()
+	if ssErr != nil || !isSharedStorage {
+		metricClasses = filterSharedStorageMetrics(metricClasses)
+	}
+
 	return metricClasses, err
+}
+
+func filterSharedStorageMetrics(classes []model.MetricClass) []model.MetricClass {
+	result := make([]model.MetricClass, 0, len(classes))
+	for _, cls := range classes {
+		filtered := make([]model.MetricGroup, 0, len(cls.MetricGroups))
+		for _, group := range cls.MetricGroups {
+			if isSharedStorageMetricGroup(group) {
+				continue
+			}
+			filtered = append(filtered, group)
+		}
+		cls.MetricGroups = filtered
+		result = append(result, cls)
+	}
+	return result
+}
+
+func isSharedStorageMetricGroup(group model.MetricGroup) bool {
+	if len(group.Metrics) == 0 {
+		return false
+	}
+	for _, m := range group.Metrics {
+		if !strings.HasPrefix(m.Key, "ss_") {
+			return false
+		}
+	}
+	return true
 }
 
 func replaceQueryVariables(exprTemplate string, labels []common.KVPair, groupLabels []string, step int64) string {
