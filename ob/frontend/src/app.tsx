@@ -14,8 +14,14 @@
  * limitations under the License.
  */
 
+import ChunkErrorBoundary from '@/component/ChunkErrorBoundary';
 import { formatMessage } from '@/util/intl';
 import { message } from '@oceanbase/design';
+import React from 'react';
+
+export function rootContainer(container: React.ReactNode) {
+  return React.createElement(ChunkErrorBoundary, null, container);
+}
 
 export const dva = {
   config: {

@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
+import ChunkErrorBoundary from '@/component/ChunkErrorBoundary';
 import Empty from '@/component/Empty';
 import { formatMessage } from '@/util/intl';
 import { Alert, Button } from '@oceanbase/design';
 import { history } from '@umijs/max';
 import React from 'react';
-
 interface ErrorBoundaryProps {
   message?: React.ReactNode;
   description?: React.ReactNode;
@@ -41,6 +41,15 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   };
 
   componentDidCatch(error: Error | null, info: object) {
+    // chunk 不匹配错误交由 ChunkErrorBoundary 的逻辑处理（自动刷新一次），
+    // 而不是展示"页面执行出错"界面
+    if (error && ChunkErrorBoundary.isChunkMismatchError(error)) {
+      if (!sessionStorage.getItem('__chunk_reload__')) {
+        sessionStorage.setItem('__chunk_reload__', '1');
+        window.location.reload();
+        return;
+      }
+    }
     this.setState({ error, info });
   }
 
