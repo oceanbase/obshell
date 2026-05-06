@@ -33,6 +33,10 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/repository/model/sqlite"
 )
 
+// agentBinaryChunkSize is the size of each chunk when uploading the agent binary to OceanBase.
+// Kept smaller than the shared CHUNK_SIZE to reduce per-statement latency and OB MemStore pressure.
+const agentBinaryChunkSize = 1024 * 1024 * 4 // 4 MB
+
 func (s *AgentService) IsBinarySynced() (bool, error) {
 	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
@@ -65,7 +69,7 @@ func (s *AgentService) SetBinarySynced(synced bool) error {
 }
 
 func (s *AgentService) UpgradeBinary() error {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	db, err := oceanbasedb.GetOcsInstance()
 	if err != nil {
 		return err
 	}
@@ -81,67 +85,72 @@ func (s *AgentService) UpgradeBinary() error {
 		return err
 	}
 
-	return oceanbaseDb.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Exec("SET SESSION ob_query_timeout=1000000000").Error; err != nil {
-			return err
-		}
-		if err := tx.Exec("SET SESSION ob_trx_timeout=1000000000").Error; err != nil {
-			return err
-		}
+	chunkCount := int(stat.Size() / agentBinaryChunkSize)
+	if stat.Size()%agentBinaryChunkSize != 0 {
+		chunkCount++
+	}
 
-		info := &oceanbase.AgentBinaryInfo{
-			Version:      constant.VERSION,
-			Architecture: global.Architecture,
-			Distribution: constant.DIST,
+	// Step 1: create the binary info record (ChunkCount=0 acts as "upload in progress" marker).
+	info := &oceanbase.AgentBinaryInfo{
+		Version:      constant.VERSION,
+		Architecture: global.Architecture,
+		Distribution: constant.DIST,
+	}
+	if err = db.Model(info).Create(info).Error; err != nil {
+		if dbErr, ok := err.(*obdriver.MySQLError); ok && (dbErr.Number == 1062 || dbErr.Number == 1205) {
+			if err = db.Model(info).
+				Where("version = ?", constant.VERSION).
+				Where("architecture = ?", global.Architecture).
+				Where("distribution = ?", constant.DIST).
+				Scan(info).Error; err != nil {
+				return errors.Wrap(err, "check binary compatibility failed")
+			} else if info.BinId == 0 {
+				return ErrOtherAgentUpgrading
+			} else if info.ChunkCount > 0 {
+				// binary already fully uploaded
+				return nil
+			}
+			// ChunkCount == 0: info exists but upload was interrupted; clean up partial chunks.
+			if err = db.Where("bin_id = ?", info.BinId).Delete(&oceanbase.AgentBinaryChunk{}).Error; err != nil {
+				return errors.Wrap(err, "clean up partial binary chunks failed")
+			}
+		} else {
+			return err
 		}
-		err := tx.Model(info).Create(info).Error
+	}
+
+	if err = db.Exec("SET SESSION ob_query_timeout=1000000000").Error; err != nil {
+		return err
+	}
+	if err = db.Exec("SET SESSION ob_trx_timeout=1000000000").Error; err != nil {
+		return err
+	}
+
+	// Step 2: write each chunk as an independent auto-commit statement to avoid large MemStore pressure.
+	chunkBuffer := make([]byte, agentBinaryChunkSize)
+	for i := 0; i < chunkCount; i++ {
+		log.Info("Upgrading binary, chunk: ", i)
+		n, err := file.Read(chunkBuffer)
 		if err != nil {
-			if dbErr, ok := err.(*obdriver.MySQLError); ok {
-				if dbErr.Number == 1062 || dbErr.Number == 1205 {
-					// check if the binary has been upgraded
-					if err = tx.Model(info).Where("version = ?", constant.VERSION).Where("architecture = ?", global.Architecture).Where("distribution = ?", constant.DIST).Scan(info).Error; err != nil {
-						return errors.Wrap(err, "check binary compatibility failed")
-					} else if info.BinId == 0 {
-						// other agent is upgrading
-						return ErrOtherAgentUpgrading
-					} else if info.ChunkCount > 0 {
-						// binary has been upgraded
-						return nil
-					} else {
-						// Only the binary info is created, but the binary is not uploaded
-					}
-				}
-			} else {
-				return err
-			}
+			return err
 		}
 
-		info.ChunkCount = int(stat.Size() / int64(constant.CHUNK_SIZE))
-		chunkBuffer := make([]byte, constant.CHUNK_SIZE)
-		if stat.Size()%int64(constant.CHUNK_SIZE) != 0 {
-			info.ChunkCount++
+		chunkData := make([]byte, n)
+		copy(chunkData, chunkBuffer[:n])
+
+		chunk := &oceanbase.AgentBinaryChunk{
+			BinId:      info.BinId,
+			ChunkId:    i,
+			ChunkCount: chunkCount,
+			Chunk:      chunkData,
 		}
-
-		for i := 0; i < info.ChunkCount; i++ {
-			log.Info("Upgrading binary, chunk: ", i)
-			n, err := file.Read(chunkBuffer)
-			if err != nil {
-				return err
-			}
-
-			chunk := &oceanbase.AgentBinaryChunk{
-				BinId:      info.BinId,
-				ChunkId:    i,
-				ChunkCount: info.ChunkCount,
-				Chunk:      chunkBuffer[:n],
-			}
-			if err = tx.Model(chunk).Create(chunk).Error; err != nil {
-				return err
-			}
+		if err = db.Model(chunk).Create(chunk).Error; err != nil {
+			return err
 		}
-		return tx.Model(info).Where("bin_id = ?", info.BinId).UpdateColumn("chunk_count", info.ChunkCount).Error
-	})
+	}
 
+	// Step 3: update ChunkCount to mark the binary as fully uploaded.
+	return db.Model(info).Where("bin_id = ?", info.BinId).UpdateColumn("chunk_count", chunkCount).Error
 }
 
 func (s *AgentService) DownloadBinary(filePath, version string) error {
