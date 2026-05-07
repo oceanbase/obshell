@@ -157,13 +157,7 @@ export async function queryMetricsReq({
               )?.value || '';
           }
         } else {
-          const tenantLabel = metric.metric?.labels
-            ?.sort((a: LabelType, b: LabelType) => a.key.localeCompare(b.key))
-            .map((label: LabelType) => label.value)
-            .join('，');
-          const tenantName = tenantLabel || '';
-          const metricName = findBy(metrics, 'key', metric.metric?.name)?.name || '';
-          item.name = `${metricName} (${tenantName})`;
+          item.name = findBy(metrics, 'key', metric.metric?.name)?.name || '';
         }
       });
     });

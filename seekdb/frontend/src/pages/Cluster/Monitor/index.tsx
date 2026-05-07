@@ -1,12 +1,9 @@
 import MonitorDetail from '@/component/MonitorDetail';
 import { formatMessage } from '@/util/intl';
 import { PageContainer } from '@oceanbase/ui';
-import { useDeepCompareEffect } from 'ahooks';
-import { useState } from 'react';
 
 import ContentWithReload from '@/component/ContentWithReload';
 import useReload from '@/hook/useReload';
-import useSeekdbInfo from '@/hook/usSeekdbInfo';
 import { MonitorScope } from '@/pages/Monitor';
 import React from 'react';
 
@@ -16,31 +13,12 @@ export interface ClusterMonitorProps {
 
 const ClusterMonitor: React.FC<ClusterMonitorProps> = ({ monitorScope }) => {
   const [reloading, reload] = useReload(false);
-  const { seekdbInfoData } = useSeekdbInfo();
-  const [filterLabel, setFilterLabel] = useState<Monitor.LabelType[]>([
-    {
-      key: 'ob_cluster_name',
-      value: seekdbInfoData.cluster_name || '',
-    },
-  ]);
-
-  // 当 clusterData.cluster_name 变化时，更新 filterLabel
-  useDeepCompareEffect(() => {
-    if (seekdbInfoData.cluster_name) {
-      setFilterLabel([
-        {
-          key: 'ob_cluster_name',
-          value: seekdbInfoData.cluster_name,
-        },
-      ]);
-    }
-  }, [seekdbInfoData.cluster_name]);
 
   const renderMonitor = () => {
     return (
       <MonitorDetail
-        filterLabel={filterLabel}
-        groupLabels={['ob_cluster_name']}
+        filterLabel={[]}
+        groupLabels={[]}
         queryScope="SEEKDB"
         useFor="cluster"
       />

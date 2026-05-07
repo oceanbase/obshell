@@ -27,9 +27,9 @@ const (
 const (
 	METRIC_RANGE_QUERY_URL  = "/api/v1/query_range"
 	DEFAULT_TIMEOUT         = 30
-	METRIC_CONFIG_FILE_ENUS = "agent/assets/metric/metrics-en_US.yaml"
-	METRIC_CONFIG_FILE_ZHCN = "agent/assets/metric/metrics-zh_CN.yaml"
-	METRIC_EXPR_CONFIG_FILE = "agent/assets/metric/metric_expr.yaml"
+	METRIC_CONFIG_FILE_ENUS = "agent/assets/metric/metrics-seekdb-en_US.yaml"
+	METRIC_CONFIG_FILE_ZHCN = "agent/assets/metric/metrics-seekdb-zh_CN.yaml"
+	METRIC_EXPR_CONFIG_FILE = "agent/assets/metric/metric_seekdb_expr.yaml"
 	KEY_INTERVAL            = "@INTERVAL"
 	KEY_LABELS              = "@LABELS"
 	KEY_GROUP_LABELS        = "@GBLABELS"

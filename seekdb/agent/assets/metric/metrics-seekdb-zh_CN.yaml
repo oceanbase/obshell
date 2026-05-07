@@ -1,0 +1,723 @@
+SEEKDB:
+- description: "性能与SQL"
+  metricGroups:
+  - description: "平均每秒处理 SQL 语句数"
+    metrics:
+    - description: "每秒处理 SQL 语句数"
+      key: seekdb_sql_all_count
+      name: all
+      unit: times/s
+    - description: "每秒处理 Select 语句数"
+      key: seekdb_sql_select_count
+      name: select
+      unit: times/s
+    - description: "每秒处理 Insert 语句数"
+      key: seekdb_sql_insert_count
+      name: insert
+      unit: times/s
+    - description: "每秒处理 Update 语句数"
+      key: seekdb_sql_update_count
+      name: update
+      unit: times/s
+    - description: "每秒处理 Replace 语句数"
+      key: seekdb_sql_replace_count
+      name: replace
+      unit: times/s
+    - description: "每秒处理 Delete 语句数"
+      key: seekdb_sql_delete_count
+      name: delete
+      unit: times/s
+    - description: "每秒处理 Commit 语句数"
+      key: seekdb_sql_commit_count
+      name: commit
+      unit: times/s
+    - description: "每秒处理 Rollback 语句数"
+      key: seekdb_sql_rollback_count
+      name: rollback
+      unit: times/s
+    - description: "DDL, DCL, DTL 等其他语句数"
+      key: seekdb_sql_other_count
+      name: other
+      unit: times/s
+    name: QPS
+  - description: "响应时间"
+    metrics:
+    - description: "SQL 语句平均处理耗时"
+      key: seekdb_sql_all_rt
+      name: all
+      unit: "μs"
+    - description: "Select 语句平均处理耗时"
+      key: seekdb_sql_select_rt
+      name: select
+      unit: "μs"
+    - description: "Insert 语句平均处理耗时"
+      key: seekdb_sql_insert_rt
+      name: insert
+      unit: "μs"
+    - description: "Update 语句平均处理耗时"
+      key: seekdb_sql_update_rt
+      name: update
+      unit: "μs"
+    - description: "Replace 语句平均处理耗时"
+      key: seekdb_sql_replace_rt
+      name: replace
+      unit: "μs"
+    - description: "Delete 语句平均处理耗时"
+      key: seekdb_sql_delete_rt
+      name: delete
+      unit: "μs"
+    - description: "DDL, DCL, DTL 等其他语句平均处理耗时"
+      key: seekdb_sql_other_rt
+      name: other
+      unit: "μs"
+    - description: "SQL 语句平均处理耗时 P99"
+      key: seekdb_sql_rt_p99
+      name: 99-all
+      unit: "μs"
+    - description: "SQL 语句平均处理耗时 P95"
+      key: seekdb_sql_rt_p95
+      name: 95-all
+      unit: "μs"
+    name: "响应时间"
+  - description: "SQL 执行计划类别"
+    metrics:
+    - description: "每秒处理本地执行计划数"
+      key: seekdb_sql_local_count
+      name: local
+      unit: times/s
+    - description: "每秒处理远程执行计划数"
+      key: seekdb_sql_remote_count
+      name: remote
+      unit: times/s
+    - description: "每秒处理分布式执行计划数"
+      key: seekdb_sql_distributed_count
+      name: distributed
+      unit: times/s
+    name: "SQL 执行计划类别"
+  - name: "SQL 执行时间"
+    description: "SQL 执行时间"
+    metrics:
+    - name: "local"
+      description: "本地执行时间"
+      key: seekdb_sql_local_time
+      unit: "μs"
+    - name: "remote"
+      description: "远程执行时间"
+      key: seekdb_sql_remote_time
+      unit: "μs"
+    - name: "distributed"
+      description: "分布式执行时间"
+      key: seekdb_sql_distributed_time
+      unit: "μs"
+  - description: "会话数"
+    metrics:
+    - description: "当前活跃会话数"
+      key: seekdb_active_session
+      name: active_session
+      unit: ''
+    - description: "当前总会话数"
+      key: seekdb_all_session
+      name: all_session
+      unit: ''
+    name: "会话数"
+  - description: "每秒等待事件次数"
+    metrics:
+    - description: "每秒等待事件次数"
+      key: seekdb_wait_event_count
+      name: all
+      unit: times/s
+    - description: "每秒应用类等待事件次数"
+      key: seekdb_system_event_application_total_waits
+      name: application_wait
+      unit: times/s
+    - description: "每秒配置类等待事件次数"
+      key: seekdb_system_event_configuration_total_waits
+      name: configuration_lock_wait
+      unit: times/s
+    - description: "每秒管理类等待事件次数"
+      key: seekdb_system_event_administrative_total_waits
+      name: administrative_wait
+      unit: times/s
+    - description: "每秒并发类等待事件次数"
+      key: seekdb_system_event_concurrency_total_waits
+      name: concurrency_wait
+      unit: times/s
+    - description: "每秒提交类等待事件次数"
+      key: seekdb_system_event_commit_total_waits
+      name: commit_wait
+      unit: times/s
+    - description: "每秒网络类等待事件次数"
+      key: seekdb_system_event_network_total_waits
+      name: network_wait
+      unit: times/s
+    - description: "每秒用户IO类等待事件次数"
+      key: seekdb_system_event_user_io_total_waits
+      name: user_io_wait
+      unit: times/s
+    - description: "每秒系统IO类等待事件次数"
+      key: seekdb_system_event_system_io_total_waits
+      name: system_io_wait
+      unit: times/s
+    - description: "每秒集群类等待事件次数"
+      key: seekdb_system_event_cluster_total_waits
+      name: cluster_wait
+      unit: times/s
+    - description: "每秒其他类等待事件次数"
+      key: seekdb_system_event_other_total_waits
+      name: other_wait
+      unit: times/s
+    name: "等待事件"
+  - description: "等待事件平均耗时"
+    metrics:
+    - description: "平均每次等待事件耗时"
+      key: seekdb_wait_event_rt
+      name: all
+      unit: "μs"
+    - description: "平均每次应用类等待事件耗时"
+      key: seekdb_system_event_application_time_waited
+      name: application_wait
+      unit: "μs"
+    - description: "平均每次配置类等待事件耗时"
+      key: seekdb_system_event_configuration_time_waited
+      name: configuration_wait
+      unit: "μs"
+    - description: "平均每次管理类等待事件耗时"
+      key: seekdb_system_event_administrative_time_waited
+      name: administrative_wait
+      unit: "μs"
+    - description: "平均每次并发类等待事件耗时"
+      key: seekdb_system_event_concurrency_time_waited
+      name: concurrency_wait
+      unit: "μs"
+    - description: "平均每次提交类等待事件耗时"
+      key: seekdb_system_event_commit_time_waited
+      name: commit_wait
+      unit: "μs"
+    - description: "平均每次网络类等待事件耗时"
+      key: seekdb_system_event_network_time_waited
+      name: network_wait
+      unit: "μs"
+    - description: "平均每次用户IO类等待事件耗时"
+      key: seekdb_system_event_user_io_time_waited
+      name: user_io_wait
+      unit: "μs"
+    - description: "平均每次系统IO类等待事件耗时"
+      key: seekdb_system_event_system_io_time_waited
+      name: system_io_wait
+      unit: "μs"
+    - description: "平均每次集群类等待事件耗时"
+      key: seekdb_system_event_cluster_time_waited
+      name: cluster_wait
+      unit: "μs"
+    - description: "平均每次其他类等待事件耗时"
+      key: seekdb_system_event_other_time_waited
+      name: other_wait
+      unit: "μs"
+    name: "等待事件耗时"
+  - description: "每秒进入等待队列的 SQL 数"
+    metrics:
+    - description: "每秒入队请求数"
+      key: seekdb_request_enqueue_count
+      name: request_enqueue_count
+      unit: times/s
+    - description: "每秒出队请求数"
+      key: seekdb_request_dequeue_count
+      name: request_dequeue_count
+      unit: times/s
+    name: "请求等待队列"
+  - description: "SQL请求在等待队列中的等待时间"
+    metrics:
+    - description: "SQL请求在队列中平均等待时间"
+      key: seekdb_request_queue_time
+      name: queue_time
+      unit: "μs"
+    name: "请求等待队列耗时"
+  - name: "CPU 开销"
+    description: "已占用 CPU 核数百分比/分配 CPU 总核数"
+    metrics:
+    - name: "CPU 开销"
+      description: "已占用 CPU 核数百分比/分配 CPU 总核数"
+      key: seekdb_ob_cpu_percent
+      unit: '%'
+  - name: "线程使用率"
+    description: "活跃线程数/最大线程数"
+    metrics:
+    - name: "线程使用率"
+      description: "活跃线程数/最大线程数"
+      key: seekdb_ob_thread_percent
+      unit: '%'
+  - description: "内存使用率"
+    metrics:
+    - description: "内存使用率"
+      key: seekdb_ob_memory_percent
+      name: memory_usage
+      unit: '%'
+    name: "内存使用率"
+  - description: "MemStore 使用百分比"
+    metrics:
+    - description: "MemStore 使用百分比"
+      key: seekdb_memstore_percent
+      name: memstore_percent
+      unit: '%'
+    - description: "MemStore 触发冻结的使用量百分比"
+      key: seekdb_active_memstore_percent
+      name: active_memstore_percent
+      unit: '%'
+    name: "MemStore 使用百分比"
+  - description: "游标"
+    metrics:
+    - description: "打开的游标数"
+      key: seekdb_opened_cursors_count
+      name: open_cursors
+      unit: ''
+    name: "游标"
+  - description: "GTS 请求次数"
+    metrics:
+    - description: "GTS 请求次数"
+      key: seekdb_gts_request_count
+      name: gts_request_count
+      unit: ''
+    name: "GTS 请求次数"
+  name: "性能与SQL"
+- description: "事务"
+  metricGroups:
+  - description: "平均每秒处理事务数"
+    metrics:
+    - description: "每秒事务数"
+      key: seekdb_tps
+      name: all
+      unit: times/s
+    - description: "每秒事务提交数"
+      key: seekdb_transaction_commit_count
+      name: trans_commit_count
+      unit: times/s
+    - description: "每秒事务回滚数"
+      key: seekdb_transaction_rollback_count
+      name: trans_rollback_count
+      unit: times/s
+    - description: "每秒事务超时数"
+      key: seekdb_transaction_timeout_count
+      name: trans_timeout_count
+      unit: times/s
+    name: TPS
+  - description: "服务端平均每个事务的处理时间"
+    metrics:
+    - description: "本地事务响应时间"
+      key: seekdb_trans_sp_total_used_time
+      name: local
+      unit: "μs"
+    - description: "分布式事务响应时间"
+      key: seekdb_trans_distributed_total_used_time
+      name: distributed
+      unit: "μs"
+    name: "事务响应时间"
+  - description: "服务端平均每个事务的处理时间"
+    metrics:
+    - description: "平均每个事务处理时间"
+      key: seekdb_tps_rt
+      name: all
+      unit: "μs"
+    - description: "平均每个事务提交时间"
+      key: seekdb_transaction_commit_rt
+      name: trans_commit_rt
+      unit: "μs"
+    - description: "平均每个事务回滚时间"
+      key: seekdb_transaction_rollback_rt
+      name: trans_rollback_rt
+      unit: "μs"
+    name: "事务响应时间明细"
+  - description: "事务回滚率"
+    metrics:
+    - description: "事务回滚率"
+      key: seekdb_transaction_rollback_ratio
+      name: transaction_rollback_ratio
+      unit: "%"
+    name: "事务回滚率"
+  - description: "每秒提交的事务日志数"
+    metrics:
+    - description: "每秒提交的事务日志数"
+      key: seekdb_trans_commit_log_count
+      name: log_count
+      unit: times/s
+    name: "事务日志量"
+  - description: "每秒提交事务日志大小"
+    metrics:
+    - description: "每秒提交事务日志大小"
+      key: seekdb_clog_trans_log_total_size
+      name: log_size
+      unit: byte/s
+    name: "事务日志数据量"
+  - description: "服务端处理事务日志的平均耗时"
+    metrics:
+    - description: "每笔事务日志网络同步的平均时间"
+      key: seekdb_trans_commit_log_sync_rt
+      name: sync_time
+      unit: "μs"
+    - description: "每笔事务日志落盘的平均时间"
+      key: seekdb_clog_write_disk_rt
+      name: write_disk
+      unit: "μs"
+    name: "事务日志耗时"
+  - description: "每秒事务锁等待次数"
+    metrics:
+    - description: "写锁等待成功次数"
+      key: seekdb_memstore_write_lock_succ_count
+      name: success
+      unit: times/s
+    - description: "写锁等待失败次数"
+      key: seekdb_memstore_write_lock_fail_count
+      name: fail
+      unit: times/s
+    name: "事务锁等待次数"
+  - description: "平均每次事务锁等待时间"
+    metrics:
+    - description: "写锁平均等待时间"
+      key: seekdb_memstore_write_lock_wait_time
+      name: wait_time
+      unit: "μs"
+    name: "事务锁等待耗时"
+  - description: "每秒指定事务数"
+    metrics:
+    - description: "每秒普通事务数"
+      key: seekdb_transaction_single_partition_count
+      name: trans_single_partition_count
+      unit: times/s
+    - description: "每秒分布式事务数"
+      key: seekdb_transaction_multi_partition_count
+      name: trans_multi_partition_count
+      unit: times/s
+    name: "事务数"
+  - description: "MemStore 锁成功率"
+    metrics:
+    - description: "MemStore 读锁成功率"
+      key: seekdb_memstore_read_lock_succ_ratio
+      name: memstore_read_lock_succ_ratio
+      unit: "%"
+    - description: "MemStore 写锁成功率"
+      key: seekdb_memstore_write_lock_succ_ratio
+      name: memstore_write_lock_succ_ratio
+      unit: "%"
+    name: "MemStore 锁成功率"
+  name: "事务"
+- description: "存储与缓存"
+  metricGroups:
+  - description: "OB 可写数据内存"
+    metrics:
+    - description: "MemStore 总大小"
+      key: seekdb_total_memstore_used
+      name: total
+      unit: MB
+    - description: "活跃 MemStore 大小"
+      key: seekdb_active_memstore_used
+      name: active
+      unit: MB
+    - description: "触发合并的阈值"
+      key: seekdb_major_freeze_trigger
+      name: trigger
+      unit: MB
+    - description: "MemStore 上限"
+      key: seekdb_memstore_limit
+      name: limit
+      unit: MB
+    name: MemStore
+  - description: "平均每秒 IO 次数"
+    metrics:
+    - description: "SSStore 每秒读次数"
+      key: seekdb_io_read_count
+      name: ssstore_read
+      unit: times/s
+    - description: "SSStore 每秒写次数"
+      key: seekdb_io_write_count
+      name: ssstore_write
+      unit: times/s
+    - description: "Clog 每秒读次数"
+      key: seekdb_clog_io_read_count
+      name: clog_read
+      unit: times/s
+    - description: "Clog 每秒写次数"
+      key: seekdb_clog_io_write_count
+      name: clog_write
+      unit: times/s
+    name: "IOPS"
+  - description: "平均 IO 耗时"
+    metrics:
+    - description: "SSStore 平均每次读耗时"
+      key: seekdb_io_read_rt
+      name: ssstore_read
+      unit: "μs"
+    - description: "SSStore 平均每次写耗时"
+      key: seekdb_io_write_rt
+      name: ssstore_write
+      unit: "μs"
+    - description: "Clog 平均每次读耗时"
+      key: seekdb_clog_io_read_rt
+      name: clog_read
+      unit: "μs"
+    - description: "Clog 平均每次写耗时"
+      key: seekdb_clog_io_write_rt
+      name: clog_write
+      unit: "μs"
+    name: "IO 耗时"
+  - description: "平均每秒 IO 数据量"
+    metrics:
+    - description: "SSStore 每秒读数据量"
+      key: seekdb_io_read_size
+      name: ssstore_read
+      unit: byte/s
+    - description: "SSStore 每秒写数据量"
+      key: seekdb_io_write_size
+      name: ssstore_write
+      unit: byte/s
+    - description: "Clog 每秒读数据量"
+      key: seekdb_clog_io_read_size
+      name: clog_read
+      unit: byte/s
+    - description: "Clog 每秒写数据量"
+      key: seekdb_clog_io_write_size
+      name: clog_write
+      unit: byte/s
+    name: "IO 吞吐量"
+  - description: "IO 配额吞吐量与延迟"
+    metrics:
+    - description: "所有 IO 组的实际 IOPS 总和"
+      key: seekdb_io_real_iops
+      name: real_iops
+      unit: times/s
+    - description: "所有 IO 组的实际吞吐量总和"
+      key: seekdb_io_real_mbps
+      name: real_mbps
+      unit: MB/s
+    - description: "平均 IO 延迟"
+      key: seekdb_io_avg_delay
+      name: avg_delay
+      unit: "μs"
+    - description: "读 IOPS"
+      key: seekdb_io_read_iops
+      name: read_iops
+      unit: times/s
+    - description: "写 IOPS"
+      key: seekdb_io_write_iops
+      name: write_iops
+      unit: times/s
+    name: "IO 配额"
+  - description: "缓存大小"
+    metrics:
+    - description: "块缓存大小"
+      key: seekdb_block_cache_size_mb
+      name: block_cache
+      unit: MB
+    - description: "行缓存大小"
+      key: seekdb_row_cache_size_mb
+      name: row_cache
+      unit: MB
+    - description: "执行计划缓存大小"
+      key: seekdb_plan_cache_size_mb
+      name: plan_cache
+      unit: MB
+    - description: "Clog 缓存大小"
+      key: seekdb_clog_cache_size_mb
+      name: clog_cache
+      unit: MB
+    - description: "布隆过滤器缓存大小"
+      key: seekdb_bloom_filter_cache_size_mb
+      name: bloom_filter_cache
+      unit: MB
+    - description: "位置缓存大小"
+      key: seekdb_location_cache_size_mb
+      name: location_cache
+      unit: MB
+    name: "缓存大小"
+  - description: "缓存命中率"
+    metrics:
+    - description: "块缓存命中率"
+      key: seekdb_block_cache_hit_ratio
+      name: block_cache
+      unit: '%'
+    - description: "行缓存命中率"
+      key: seekdb_row_cache_hit_ratio
+      name: row_cache
+      unit: '%'
+    - description: "执行计划缓存命中率"
+      key: seekdb_plan_cache_hit_ratio
+      name: plan_cache
+      unit: '%'
+    - description: "Clog 缓存命中率"
+      key: seekdb_clog_cache_hit_ratio
+      name: clog_cache
+      unit: '%'
+    - description: "布隆过滤器缓存命中率"
+      key: seekdb_bloom_filter_cache_hit_ratio
+      name: bloom_filter_cache
+      unit: '%'
+    - description: "位置缓存命中率"
+      key: seekdb_location_cache_hit_ratio
+      name: location_cache
+      unit: '%'
+    name: "缓存命中率"
+  - description: "缓存请求总数"
+    metrics:
+    - description: "块缓存请求总数"
+      key: seekdb_block_cache_req_total
+      name: block_cache
+      unit: ''
+    - description: "行缓存请求总数"
+      key: seekdb_row_cache_req_total
+      name: row_cache
+      unit: ''
+    - description: "Clog 缓存请求总数"
+      key: seekdb_clog_cache_req_total
+      name: clog_cache
+      unit: ''
+    - description: "布隆过滤器缓存请求总数"
+      key: seekdb_bloom_filter_cache_req_total
+      name: bloom_filter_cache
+      unit: ''
+    - description: "位置缓存请求总数"
+      key: seekdb_location_cache_req_total
+      name: location_cache
+      unit: ''
+    name: "缓存请求总数"
+  - description: "日志盘"
+    metrics:
+    - description: "日志盘分配空间大小"
+      key: seekdb_log_disk_size
+      name: log_disk_size
+      unit: 'byte'
+    - description: "日志盘已占用空间大小"
+      key: seekdb_log_disk_used
+      name: log_disk_used
+      unit: 'byte'
+    name: "日志盘"
+  - description: "日志盘使用百分比"
+    metrics:
+    - description: "日志盘使用率"
+      key: seekdb_log_disk_used_percentage
+      name: log_disk_used_percent
+      unit: '%'
+    name: "日志盘使用百分比"
+  - description: "向量内存"
+    metrics:
+    - description: "向量内存持有大小"
+      key: seekdb_vector_mem_hold
+      name: mem_hold
+      unit: 'byte'
+    - description: "向量内存使用大小"
+      key: seekdb_vector_mem_used
+      name: mem_used
+      unit: 'byte'
+    - description: "向量内存上限大小"
+      key: seekdb_vector_mem_limit
+      name: mem_limit
+      unit: 'byte'
+    name: "向量内存"
+  - description: "向量内存百分比"
+    metrics:
+    - description: "向量内存持有百分比"
+      key: seekdb_vector_mem_hold_percentage
+      name: mem_hold_percent
+      unit: '%'
+    - description: "向量内存使用百分比"
+      key: seekdb_vector_mem_used_percentage
+      name: mem_used_percent
+      unit: '%'
+    name: "向量内存百分比"
+  name: "存储与缓存"
+- description: "主机性能"
+  name: "主机性能"
+  metricGroups:
+  - description: "Linux 系统负载"
+    name: "Linux 系统负载"
+    metrics:
+    - description: "最近 1 分钟内系统平均负载"
+      key: seekdb_load1
+      name: load1
+      unit: ""
+    - description: "最近 5 分钟内系统平均负载"
+      key: seekdb_load5
+      name: load5
+      unit: ""
+    - description: "最近 15 分钟内系统平均负载"
+      key: seekdb_load15
+      name: load15
+      unit: ""
+    - description: "最近 1 分钟内系统平均负载/CPU 核数"
+      key: seekdb_load1_per_cpu
+      name: load1_per_cpu
+      unit: ""
+  - description: "CPU 利用率"
+    name: "CPU 使用率"
+    metrics:
+    - description: "CPU 利用率"
+      key: seekdb_cpu_percent
+      name: cpu_percent
+      unit: "%"
+  - description: "内存使用情况"
+    name: "内存"
+    metrics:
+    - description: "已使用物理内存大小"
+      key: seekdb_memory_used
+      name: used
+      unit: GB
+    - description: "内核缓冲区缓存大小"
+      key: seekdb_memory_buffers
+      name: buffers
+      unit: GB
+    - description: "可用物理内存大小"
+      key: seekdb_memory_free
+      name: free
+      unit: GB
+    - description: "缓存使用的内存大小"
+      key: seekdb_memory_cached
+      name: cached
+      unit: GB
+  - description: "主机内存使用率"
+    name: "内存使用率"
+    metrics:
+    - description: "主机内存使用率"
+      key: seekdb_memory_percent
+      name: memory_percent
+      unit: "%"
+  - description: "IOPS"
+    name: "IOPS"
+    metrics:
+    - description: "每秒读次数"
+      key: seekdb_io_read
+      name: read
+      unit: times/s
+    - description: "每秒写次数"
+      key: seekdb_io_write
+      name: write
+      unit: times/s
+  - description: "平均每次 IO 耗时"
+    name: "IO 耗时"
+    metrics:
+    - description: "平均每次 IO 读耗时"
+      key: seekdb_io_read_time
+      name: read
+      unit: "μs"
+    - description: "平均每次 IO 写耗时"
+      key: seekdb_io_write_time
+      name: write
+      unit: "μs"
+  - description: "平均每秒 IO 数据量"
+    name: "IO 吞吐量"
+    metrics:
+    - description: "每次读取的数据量"
+      key: seekdb_io_read_byte
+      name: read
+      unit: MB/s
+    - description: "每次写入的数据量"
+      key: seekdb_io_write_byte
+      name: write
+      unit: MB/s
+  - description: "网络吞吐"
+    name: "网络吞吐率"
+    metrics:
+    - description: "每秒接收数据量"
+      key: seekdb_net_recv
+      name: receive
+      unit: MB/s
+    - description: "每秒发送数据量"
+      key: seekdb_net_send
+      name: send
+      unit: MB/s
