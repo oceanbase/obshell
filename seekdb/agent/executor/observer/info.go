@@ -35,13 +35,15 @@ import (
 )
 
 const (
-	STATUS_STOPPING    = "STOPPING"    // 停止中
-	STATUS_STOPPED     = "STOPPED"     // 已停止
-	STATUS_STARTING    = "STARTING"    // 启动中
-	STATUS_RESTARTING  = "RESTARTING"  // 重启中
-	STATUS_AVAILABLE   = "AVAILABLE"   // 可用
-	STATUS_UNAVAILABLE = "UNAVAILABLE" // 不可用
-	STATUS_UNKNOWN     = "UNKNOWN"
+	STATUS_STOPPING       = "STOPPING"       // 停止中
+	STATUS_STOPPED        = "STOPPED"        // 已停止
+	STATUS_STARTING       = "STARTING"       // 启动中
+	STATUS_RESTARTING     = "RESTARTING"     // 重启中
+	STATUS_SWITCHING_OVER = "SWITCHING_OVER" // 日常切换中
+	STATUS_ACTIVATING     = "ACTIVATING"     // 容灾切换中
+	STATUS_AVAILABLE      = "AVAILABLE"      // 可用
+	STATUS_UNAVAILABLE    = "UNAVAILABLE"    // 不可用
+	STATUS_UNKNOWN        = "UNKNOWN"
 )
 
 func GetObserverInfo() (info obmodel.ObserverInfo) {
@@ -187,6 +189,10 @@ func getObserverStatus() (status string) {
 			return STATUS_STOPPING
 		case DAG_RESTART_OBSERVER:
 			return STATUS_RESTARTING
+		case constant.DAG_SWITCHOVER:
+			return STATUS_SWITCHING_OVER
+		case constant.DAG_ACTIVATE:
+			return STATUS_ACTIVATING
 		default:
 		}
 	}

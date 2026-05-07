@@ -14,32 +14,8 @@
  * limitations under the License.
  */
 
-package secure
+package standby
 
-import (
-	"github.com/oceanbase/obshell/seekdb/agent/lib/json"
-)
-
-const (
-	NotForward = iota
-	AutoForward
-	ManualForward
-)
-
-type HttpHeader struct {
-	Auth         string
-	Ts           string
-	Uri          string
-	Keys         []byte
-	Sha256       string
-	StandbyToken string `json:"StandbyToken,omitempty"`
-}
-
-func DecryptHeader(ciphertext string) (HttpHeader, error) {
-	var headers HttpHeader
-	decHeader, err := Crypter.DecryptAndReturnBytes(ciphertext)
-	if err == nil {
-		err = json.Unmarshal(decHeader, &headers)
-	}
-	return headers, err
-}
+// StandbyService provides methods for managing standby peer metadata and
+// issuing standby-related seekdb SQL commands.
+type StandbyService struct{}

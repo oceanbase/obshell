@@ -1,9 +1,24 @@
 ---
-globs: src/locale/**/*,src/page/**/*,src/component/**/*
+globs: seekdb/frontend/src/**/*,src/locale/**/*,src/page/**/*,src/component/**/*,src/pages/**/*
 description: 国际化(i18n)开发规范
 ---
 
 # 国际化开发规范
+
+## AI 生成代码规范
+
+**AI 生成的代码中，中文文本不需要添加 i18n（国际化）处理，直接硬编码中文字符串即可。** 后续会统一进行翻译处理。
+
+```typescript
+// ✅ AI 生成代码中允许直接使用中文
+<Button>确认</Button>
+<span>集群名称</span>
+message.success('操作成功');
+
+// ❌ 不需要在 AI 生成代码中额外添加
+const intl = useIntl();
+intl.formatMessage({ id: 'common.confirm' })
+```
 
 ## 国际化文件结构
 

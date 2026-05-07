@@ -15,7 +15,7 @@
  */
 
 import type { ModalFuncProps } from '@oceanbase/design';
-import { Button, Dropdown, Menu, Popconfirm, Space, Tooltip } from '@oceanbase/design';
+import { Button, Dropdown, Menu, Popconfirm, Space, theme, Tooltip } from '@oceanbase/design';
 import type { ButtonProps } from '@oceanbase/design/es/button';
 import type { PopconfirmProps } from '@oceanbase/design/es/popconfirm';
 import { EllipsisOutlined } from '@oceanbase/icons';
@@ -23,6 +23,8 @@ import { history } from '@umijs/max';
 import React from 'react';
 
 import type { TooltipProps } from '@oceanbase/design/es/tooltip';
+import { findByValue } from '@oceanbase/util';
+import { INSTANCE_TYPE_LIST } from './instance';
 
 export interface getConfirmModalProps extends ModalFuncProps {
   operationType: 'confirm' | 'delete';
@@ -153,3 +155,36 @@ export function getOperationComponent<T>({
     </Space>
   );
 }
+
+export interface InstanceNameProps {
+  name?: string;
+  standbyRole?: string;
+}
+
+export const InstanceName: React.FC<InstanceNameProps> = ({ name, standbyRole }) => {
+  const { token } = theme.useToken();
+  if (!name) return <>-</>;
+  if (!standbyRole) return <>{name}</>;
+  const typeItem = findByValue(INSTANCE_TYPE_LIST, standbyRole);
+  if (!typeItem) return <>{name}</>;
+  return (
+    <Space>
+      <span>{name}</span>
+      <span
+        style={{
+          display: 'inline-block',
+          fontSize: 12,
+          width: 16,
+          height: 16,
+          lineHeight: '16px',
+          textAlign: 'center',
+          borderRadius: '50%',
+          background: typeItem.backgroundColor,
+          color: token.colorBgContainer,
+        }}
+      >
+        {typeItem.signLabel}
+      </span>
+    </Space>
+  );
+};

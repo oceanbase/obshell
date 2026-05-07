@@ -166,6 +166,7 @@ var (
 	ErrRequestBodyDecryptAesContentLengthInvalid = NewErrorCode("Request.Body.Decrypt.AES.ContentLength.Invalid", unexpected, "err.request.body.decrypt.aes.content.length.invalid")
 	ErrRequestHeaderTypeInvalid                  = NewErrorCode("Request.Header.Type.Invalid", unexpected, "err.request.header.type.invalid")
 	ErrRequestHeaderNotFound                     = NewErrorCode("Request.Header.NotFound", badRequest, "err.request.header.not.found")
+	ErrRequestAesKeyNotFound                     = NewErrorCode("Request.AES.KeyNotFound", badRequest, "err.request.aes.key.not.found")
 
 	// Security
 	ErrSecurityUserPermissionDenied                     = NewErrorCode("Security.User.PermissionDenied", unauthorized, "err.security.user.permission.denied")
@@ -176,6 +177,28 @@ var (
 	ErrSecurityAuthenticationIncorrectOceanbasePassword = NewErrorCode("Security.Authentication.IncorrectseekdbPassword", unauthorized, "err.security.authentication.incorrect.seekdb.password", 10008)
 	ErrSecurityAuthenticationExpired                    = NewErrorCode("Security.Authentication.Expired", unauthorized, "err.security.authentication.expired", 10008)
 	ErrSecurityAuthenticationTimestampInvalid           = NewErrorCode("Security.Authentication.Timestamp.Invalid", unauthorized, "err.security.authentication.timestamp.invalid", 10008)
+
+	ErrStandbyTokenMissing = NewErrorCode("Standby.Token.Missing", unauthorized, "err.standby.token.missing")
+	ErrStandbyTokenInvalid = NewErrorCode("Standby.Token.Invalid", unauthorized, "err.standby.token.invalid")
+
+	// Standby.Pair
+	ErrStandbyInvalidDirection              = NewErrorCode("Standby.Pair.InvalidDirection", badRequest, "err.standby.pair.invalid.direction")
+	ErrStandbyInvalidPeerHost               = NewErrorCode("Standby.Pair.InvalidPeerHost", badRequest, "err.standby.pair.invalid.peer.host")
+	ErrStandbyInvalidPeerPort               = NewErrorCode("Standby.Pair.InvalidPeerPort", badRequest, "err.standby.pair.invalid.peer.port")
+	ErrStandbyLocalRoleNotStandby           = NewErrorCode("Standby.LocalRole.NotStandby", badRequest, "err.standby.local.role.not.standby")
+	ErrStandbyUpstreamPeerAlreadyExists     = NewErrorCode("Standby.Pair.UpstreamAlreadyExists", badRequest, "err.standby.pair.upstream.already.exists")
+	ErrStandbyDecoupleFromPrimaryNotAllowed = NewErrorCode("Standby.Decouple.FromPrimaryNotAllowed", badRequest, "err.standby.decouple.from.primary.not.allowed")
+	ErrStandbyPeerNotFound                  = NewErrorCode("Standby.Peer.NotFound", notFound, "err.standby.peer.not.found")
+
+	// Standby.Switchover
+	ErrStandbySwitchoverLocalNotPrimary     = NewErrorCode("Standby.Switchover.LocalNotPrimary", badRequest, "err.standby.switchover.local.not.primary")
+	ErrStandbySwitchoverPeerNotStandby      = NewErrorCode("Standby.Switchover.PeerNotStandby", badRequest, "err.standby.switchover.peer.not.standby")
+	ErrStandbySwitchoverLagExceedsThreshold = NewErrorCode("Standby.Switchover.LagExceedsThreshold", badRequest, "err.standby.switchover.lag.exceeds.threshold")
+	ErrStandbySwitchoverPeerUnreachable     = NewErrorCode("Standby.Switchover.PeerUnreachable", badRequest, "err.standby.switchover.peer.unreachable")
+
+	// Standby.Activate
+	ErrStandbyActivateLocalNotStandby = NewErrorCode("Standby.Activate.LocalNotStandby", badRequest, "err.standby.activate.local.not.standby")
+	ErrStandbyUpstreamStillHealthy    = NewErrorCode("Standby.Activate.UpstreamStillHealthy", badRequest, "err.standby.activate.upstream.still.healthy")
 
 	// Task
 	ErrTaskNotFound                        = NewErrorCode("Task.NotFound", notFound, "err.task.not.found")

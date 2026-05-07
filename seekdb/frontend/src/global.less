@@ -337,35 +337,61 @@ a[disabled] {
 
 .card-without-padding {
   .ant-card-body {
-    padding: 1px 0 0 0 !important;
+    // 为了避免 Card.Grid 遮挡 Card 的分隔线，需要留出 2px 的空间
+    padding: 2px 0 0 !important;
+    // 解决 Card 底部圆角被遮挡
+    overflow: hidden;
+
+    /* 触控板横向「橡皮筋」：到边界后不再把滚动链到外层，避免两侧露出空白（仅作用于本 Card 内 Table 的滚动层） */
+    .ant-table-container,
+    .ant-table-content,
+    .ant-table-body {
+      overscroll-behavior-x: none;
+    }
 
     /* 位于没有 padding 的 Card 中时，Table 的第一列文字要和 title 左对齐 */
 
-    /* 带checkbox的Table，CheckBox 会被第二列的元素遮挡到，添加 z-index，提高第一列显示层级 */
-    // card-without-padding 下的表格，为了保证第一列 title 与卡片 title 左对齐，写死了 padding-left 的宽度为 24px，导致会出现 checkbox 遮挡的问题
-    // 为了避免 checkbox 被遮挡，需要定制表格第一列的 z-index
-    .ant-table-thead > tr > th:first-child,
-    .ant-table-tbody > tr > td:first-child {
-      z-index: 1;
-      padding-left: 24px !important;
+    /* 第一列要与 title 左对齐 */
+    .ant-table-thead > tr > th:first-child:not(.ant-table-selection-column),
+    .ant-table-tbody
+      > tr
+      > td:first-child:not(.ant-table-selection-column):not(.ant-table-row-expand-icon-cell) {
+      padding-left: 24px;
+    }
 
-      // 带排序 icon 的，需要设置左 padding 为 0
-      .ant-table-column-sorters {
-        padding-left: 0;
-      }
+    /* 带 checkbox 的 Table，checkbox 会被第二列的元素遮挡到，添加 z-index，提高第一列显示层级 */
+
+    /* card-without-padding 下的表格，为了保证第一列 title 与卡片 title 左对齐，写死了 padding-left 的宽度为 24px，导致会出现 checkbox 遮挡的问题 */
+
+    /* 为了避免 checkbox 被遮挡，需要定制表格第一列的 z-index 为 3，因为设置表格列固定左侧显示时，那一列 z-index 为 2，需要大于 2 才不会出现遮挡 */
+
+    /* issue: https://aone.alipay.com/issue/32112415 */
+
+    /* issue: https://aone.alipay.com/v2/project/742021/bug/100285402 */
+    .ant-table-thead > tr > th.ant-table-selection-column:first-child,
+    .ant-table-tbody > tr > td.ant-table-selection-column:first-child {
+      z-index: 3;
     }
 
     /* 最后一列要与 extra 右对齐 */
     .ant-table-thead > tr > th:last-child,
     .ant-table-tbody > tr > td:last-child {
-      padding-right: 24px !important;
+      padding-right: 24px;
     }
 
     .ant-table-pagination.ant-pagination {
-      margin-right: 24px !important;
-
       /* 无内边距的卡片中，设置 Table 分页器的外间距，避免分页器紧贴卡片 */
-      margin-bottom: 16px;
+      margin-right: 24px !important;
+    }
+
+    /* 首列 rowSpan 合并后，后续行第一个 td 可能实为第 2 列及以后，勿套用「第一列与标题对齐」的 24px */
+    .primary-backup-tenant-list-table
+      .ant-table-tbody
+      > tr
+      > td.table-subrow-first-cell:first-child:not(.ant-table-selection-column):not(
+        .ant-table-row-expand-icon-cell
+      ) {
+      padding-left: 16px;
     }
   }
 }
@@ -1228,4 +1254,29 @@ a[disabled] {
 .tech-highlight-light {
   background-color: @colorBgLayout;
   border-radius: 8px;
+}
+/* 无外边框表格样式 */
+.table-without-outside-border {
+  .ant-table-container {
+    border: none !important;
+  }
+
+  .ant-table-bordered {
+    .ant-table-thead > tr th {
+      background-color: #fff !important;
+    }
+  }
+
+  .ant-table-thead > tr > th:last-child,
+  .ant-table-tbody > tr > td:last-child {
+    border-right: none !important;
+  }
+
+  .ant-table-tbody tr:last-child > *:first-child {
+    border-bottom-left-radius: 0 !important;
+  }
+
+  .ant-table-tbody tr:last-child > *:last-child {
+    border-bottom-right-radius: 0 !important;
+  }
 }

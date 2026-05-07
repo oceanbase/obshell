@@ -41,7 +41,8 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 	}
 	r.Use(
 		gin.CustomRecovery(common.Recovery), // gin's crash-free middleware
-		common.PostHandlers("/debug/pprof", "/swagger"),
+		common.PostHandlers("/debug/pprof", "/swagger",
+			constant.URI_SEEKDB_STANDBY_API_PREFIX+constant.URI_TOKEN),
 		common.HeaderDecrypt(),
 		common.BodyDecrypt(constant.URI_API_V1+constant.URI_PACKAGE), // decrypt request body
 		common.PaddingBody(),                                         // if the response body is empty, the response body is padded with "{}"
@@ -111,6 +112,7 @@ func InitOcsAgentRoutes(s *http2.State, r *gin.Engine, isLocalRoute bool) {
 
 	InitUserRoutes(seekdb, isLocalRoute)
 	InitDatabaseRoutes(seekdb, isLocalRoute)
+	InitStandbyRoutes(r, seekdb, isLocalRoute)
 
 	// agent routes
 	agent.POST(constant.URI_UPGRADE, agentUpgradeHandler)

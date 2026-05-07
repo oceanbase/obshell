@@ -25,7 +25,7 @@ import (
 
 func StartTaskEngine() {
 	startLocalTaskEngine()
-	// SeekDB mode: all metadata lives in local SQLite, so only the local
+	// seekdb mode: all metadata lives in local SQLite, so only the local
 	// scheduler is needed.  Starting the cluster scheduler as well would
 	// cause two schedulers to compete on the same SQLite DAG table, leading
 	// to maintenance-state corruption (ocs_info.status never restored).

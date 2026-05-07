@@ -355,6 +355,17 @@ declare namespace API {
     scope: 'OBCLUSTER' | 'OBTENANT';
   };
 
+  type LocalStandbyStatus = {
+    instance_name?: string;
+    log_restore_source?: string;
+    readable_scn?: number;
+    /** PRIMARY / STANDBY / unknown */
+    role?: string;
+    sync_scn?: number;
+    /** NORMAL_SYNC / SYNC_DELAYED / SYNC_PAUSED / UNKNOWN; empty for PRIMARY */
+    sync_status?: string;
+  };
+
   type lockUserParams = {
     /** user name */
     user: string;
@@ -505,21 +516,11 @@ declare namespace API {
   };
 
   type ObserverInfo = {
-    cpuCount?: number;
-    dataFileSize?: string;
-    hostHash?: string;
-    logDiskSize?: string;
-    memoryLimit?: string;
-    revision?: string;
-    type?: string;
-    version?: string;
-  };
-
-  type ObserverInfo = {
     architecture?: string;
     base_dir?: string;
     bin_path?: string;
     cluster_name?: string;
+    name?: string;
     connection_string?: string;
     cpu_count?: number;
     created_time?: string;
@@ -590,6 +591,36 @@ declare namespace API {
     version?: string;
   };
 
+  type PairDeleteParam = {
+    notify_peer?: boolean;
+    peer_host: string;
+    peer_obshell_port: number;
+  };
+
+  type PairParam = {
+    /** UPSTREAM / DOWNSTREAM */
+    direction: string;
+    peer_host: string;
+    peer_obshell_port: number;
+    peer_rpc_port: number;
+    token: string;
+  };
+
+  type PeerStandbyStatus = {
+    direction?: string;
+    error?: string;
+    instance_name?: string;
+    lag_seconds?: number;
+    peer_host?: string;
+    peer_obshell_port?: number;
+    peer_rpc_port?: number;
+    readable_scn?: number;
+    role?: string;
+    sync_scn?: number;
+    /** from peer's LocalStandbyStatus; UNKNOWN when peer obshell unreachable */
+    sync_status?: string;
+  };
+
   type PrometheusConfig = {
     address?: string;
     auth?: Auth;
@@ -599,6 +630,11 @@ declare namespace API {
     end_timestamp?: number;
     start_timestamp?: number;
     step?: number;
+  };
+
+  type RpcSwitchoverToPrimaryParam = {
+    caller_host: string;
+    caller_obshell_port: number;
   };
 
   type RuleFilter = {
@@ -671,6 +707,11 @@ declare namespace API {
     updated_at: number;
   };
 
+  type StandbyStatusResp = {
+    local?: LocalStandbyStatus;
+    peers?: PeerStandbyStatus[];
+  };
+
   type State = 'active' | 'unprocessed' | 'suppressed';
 
   type State = 'active' | 'expired' | 'pending';
@@ -683,6 +724,12 @@ declare namespace API {
 
   type Status = {
     state: State;
+  };
+
+  type SwitchoverParam = {
+    delay_threshold_seconds?: number;
+    peer_host: string;
+    peer_obshell_port: number;
   };
 
   type TaskDetailDTO = {
@@ -709,6 +756,14 @@ declare namespace API {
     last_scn?: number;
     start_time?: string;
     status?: string;
+  };
+
+  type TokenParam = {
+    force?: boolean;
+  };
+
+  type TokenResp = {
+    token?: string;
   };
 
   type UlimitInfo = {

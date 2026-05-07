@@ -113,6 +113,27 @@ func NewRSACryptoFromKey(privateKey string) (*RSACrypto, error) {
 	}, nil
 }
 
+// NewRSACryptoFromPublicKey creates an RSACrypto that can only Encrypt (no
+// private key is available). publicKey is assumed to be base64-encoded PKCS1
+// DER. The returned instance panics on Decrypt calls.
+func NewRSACryptoFromPublicKey(publicKey string) (*RSACrypto, error) {
+	mpub, err := base64.StdEncoding.DecodeString(publicKey)
+	if err != nil {
+		return nil, err
+	}
+	pub, err := x509.ParsePKCS1PublicKey(mpub)
+	if err != nil {
+		return nil, err
+	}
+	// Wrap as a private-key struct so we can reuse sectionalEncrypt via Encrypt().
+	// The private key fields are zeroed; Decrypt will return an error.
+	pk := &rsa.PrivateKey{PublicKey: *pub}
+	return &RSACrypto{
+		pk:   pk,
+		spub: publicKey,
+	}, nil
+}
+
 func (r *RSACrypto) Encrypt(raw string) (string, error) {
 	if r == nil || r.pk == nil {
 		return "", errors.Occur(errors.ErrCommonUnexpected, ERR_NO_INIT)

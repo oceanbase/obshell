@@ -27,10 +27,12 @@ import {
   getCompaction,
   majorCompaction,
   restartSeekdb,
+  standbyStatus,
   startSeekdb,
   stopSeekdb,
 } from '@/service/obshell/seekdb';
 import { getCompactionStatusV4 } from '@/util/cluster';
+import { InstanceName } from '@/util/component';
 import { formatTime } from '@/util/datetime';
 import { getInstanceAvailableFlag } from '@/util/instance';
 import { formatMessage } from '@/util/intl';
@@ -54,10 +56,15 @@ import { PageContainer } from '@oceanbase/ui';
 import { findByValue, isNullValue } from '@oceanbase/util';
 import { history, useDispatch, useSelector } from '@umijs/max';
 import { useInterval, useRequest } from 'ahooks';
+import { isEmpty } from 'lodash';
 import moment from 'moment';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import InstanceConnectionString from '../Component/InstanceConnectionString';
 import ModifyWhitelistModal from '../Component/ModifyWhitelistModal';
+import ActivateModal from './components/ActivateModal';
+import DecoupleModal from './components/DecoupleModal';
+import StandbyRelationCard from './components/StandbyRelationCard';
+import SwitchoverModal from './components/SwitchoverModal';
 interface NewProps {}
 
 const Detail: React.FC<NewProps> = ({}) => {
@@ -71,6 +78,11 @@ const Detail: React.FC<NewProps> = ({}) => {
   const [showWhitelistModal, setShowWhitelistModal] = useState(false);
   const [upgradeVisible, setUpgradeVisible] = useState<boolean>(false);
   const [upgradeAgentVisible, setUpgradeAgentVisible] = useState<boolean>(false);
+  const [switchoverVisible, setSwitchoverVisible] = useState(false);
+  const [activateVisible, setActivateVisible] = useState(false);
+  const [decoupleVisible, setDecoupleVisible] = useState(false);
+  /** 日常切换 / 容灾切换任务提交后，轮询实例状态直至进入切换中 */
+  const [awaitingSeekdbTransitionPoll, setAwaitingSeekdbTransitionPoll] = useState(false);
 
   const getSeekdbInfoData = () => {
     dispatch({
@@ -83,6 +95,32 @@ const Detail: React.FC<NewProps> = ({}) => {
     getSeekdbInfoData();
   }, []);
 
+  // Standby status
+  const { data: standbyData, refresh: refreshStandby } = useRequest(standbyStatus);
+
+  const standbyLocal: API.LocalStandbyStatus = standbyData?.data?.local;
+  const standbyPeers: API.PeerStandbyStatus[] = standbyData?.data?.peers || [];
+  const standbyRole = standbyLocal?.role;
+  const hasStandbyRelation = !!(standbyRole && standbyPeers.length > 0);
+
+  const downstreamPeers = useMemo(
+    () => standbyPeers.filter(item => item.direction === 'DOWNSTREAM'),
+    [standbyPeers]
+  );
+
+  const upstreamPeer = useMemo(
+    () => standbyPeers.find(item => item.direction === 'UPSTREAM'),
+    [standbyPeers]
+  );
+
+  // Poll standby status when relationship exists
+  useInterval(
+    () => {
+      refreshStandby();
+    },
+    hasStandbyRelation ? 5000 : undefined
+  );
+
   const seekdbInfoData: API.ObserverInfo = {
     ...(seekdbInfo || {}),
     name: seekdbInfo?.cluster_name,
@@ -92,15 +130,43 @@ const Detail: React.FC<NewProps> = ({}) => {
   const seekdbInfoStatusInfo = OB_INFO_STATUS_LIST.find(item => item.value === seekdbInfoStatus);
   const seekdbInfoStatusName = seekdbInfoStatusInfo?.label;
   const availableFlag = getInstanceAvailableFlag(seekdbInfoStatus);
+  const compactionAvailableFlag = availableFlag || seekdbInfoStatus === 'SWITCHING_OVER';
   const systemdUnit = seekdbInfoData?.systemd_unit || '';
 
-  const seekdbInfoPolling = ['STARTING', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus);
+  const seekdbInfoPolling = [
+    'STARTING',
+    'STOPPING',
+    'RESTARTING',
+    'SWITCHING_OVER',
+    'ACTIVATING',
+  ].includes(seekdbInfoStatus);
   useInterval(
     () => {
       getSeekdbInfoData();
     },
     seekdbInfoPolling ? 3000 : undefined
   );
+
+  useEffect(() => {
+    if (
+      awaitingSeekdbTransitionPoll &&
+      (seekdbInfoStatus === 'SWITCHING_OVER' || seekdbInfoStatus === 'ACTIVATING')
+    ) {
+      setAwaitingSeekdbTransitionPoll(false);
+    }
+  }, [awaitingSeekdbTransitionPoll, seekdbInfoStatus]);
+
+  useInterval(
+    () => {
+      getSeekdbInfoData();
+    },
+    awaitingSeekdbTransitionPoll ? 3000 : undefined
+  );
+
+  const startSeekdbTransitionPolling = () => {
+    setAwaitingSeekdbTransitionPoll(true);
+    getSeekdbInfoData();
+  };
 
   // 格式化在线时长，去掉秒数的小数部分
   const formatLifeTime = (lifeTime?: string) => {
@@ -112,18 +178,19 @@ const Detail: React.FC<NewProps> = ({}) => {
   // 获取租户合并详情
   const { data, refresh: getTenantCompactionRefresh } = useRequest(getCompaction, {
     defaultParams: [{}],
-    ready: !!availableFlag,
+    ready: !!compactionAvailableFlag,
   });
 
   const preTenantCompaction: API.TenantCompaction = data?.data || {};
-
-  const tenantCompaction = {
-    ...preTenantCompaction,
-    startTime: preTenantCompaction?.start_time,
-    lastFinishTime: preTenantCompaction?.last_finish_time,
-    broadcastScn: preTenantCompaction?.global_broadcast_scn,
-    frozenScn: preTenantCompaction?.frozen_scn,
-  };
+  const tenantCompaction = isEmpty(preTenantCompaction)
+    ? null
+    : {
+        ...preTenantCompaction,
+        startTime: preTenantCompaction?.start_time,
+        lastFinishTime: preTenantCompaction?.last_finish_time,
+        broadcastScn: preTenantCompaction?.global_broadcast_scn,
+        frozenScn: preTenantCompaction?.frozen_scn,
+      };
 
   const compactionStatus = tenantCompaction ? getCompactionStatusV4([tenantCompaction]) : null;
   const statusItem = findByValue(COMPACTION_STATUS_LISTV4, compactionStatus);
@@ -327,6 +394,12 @@ const Detail: React.FC<NewProps> = ({}) => {
           });
         },
       });
+    } else if (key === 'switchover') {
+      setSwitchoverVisible(true);
+    } else if (key === 'activate') {
+      setActivateVisible(true);
+    } else if (key === 'decouple') {
+      setDecoupleVisible(true);
     } else if (key === 'restart') {
       modal.confirm({
         title: formatMessage({
@@ -361,10 +434,10 @@ const Detail: React.FC<NewProps> = ({}) => {
     <Menu onClick={({ key }) => handleMenuClick(key)}>
       {/* <Menu.Item key="upgrade">
       <span>
-       {formatMessage({
-         id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
-         defaultMessage: '升级版本',
-       })}
+      {formatMessage({
+       id: 'ocp-v2.Cluster.Overview.UpgradeVersion',
+       defaultMessage: '升级版本',
+      })}
       </span>
       </Menu.Item> */}
       <Menu.Item key="upgradeAgent" disabled={seekdbInfoStatus !== 'AVAILABLE'}>
@@ -377,6 +450,32 @@ const Detail: React.FC<NewProps> = ({}) => {
           </span>
         </Tooltip>
       </Menu.Item>
+      {hasStandbyRelation && standbyRole === 'PRIMARY' && (
+        <Menu.Item
+          key="switchover"
+          disabled={downstreamPeers.length === 0 || seekdbInfoStatus === 'SWITCHING_OVER'}
+        >
+          {formatMessage({
+            id: 'seekdb.Detail.Overview.DailySwitching',
+            defaultMessage: '日常切换',
+          })}
+        </Menu.Item>
+      )}
+      {hasStandbyRelation &&
+        standbyRole === 'STANDBY' && [
+          <Menu.Item key="activate" disabled={seekdbInfoStatus === 'ACTIVATING'}>
+            {formatMessage({
+              id: 'seekdb.Detail.Overview.DisasterRecoverySwitchover',
+              defaultMessage: '容灾切换',
+            })}
+          </Menu.Item>,
+          <Menu.Item key="decouple" disabled={seekdbInfoStatus === 'ACTIVATING'}>
+            {formatMessage({
+              id: 'seekdb.Detail.Overview.PrimaryStandbyDecoupling',
+              defaultMessage: '主备解耦',
+            })}
+          </Menu.Item>,
+        ]}
     </Menu>
   );
 
@@ -422,7 +521,10 @@ const Detail: React.FC<NewProps> = ({}) => {
               ['AVAILABLE', 'UNAVAILABLE', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && (
                 <Tooltip
                   title={
-                    (['STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && tooltipTitle) ||
+                    (['STOPPING', 'RESTARTING', 'SWITCHING_OVER', 'ACTIVATING'].includes(
+                      seekdbInfoStatus
+                    ) &&
+                      tooltipTitle) ||
                     (!!systemdUnit &&
                       formatMessage({
                         id: 'seekdb.Detail.Overview.TheSeekdbInstanceIsRunning',
@@ -433,7 +535,9 @@ const Detail: React.FC<NewProps> = ({}) => {
                 >
                   <Button
                     disabled={
-                      ['STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) || !!systemdUnit
+                      ['STOPPING', 'RESTARTING', 'SWITCHING_OVER', 'ACTIVATING'].includes(
+                        seekdbInfoStatus
+                      ) || !!systemdUnit
                     }
                     onClick={() => handleMenuClick('stop')}
                   >
@@ -456,14 +560,25 @@ const Detail: React.FC<NewProps> = ({}) => {
             {!isDesktopMode && (
               <Tooltip
                 title={
-                  ['RESTARTING', 'STOPPING', 'STARTING', 'STOPPED'].includes(seekdbInfoStatus) &&
-                  tooltipTitle
+                  [
+                    'RESTARTING',
+                    'STOPPING',
+                    'STARTING',
+                    'STOPPED',
+                    'SWITCHING_OVER',
+                    'ACTIVATING',
+                  ].includes(seekdbInfoStatus) && tooltipTitle
                 }
               >
                 <Button
-                  disabled={['RESTARTING', 'STOPPING', 'STARTING', 'STOPPED'].includes(
-                    seekdbInfoStatus
-                  )}
+                  disabled={[
+                    'RESTARTING',
+                    'STOPPING',
+                    'STARTING',
+                    'STOPPED',
+                    'SWITCHING_OVER',
+                    'ACTIVATING',
+                  ].includes(seekdbInfoStatus)}
                   onClick={() => {
                     handleMenuClick('restart');
                   }}
@@ -497,6 +612,17 @@ const Detail: React.FC<NewProps> = ({}) => {
             <Descriptions column={4}>
               <Descriptions.Item
                 label={formatMessage({
+                  id: 'seekdb.Detail.Overview.InstanceName',
+                  defaultMessage: '实例名称',
+                })}
+              >
+                <InstanceName
+                  name={seekdbInfoData?.name}
+                  standbyRole={hasStandbyRelation ? standbyRole : undefined}
+                />
+              </Descriptions.Item>
+              <Descriptions.Item
+                label={formatMessage({
                   id: 'seekdb.Detail.Overview.Status',
                   defaultMessage: '状态',
                 })}
@@ -506,7 +632,9 @@ const Detail: React.FC<NewProps> = ({}) => {
                   text={seekdbInfoStatusName}
                 />
 
-                {['STARTING', 'STOPPING', 'RESTARTING'].includes(seekdbInfoStatus) && (
+                {['STARTING', 'STOPPING', 'RESTARTING', 'SWITCHING_OVER', 'ACTIVATING'].includes(
+                  seekdbInfoStatus
+                ) && (
                   <Tooltip
                     title={formatMessage({
                       id: 'seekdb.Detail.Overview.CanEnterTheTaskCenter',
@@ -783,6 +911,16 @@ const Detail: React.FC<NewProps> = ({}) => {
             </Col>
           </>
         )}
+        {hasStandbyRelation && (
+          <Col span={24}>
+            <StandbyRelationCard
+              standbyLocal={standbyLocal}
+              standbyPeers={standbyPeers}
+              standbyRole={standbyRole}
+              instanceName={seekdbInfoData?.name}
+            />
+          </Col>
+        )}
       </Row>
 
       <ModifyWhitelistModal
@@ -798,12 +936,12 @@ const Detail: React.FC<NewProps> = ({}) => {
       />
 
       {/* <UpgradeDrawer
-           visible={upgradeVisible}
-           onCancel={() => setUpgradeVisible(false)}
-           onSuccess={() => {
-             setUpgradeVisible(false);
-           }}
-          /> */}
+             visible={upgradeVisible}
+             onCancel={() => setUpgradeVisible(false)}
+             onSuccess={() => {
+               setUpgradeVisible(false);
+             }}
+            /> */}
 
       <UpgradeAgentDrawer
         visible={upgradeAgentVisible}
@@ -813,6 +951,45 @@ const Detail: React.FC<NewProps> = ({}) => {
           setUpgradeAgentVisible(false);
         }}
       />
+
+      {hasStandbyRelation && (
+        <>
+          <SwitchoverModal
+            visible={switchoverVisible}
+            peers={downstreamPeers}
+            localInstanceName={standbyLocal?.instance_name || seekdbInfoData?.name}
+            onCancel={() => setSwitchoverVisible(false)}
+            onSuccess={() => {
+              setSwitchoverVisible(false);
+              refreshStandby();
+              startSeekdbTransitionPolling();
+            }}
+          />
+
+          <ActivateModal
+            visible={activateVisible}
+            localInstanceName={standbyLocal?.instance_name || seekdbInfoData?.name}
+            localStatus={standbyLocal}
+            upstreamPeer={upstreamPeer}
+            onCancel={() => setActivateVisible(false)}
+            onSuccess={() => {
+              setActivateVisible(false);
+              refreshStandby();
+              startSeekdbTransitionPolling();
+            }}
+          />
+
+          <DecoupleModal
+            visible={decoupleVisible}
+            upstreamPeer={upstreamPeer}
+            onCancel={() => setDecoupleVisible(false)}
+            onSuccess={() => {
+              setDecoupleVisible(false);
+              refreshStandby();
+            }}
+          />
+        </>
+      )}
     </PageContainer>
   );
 };

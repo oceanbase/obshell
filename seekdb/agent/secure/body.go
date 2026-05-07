@@ -91,6 +91,17 @@ func EncryptBodyWithAes(body interface{}) (encryptedBody interface{}, key []byte
 	return
 }
 
+// EncryptWithAesKeys encrypts body using the AES key+IV pair from keys.
+// keys is expected to be the raw bytes of (aesKey || aesIV), matching the
+// format produced by the client when building the X-OCS-Header.
+func EncryptWithAesKeys(body []byte, keys string) (string, error) {
+	key, iv, err := transferKeys(keys)
+	if err != nil {
+		return "", err
+	}
+	return crypto.AESEncrypt(body, key, iv)
+}
+
 func bodyDecryptWithRsa(ciphertext string) ([]byte, error) {
 	plaintext, err := Crypter.DecryptAndReturnBytes(ciphertext)
 	if err != nil {

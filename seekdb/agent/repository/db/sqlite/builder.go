@@ -176,6 +176,7 @@ var SqliteTables = []interface{}{
 	sqlite.NodeInstance{},
 	sqlite.UpgradePkgInfo{},
 	sqlite.UpgradePkgChunk{},
+	sqlite.SeekdbStandbyPeer{},
 }
 
 // MigrateSqliteTables will check if the sqlite tables exist, if not, it will create them.

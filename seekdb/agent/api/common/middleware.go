@@ -269,7 +269,8 @@ func PaddingBody() func(*gin.Context) {
 // PostHandlers returns a Gin middleware function that logs the response and duration of API requests.
 func PostHandlers(excludeRoutes ...string) func(*gin.Context) {
 	return func(c *gin.Context) {
-		if !strings.HasPrefix(c.Request.RequestURI, constant.URI_API_V1) {
+		if !strings.HasPrefix(c.Request.RequestURI, constant.URI_API_V1) &&
+			!strings.HasPrefix(c.Request.RequestURI, constant.URI_RPC_V1) {
 			c.Next()
 			return
 		}
@@ -497,26 +498,32 @@ func VerifyFile() func(*gin.Context) {
 	}
 }
 
-func Verify() func(*gin.Context) {
+// RouteVerifier is the pluggable authentication callback used by VerifyWith.
+// It receives the already-decoded header and the current Unix timestamp, and is
+// responsible for calling c.Abort() + SendResponse on failure.
+type RouteVerifier func(c *gin.Context, curTs int64, header *secure.HttpHeader)
+
+// VerifyWith is the common authentication pipeline shared by all route groups:
+//  1. Early-exit when encryption is globally disabled.
+//  2. Read the already-decrypted HttpHeader from gin context (set by HeaderDecrypt).
+//  3. Verify the URI in the header matches the actual request URI.
+//  4. Extract the current timestamp (using the request-received time when available).
+//  5. Delegate to verifyFn for the group-specific credential check.
+func VerifyWith(verifyFn RouteVerifier) func(*gin.Context) {
 	return func(c *gin.Context) {
 		if config.IsEncryptionDisabled() {
 			c.Next()
 			return
 		}
-		log.WithContext(NewContextWithTraceId(c)).Infof("verfiy request: %s", c.Request.RequestURI)
-		var header secure.HttpHeader
+		log.WithContext(NewContextWithTraceId(c)).Infof("verify request: %s", c.Request.RequestURI)
 		obHeaderByte, _ := c.Get(constant.OCS_HEADER)
-		var headerByte any
-		if obHeaderByte != nil {
-			headerByte = obHeaderByte
-		} else {
+		if obHeaderByte == nil {
 			log.WithContext(NewContextWithTraceId(c)).Error("header not found")
 			c.Abort()
 			SendResponse(c, nil, errors.Occur(errors.ErrRequestHeaderNotFound))
 			return
 		}
-
-		header, ok := headerByte.(secure.HttpHeader)
+		header, ok := obHeaderByte.(secure.HttpHeader)
 		if !ok {
 			log.WithContext(NewContextWithTraceId(c)).Error("header type error")
 			c.Abort()
@@ -527,9 +534,8 @@ func Verify() func(*gin.Context) {
 		// Verify the URI in the header matches the URI of the request.
 		if header.Uri != c.Request.RequestURI {
 			log.WithContext(NewContextWithTraceId(c)).Errorf("verify uri failed, uri: %s, expect: %s", header.Uri, c.Request.RequestURI)
-			authErr := errors.Occur(errors.ErrSecurityAuthenticationHeaderUriMismatch)
 			c.Abort()
-			SendResponse(c, nil, authErr)
+			SendResponse(c, nil, errors.Occur(errors.ErrSecurityAuthenticationHeaderUriMismatch))
 			return
 		}
 
@@ -540,8 +546,15 @@ func Verify() func(*gin.Context) {
 			}
 		}
 
-		VerifyObRouters(c, curTs, &header)
-		// Verification succeeded, continue to the next middleware.
-		c.Next()
+		verifyFn(c, curTs, &header)
+		if !c.IsAborted() {
+			c.Next()
+		}
 	}
+}
+
+// Verify is the authentication middleware for user-facing API routes.
+// It uses VerifyObRouters to validate the OB root-password-based credential.
+func Verify() func(*gin.Context) {
+	return VerifyWith(VerifyObRouters)
 }

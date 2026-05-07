@@ -30,6 +30,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/executor/observer"
+	standbyexec "github.com/oceanbase/obshell/seekdb/agent/executor/standby"
 	"github.com/oceanbase/obshell/seekdb/agent/executor/upgrade"
 	"github.com/oceanbase/obshell/seekdb/agent/global"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
@@ -241,6 +242,7 @@ func (a *Agent) initTask() {
 	observer.RegisterObStopTask()
 	observer.RegisterObStartTask()
 	upgrade.RegisterUpgradeTask()
+	standbyexec.RegisterTasks()
 }
 
 // Check if the ob config file exists.

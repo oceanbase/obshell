@@ -90,6 +90,85 @@ export async function restartSeekdb(body: API.ObRestartParam, options?: { [key: 
   });
 }
 
+/** Trigger an Activate DAG (unilateral promotion to primary) POST /api/v1/seekdb/standby/activate */
+export async function standbyActivate(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>(
+    '/api/v1/seekdb/standby/activate',
+    {
+      method: 'POST',
+      ...(options || {}),
+    }
+  );
+}
+
+/** Create or update a standby peer relationship PUT /api/v1/seekdb/standby/pair */
+export async function standbyPairUpsert(body: API.PairParam, options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse>('/api/v1/seekdb/standby/pair', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** Remove a standby peer relationship DELETE /api/v1/seekdb/standby/pair */
+export async function standbyPairDelete(
+  body: API.PairDeleteParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse>('/api/v1/seekdb/standby/pair', {
+    method: 'DELETE',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
+/** Get local standby role and peer statuses GET /api/v1/seekdb/standby/status */
+export async function standbyStatus(options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.StandbyStatusResp }>(
+    '/api/v1/seekdb/standby/status',
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  );
+}
+
+/** Trigger a Switchover DAG (primary → standby) POST /api/v1/seekdb/standby/switchover */
+export async function standbySwitchover(
+  body: API.SwitchoverParam,
+  options?: { [key: string]: any }
+) {
+  return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>(
+    '/api/v1/seekdb/standby/switchover',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    }
+  );
+}
+
+/** Generate or retrieve the local standby token POST /api/v1/seekdb/standby/token */
+export async function standbyToken(body: API.TokenParam, options?: { [key: string]: any }) {
+  return request<API.OcsAgentResponse & { data?: API.TokenResp }>('/api/v1/seekdb/standby/token', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  });
+}
+
 /** start seekdb start seekdb POST /api/v1/seekdb/start */
 export async function startSeekdb(options?: { [key: string]: any }) {
   return request<API.OcsAgentResponse & { data?: API.DagDetailDTO }>('/api/v1/seekdb/start', {

@@ -592,4 +592,20 @@ export const OB_INFO_STATUS_LIST = [
     value: 'RESTARTING',
     badgeStatus: 'processing',
   },
+  {
+    label: formatMessage({
+      id: 'seekdb.src.constant.tenant.InDailySwitching',
+      defaultMessage: '日常切换中',
+    }),
+    value: 'SWITCHING_OVER',
+    badgeStatus: 'processing',
+  },
+  {
+    label: formatMessage({
+      id: 'seekdb.src.constant.tenant.DisasterRecoverySwitchoverInProgress',
+      defaultMessage: '容灾切换中',
+    }),
+    value: 'ACTIVATING',
+    badgeStatus: 'processing',
+  },
 ];
