@@ -14,35 +14,37 @@
  * limitations under the License.
  */
 
+import ContentWithReload from '@/component/ContentWithReload';
+import MyInput from '@/component/MyInput';
+import RenderConnectionString from '@/component/RenderConnectionString';
+import { PAGINATION_OPTION_10 } from '@/constant';
+import { getStats, listUsers, lockUser, unlockUser } from '@/service/obshell/user';
 import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
 import {
-  Table,
-  Col,
-  Row,
-  Card,
-  Tooltip,
   Button,
+  Card,
+  Col,
+  message,
+  Modal,
+  Row,
   Space,
   Switch,
-  Modal,
-  message,
+  Table,
+  theme,
+  Tooltip,
 } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { useRequest } from 'ahooks';
-import { PAGINATION_OPTION_10 } from '@/constant';
-import ContentWithReload from '@/component/ContentWithReload';
-import MyInput from '@/component/MyInput';
+import React, { useState } from 'react';
 import AddUserDrawer from '../../Component/AddUserDrawer';
 import ModifyDbUserPassword from '../../Component/ModifyDbUserPassword';
-import DeleteUserModal from '../Component/DeleteUserModal';
 import OBProxyAndConnectionStringModal from '../../Component/OBProxyAndConnectionStringModal';
-import RenderConnectionString from '@/component/RenderConnectionString';
-import { listUsers, lockUser, unlockUser, getStats } from '@/service/obshell/user';
+import DeleteUserModal from '../Component/DeleteUserModal';
 
 export interface IndexProps {}
 
 const Index: React.FC<IndexProps> = () => {
+  const { token } = theme.useToken();
   const [keyword, setKeyword] = useState('');
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
   const [dbUser, setDbUser] = useState<API.DbUser | null>(null);
@@ -140,7 +142,7 @@ const Index: React.FC<IndexProps> = () => {
         }),
 
         content: (
-          <div style={{ color: '#5C6B8A' }}>
+          <div style={{ color: token.colorTextTertiary }}>
             <div>
               {formatMessage(
                 {
@@ -165,7 +167,7 @@ const Index: React.FC<IndexProps> = () => {
           defaultMessage: '被锁定的用户将不允许登录，请谨慎操作',
         }),
         content: (
-          <div style={{ color: '#5C6B8A' }}>
+          <div style={{ color: token.colorTextTertiary }}>
             <div>
               {formatMessage(
                 {
@@ -342,7 +344,7 @@ const Index: React.FC<IndexProps> = () => {
       <Row gutter={[16, 16]}>
         <Col span={24}>
           <div>
-            <Card bordered={false} className="card-without-padding">
+            <Card className="card-without-padding">
               <Table
                 columns={columns}
                 rowKey="id"

@@ -201,7 +201,6 @@ const TenantResourceTop3: React.FC = () => {
       headStyle={{
         marginBottom: 16,
       }}
-      bordered={false}
     >
       <Row gutter={[16, 16]}>
         {tenantMetricList.map((item, index) => {

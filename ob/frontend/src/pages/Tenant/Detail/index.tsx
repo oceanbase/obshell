@@ -22,7 +22,7 @@ import { useBasicMenu, useTenantMenu } from '@/hook/useMenu';
 import BasicLayout from '@/pages/Layout/BasicLayout';
 import ModifyTenantPasswordModal from '@/pages/Tenant/Detail/Component/ModifyTenantPasswordModal';
 import { formatMessage } from '@/util/intl';
-import { Badge, Tooltip } from '@oceanbase/design';
+import { Badge, theme, Tooltip } from '@oceanbase/design';
 import { CaretDownFilled } from '@oceanbase/icons';
 import { findByValue, jsonParse } from '@oceanbase/util';
 import {
@@ -38,6 +38,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 const Detail: React.FC = () => {
+  const { token } = theme.useToken();
   const { tenantName = '' } = useParams<{ tenantName: string }>();
 
   const { pathname } = useLocation();
@@ -240,13 +241,12 @@ const Detail: React.FC = () => {
               <TenantSelect
                 valueProp="tenant_name"
                 value={tenantName}
-                bordered={false}
                 suffixIcon={
                   <CaretDownFilled
                     className="ant-select-suffix"
                     style={{
                       fontSize: 12,
-                      color: '#8592AD',
+                      color: token.colorTextTertiary,
                     }}
                   />
                 }
@@ -261,7 +261,6 @@ const Detail: React.FC = () => {
       }
     >
       <Outlet />
-
       <ModifyTenantPasswordModal
         visible={showTenantPasswordModal}
         onCancel={() => {
@@ -282,7 +281,6 @@ const Detail: React.FC = () => {
           handlePreCheck();
         }}
       />
-
       <TenantAdminPasswordModal
         visible={showTenantAdminPasswordModal}
         type={tenantAdminPasswordErrorData?.type}

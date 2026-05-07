@@ -377,7 +377,6 @@ const Host = forwardRef<HostRef, HostProps>(({ onLoadingChange }, ref) => {
         <Col span={24}>
           <Card
             divided={true}
-            bordered={false}
             title={formatMessage({
               id: 'OBShell.page.Credential.Host.CredentialList',
               defaultMessage: '凭据列表',

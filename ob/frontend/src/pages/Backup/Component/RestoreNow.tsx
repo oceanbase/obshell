@@ -571,7 +571,6 @@ const RestoreNow: React.FC<RestoreNowProps> = ({ useType, tenantName = '', isCop
         <Col span={24}>
           <Spin spinning={getRestoreSourceTenantInfoLoading}>
             <Card
-              bordered={false}
               title={formatMessage({
                 id: 'ocp-v2.Backup.Component.RestoreNow.RestoreSourceInformation',
                 defaultMessage: '恢复源信息',

@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React, { useState } from 'react';
-import { Tag, Input } from '@oceanbase/design';
+import { Input, Tag, theme } from '@oceanbase/design';
 import { uniq, findIndex } from 'lodash';
 
 /**
@@ -26,6 +26,7 @@ import { uniq, findIndex } from 'lodash';
 interface BatchAddObjectTagsProps {}
 
 const BatchAddObjectTags: React.FC<BatchAddObjectTagsProps> = () => {
+  const { token } = theme.useToken();
   const [tags, setTags] = useState<string[]>([]);
   const [inputValue, setInputValue] = useState('');
 
@@ -49,7 +50,7 @@ const BatchAddObjectTags: React.FC<BatchAddObjectTagsProps> = () => {
     <>
       <div
         style={{
-          border: '1px solid #d9d9d9',
+          border: `1px solid ${token.colorBorder}`,
           maxHeight: 560,
           padding: paddingValue,
           overflow: 'auto',
@@ -71,7 +72,6 @@ const BatchAddObjectTags: React.FC<BatchAddObjectTagsProps> = () => {
             defaultMessage: '请输入',
           })}
           value={inputValue}
-          bordered={false}
           onChange={handleInputChange}
           onBlur={handleInputConfirm}
           onPressEnter={handleInputConfirm}

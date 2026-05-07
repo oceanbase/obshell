@@ -243,7 +243,6 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             id: 'OBShell.Detail.Session.Statistics.StatisticsByUser',
             defaultMessage: '按用户统计',
           })}
-          bordered={false}
           className="card-without-padding"
         >
           <Table
@@ -262,7 +261,6 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             id: 'OBShell.Detail.Session.Statistics.StatisticsByAccessSource',
             defaultMessage: '按访问来源统计',
           })}
-          bordered={false}
           className="card-without-padding"
         >
           <Table
@@ -281,7 +279,6 @@ const Statistics: React.FC<StatisticsProps> = ({ tenantName }) => {
             id: 'OBShell.Detail.Session.Statistics.StatisticsByDatabase',
             defaultMessage: '按数据库统计',
           })}
-          bordered={false}
           className="card-without-padding"
         >
           <Table

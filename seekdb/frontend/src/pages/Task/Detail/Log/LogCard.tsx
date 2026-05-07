@@ -157,7 +157,6 @@ const LogCard: React.FC<LogCardProps> = ({
       className={styles.container}
     >
       <Card
-        bordered={false}
         title={
           <div>
             <Space size={16}>
@@ -392,7 +391,7 @@ const LogCard: React.FC<LogCardProps> = ({
                 <pre
                   style={{
                     whiteSpace: 'break-spaces',
-                    color: 'rgba(0, 0, 0, 0.65)',
+                    color: token.colorTextSecondary,
                     textAlign: 'left',
                     margin: 0,
                     padding: '0.5em',

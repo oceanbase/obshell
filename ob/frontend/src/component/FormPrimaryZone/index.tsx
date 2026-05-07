@@ -16,7 +16,7 @@
 
 import { formatMessage } from '@/util/intl';
 import React from 'react';
-import { Checkbox, Col, Row, Spin, Typography, Card, Tooltip } from '@oceanbase/design';
+import { Card, Checkbox, Col, Row, Spin, token, Tooltip, Typography } from '@oceanbase/design';
 import classNames from 'classnames';
 import { flatten, isEqual, uniq } from 'lodash';
 import { sortByEnum } from '@oceanbase/util';
@@ -160,7 +160,7 @@ class FormPrimaryZone extends React.Component<FormPrimaryZoneProps, FormPrimaryZ
 
   public getItemStyle = (isDragging, draggableStyle) => ({
     userSelect: 'none',
-    backgroundColor: isDragging ? '#fafafa' : 'transparent',
+    backgroundColor: isDragging ? token.colorBgLayout : 'transparent',
     // 需要应用的拖拽样式
     ...draggableStyle,
   });

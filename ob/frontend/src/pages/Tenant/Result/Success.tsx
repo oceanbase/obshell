@@ -115,7 +115,7 @@ const TaskSuccess: React.FC<TaskSuccessProps> = ({ taskId }) => {
           }
         />
 
-        <Card bordered={false} className={styles.detail}>
+        <Card className={styles.detail}>
           <Descriptions
             title={formatMessage({
               id: 'ocp-express.OBProxy.Result.Success.TaskInformation',

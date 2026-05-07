@@ -68,7 +68,6 @@ const StorageConfigCard: React.FC<StorageConfigCardProps> = ({
 
   return (
     <Card
-      bordered={false}
       title={formatMessage({
         id: 'ocp-v2.Component.StorageConfigCard.StorageConfiguration',
         defaultMessage: '存储配置',

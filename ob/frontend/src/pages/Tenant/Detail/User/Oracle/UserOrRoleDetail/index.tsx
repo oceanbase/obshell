@@ -44,6 +44,7 @@ import {
   Switch,
   Table,
   TableColumnType,
+  theme,
   Tooltip,
 } from '@oceanbase/design';
 import type { Route } from '@oceanbase/design/es/breadcrumb/Breadcrumb';
@@ -65,6 +66,7 @@ import { UserStats } from '../UserList';
 const { confirm } = Modal;
 
 const UserOrRoleDetail: React.FC = () => {
+  const { token } = theme.useToken();
   const { username, roleName } = useParams<{
     username?: string;
     roleName?: string;
@@ -289,7 +291,7 @@ const UserOrRoleDetail: React.FC = () => {
       }),
 
       content: (
-        <div style={{ color: '#5C6B8A' }}>
+        <div style={{ color: token.colorTextTertiary }}>
           <div>
             {formatMessage(
               {
@@ -553,7 +555,6 @@ const UserOrRoleDetail: React.FC = () => {
                 id: 'ocp-express.Oracle.UserOrRoleDetail.BasicInformation',
                 defaultMessage: '基本信息',
               })}
-              bordered={false}
             >
               <Descriptions>
                 <Descriptions.Item
@@ -600,7 +601,6 @@ const UserOrRoleDetail: React.FC = () => {
               id: 'ocp-express.Oracle.UserOrRoleDetail.HaveSystemPermissions',
               defaultMessage: '拥有系统权限',
             })}
-            bordered={false}
             extra={
               userData?.user_name !== 'SYS' && (
                 <Button onClick={() => setGlobalPrivVisible(true)}>
@@ -629,7 +629,6 @@ const UserOrRoleDetail: React.FC = () => {
               id: 'ocp-express.Oracle.UserOrRoleDetail.HaveARole',
               defaultMessage: '拥有角色',
             })}
-            bordered={false}
             extra={
               userData?.user_name !== 'SYS' && (
                 <Button onClick={() => setRoleVisible(true)}>
@@ -650,7 +649,6 @@ const UserOrRoleDetail: React.FC = () => {
               id: 'ocp-express.Oracle.UserOrRoleDetail.AccessibleObjects',
               defaultMessage: '可访问对象',
             })}
-            bordered={false}
             extra={
               <Space>
                 <MyInput.Search
@@ -759,7 +757,6 @@ const UserOrRoleDetail: React.FC = () => {
                 id: 'ocp-express.Oracle.UserOrRoleDetail.ReferencedByTheFollowingRoles',
                 defaultMessage: '被以下角色及用户引用',
               })}
-              bordered={false}
             >
               <Descriptions column={1}>
                 <Descriptions.Item
@@ -801,7 +798,6 @@ const UserOrRoleDetail: React.FC = () => {
           history.back();
         }}
       />
-
       <ModifyDbUserPassword
         visible={modifyPasswordVisible}
         dbUser={userOrRoleDetail}
@@ -820,7 +816,6 @@ const UserOrRoleDetail: React.FC = () => {
           refreshGetDbRole();
         }}
       />
-
       <ModifyGlobalPrivilegeModal
         visible={globalPrivVisible}
         tenantName={tenantName}
@@ -840,7 +835,6 @@ const UserOrRoleDetail: React.FC = () => {
           }
         }}
       />
-
       <ModifyRoleModal
         visible={roleVisible}
         tenantName={tenantName}
@@ -860,7 +854,6 @@ const UserOrRoleDetail: React.FC = () => {
           }
         }}
       />
-
       <ModifyObjectPrivilegeModal
         visible={modifydObjectVisible}
         tenantName={tenantName}
@@ -884,7 +877,6 @@ const UserOrRoleDetail: React.FC = () => {
           }
         }}
       />
-
       <AddObjectPrivilegeDrawer
         visible={addObjectVisible}
         tenantName={tenantName}
@@ -908,7 +900,6 @@ const UserOrRoleDetail: React.FC = () => {
           }
         }}
       />
-
       <ModifyObjectPrivilegeDrawer
         visible={modifyObjectVisible}
         tenantName={tenantName}

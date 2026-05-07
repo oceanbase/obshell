@@ -112,7 +112,6 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
     <>
       {deadLockDetectionEnabled === false ? (
         <Card
-          bordered={false}
           bodyStyle={{ marginBottom: 0 }}
           title={formatMessage({
             id: 'OBShell.Session.Deadlock.DeadlockDetails',
@@ -168,7 +167,6 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
         </Empty>
       ) : (
         <Card
-          bordered={false}
           bodyStyle={{ marginBottom: 0, display: 'flex', flexDirection: 'column' }}
           title={
             <Space>
@@ -209,7 +207,6 @@ const Deadlock: React.FC<DeadlockProps> = ({ tenantName }) => {
           }
         >
           <Collapse
-            bordered={false}
             // 默认展开第一个死锁
             defaultActiveKey={deadLockHistoryList.map(item => item.event_id as string).slice(0, 1)}
             style={{ backgroundColor: token.colorBgContainer }}

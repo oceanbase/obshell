@@ -172,7 +172,7 @@ const Detail: React.FC = () => {
             style={
               unavailableCount === 0
                 ? { color: token.colorTextTertiary, cursor: 'default' }
-                : { color: '#ff4b4b' }
+                : { color: token.colorError }
             }
           >
             {unavailableCount}
@@ -557,7 +557,7 @@ const Detail: React.FC = () => {
                     fontWeight: 'normal',
                     lineHeight: '24px',
                     position: 'relative',
-                    top: -4,
+                    top: -2,
                   }}
                 >
                   {isAbnormal

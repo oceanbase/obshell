@@ -16,7 +16,7 @@ import { formatMessage } from '@/util/intl';
  */
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Input, Row, Col, Popconfirm } from '@oceanbase/design';
+import { Col, Input, Popconfirm, Row, theme } from '@oceanbase/design';
 import { EditOutlined, CheckOutlined, CloseOutlined } from '@oceanbase/icons';
 import type { InputProps } from '@oceanbase/design/es/input';
 
@@ -51,6 +51,7 @@ const EditText: React.FC<EditTextProps> = ({
   }),
   ...restProps
 }) => {
+  const { token } = theme.useToken();
   const [innerValue, setInnerValue] = useState<string>(initAddress || '');
   const [draftValue, setDraftValue] = useState<string>('');
 
@@ -112,12 +113,15 @@ const EditText: React.FC<EditTextProps> = ({
             },
           }}
         >
-          <CheckOutlined style={{ color: '#0ac185', cursor: 'pointer' }} />
+          <CheckOutlined style={{ color: token.colorSuccess, cursor: 'pointer' }} />
         </Popconfirm>
       );
     } else {
       return (
-        <CheckOutlined style={{ color: '#0ac185', cursor: 'pointer' }} onClick={handleConfirm} />
+        <CheckOutlined
+          style={{ color: token.colorSuccess, cursor: 'pointer' }}
+          onClick={handleConfirm}
+        />
       );
     }
   };
@@ -133,7 +137,6 @@ const EditText: React.FC<EditTextProps> = ({
           // 这个 onChange 不会被调用，但 Form 需要这个控件来获取值
         }}
       />
-
       <Row gutter={[8, 0]} style={{ width: '100%' }}>
         {edit ? (
           <>
@@ -151,7 +154,7 @@ const EditText: React.FC<EditTextProps> = ({
             <Col style={{ lineHeight: '32px' }}>{renderConfirmButton()}</Col>
             <Col style={{ lineHeight: '32px' }}>
               <CloseOutlined
-                style={{ color: '#f93939', cursor: 'pointer' }}
+                style={{ color: token.colorError, cursor: 'pointer' }}
                 onClick={handleCancel}
               />
             </Col>
@@ -160,12 +163,13 @@ const EditText: React.FC<EditTextProps> = ({
           <>
             <Col>
               <div>
-                file://{currentValue || <span style={{ color: '#bfbfbf' }}>{initAddress}</span>}
+                file://
+                {currentValue || <span style={{ color: token.colorBorder }}>{initAddress}</span>}
               </div>
             </Col>
             <Col>
               <EditOutlined
-                style={{ cursor: 'pointer', color: '#006aff' }}
+                style={{ cursor: 'pointer', color: token.colorInfo }}
                 onClick={handleStartEdit}
               />
             </Col>

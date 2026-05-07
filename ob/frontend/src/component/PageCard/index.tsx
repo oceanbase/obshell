@@ -32,7 +32,7 @@ const PageCard: React.FC<TaskSuccessProps> = ({
   ...restProps
 }) => {
   return (
-    <Card bordered={false} className={`${styles.card} ${className}`} {...restProps}>
+    <Card className={`${styles.card} ${className}`} {...restProps}>
       <Spin spinning={loading}>{children}</Spin>
     </Card>
   );

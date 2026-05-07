@@ -189,7 +189,6 @@ const PackagePage: React.FC = () => {
       }}
     >
       <Card
-        bordered={false}
         title={
           <MyInput.Search
             value={keyword}

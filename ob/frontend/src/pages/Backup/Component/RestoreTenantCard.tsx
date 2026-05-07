@@ -87,7 +87,7 @@ const RestoreTenantCard: React.FC<RestoreTenantCardProps> = forwardRef(
     }, []);
 
     return (
-      <Card bordered={false} title={title}>
+      <Card title={title}>
         <Form form={form} layout="vertical" colon={false} hideRequiredMark={true}>
           <Row gutter={24}>
             <Col span={8}>

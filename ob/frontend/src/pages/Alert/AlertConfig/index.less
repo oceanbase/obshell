@@ -1,12 +1,14 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
 .container {
   height: calc(100vh - 200px);
   min-height: 900px;
   padding: 40px 24px;
-  background: #fff;
+  background: @colorBgContainer;
   border-radius: 8px;
   margin-bottom: 0;
   padding-bottom: 60px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px @colorFillSecondary;
   position: relative;
 
   .content {
@@ -27,7 +29,7 @@
     .description {
       margin-top: 16px;
       margin-bottom: 0;
-      color: #8592ad;
+      color: @colorTextTertiary;
       font-size: 14px;
       line-height: 22px;
     }

@@ -306,7 +306,7 @@ const New: React.FC<NewProps> = ({}) => {
   };
 
   const replicaTypeTooltipConfig = {
-    color: '#fff',
+    color: token.colorBgContainer,
     overlayStyle: {
       maxWidth: 400,
     },
@@ -427,7 +427,6 @@ const New: React.FC<NewProps> = ({}) => {
                 id: 'ocp-express.Tenant.New.BasicInformation',
                 defaultMessage: '基本信息',
               })}
-              bordered={false}
             >
               <Row gutter={24}>
                 <Col span={8}>
@@ -726,7 +725,7 @@ const New: React.FC<NewProps> = ({}) => {
                               defaultMessage: '负载类型',
                             })}
                           </div>
-                          <InfoCircleFilled style={{ color: '#006aff' }} />
+                          <InfoCircleFilled style={{ color: token.colorInfo }} />
                           <Text
                             style={{
                               width: 'calc(100vw - 450px)',
@@ -737,11 +736,11 @@ const New: React.FC<NewProps> = ({}) => {
                             ellipsis={{
                               tooltip: {
                                 overlayInnerStyle: {
-                                  background: '#fff',
+                                  background: token.colorBgContainer,
                                   width: 484,
                                   color: token.colorTextTertiary,
                                 },
-                                color: '#fff',
+                                color: token.colorBgContainer,
                               },
                             }}
                           >
@@ -792,7 +791,6 @@ const New: React.FC<NewProps> = ({}) => {
                 id: 'ocp-express.Tenant.New.ZoneInformation',
                 defaultMessage: 'Zone 信息',
               })}
-              bordered={false}
             >
               <Spin spinning={false}>
                 {zones?.length > 0 && (
@@ -1253,7 +1251,6 @@ const New: React.FC<NewProps> = ({}) => {
                 id: 'ocp-express.Tenant.New.SecuritySettings',
                 defaultMessage: '安全设置',
               })}
-              bordered={false}
             >
               <Row>
                 <Col span={10}>
@@ -1290,7 +1287,6 @@ const New: React.FC<NewProps> = ({}) => {
                   />
                 </Space>
               }
-              bordered={false}
             >
               {advanceSettingSwitch && (
                 <>

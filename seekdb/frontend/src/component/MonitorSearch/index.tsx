@@ -209,7 +209,7 @@ const MonitorSearch: React.FC<MonitorSearchProps> = ({
   );
 
   return (
-    <Card className={styles.container} bodyStyle={{ padding: '16px 24px 0 24px' }} bordered={false}>
+    <Card className={styles.container} bodyStyle={{ padding: '16px 24px 0 24px' }}>
       <Form
         layout="inline"
         form={form}

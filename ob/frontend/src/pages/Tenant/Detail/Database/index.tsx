@@ -300,7 +300,6 @@ const Database: React.FC<DatabaseProps> = ({ tenantData }) => {
                 id: 'ocp-express.Detail.Database.DatabaseList',
                 defaultMessage: '数据库列表',
               })}
-              bordered={false}
               className="card-without-padding"
               extra={
                 <MyInput.Search

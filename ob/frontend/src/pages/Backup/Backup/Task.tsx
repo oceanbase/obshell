@@ -45,7 +45,6 @@ const Task: React.FC<TaskProps> = ({
       // 设置元素 ID，用于获取滚动对象，方便实现自动滚动到当前位置的交互效果
       id="ocp-backup-task-card"
       {...(tab === 'restore' ? { className: 'card-without-padding' } : {})}
-      bordered={false}
       activeTabKey={tab}
       onTabChange={key => {
         setTab(key);

@@ -1,6 +1,6 @@
 import { formatMessage } from '@/util/intl';
 import { DeleteOutlined, PlusOutlined } from '@oceanbase/icons';
-import { Button, Checkbox, Col, Input, Popconfirm, Row, Space } from '@oceanbase/design';
+import { Button, Checkbox, Col, Input, Popconfirm, Row, Space, theme } from '@oceanbase/design';
 import React from 'react';
 
 type Label = {
@@ -19,6 +19,7 @@ interface InputLabelCompPorps {
 }
 
 export default function InputLabelComp(props: InputLabelCompPorps) {
+  const { token } = theme.useToken();
   const {
     value: labels = [],
     onChange,
@@ -122,17 +123,16 @@ export default function InputLabelComp(props: InputLabelCompPorps) {
                   ghost: true,
                 }}
               >
-                <DeleteOutlined style={{ color: 'rgba(0, 0, 0, .45)' }} />
+                <DeleteOutlined style={{ color: token.colorTextTertiary }} />
               </Popconfirm>
             )}
           </Row>
         ))}
       </Space>
-
       {(!maxLength || labels.length < maxLength) && !disable ? (
         <Row>
           <Col span={24}>
-            <Button type="dashed" block onClick={add} style={{ color: 'rgba(0,0,0,0.65)' }}>
+            <Button type="dashed" block onClick={add} style={{ color: token.colorTextSecondary }}>
               <PlusOutlined />
               {formatMessage({
                 id: 'OBShell.component.InputLabelComp.Add',

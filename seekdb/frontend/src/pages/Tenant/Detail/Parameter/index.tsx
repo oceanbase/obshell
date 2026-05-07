@@ -307,7 +307,7 @@ const Index: React.FC<IndexProps> = ({}) => {
         ),
       }}
     >
-      <Card bordered={false} className="card-without-padding">
+      <Card className="card-without-padding">
         <Table
           loading={loading}
           dataSource={parameterList?.filter(

@@ -295,7 +295,6 @@ const Task: React.FC<TaskProps> = ({ mode = 'page', type, name }) => {
     >
       <Card
         className="card-without-padding"
-        bordered={false}
         title={
           mode === 'page' &&
           formatMessage({

@@ -15,7 +15,7 @@
  */
 
 import React from 'react';
-import { Divider } from '@oceanbase/design';
+import { Divider, theme } from '@oceanbase/design';
 import { PlusOutlined } from '@oceanbase/icons';
 import ContentWithIcon from '@/component/ContentWithIcon';
 
@@ -24,6 +24,7 @@ const SelectDropdownRender: React.FC<{
   text: React.ReactNode;
   onClick?: () => void;
 }> = ({ menu, text, ...restProps }) => {
+  const { token } = theme.useToken();
   return (
     <div>
       {menu}
@@ -34,7 +35,7 @@ const SelectDropdownRender: React.FC<{
             padding: '4px 8px 8px 8px',
             cursor: 'pointer',
             // 由于 Select 在 empty 状态会将下拉菜单的文字都置灰，会影响 SelectDropdownRender，这里做样式覆盖
-            color: 'rgba(0, 0, 0, 0.85)',
+            color: token.colorText,
           }}
           {...restProps}
         >

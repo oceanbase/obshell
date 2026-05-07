@@ -330,7 +330,7 @@ const List: React.FC<ListProps> = ({}) => {
         ),
       }}
     >
-      <Card bordered={false} className="card-without-padding">
+      <Card className="card-without-padding">
         <Table
           data-aspm="c304242"
           data-aspm-desc="集群参数列表"

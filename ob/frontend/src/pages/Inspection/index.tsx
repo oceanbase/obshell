@@ -6,6 +6,7 @@ import { formatTime } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
 import {
   Button,
+  Card,
   Dropdown,
   message,
   Modal,
@@ -258,7 +259,9 @@ export default function HistoryList() {
         </Dropdown>
       }
     >
-      <Table {...tableProps} columns={columns} loading={showLoading} />
+      <Card className="card-without-padding">
+        <Table {...tableProps} columns={columns} loading={showLoading} />
+      </Card>
     </PageContainer>
   );
 }

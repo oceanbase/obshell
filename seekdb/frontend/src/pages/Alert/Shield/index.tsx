@@ -5,7 +5,7 @@ import { DATE_TIME_FORMAT } from '@/constant/datetime';
 import { deleteSilencer, listSilencers } from '@/service/obshell/alarm';
 import { Alert } from '@/typing/env/alert';
 import { formatMessage } from '@/util/intl';
-import { Button, Card, Form, Space, Table, Tag, Typography } from '@oceanbase/design';
+import { Button, Card, Form, Space, Table, Tag, theme, Typography } from '@oceanbase/design';
 import { history, useLocation } from '@umijs/max';
 import { useRequest } from 'ahooks';
 import type { ColumnsType } from 'antd/es/table';
@@ -21,6 +21,7 @@ type InstancesRender = {
 };
 
 export default function Shield() {
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -122,7 +123,7 @@ export default function Shield() {
           </Button>
           <Button
             type="link"
-            style={record.status.state !== 'expired' ? { color: '#ff4b4b' } : {}}
+            style={record.status.state !== 'expired' ? { color: token.colorError } : {}}
             disabled={record.status.state === 'expired'}
             onClick={() => {
               showDeleteConfirm({

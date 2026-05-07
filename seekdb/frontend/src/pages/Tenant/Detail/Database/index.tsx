@@ -14,34 +14,34 @@
  * limitations under the License.
  */
 
+import ContentWithReload from '@/component/ContentWithReload';
+import MyInput from '@/component/MyInput';
+import RenderConnectionString from '@/component/RenderConnectionString';
+import { PAGINATION_OPTION_10 } from '@/constant';
+import { FORBID_OPERATION_DBLIST } from '@/constant/tenant';
+import { deleteDatabase, listDatabases } from '@/service/obshell/database';
+import { formatTime } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
-import React, { useState } from 'react';
 import {
-  Table,
-  Col,
-  Row,
-  Card,
-  Descriptions,
-  Tooltip,
-  Button,
   Alert,
+  Button,
+  Card,
+  Col,
+  Descriptions,
   Input,
-  Space,
   Modal,
+  Row,
+  Space,
+  Table,
+  Tooltip,
   message,
 } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { sortByMoment } from '@oceanbase/util';
-import { PAGINATION_OPTION_10 } from '@/constant';
-import { FORBID_OPERATION_DBLIST } from '@/constant/tenant';
-import { formatTime } from '@/util/datetime';
 import { useRequest } from 'ahooks';
-import ContentWithReload from '@/component/ContentWithReload';
-import MyInput from '@/component/MyInput';
+import React, { useState } from 'react';
 import AddDatabaseDrawer from '../Component/AddDatabaseDrawer';
 import OBProxyAndConnectionStringModal from '../Component/OBProxyAndConnectionStringModal';
-import RenderConnectionString from '@/component/RenderConnectionString';
-import { listDatabases, deleteDatabase } from '@/service/obshell/database';
 
 const Database: React.FC = () => {
   const [connectionStringModalVisible, setConnectionStringModalVisible] = useState(false);
@@ -254,7 +254,7 @@ const Database: React.FC = () => {
     >
       <Row gutter={[16, 16]}>
         <Col span={24}>
-          <Card bordered={false} className="card-without-padding">
+          <Card className="card-without-padding">
             <Table
               loading={loading}
               dataSource={dataSource.filter(

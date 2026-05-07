@@ -88,7 +88,7 @@ export const EXTEND_CHART_COLORS = [
 ];
 
 export const Dimension = {
-  "database_performance": [
+  database_performance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -123,7 +123,7 @@ export const Dimension = {
     },
   ],
 
-  "host_performance": [
+  host_performance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -142,7 +142,7 @@ export const Dimension = {
     },
   ],
 
-  "observer_performance": [
+  observer_performance: [
     {
       value: 'ob_cluster_name',
       label: formatMessage({
@@ -161,7 +161,7 @@ export const Dimension = {
     },
   ],
 
-  "performance_and_sql": [
+  performance_and_sql: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -180,7 +180,7 @@ export const Dimension = {
     },
   ],
 
-  "transaction": [
+  transaction: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -199,7 +199,7 @@ export const Dimension = {
     },
   ],
 
-  "storage_and_cache": [
+  storage_and_cache: [
     {
       value: 'tenant_name',
       label: formatMessage({
@@ -226,4 +226,4 @@ export const DATE_RANGER_SELECTS = [
   DateRanger.NEAR_6_HOURS,
   DateRanger.LAST_1_DAY,
   DateRanger.LAST_3_DAYS,
-]
+];

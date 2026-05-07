@@ -25,13 +25,14 @@ import {
   Button,
   Card,
   Col,
+  message,
   Modal,
   Row,
   Space,
   Switch,
   Table,
+  theme,
   Tooltip,
-  message,
 } from '@oceanbase/design';
 import { PageContainer } from '@oceanbase/ui';
 import { useSelector } from '@umijs/max';
@@ -47,6 +48,7 @@ export interface IndexProps {
 }
 
 const Index: React.FC<IndexProps> = ({ tenantName }) => {
+  const { token } = theme.useToken();
   const { tenantData, precheckResult } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [keyword, setKeyword] = useState('');
@@ -159,7 +161,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
         }),
 
         content: (
-          <div style={{ color: '#5C6B8A' }}>
+          <div style={{ color: token.colorTextTertiary }}>
             <div>
               {formatMessage(
                 {
@@ -194,7 +196,7 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
           defaultMessage: '被锁定的用户将不允许登录，请谨慎操作',
         }),
         content: (
-          <div style={{ color: '#5C6B8A' }}>
+          <div style={{ color: token.colorTextTertiary }}>
             <div>
               {formatMessage(
                 {
@@ -381,7 +383,6 @@ const Index: React.FC<IndexProps> = ({ tenantName }) => {
                 id: 'ocp-express.User.MySQL.UserList',
                 defaultMessage: '用户列表',
               })}
-              bordered={false}
               className="card-without-padding"
               extra={
                 <MyInput.Search

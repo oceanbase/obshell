@@ -231,7 +231,7 @@ const PackagePage: React.FC = () => {
         ),
       }}
     >
-      <Card bordered={false} className="card-without-padding">
+      <Card className="card-without-padding">
         <Table
           loading={loading}
           dataSource={packageList.filter(

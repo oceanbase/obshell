@@ -20,7 +20,16 @@ import { DATE_FORMAT_DISPLAY } from '@/constant/datetime';
 import { getStats, lockUser, unlockUser } from '@/service/obshell/tenant';
 import { formatTime } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
-import { message, Modal, Space, Switch, Table, TableColumnType, Tooltip } from '@oceanbase/design';
+import {
+  message,
+  Modal,
+  Space,
+  Switch,
+  Table,
+  TableColumnType,
+  theme,
+  Tooltip,
+} from '@oceanbase/design';
 import { sortByMoment } from '@oceanbase/util';
 import { connect, history } from '@umijs/max';
 import { useRequest } from 'ahooks';
@@ -50,6 +59,7 @@ const UserList: React.FC<UserProps> = ({
   refreshDbUser,
   tenantData,
 }) => {
+  const { token } = theme.useToken();
   const [current, setCurrent] = useState<API.ObUser | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({});
   // 修改密码
@@ -135,7 +145,7 @@ const UserList: React.FC<UserProps> = ({
         defaultMessage: '取消',
       }),
       content: (
-        <div style={{ color: '#5C6B8A' }}>
+        <div style={{ color: token.colorTextTertiary }}>
           <div>
             {formatMessage(
               {

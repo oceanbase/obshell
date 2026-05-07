@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { theme } from '@oceanbase/design';
+
 import { useSelector } from '@umijs/max';
 import Highlight, { defaultProps } from 'prism-react-renderer';
 import Prism from 'prism-react-renderer/prism/index';
@@ -70,6 +72,7 @@ const HighlightWithLineNumbers: React.FC<HighlightWithLineNumbersProps> = ({
   showLineNumber = true,
   language = 'javaLog',
 }) => {
+  const { token } = theme.useToken();
   const { themeMode } = useSelector((state: DefaultRootState) => state.global);
 
   return (
@@ -90,7 +93,8 @@ const HighlightWithLineNumbers: React.FC<HighlightWithLineNumbersProps> = ({
               textAlign: 'left',
               margin: '1em 0',
               padding: 16, //'0.5em',
-              backgroundColor: themeMode === 'light' ? '#F8FAFE' : 'rgb(42, 39, 52)',
+              backgroundColor:
+                themeMode === 'light' ? token.colorFillQuaternary : 'rgb(42, 39, 52)',
             }}
           >
             {tokens.map((line, i) => {

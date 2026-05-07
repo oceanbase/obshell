@@ -62,20 +62,20 @@ dependencies:
     specifier: 3.4.10
     version: 3.4.10
   '@oceanbase/charts':
-    specifier: ^0.4.5
-    version: 0.4.10(@ant-design/icons@4.8.3)(antd@5.29.3)(react-dom@18.3.1)(react@18.3.1)(reflect-metadata@0.1.14)
+    specifier: ^1.0.0-alpha.4
+    version: 1.0.0-alpha.4(@ant-design/icons@4.8.3)(antd@5.29.3)(react-dom@18.3.1)(react@18.3.1)(reflect-metadata@0.1.14)
   '@oceanbase/design':
-    specifier: ^0.4.10
-    version: 0.4.20(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^1.0.0-alpha.19
+    version: 1.0.0-alpha.19(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1)
   '@oceanbase/icons':
-    specifier: ^0.4.6
-    version: 0.4.7(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^1.0.0-alpha.1
+    version: 1.0.0-alpha.1(react-dom@18.3.1)(react@18.3.1)
   '@oceanbase/ui':
-    specifier: ^0.4.24
-    version: 0.4.24(@types/react@17.0.52)(antd@5.29.3)(rc-field-form@2.7.1)(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^1.0.0-alpha.19
+    version: 1.0.0-alpha.19(@types/react@17.0.52)(antd@5.29.3)(rc-field-form@2.7.1)(react-dom@18.3.1)(react@18.3.1)
   '@oceanbase/util':
-    specifier: ^0.4.2
-    version: 0.4.6(react-dom@18.3.1)(react@18.3.1)
+    specifier: ^1.0.0-alpha.2
+    version: 1.0.0-alpha.2(react-dom@18.3.1)(react@18.3.1)
   '@umijs/max':
     specifier: ^4.1.1
     version: 4.6.43(@babel/core@7.29.0)(@types/node@18.19.130)(@types/react-dom@17.0.2)(@types/react@17.0.52)(dva@2.5.0-beta.2)(prettier@2.8.8)(rc-field-form@2.7.1)(react-dom@18.3.1)(react-native@0.85.1)(react@18.3.1)(resolve-url-loader@5.0.0)(sass@1.54.0)(styled-jsx@5.1.7)(typescript@4.9.5)(webpack@5.104.1)
@@ -4939,14 +4939,14 @@ packages:
     resolution: {integrity: sha512-4IRij4j1Cw2NbnBpbg3Cb6aoYjG2E2FzSk11uDKY8IBrAMV+2lByMoM8j2gJZ1shqIyiYYorw/UawYW8BljILw==}
     dev: false
 
-  /@oceanbase/charts@0.4.10(@ant-design/icons@4.8.3)(antd@5.29.3)(react-dom@18.3.1)(react@18.3.1)(reflect-metadata@0.1.14):
-    resolution: {integrity: sha512-LwEh8qnrzAQTwWuKus86ErGS//i2lpUGFh1yHIoMZrSuuIjzkGnux2cxCkmIgiY0rQlAdXKzhymM3bzy3B6Q0A==}
+  /@oceanbase/charts@1.0.0-alpha.4(@ant-design/icons@4.8.3)(antd@5.29.3)(react-dom@18.3.1)(react@18.3.1)(reflect-metadata@0.1.14):
+    resolution: {integrity: sha512-joSa3a2gq+0vAuzM/I1s/Cz7R291sgnprxN212L/FqGEhDZFucJ9yi5OzUAOKJ4yTHkVUgIDeyBj0w0xLdxWRQ==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
     dependencies:
       '@ant-design/charts': 1.4.3(@ant-design/icons@4.8.3)(antd@5.29.3)(classnames@2.5.1)(lodash@4.18.1)(react-dom@18.3.1)(react@18.3.1)(reflect-metadata@0.1.14)
-      '@oceanbase/util': 0.4.6(react-dom@18.3.1)(react@18.3.1)
+      '@oceanbase/util': 1.0.0-alpha.2(react-dom@18.3.1)(react@18.3.1)
       classnames: 2.5.1
       lodash: 4.18.1
       rc-util: 5.44.4(react-dom@18.3.1)(react@18.3.1)
@@ -4960,8 +4960,8 @@ packages:
       - reflect-metadata
     dev: false
 
-  /@oceanbase/design@0.4.20(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-49rTN1KU+O0Lt0TIisbQKVhXAVMS5zN+ldYrHt7/YFm1rDyYTIhPUiNTW+itna34sqBV0+Sxiaeu4xqf0XrdAg==}
+  /@oceanbase/design@1.0.0-alpha.19(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-ciIzPLpGZdCzWpxRqfjT8v+FLOJ2LZJcEIQ2kZwlBmLLl0qzqM1cCzVh3dRU0pwk7hHXWXv3AWDjmyI9bYGdFw==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
@@ -4970,8 +4970,8 @@ packages:
       '@ctrl/tinycolor': 4.2.0
       '@inline-svg-unique-id/react': 1.2.3(react@18.3.1)
       '@oceanbase/aliyun-theme': 0.1.6
-      '@oceanbase/icons': 0.4.7(react-dom@18.3.1)(react@18.3.1)
-      '@oceanbase/util': 0.4.6(react-dom@18.3.1)(react@18.3.1)
+      '@oceanbase/icons': 1.0.0-alpha.1(react-dom@18.3.1)(react@18.3.1)
+      '@oceanbase/util': 1.0.0-alpha.2(react-dom@18.3.1)(react@18.3.1)
       ahooks: 2.10.14(react@18.3.1)
       antd: 5.29.3(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1)
       classnames: 2.5.1
@@ -5003,8 +5003,8 @@ packages:
       yargs: 17.7.2
     dev: false
 
-  /@oceanbase/icons@0.4.7(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-UpzrmrDpW6VF9llD25QWc3aAOzQiVsjj7ue5uyzvVtoanZxosfjg9IoKqqRWbIqMWGHg2jka7TsiLbUCL7haQg==}
+  /@oceanbase/icons@1.0.0-alpha.1(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-O4EW7aUlS4PwKF2qTsFC+hyNJO66aWAPn0HhjANKnisJe1AW1ulk5xkd06dWCc5ptcd+Jb22hcD/XHSgjOKW2w==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
@@ -5017,18 +5017,18 @@ packages:
       react-dom: 18.3.1(react@18.3.1)
     dev: false
 
-  /@oceanbase/ui@0.4.24(@types/react@17.0.52)(antd@5.29.3)(rc-field-form@2.7.1)(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-KTo917BzYmEdetpaDsnaetoHaTn/dr2q9WIf0LlpAlWSSiPiHh85NIWu2QoYI+ep1jiwnf9nE3wvfeGXzADqJg==}
+  /@oceanbase/ui@1.0.0-alpha.19(@types/react@17.0.52)(antd@5.29.3)(rc-field-form@2.7.1)(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-K+eIKHvDcQQ/8Xse85x6SuaXHDfZ4Gn4BB4B+Enr7Lr8HnLfm14JLgi9DplMBZny5xKHy/bkvNjve3+sAahaxw==}
     peerDependencies:
       react: '>=16.9.0'
       react-dom: '>=16.9.0'
     dependencies:
       '@ant-design/cssinjs': 1.24.0(react-dom@18.3.1)(react@18.3.1)
       '@ant-design/pro-components': 2.8.10(antd@5.29.3)(rc-field-form@2.7.1)(react-dom@18.3.1)(react@18.3.1)
-      '@antv/g6': 3.4.10
-      '@oceanbase/design': 0.4.20(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1)
-      '@oceanbase/icons': 0.4.7(react-dom@18.3.1)(react@18.3.1)
-      '@oceanbase/util': 0.4.6(react-dom@18.3.1)(react@18.3.1)
+      '@inline-svg-unique-id/react': 1.2.3(react@18.3.1)
+      '@oceanbase/design': 1.0.0-alpha.19(moment@2.30.1)(react-dom@18.3.1)(react@18.3.1)
+      '@oceanbase/icons': 1.0.0-alpha.1(react-dom@18.3.1)(react@18.3.1)
+      '@oceanbase/util': 1.0.0-alpha.2(react-dom@18.3.1)(react@18.3.1)
       ahooks: 2.10.14(react@18.3.1)
       classnames: 2.5.1
       dayjs: 1.11.20
@@ -5057,8 +5057,8 @@ packages:
       - rc-field-form
     dev: false
 
-  /@oceanbase/util@0.4.6(react-dom@18.3.1)(react@18.3.1):
-    resolution: {integrity: sha512-mkGs9uKeBHZMXKaey3JmJMReH1Zs5RCLziubu6rE7aKkXeAHrM9oaFKwpZov0SwSE7O5rKmd9UkgZ7U0zv3hsw==}
+  /@oceanbase/util@1.0.0-alpha.2(react-dom@18.3.1)(react@18.3.1):
+    resolution: {integrity: sha512-S2y/mGqC4rTfPagjplSYLv0vfpko15Tiz4AvCGyuGkfjns5grz6t/GXLCFQJcRxyufWao2RkN2g7Nu9AKdXqvA==}
     peerDependencies:
       react: '>=16.9.0'
     dependencies:
@@ -6067,7 +6067,7 @@ packages:
     resolution: {integrity: sha512-hy8b7Y1J8OGe6LbAjj3xniQrj3v6lsivCcrmf4TzSgPzLkhIeKgc5IZnT7ReIqmEuodjfO8EYAuoFvIrHi/+jQ==}
     deprecated: This is a stub types definition. history provides its own type definitions, so you do not need this installed.
     dependencies:
-      history: 4.10.1
+      history: 5.3.0
     dev: false
 
   /@types/hoist-non-react-statics@3.3.7(@types/react@17.0.52):
@@ -6216,7 +6216,7 @@ packages:
       '@types/history': 4.7.11
       '@types/react': 17.0.52
       '@types/react-router': 5.1.20
-      redux: 3.7.2
+      redux: 4.2.1
     dev: false
 
   /@types/react-router@5.1.20:

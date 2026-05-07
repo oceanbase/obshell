@@ -1,5 +1,7 @@
+@import '~@oceanbase/design/es/theme/index.less';
+
 .legendContainer {
-  background: #f8fafe;
+  background: @colorFillQuaternary;
   border-radius: 4px;
   margin-top: 10px;
   height: 108px;
@@ -26,7 +28,7 @@
         }
 
         th {
-          color: #1890ff;
+          color: @colorInfo;
           line-height: 20px;
           text-align: right;
           font-weight: 400;
@@ -51,7 +53,7 @@
 
             .sortIcon {
               font-size: 12px;
-              color: #1890ff;
+              color: @colorInfo;
             }
           }
         }
@@ -65,7 +67,7 @@
           align-items: center;
           cursor: pointer;
           text-align: left;
-          color: rgba(0, 0, 0, 0.65);
+          color: @colorTextSecondary;
           padding-right: 24px;
 
           .stick {
@@ -78,7 +80,7 @@
 
         td {
           text-align: right;
-          color: rgba(0, 0, 0, 0.85);
+          color: @colorText;
         }
       }
     }

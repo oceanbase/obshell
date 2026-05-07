@@ -102,7 +102,7 @@ const BackupStrategyCard: React.FC<BackupStrategyCardProps> = ({
   });
 
   return (
-    <Card bordered={false} {...restProps}>
+    <Card {...restProps}>
       {/* 集群级备份策略可能为空 */}
       {isNullValue(backupStrategy?.id) ? (
         <Empty

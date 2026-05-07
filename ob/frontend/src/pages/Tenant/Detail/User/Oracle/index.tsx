@@ -192,7 +192,6 @@ const Index: React.FC<IndexProps> = ({ pathname, tenantName }) => {
       }}
     >
       <MyCard
-        bordered={false}
         className={`card-without-padding ${styles.card}`}
         activeTabKey={tab}
         onTabChange={key => {

@@ -662,7 +662,6 @@ const Detail: React.FC<NewProps> = ({}) => {
           <>
             <Col span={24}>
               <MyCard
-                bordered={false}
                 title={
                   <ContentWithQuestion
                     content={formatMessage({
@@ -693,7 +692,6 @@ const Detail: React.FC<NewProps> = ({}) => {
             </Col>
             <Col span={24}>
               <MyCard
-                bordered={false}
                 title={formatMessage({
                   id: 'ocp-express.Detail.Overview.MergeManagement',
                   defaultMessage: '合并管理',

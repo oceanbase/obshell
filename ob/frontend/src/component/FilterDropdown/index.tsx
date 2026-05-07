@@ -71,7 +71,6 @@ const FilterDropdown: React.FC<FilterDropdownProps> = ({
       {...restProps}
       overlay={
         <Card
-          bordered={false}
           bodyStyle={cardBodyStyle ? { ...cardBodyStyle, padding: 0 } : { padding: 0 }}
           className={`${styles.overlay} ${styles[`${mode}Overlay`]}`}
         >

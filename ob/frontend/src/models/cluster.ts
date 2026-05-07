@@ -46,7 +46,11 @@ const clusterModel = () => {
     isSharedStorage: false, // 是否共享存储模式
   });
 
-  const { run: getObclusterInfo, refresh, loading } = useRequest(obclusterInfo, {
+  const {
+    run: getObclusterInfo,
+    refresh,
+    loading,
+  } = useRequest(obclusterInfo, {
     manual: true,
     onSuccess: res => {
       if (res.successful) {

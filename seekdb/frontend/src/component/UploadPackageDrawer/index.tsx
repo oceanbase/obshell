@@ -1,7 +1,17 @@
 import { formatMessage } from '@/util/intl'; // import * as SoftwarePackageController from '@/service/ocp-all-in-one/SoftwarePackageController';
 import { uniqueId, find } from 'lodash';
 import React, { useState, useEffect } from 'react';
-import { Button, message, Drawer, Upload, Form, Table, Progress, Modal } from '@oceanbase/design';
+import {
+  Button,
+  Drawer,
+  Form,
+  message,
+  Modal,
+  Progress,
+  Table,
+  theme,
+  Upload,
+} from '@oceanbase/design';
 import type { UploadFile } from '@oceanbase/design';
 import { UploadOutlined } from '@oceanbase/icons';
 import CryptoJS from 'crypto-js';
@@ -26,6 +36,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
   onSuccess,
   ...restProps
 }) => {
+  const { token } = theme.useToken();
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   useEffect(() => {
@@ -142,7 +153,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
       render: (text: string, record) => (
         <div style={{ maxWidth: '460px' }}>
           <div>{text}</div>
-          <div style={{ color: '#8592ad', fontSize: '12px', lineHeight: '20px' }}>
+          <div style={{ color: token.colorTextTertiary, fontSize: '12px', lineHeight: '20px' }}>
             md5: {record.md5}
           </div>
         </div>
@@ -348,7 +359,7 @@ const UploadPackageDrawer: React.FC<UploadPackageDrawerProps> = ({
               lineHeight: '22px',
               marginTop: '24px',
               marginBottom: '4px',
-              color: '#132039',
+              color: token.colorText,
             }}
           >
             {formatMessage({

@@ -4,7 +4,7 @@ import { agentUpgrade } from '@/service/obshell/upgrade';
 import { getAgentInfo } from '@/service/obshell/v1';
 import { formatMessage } from '@/util/intl';
 import { taskSuccess } from '@/util/task';
-import { Form, Modal } from '@oceanbase/design';
+import { Form, Modal, theme } from '@oceanbase/design';
 import { useRequest } from 'ahooks';
 import React, { useState } from 'react';
 export interface UpgradeDrawerProps extends MyDrawerProps {
@@ -20,6 +20,7 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
   onCancel,
   ...restProps
 }) => {
+  const { token } = theme.useToken();
   const [form] = Form.useForm();
   const { validateFields } = form;
   const [packageList, setPackageList] = useState<API.UpgradePkgInfo[]>([]);
@@ -83,7 +84,14 @@ const UpgradeAgentDrawer: React.FC<UpgradeDrawerProps> = ({
       {...restProps}
     >
       <Form form={form} preserve={false} hideRequiredMark={true} className="form-with-small-margin">
-        <div style={{ borderRadius: 6, background: '#f8fafe', padding: 16, marginBottom: 24 }}>
+        <div
+          style={{
+            borderRadius: 6,
+            background: token.colorFillQuaternary,
+            padding: 16,
+            marginBottom: 24,
+          }}
+        >
           <Form.Item
             label={formatMessage({
               id: 'ocp-v2.Overview.UpgradeAgentDrawer.InstalledVersion',

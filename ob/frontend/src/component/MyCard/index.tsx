@@ -25,7 +25,6 @@ const MyCard = ({
   return (
     <Card
       className={`${className} ${styles.card}`}
-      bordered={false}
       bodyStyle={{ padding: '16px 24px', ...bodyStyle }}
       {...restProps}
     >

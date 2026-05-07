@@ -1,4 +1,4 @@
-import { Typography } from '@oceanbase/design';
+import { theme, Typography } from '@oceanbase/design';
 import { CaretDownOutlined, CaretUpOutlined } from '@oceanbase/icons';
 import React, { useMemo, useState } from 'react';
 import styles from './index.less';
@@ -31,6 +31,7 @@ const ChartLegend: React.FC<ChartLegendProps> = ({
   onClickLegend, // 点击图例回调
   enableSort = false, // 是否启用排序功能
 }) => {
+  const { token } = theme.useToken();
   const [sortField, setSortField] = useState<'max' | 'avg' | 'current' | null>(null);
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
@@ -206,7 +207,7 @@ const ChartLegend: React.FC<ChartLegendProps> = ({
                       {/* 图例 Name 列 */}
                       <td
                         style={{
-                          color: isHidden ? '#bfbfbf' : 'rgba(0, 0, 0, 0.65)',
+                          color: isHidden ? token.colorBorder : token.colorTextSecondary,
                         }}
                         onClick={() => onClickLegend(item)}
                       >
@@ -214,7 +215,7 @@ const ChartLegend: React.FC<ChartLegendProps> = ({
                         <div
                           className={styles.stick}
                           style={{
-                            backgroundColor: isHidden ? '#bfbfbf' : colorMapping[item], // 颜色条，灰色表示隐藏状态
+                            backgroundColor: isHidden ? token.colorBorder : colorMapping[item], // 颜色条，灰色表示隐藏状态
                           }}
                         />
                         <Text
@@ -234,32 +235,29 @@ const ChartLegend: React.FC<ChartLegendProps> = ({
                           {item}
                         </Text>
                       </td>
-
                       {/* 图例 Max 列 */}
                       <td
                         style={{
                           width: 80,
-                          color: isHidden ? '#bfbfbf' : 'rgba(0, 0, 0, 0.85)',
+                          color: isHidden ? token.colorBorder : token.colorText,
                         }}
                       >
                         {legendData?.[item]?.max || 0}
                       </td>
-
                       {/* 图例 Avg 列 */}
                       <td
                         style={{
                           width: 80,
-                          color: isHidden ? '#bfbfbf' : 'rgba(0, 0, 0, 0.85)',
+                          color: isHidden ? token.colorBorder : token.colorText,
                         }}
                       >
                         {legendData?.[item]?.avg || 0}
                       </td>
-
                       {/* 图例 Current 列 */}
                       <td
                         style={{
                           width: 80,
-                          color: isHidden ? '#bfbfbf' : 'rgba(0, 0, 0, 0.85)',
+                          color: isHidden ? token.colorBorder : token.colorText,
                         }}
                       >
                         {legendData?.[item]?.current || 0}

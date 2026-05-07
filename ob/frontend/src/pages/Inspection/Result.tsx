@@ -273,7 +273,6 @@ const Report: React.FC = () => {
         <Row gutter={[16, 16]}>
           <Col span={8}>
             <Card
-              bordered={false}
               title={formatMessage({
                 id: 'OBShell.page.Inspection.Result.BasicInformation',
                 defaultMessage: '基本信息',
@@ -324,7 +323,6 @@ const Report: React.FC = () => {
                 id: 'OBShell.page.Inspection.Result.OverviewOfInspectionResults',
                 defaultMessage: '巡检结果概览',
               })}
-              bordered={false}
               style={{
                 height: '250px',
               }}
@@ -425,7 +423,6 @@ const Report: React.FC = () => {
           </Col>
           <Col span={24}>
             <Card
-              bordered={false}
               tabList={tabList}
               activeTabKey={activeTabKey}
               onTabChange={key => {

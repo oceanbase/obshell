@@ -18,15 +18,16 @@ import { formatMessage } from '@/util/intl';
 import { useRequest } from 'ahooks';
 import React from 'react';
 import {
-  Form,
-  Checkbox,
-  Tag,
-  Space,
   Button,
-  Row,
+  Checkbox,
   Col,
-  message,
   DrawerProps,
+  Form,
+  message,
+  Row,
+  Space,
+  Tag,
+  theme,
 } from '@oceanbase/design';
 import {
   ORACLE_OBJECT_TYPE_LIST,
@@ -61,6 +62,7 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
   onCancel,
   ...restProps
 }) => {
+  const { token } = theme.useToken();
   const objectType = dbObjects?.[0]?.object?.type;
 
   const [form] = Form.useForm();
@@ -188,7 +190,12 @@ const ModifyObjectPrivilegeDrawer: React.FC<ModifyObjectPrivilegeDrawerProps> = 
         >
           <Row
             gutter={[8, 8]}
-            style={{ padding: 12, maxHeight: 520, background: '#FAFAFA', overflow: 'auto' }}
+            style={{
+              padding: 12,
+              maxHeight: 520,
+              background: token.colorBgLayout,
+              overflow: 'auto',
+            }}
           >
             {dbObjects?.map(item => (
               <Col key={item?.object?.full_name} span={6}>

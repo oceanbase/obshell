@@ -185,6 +185,6 @@ export const COMPACTION_RESULT_LIST = [
       id: 'ocp-express.src.constant.compaction.Idle',
       defaultMessage: '空闲中',
     }),
-    color: 'rgba(0,0,0,0.06)',
+    color: token.colorFillSecondary,
   },
 ];

@@ -13,6 +13,7 @@ import {
   Space,
   Table,
   TableColumnType,
+  theme,
   Tooltip,
   Typography,
 } from '@oceanbase/design';
@@ -39,6 +40,7 @@ export interface ListProps {
 }
 
 const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode = 'page' }) => {
+  const { token } = theme.useToken();
   const { tenantData } = useSelector((state: DefaultRootState) => state.tenant);
 
   const [activeOnly, setActiveOnly] = useState(false);
@@ -335,7 +337,6 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
   return (
     <div>
       <Card
-        bordered={false}
         className="card-without-padding"
         style={{ marginBottom: selectedRowKeys.length > 0 ? 56 : 0 }}
         extra={
@@ -369,7 +370,13 @@ const List: React.FC<ListProps> = ({ tenantName, query, showReload = true, mode 
                   defaultMessage: '刷新',
                 })}
               >
-                <div style={{ border: '1px solid #cdd5e4', paddingInline: 8, paddingBlock: 4 }}>
+                <div
+                  style={{
+                    border: `1px solid ${token.colorBorder}`,
+                    paddingInline: 8,
+                    paddingBlock: 4,
+                  }}
+                >
                   <SyncOutlined
                     spin={loading}
                     onClick={() => {
