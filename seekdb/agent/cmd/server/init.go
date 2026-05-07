@@ -205,6 +205,10 @@ func (a *Agent) checkAgentInfo() {
 	if a.AgentInfo.Ip == "" && meta.OCS_AGENT.GetIp() != "" {
 		a.AgentInfo.Ip = meta.OCS_AGENT.GetIp()
 	}
+	if a.AgentInfo.Ip == "" {
+		ip, _ := observer.GetConfFromObMeta()
+		a.AgentInfo.Ip = ip
+	}
 
 	// Fill agent port.
 	if a.AgentInfo.GetPort() == 0 {
