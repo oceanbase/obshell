@@ -18,7 +18,6 @@ package upgrade
 
 import (
 	"github.com/oceanbase/obshell/seekdb/agent/engine/task"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 )
 
 type UpgradePostTableMaintainTask struct {
@@ -38,8 +37,5 @@ func newUpgradePostTableMaintainTask() *UpgradePostTableMaintainTask {
 
 func (t *UpgradePostTableMaintainTask) Execute() (err error) {
 	t.ExecuteLog("Start to upgrade post table maintain")
-	if err := oceanbase.AutoMigrateObTables(true); err != nil {
-		return err
-	}
 	return nil
 }

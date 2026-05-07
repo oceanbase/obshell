@@ -23,9 +23,7 @@ import (
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
-	"github.com/oceanbase/obshell/seekdb/agent/executor/observer"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/process"
-	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 )
 
@@ -55,41 +53,18 @@ func (a *Agent) takeOverOrRebuild() (err error) {
 		time.Sleep(constant.GET_INSTANCE_RETRY_INTERVAL * time.Second)
 	}
 
-	if err = oceanbase.CreateDataBase(constant.DB_OCS); err != nil {
-		return err
-	}
-
 	for {
-		if _, err = oceanbase.GetOcsInstance(); err == nil {
+		if _, err = oceanbase.GetInstance(); err == nil {
 			break
 		} else {
-			// Because initConnection() only returns when there's a password error or on success
-			// and the password must be correct at this point, so we can wait here until the connection is successful
-			log.WithError(err).Error("get ocs db connection failed")
+			log.WithError(err).Error("get seekdb sql connection failed")
 		}
 		time.Sleep(constant.GET_INSTANCE_RETRY_INTERVAL * time.Second)
 	}
 
-	if err = oceanbase.AutoMigrateObTables(true); err != nil {
-		return err
-	}
-
-	var agentInstance *meta.AgentInstance
-	if agentInstance, err = agentService.GetAgentInstanceByIpAndRpcPortFromOB(meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT); err != nil {
-		log.WithError(err).Errorf("get ocs agent by ip and rpc port failed, ip: %s, mysql port: %d", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT)
-		return err
-	}
-	if agentInstance == nil {
-		log.Infof("agent with ip %s and mysql port %d not found, need to take over", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT)
-		if err = agentService.TakeOver(); err != nil {
-			log.WithError(err).Error("take over failed")
-			return errors.Wrap(err, "create take over agent failed")
-		}
-		return nil
-	}
-	if err = observer.Rebuild(agentInstance); err != nil {
-		log.WithError(err).Error("rebuild failed")
-		return err
+	if err = agentService.TakeOver(); err != nil {
+		log.WithError(err).Error("take over failed")
+		return errors.Wrap(err, "create take over agent failed")
 	}
 	return nil
 }

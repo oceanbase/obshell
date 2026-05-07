@@ -272,7 +272,7 @@ func (s *taskService) getDbInstance() (*gorm.DB, error) {
 	if s.isLocal {
 		return sqlitedb.GetSqliteInstance()
 	}
-	return oceanbasedb.GetOcsInstance()
+	return oceanbasedb.GetInstance()
 }
 
 func (s *taskService) getCurrentTime(db *gorm.DB) (t time.Time) {

@@ -20,16 +20,16 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/oceanbase/obshell/seekdb/agent/engine/task"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
 func (s *AgentService) initializeClusterStatus(tx *gorm.DB) error {
-	var clusterStatus oceanbase.ClusterStatus
-	if err := tx.Model(&oceanbase.ClusterStatus{}).Where("id = 1").Scan(&clusterStatus).Error; err != nil {
+	var clusterStatus sqlite.ClusterStatus
+	if err := tx.Model(&sqlite.ClusterStatus{}).Where("id = 1").Scan(&clusterStatus).Error; err != nil {
 		return err
 	}
 	if clusterStatus.Id == 0 {
-		return tx.Model(&oceanbase.ClusterStatus{}).Create(&oceanbase.ClusterStatus{
+		return tx.Model(&sqlite.ClusterStatus{}).Create(&sqlite.ClusterStatus{
 			Id:     1,
 			Status: task.NOT_UNDER_MAINTENANCE,
 		}).Error

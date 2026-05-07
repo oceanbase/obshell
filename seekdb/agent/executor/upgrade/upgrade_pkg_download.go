@@ -26,7 +26,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/global"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/system"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
 var (
@@ -44,7 +44,7 @@ type GetAllRequiredPkgsTask struct {
 	targetBuildNumber   string
 	targetVersion       string
 	distribution        string
-	upgradePkgInfo      oceanbase.UpgradePkgInfo
+	upgradePkgInfo      sqlite.UpgradePkgInfo
 	upgradeCheckTaskDir string
 }
 
@@ -107,7 +107,7 @@ func (t *GetAllRequiredPkgsTask) getAllRequiredPkgs() (err error) {
 	}
 
 	t.ExecuteLog("Confirm that all the required packages have been uploaded.")
-	var pkgInfo oceanbase.UpgradePkgInfo
+	var pkgInfo sqlite.UpgradePkgInfo
 	arch := global.Architecture
 
 	pkgInfo, err = obclusterService.GetUpgradePkgInfoByVersionAndRelease(constant.PKG_OBSHELL, t.targetVersion, t.targetBuildNumber, t.distribution, arch)

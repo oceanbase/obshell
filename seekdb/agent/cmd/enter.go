@@ -51,6 +51,7 @@ type CommonFlag struct {
 
 func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 	cmd.Flags().SortFlags = false
+	cmd.VarsPs(&flag.AgentInfo.Ip, []string{constant.FLAG_IP}, "", "The IP address for the agent to bind to", false)
 	cmd.VarsPs(&flag.AgentInfo.Port, []string{constant.FLAG_PORT, constant.FLAG_PORT_SH}, 0, "The operations port number", false)
 	cmd.VarsPs(&flag.OldServerPid, []string{constant.FLAG_PID}, int32(0), "Old obshell pid, only used for upgrade", false)
 	cmd.Flags().MarkHidden(constant.FLAG_PID)
@@ -62,6 +63,9 @@ func SetCommandFlags(cmd *command.Command, flag *CommonFlag) {
 
 func (flag *CommonFlag) GetArgs() (args []string) {
 	flag.HiddenPassword()
+	if flag.AgentInfo.GetIp() != "" {
+		args = append(args, fmt.Sprintf("--%s", constant.FLAG_IP), flag.AgentInfo.GetIp())
+	}
 	if flag.AgentInfo.GetPort() != 0 {
 		args = append(args, fmt.Sprintf("--%s", constant.FLAG_PORT), fmt.Sprint(flag.AgentInfo.GetPort()))
 	}

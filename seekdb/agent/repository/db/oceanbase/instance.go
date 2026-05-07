@@ -27,20 +27,6 @@ var (
 	ERR_OBSERVER_NOT_EXIST = errors.Occur(errors.ErrObServerProcessNotExist)
 )
 
-// GetOcsInstance will return a connection to the OCS database.
-// If the connection cannot execute the SQL command 'SHOW DATABASES', it will return an error.
-func GetOcsInstance() (db *gorm.DB, err error) {
-	db, err = getSqlExecutableInstance(TEST_OCEANBASE_SQL)
-	if err != nil {
-		return nil, err
-	}
-
-	if isOcs {
-		return db, nil
-	}
-	return nil, errors.Occur(errors.ErrAgentOceanbaseDBNotOcs)
-}
-
 // GetInstance will return the current connection regardless of the database it is connected with.
 // If the connection cannot execute the SQL command 'SHOW DATABASES', it will return an error.
 func GetInstance() (db *gorm.DB, err error) {

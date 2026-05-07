@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package oceanbase
+package sqlite
 
+// ClusterStatus mirrors oceanbase.ClusterStatus; single row id=1 in local SQLite.
 type ClusterStatus struct {
-	Id     int `gorm:"autoIncrement:false"`
+	Id     int `gorm:"primaryKey"`
 	Status int
 }

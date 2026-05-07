@@ -28,7 +28,7 @@ func NewObMysqlDataSourceConfig() *ObDataSourceConfig {
 	return &ObDataSourceConfig{
 		username:        constant.DB_USERNAME,
 		ip:              meta.OCS_AGENT.GetLocalIp(),
-		dBName:          constant.DB_OCS,
+		dBName:          constant.DB_OCEANBASE,
 		charset:         constant.DB_DEFAULT_CHARSET,
 		parseTime:       true,
 		location:        constant.DB_DEFAULT_LOCATION,

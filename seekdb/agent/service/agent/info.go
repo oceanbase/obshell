@@ -67,20 +67,6 @@ func (s *AgentService) updateAgentInfo(db *gorm.DB, agentInfo meta.AgentInfoInte
 	return nil
 }
 
-func (s *AgentService) UpdateAgentIP(ip string) error {
-	if ocsAgent == nil {
-		return errors.Occur(errors.ErrAgentNotInitialized)
-	}
-	if ocsAgent.GetIp() != ip {
-		if !ocsAgent.IsSingleAgent() && !ocsAgent.IsUnidentified() {
-			// IP recorded in meta is inconsistent with IP recorded in ob config.bin
-			return errors.Occur(errors.ErrAgentIpInconsistentWithOBServer)
-		}
-		ocsAgent.Ip = ip
-	}
-	return nil
-}
-
 func (s *AgentService) UpdateAgentInfo(agentInfo meta.AgentInfoInterface) error {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {

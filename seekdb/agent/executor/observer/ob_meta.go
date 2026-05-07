@@ -30,7 +30,7 @@ func HandleOBMeta() (err error) {
 	for {
 		if oceanbase.IsConnecting() {
 			// If the connection is being established, wait for it to complete
-		} else if _, err = oceanbase.GetOcsInstance(); err == nil {
+		} else if _, err = oceanbase.GetInstance(); err == nil {
 			break
 		} else {
 			// Because initConnection() only returns when there's a password error or on success
@@ -41,12 +41,6 @@ func HandleOBMeta() (err error) {
 		}
 		count++
 		time.Sleep(10 * time.Millisecond)
-	}
-
-	log.Info("try to start migrate table")
-	if err = oceanbase.AutoMigrateObTables(true); err != nil {
-		log.WithError(err).Error("auto migrate ob tables failed")
-		return
 	}
 
 	return nil

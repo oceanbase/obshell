@@ -25,33 +25,15 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
-func (s *AgentService) GetAgentInstanceByIpAndRpcPortFromOB(ip string, mysqlPort int) (agent *meta.AgentInstance, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return
-	}
-	hasTable := oceanbaseDb.Migrator().HasTable(&oceanbase.AllAgent{})
-	if !hasTable {
-		return
-	}
-	err = oceanbaseDb.Model(&oceanbase.AllAgent{}).Where("ip=? and mysql_port=?", ip, mysqlPort).Scan(&agent).Error
-	return
-}
-
 func (s *AgentService) TakeOver() (err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return
-	}
 	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
 	}
-	agent := oceanbase.AllAgent{
+	agent := sqlite.AllAgent{
 		Ip:           meta.OCS_AGENT.GetIp(),
 		Port:         meta.OCS_AGENT.GetPort(),
 		Os:           global.Os,
@@ -61,46 +43,36 @@ func (s *AgentService) TakeOver() (err error) {
 		Version:      meta.OCS_AGENT.GetVersion(),
 		Identity:     string(meta.CLUSTER_AGENT),
 	}
-	err = oceanbaseDb.Transaction(func(oceanbaseTx *gorm.DB) error {
-		return sqliteDb.Transaction(func(sqliteTx *gorm.DB) error {
-			// clear all_agent
-			if err = oceanbaseTx.Model(&oceanbase.AllAgent{}).Delete(&oceanbase.AllAgent{}, "1=1").Error; err != nil {
-				return err
-			}
-			if err = oceanbaseTx.Model(&oceanbase.AllAgent{}).Create(&agent).Error; err != nil {
-				return err
-			}
-			return s.TakeOverOrRebuild(sqliteTx, oceanbaseTx)
-		})
+	return sqliteDb.Transaction(func(sqliteTx *gorm.DB) error {
+		if err = sqliteTx.Model(&sqlite.AllAgent{}).Delete(&sqlite.AllAgent{}, "1=1").Error; err != nil {
+			return err
+		}
+		if err = sqliteTx.Model(&sqlite.AllAgent{}).Create(&agent).Error; err != nil {
+			return err
+		}
+		return s.TakeOverOrRebuild(sqliteTx)
 	})
-	return
 }
 
 func (s *AgentService) Rebuild(agentInstance *meta.AgentInstance) (err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return
-	}
 	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
 	}
-	return oceanbaseDb.Transaction(func(oceanbaseTx *gorm.DB) error {
-		return sqliteDb.Transaction(func(sqliteTx *gorm.DB) error {
-			return s.TakeOverOrRebuild(sqliteTx, oceanbaseTx)
-		})
+	return sqliteDb.Transaction(func(sqliteTx *gorm.DB) error {
+		return s.TakeOverOrRebuild(sqliteTx)
 	})
 }
 
 func (s *AgentService) UpdateAgentVersion() (err error) {
-	db, err := oceanbasedb.GetOcsInstance()
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
 	}
-	return db.Model(&oceanbase.AllAgent{}).Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Update("version", meta.OCS_AGENT.GetVersion()).Error
+	return db.Model(&sqlite.AllAgent{}).Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Update("version", meta.OCS_AGENT.GetVersion()).Error
 }
 
-func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB, oceanbaseTx *gorm.DB) error {
+func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB) error {
 	var err error
 	observerUser, err := process.GetObserverUser()
 	if err != nil {
@@ -132,8 +104,7 @@ func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB, oceanbaseTx *gorm.DB
 	if err := s.updateObserverRedoDir(sqliteTx, redoDir); err != nil {
 		return err
 	}
-	// update redo dir
-	if err := s.initializeClusterStatus(oceanbaseTx); err != nil {
+	if err := s.initializeClusterStatus(sqliteTx); err != nil {
 		return err
 	}
 	// update obversion
@@ -157,7 +128,11 @@ func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB, oceanbaseTx *gorm.DB
 		return err
 	}
 	var obSysParameter []sqlite.ObSysParameter
-	err = oceanbaseTx.Raw("select * from oceanbase.GV$OB_PARAMETERS").Find(&obSysParameter).Error
+	obConn, err := oceanbasedb.GetInstance()
+	if err != nil {
+		return err
+	}
+	err = obConn.Raw("select * from oceanbase.GV$OB_PARAMETERS").Find(&obSysParameter).Error
 	if err != nil {
 		return err
 	}

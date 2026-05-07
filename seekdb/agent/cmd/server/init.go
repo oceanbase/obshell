@@ -182,7 +182,9 @@ func (a *Agent) updateAgent() (err error) {
 
 	switch meta.OCS_AGENT.GetIdentity() {
 	case meta.UNIDENTIFIED:
-		if meta.OCS_AGENT.GetIp() != a.AgentInfo.Ip {
+		// Only block if a non-empty meta IP conflicts with the input IP.
+		// An empty meta IP means first init; the input IP (e.g. from --ip) wins.
+		if meta.OCS_AGENT.GetIp() != "" && meta.OCS_AGENT.GetIp() != a.AgentInfo.Ip {
 			process.ExitWithError(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, errors.Occur(errors.ErrAgentInfoNotEqual, a.AgentInfo, meta.OCS_AGENT))
 		}
 		fallthrough

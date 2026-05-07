@@ -167,6 +167,8 @@ var SqliteTables = []interface{}{
 	sqlite.OcsInfo{},
 	sqlite.ObConfig{},
 	sqlite.OcsConfig{},
+	sqlite.AllAgent{},
+	sqlite.ClusterStatus{},
 	sqlite.TaskMapping{},
 	sqlite.SubtaskInstance{},
 	sqlite.SubTaskLog{},

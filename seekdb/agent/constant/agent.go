@@ -64,6 +64,7 @@ const (
 
 // command flag
 const (
+	FLAG_IP        = "ip"
 	FLAG_PORT      = "port"
 	FLAG_PORT_SH   = "P"
 	FLAG_PID       = "pid"

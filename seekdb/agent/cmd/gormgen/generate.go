@@ -21,7 +21,6 @@ import (
 
 	"gorm.io/gen"
 
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
@@ -29,7 +28,6 @@ const REPO_ROOT = "../../repository/query"
 
 func main() {
 	GenerateSqlite()
-	GenerateOceanbase()
 }
 
 func GenerateSqlite() {
@@ -40,17 +38,5 @@ func GenerateSqlite() {
 	g.ApplyBasic(sqlite.OcsInfo{},
 		sqlite.ObSysParameter{},
 		sqlite.ObConfig{}, sqlite.OcsConfig{})
-	g.Execute()
-}
-
-func GenerateOceanbase() {
-	g := gen.NewGenerator(gen.Config{
-		Mode:    gen.WithDefaultQuery,
-		OutPath: filepath.Join(REPO_ROOT, "oceanbase"),
-	})
-	g.ApplyBasic(oceanbase.AllAgent{},
-		oceanbase.DagInstance{}, oceanbase.NodeInstance{}, oceanbase.SubtaskInstance{},
-		oceanbase.UpgradePkgInfo{}, oceanbase.UpgradePkgChunk{},
-	)
 	g.Execute()
 }

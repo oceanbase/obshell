@@ -80,20 +80,18 @@ func getParamFromMetaDb(name string) (string, bool) {
 
 func LoadOBConfigFromConfigFile() (err error) {
 	// Load ob config from ./store/sstable/meta.db table __all_sys_parameter (seekdb does not use seekdb.config.bin).
+	// Only the MySQL port is loaded here; the agent IP is set via --ip flag or auto-detection in handle.go.
 	log.Info("load ob config from meta.db __all_sys_parameter")
-	ip, mysqlPort := GetConfFromObMeta()
+	_, mysqlPort := GetConfFromObMeta()
 	if mysqlPort == 0 {
 		log.Info("load ob config without mysql port, use default mysql port")
 		mysqlPort = constant.DEFAULT_MYSQL_PORT
-	}
-	if err = agentService.UpdateAgentIP(ip); err != nil {
-		return err
 	}
 	return agentService.UpdatePort(mysqlPort)
 }
 
 // GetConfFromObMeta reads mysql_port and local_ip from ./store/sstable/meta.db __all_sys_parameter.
-// If meta.db or a parameter is missing, returns constant.LOCAL_IP and 0 for port.
+// Falls back to 127.0.0.1 when local_ip is missing; IPv6 mode falls back to ::1.
 func GetConfFromObMeta() (ip string, mysqlPort int) {
 	metaPath := path.MetaDbPath()
 	log.Infof("get conf from meta.db %s table %s", metaPath, constant.OB_SYS_PARAMETER_TABLE)
@@ -101,9 +99,11 @@ func GetConfFromObMeta() (ip string, mysqlPort int) {
 	if v, ok := getParamFromMetaDb(ETC_KEY_MYSQL_PORT); ok {
 		mysqlPort, _ = strconv.Atoi(v)
 	}
-	ip = constant.LOCAL_IP
+
 	if useIPv6, ok := getParamFromMetaDb(ETC_KEY_USE_IPV6); ok && (useIPv6 == "1" || strings.ToLower(useIPv6) == "true") {
 		ip = constant.LOCAL_IP_V6
+	} else {
+		ip = constant.LOCAL_IP
 	}
 	log.Infof("get conf from meta.db, ip: %s, mysqlPort: %d", ip, mysqlPort)
 	return

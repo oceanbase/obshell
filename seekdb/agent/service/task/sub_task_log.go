@@ -18,10 +18,8 @@ package task
 
 import (
 	"github.com/oceanbase/obshell/seekdb/agent/engine/task"
-	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/bo"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
@@ -30,15 +28,7 @@ type SubTaskLogService struct {
 }
 
 func (s *SubTaskLogService) InsertRemote(subTaskLog task.TaskExecuteLogDTO) (err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return err
-	}
-	return oceanbaseDb.Create(&oceanbase.SubTaskLog{
-		SubTaskId:    subTaskLog.TaskId,
-		ExecuteTimes: subTaskLog.ExecuteTimes,
-		LogContent:   subTaskLog.LogContent,
-	}).Error
+	return nil
 }
 
 func (s *SubTaskLogService) InsertLocal(subTaskLog task.TaskExecuteLogDTO) (err error) {
@@ -55,24 +45,7 @@ func (s *SubTaskLogService) InsertLocal(subTaskLog task.TaskExecuteLogDTO) (err 
 }
 
 func (s *SubTaskLogService) InsertLocalToRemote(subTaskLog task.TaskExecuteLogDTO) error {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
-	if err != nil {
-		return err
-	}
-	sqliteDb, err := sqlitedb.GetSqliteInstance()
-	if err != nil {
-		return err
-	}
-	var taskMap sqlite.TaskMapping
-	if err = sqliteDb.Model(&taskMap).Where("local_task_id=?", subTaskLog.TaskId).First(&taskMap).Error; err != nil {
-		return err
-	}
-
-	return oceanbaseDb.Create(&oceanbase.SubTaskLog{
-		SubTaskId:    taskMap.RemoteTaskId,
-		ExecuteTimes: subTaskLog.ExecuteTimes,
-		LogContent:   subTaskLog.LogContent,
-	}).Error
+	return nil
 }
 
 func (s *SubTaskLogService) SetLocalIsSync(subTaskLog *sqlite.SubTaskLog) error {
@@ -106,20 +79,4 @@ func (s *taskService) GetFullSubTaskLogsByTaskID(taskID int64) (subTaskLogs []*b
 		return nil, err
 	}
 	return subTaskLogsBO, nil
-}
-
-func (s *SubTaskLogService) GetUnSyncSubTaskLogById(id int64, limit int) (subTaskLogs []sqlite.SubTaskLog, err error) {
-	sqliteDb, err := sqlitedb.GetSqliteInstance()
-	if err != nil {
-		return
-	}
-
-	columns := "sub_task_log.id as id, task_mapping.local_task_id as sub_task_id, " +
-		"sub_task_log.execute_times as execute_times, log_content, sub_task_log.is_sync, " +
-		"sub_task_log.create_time as create_time, sub_task_log.update_time as update_time"
-
-	err = sqliteDb.Model(&subTaskLogs).Select(columns).
-		Joins("join task_mapping on sub_task_log.sub_task_id = task_mapping.local_task_id").
-		Where("sub_task_log.id > ? and sub_task_log.is_sync = 0", id).Limit(limit).Find(&subTaskLogs).Error
-	return
 }

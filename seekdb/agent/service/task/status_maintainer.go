@@ -17,8 +17,9 @@
 package task
 
 import (
-	"fmt"
 	"strconv"
+
+	stderrors "errors"
 
 	"gorm.io/gorm"
 
@@ -26,9 +27,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/engine/task"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
-	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
@@ -38,7 +37,7 @@ type clusterStatusMaintainer struct {
 }
 
 func (maintainer *clusterStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, oldStatus int) error {
-	clusterStatus := oceanbase.ClusterStatus{
+	clusterStatus := sqlite.ClusterStatus{
 		Id:     1,
 		Status: newStatus,
 	}
@@ -49,7 +48,7 @@ func (maintainer *clusterStatusMaintainer) setStatus(tx *gorm.DB, newStatus int,
 	if resp.RowsAffected == 0 {
 		if newStatus != task.GLOBAL_MAINTENANCE {
 			var nowStatus int
-			if err := tx.Set("gorm:query_option", "FOR UPDATE").Model(&oceanbase.ClusterStatus{}).Select("status").Where("id=?", 1).First(&nowStatus).Error; err != nil {
+			if err := tx.Model(&sqlite.ClusterStatus{}).Select("status").Where("id=?", 1).First(&nowStatus).Error; err != nil {
 				return err
 			} else if nowStatus == newStatus {
 				return nil
@@ -94,12 +93,12 @@ func (maintainer *clusterStatusMaintainer) StopMaintenance(tx *gorm.DB, dag task
 }
 
 func (maintainer *clusterStatusMaintainer) IsRunning() (bool, error) {
-	db, err := oceanbasedb.GetOcsInstance()
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return false, err
 	}
 	var status int
-	if err := db.Model(&oceanbase.ClusterStatus{}).Select("status").Where("id=?", 1).First(&status).Error; err != nil {
+	if err := db.Model(&sqlite.ClusterStatus{}).Select("status").Where("id=?", 1).First(&status).Error; err != nil {
 		return false, err
 	}
 	return status == task.NOT_UNDER_MAINTENANCE, nil
@@ -107,15 +106,18 @@ func (maintainer *clusterStatusMaintainer) IsRunning() (bool, error) {
 
 func (maintainer *clusterStatusMaintainer) IsInited() (bool, error) {
 	if !isClusterStatusInit {
-		db, err := oceanbasedb.GetOcsInstance()
+		db, err := sqlitedb.GetSqliteInstance()
 		if err != nil {
 			return false, err
 		}
-		var clusterStatus *oceanbase.ClusterStatus
-		if err := db.Model(&oceanbase.ClusterStatus{}).Where("id = 1").Scan(&clusterStatus).Error; err != nil {
+		var row sqlite.ClusterStatus
+		if err := db.Model(&sqlite.ClusterStatus{}).Where("id = 1").First(&row).Error; err != nil {
+			if stderrors.Is(err, gorm.ErrRecordNotFound) {
+				return false, nil
+			}
 			return false, err
 		}
-		isClusterStatusInit = (clusterStatus != nil)
+		isClusterStatusInit = true
 	}
 	return isClusterStatusInit, nil
 }
@@ -131,7 +133,7 @@ func (maintainer *agentStatusMaintainer) setStatus(tx *gorm.DB, newStatus int, o
 	if resp.RowsAffected == 0 {
 		if newStatus == task.NOT_UNDER_MAINTENANCE {
 			var nowStatus int
-			if err := tx.Set("gorm:query_option", "FOR UPDATE").Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", "status").First(&nowStatus).Error; err != nil {
+			if err := tx.Model(&sqlite.OcsInfo{}).Select("value").Where("name=?", "status").First(&nowStatus).Error; err != nil {
 				return err
 			} else if nowStatus == newStatus {
 				return nil
@@ -146,7 +148,6 @@ func (maintainer *agentStatusMaintainer) StartMaintenance(tx *gorm.DB, dag task.
 	if !dag.IsMaintenance() {
 		return nil
 	}
-	fmt.Println("StartMaintenance", dag.GetMaintenanceType())
 	switch dag.GetMaintenanceType() {
 	case task.GLOBAL_MAINTENANCE:
 		return maintainer.setStatus(tx, dag.GetMaintenanceType(), task.NOT_UNDER_MAINTENANCE)

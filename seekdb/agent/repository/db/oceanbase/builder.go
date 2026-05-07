@@ -18,9 +18,7 @@ package oceanbase
 
 import (
 	"fmt"
-	"reflect"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -35,20 +33,7 @@ import (
 
 	"github.com/oceanbase/obshell/seekdb/agent/repository/driver"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/logger"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 )
-
-var tableList = []interface{}{
-	oceanbase.AllAgent{},
-	oceanbase.DagInstance{},
-	oceanbase.NodeInstance{},
-	oceanbase.SubtaskInstance{},
-	oceanbase.SubTaskLog{},
-	oceanbase.UpgradePkgInfo{},
-	oceanbase.UpgradePkgChunk{},
-	oceanbase.ClusterStatus{},
-	oceanbase.OcsConfig{},
-}
 
 // createGormDbByConfig will create an ob db instance according to the configuration and
 // set the specifications of the connection pool.
@@ -147,50 +132,4 @@ func IsTableNotExists(err error) bool {
 	}
 	// Error 1146: Table doesn't exist
 	return strings.Contains(err.Error(), "Error 1146")
-}
-
-func AutoMigrateObTables(parallel bool) (err error) {
-	migrateOnce.Do(func() {
-		if parallel {
-			err = parallelAutoMigrateObTables()
-		} else {
-			err = autoMigrateObTables()
-		}
-	})
-
-	if err != nil {
-		migrateOnce = sync.Once{}
-	}
-	return
-}
-
-func autoMigrateObTables() (err error) {
-	if dbInstance == nil {
-		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
-	}
-	// When the ob db instance exists, do ob table migration
-	return dbInstance.AutoMigrate(tableList...)
-}
-
-func parallelAutoMigrateObTables() (err error) {
-	if dbInstance == nil {
-		return errors.Occur(errors.ErrAgentOceanbaseNotHold)
-	}
-	for _, table := range tableList {
-		for i := 0; i < 10; i++ {
-			err = dbInstance.AutoMigrate(table)
-			if err == nil || IsTableAlreadyExists(err) || IsDuplicateColumn(err) {
-				break
-			}
-			if IsTableNotExists(err) {
-				time.Sleep(100 * time.Millisecond)
-				continue
-			} else {
-				log.WithError(err).Errorf("auto migrate ob table %s failed", reflect.TypeOf(table).Name())
-				return err
-			}
-		}
-	}
-	log.Info("auto migrate ob tables succeed")
-	return nil
 }

@@ -24,7 +24,8 @@ func NewClusterTaskService() *ClusterTaskService {
 	return &ClusterTaskService{
 		taskService: taskService{
 			StatusMaintainerInterface: &clusterStatusMaintainer{},
-			isLocal:                   false,
+			// Persist DAG/subtasks in local SQLite; cluster maintenance state uses sqlite.ClusterStatus.
+			isLocal: true,
 		},
 	}
 }

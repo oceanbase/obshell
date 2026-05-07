@@ -18,17 +18,17 @@ package config
 
 import (
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
-	obdb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
-	obmodel "github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 	"gorm.io/gorm"
 )
 
 func SaveOcsConfig(name, value, info string) error {
-	db, err := obdb.GetOcsInstance()
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
-		return errors.Wrap(err, "Get oceanbase instance failed")
+		return errors.Wrap(err, "get sqlite instance failed")
 	}
-	cfg := obmodel.OcsConfig{
+	cfg := sqlite.OcsConfig{
 		Name:  name,
 		Value: value,
 		Info:  info,
@@ -36,18 +36,18 @@ func SaveOcsConfig(name, value, info string) error {
 	return db.Save(&cfg).Error
 }
 
-func GetOcsConfig(name string) (*obmodel.OcsConfig, error) {
-	db, err := obdb.GetOcsInstance()
+func GetOcsConfig(name string) (*sqlite.OcsConfig, error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
-		return nil, errors.Wrap(err, "Get oceanbase instance failed")
+		return nil, errors.Wrap(err, "get sqlite instance failed")
 	}
-	var cfg obmodel.OcsConfig
+	var cfg sqlite.OcsConfig
 	err = db.Where("name = ?", name).First(&cfg).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		return nil, errors.Wrap(err, "Get ocs config failed")
+		return nil, errors.Wrap(err, "get ocs config failed")
 	}
 	return &cfg, nil
 }

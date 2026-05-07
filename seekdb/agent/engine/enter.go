@@ -17,19 +17,18 @@
 package engine
 
 import (
-	"time"
-
 	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/seekdb/agent/engine/executor"
 	"github.com/oceanbase/obshell/seekdb/agent/engine/scheduler"
-	"github.com/oceanbase/obshell/seekdb/agent/meta"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 )
 
 func StartTaskEngine() {
 	startLocalTaskEngine()
-	go startClusterTaskEngine()
+	// SeekDB mode: all metadata lives in local SQLite, so only the local
+	// scheduler is needed.  Starting the cluster scheduler as well would
+	// cause two schedulers to compete on the same SQLite DAG table, leading
+	// to maintenance-state corruption (ocs_info.status never restored).
 }
 
 func startLocalTaskEngine() {
@@ -45,27 +44,3 @@ func startLocalTaskEngine() {
 	log.Info("local task engine started")
 }
 
-func startClusterTaskEngine() {
-	for !meta.OCS_AGENT.IsClusterAgent() {
-		time.Sleep(time.Second)
-	}
-
-	log.Info("cluster task engine starting ...")
-	for {
-		if db, _ := oceanbase.GetOcsInstance(); db != nil {
-			log.Info("start cluster task engine")
-			if scheduler.OCS_SCHEDULER == nil {
-				scheduler.OCS_SCHEDULER = scheduler.NewScheduler(false)
-				go scheduler.OCS_SCHEDULER.Start()
-			}
-
-			if executor.OCS_SYNCHRONIZER == nil {
-				executor.OCS_SYNCHRONIZER = executor.NewSynchronizer()
-				go executor.OCS_SYNCHRONIZER.Start()
-			}
-			break
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	log.Info("cluster task engine started")
-}

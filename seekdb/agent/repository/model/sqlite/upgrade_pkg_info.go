@@ -16,7 +16,11 @@
 
 package sqlite
 
-import "time"
+import (
+	"time"
+
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/bo"
+)
 
 type UpgradePkgInfo struct {
 	PkgId               int       `gorm:"primaryKey;autoIncrement;not null"`
@@ -31,4 +35,21 @@ type UpgradePkgInfo struct {
 	ChunkCount          int       `gorm:"not null"`
 	Md5                 string    `gorm:"type:varchar(128);not null"`
 	GmtModify           time.Time `gorm:"type:TIMESTAMP;default:CURRENT_TIMESTAMP"`
+}
+
+func (upgradePkgInfo *UpgradePkgInfo) ToBO() bo.UpgradePkgInfo {
+	return bo.UpgradePkgInfo{
+		PkgId:               upgradePkgInfo.PkgId,
+		Name:                upgradePkgInfo.Name,
+		Version:             upgradePkgInfo.Version,
+		ReleaseDistribution: upgradePkgInfo.ReleaseDistribution,
+		Distribution:        upgradePkgInfo.Distribution,
+		Release:             upgradePkgInfo.Release,
+		Architecture:        upgradePkgInfo.Architecture,
+		Size:                upgradePkgInfo.Size,
+		PayloadSize:         upgradePkgInfo.PayloadSize,
+		ChunkCount:          upgradePkgInfo.ChunkCount,
+		Md5:                 upgradePkgInfo.Md5,
+		GmtModify:           upgradePkgInfo.GmtModify,
+	}
 }

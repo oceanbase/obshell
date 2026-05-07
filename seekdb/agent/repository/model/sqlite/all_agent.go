@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-package oceanbase
+package sqlite
 
+// AllAgent mirrors oceanbase.AllAgent; persisted in obshell local SQLite only.
 type AllAgent struct {
 	Ip           string `gorm:"primaryKey;type:varchar(64);not null"`
-	Port         int    `gorm:"primaryKey;type:bigint(20);not null"`
+	Port         int    `gorm:"primaryKey;type:bigint;not null"`
 	Identity     string `gorm:"type:varchar(64);not null"`
 	Version      string `gorm:"type:varchar(64);not null"`
 	Os           string `gorm:"type:varchar(64);not null"`
 	Architecture string `gorm:"type:varchar(64);not null"`
-	MysqlPort    int    `gorm:"type:bigint(20)"`
+	MysqlPort    int    `gorm:"type:bigint"`
 	HomePath     string `gorm:"type:text"`
 	PublicKey    string `gorm:"type:text"`
 }

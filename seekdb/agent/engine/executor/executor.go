@@ -19,7 +19,6 @@ package executor
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"runtime"
 	"sync"
 	"time"
@@ -212,14 +211,6 @@ func (executor *Executor) startTask(subTask task.ExecutableTask) error {
 		startSucceed = true
 		return nil
 	}
-}
-
-func createRemoteTask(remoteTaskId int64, subTask task.ExecutableTask) *task.RemoteTask {
-	structName := reflect.TypeOf(subTask).Elem().Name()
-	return task.NewRemoteTask(structName, remoteTaskId, subTask.GetName(), subTask.GetContext(),
-		subTask.GetState(), subTask.GetOperator(), subTask.CanCancel(), subTask.CanContinue(), subTask.CanPass(),
-		subTask.CanRetry(), subTask.CanRollback(), subTask.GetExecuteTimes(), subTask.GetExecuteAgent(),
-		subTask.GetStartTime(), subTask.GetEndTime())
 }
 
 func (executor *Executor) finishTask() {

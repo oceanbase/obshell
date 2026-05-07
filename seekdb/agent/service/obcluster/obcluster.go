@@ -28,7 +28,9 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
+	sqlitedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/sqlite"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
 func (obclusterService *ObclusterService) ExecuteSql(sql string) (err error) {
@@ -61,43 +63,43 @@ func (obclusterService *ObclusterService) MinorFreeze() (err error) {
 	return db.Exec("alter system minor freeze").Error
 }
 
-func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndReleaseDist(name, version, releaseDist, arch string) (pkgInfo oceanbase.UpgradePkgInfo, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndReleaseDist(name, version, releaseDist, arch string) (pkgInfo sqlite.UpgradePkgInfo, err error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return
 	}
-	err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Where("name = ? and version = ? and release_distribution = ? and architecture = ? ", name, version, releaseDist, arch).Last(&pkgInfo).Error
+	err = db.Model(&sqlite.UpgradePkgInfo{}).Where("name = ? and version = ? and release_distribution = ? and architecture = ? ", name, version, releaseDist, arch).Last(&pkgInfo).Error
 	return
 }
 
-func (ObclusterService *ObclusterService) GetAllUpgradePkgInfos() (pkgInfos []oceanbase.UpgradePkgInfo, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+func (ObclusterService *ObclusterService) GetAllUpgradePkgInfos() (pkgInfos []sqlite.UpgradePkgInfo, err error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Find(&pkgInfos).Error
+	err = db.Model(&sqlite.UpgradePkgInfo{}).Find(&pkgInfos).Error
 	return
 }
 
-func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersion(name, version, arch, distribution string, deprecatedInfo []string) (pkgInfo oceanbase.UpgradePkgInfo, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersion(name, version, arch, distribution string, deprecatedInfo []string) (pkgInfo sqlite.UpgradePkgInfo, err error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return
 	}
 	if len(deprecatedInfo) == 0 {
-		err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? ", name, version, arch, distribution).Last(&pkgInfo).Error
+		err = db.Model(&sqlite.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? ", name, version, arch, distribution).Last(&pkgInfo).Error
 	} else {
-		err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? and `release` not in ?", name, version, distribution, arch, deprecatedInfo).Last(&pkgInfo).Error
+		err = db.Model(&sqlite.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? and `release` not in ?", name, version, distribution, arch, deprecatedInfo).Last(&pkgInfo).Error
 	}
 	return
 }
 
-func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndRelease(name, version, release, distribution, arch string) (pkgInfo oceanbase.UpgradePkgInfo, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+func (obclusterService *ObclusterService) GetUpgradePkgInfoByVersionAndRelease(name, version, release, distribution, arch string) (pkgInfo sqlite.UpgradePkgInfo, err error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return
 	}
-	err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? and `release` = ?", name, version, distribution, arch, release).Last(&pkgInfo).Error
+	err = db.Model(&sqlite.UpgradePkgInfo{}).Where("name = ? and version = ? and distribution = ? and architecture = ? and `release` = ?", name, version, distribution, arch, release).Last(&pkgInfo).Error
 	return
 }
 
@@ -146,33 +148,31 @@ func (obclusterService *ObclusterService) DownloadUpgradePkgChunkInBatch(filepat
 	return nil
 }
 
-func (obclusterService *ObclusterService) GetUpgradePkgChunkByPkgIdAndChunkId(pkgId, chunkId int) (chunk oceanbase.UpgradePkgChunk, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+func (obclusterService *ObclusterService) GetUpgradePkgChunkByPkgIdAndChunkId(pkgId, chunkId int) (chunk sqlite.UpgradePkgChunk, err error) {
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return chunk, err
 	}
-	oceanbaseDb.Exec("SET SESSION ob_query_timeout=1000000000") // Ignore the error because it is not non-essential.
-	oceanbaseDb.Exec("SET SESSION ob_trx_timeout=1000000000")
-	err = oceanbaseDb.Model(&oceanbase.UpgradePkgChunk{}).Where("pkg_id = ? and chunk_id = ?", pkgId, chunkId).First(&chunk).Error
+	err = db.Model(&sqlite.UpgradePkgChunk{}).Where("pkg_id = ? and chunk_id = ?", pkgId, chunkId).First(&chunk).Error
 	return
 }
 
 func (obclusterService *ObclusterService) GetUpgradePkgChunkCountByPkgId(pkgId int) (count int64, err error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return 0, err
 	}
-	err = oceanbaseDb.Model(&oceanbase.UpgradePkgChunk{}).Where("pkg_id = ?", pkgId).Count(&count).Error
+	err = db.Model(&sqlite.UpgradePkgChunk{}).Where("pkg_id = ?", pkgId).Count(&count).Error
 	return
 }
 
-func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *rpm.Package, file multipart.File) (pkgInfo *oceanbase.UpgradePkgInfo, err error) {
+func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *rpm.Package, file multipart.File) (pkgInfo *sqlite.UpgradePkgInfo, err error) {
 	payloadSize := uint64(rpmPkg.Signature.GetTag(1000).Int64())
 	chunkCount := payloadSize / constant.CHUNK_SIZE
 	if payloadSize%constant.CHUNK_SIZE != 0 {
 		chunkCount++
 	}
-	pkgInfo = &oceanbase.UpgradePkgInfo{
+	pkgInfo = &sqlite.UpgradePkgInfo{
 		Name:                rpmPkg.Name(),
 		Version:             rpmPkg.Version(),
 		ReleaseDistribution: rpmPkg.Release(),
@@ -185,14 +185,12 @@ func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *r
 		Md5:                 hex.EncodeToString(rpmPkg.Signature.Tags[1004].Bytes()),
 	}
 
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Transaction(func(tx *gorm.DB) error {
-		tx.Exec("SET SESSION ob_query_timeout=1000000000") // Ignore the error because it is not non-essential.
-		tx.Exec("SET SESSION ob_trx_timeout=1000000000")
-		if err := tx.Model(&oceanbase.UpgradePkgInfo{}).Create(&pkgInfo).Error; err != nil {
+	err = sqliteDb.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&sqlite.UpgradePkgInfo{}).Create(&pkgInfo).Error; err != nil {
 			return err
 		}
 		chunkBuffer := make([]byte, constant.CHUNK_SIZE)
@@ -205,12 +203,12 @@ func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *r
 			if err != nil {
 				return err
 			}
-			record := &oceanbase.UpgradePkgChunk{
+			record := &sqlite.UpgradePkgChunk{
 				PkgId:      pkgInfo.PkgId,
 				ChunkId:    i,
 				ChunkCount: pkgInfo.ChunkCount,
 				Chunk:      chunkBuffer[:n]}
-			if err = tx.Model(&oceanbase.UpgradePkgChunk{}).Create(record).Error; err != nil {
+			if err = tx.Model(&sqlite.UpgradePkgChunk{}).Create(record).Error; err != nil {
 				return err
 			}
 		}
@@ -220,25 +218,24 @@ func (obclusterService *ObclusterService) DumpUpgradePkgInfoAndChunkTx(rpmPkg *r
 }
 
 func (obclusterService *ObclusterService) DeleteUpgradePkgInfoAndChunkTx(name, version, releaseDist, arch string) error {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
 	}
-	return oceanbaseDb.Transaction(func(tx *gorm.DB) error {
-		// get pkg id
+	return sqliteDb.Transaction(func(tx *gorm.DB) error {
 		var pkgId int
-		err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Select("pkg_id").Where("name = ? and version = ? and release_distribution = ? and architecture = ?", name, version, releaseDist, arch).Scan(&pkgId).Error
+		err = tx.Model(&sqlite.UpgradePkgInfo{}).Select("pkg_id").Where("name = ? and version = ? and release_distribution = ? and architecture = ?", name, version, releaseDist, arch).Scan(&pkgId).Error
 		if err != nil {
 			return err
 		}
 		if pkgId == 0 {
 			return nil
 		}
-		err = oceanbaseDb.Model(&oceanbase.UpgradePkgInfo{}).Where("name = ? and version = ? and release_distribution = ? and architecture = ?", name, version, releaseDist, arch).Delete(&oceanbase.UpgradePkgInfo{}).Error
+		err = tx.Model(&sqlite.UpgradePkgInfo{}).Where("name = ? and version = ? and release_distribution = ? and architecture = ?", name, version, releaseDist, arch).Delete(&sqlite.UpgradePkgInfo{}).Error
 		if err != nil {
 			return err
 		}
-		err = oceanbaseDb.Model(&oceanbase.UpgradePkgChunk{}).Where("pkg_id = ?", pkgId).Delete(&oceanbase.UpgradePkgChunk{}).Error
+		err = tx.Model(&sqlite.UpgradePkgChunk{}).Where("pkg_id = ?", pkgId).Delete(&sqlite.UpgradePkgChunk{}).Error
 		if err != nil {
 			return err
 		}

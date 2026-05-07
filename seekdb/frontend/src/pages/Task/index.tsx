@@ -19,7 +19,7 @@ import MyInput from '@/component/MyInput';
 import { TASK_STATUS_LIST } from '@/constant/task';
 import useDocumentTitle from '@/hook/useDocumentTitle';
 import { useQueryParams } from '@/hook/useQueryParams';
-import { getAllAgentDags, getAllClusterDags } from '@/service/obshell/task';
+import { getAllAgentDags } from '@/service/obshell/task';
 import { formatTime } from '@/util/datetime';
 import { formatMessage } from '@/util/intl';
 import { getTaskProgress } from '@/util/task';
@@ -59,35 +59,15 @@ const Task: React.FC<TaskProps> = ({ mode = 'page', type, name }) => {
 
   const { data, loading, refresh } = useRequest(
     () =>
-      getAllClusterDags(
-        {
-          show_details: false,
-        },
-        {
-          HIDE_ERROR_MESSAGE: true,
-        }
-      ),
-
-    {}
-  );
-  const {
-    data: agentDagsRes,
-    loading: agentDagsLoading,
-    refresh: refreshAgentDags,
-  } = useRequest(
-    () =>
       getAllAgentDags({
         show_details: false,
       }),
     {}
   );
 
-  const clusterTasks = data?.data?.contents || [];
-  const agentTasks = agentDagsRes?.data?.contents || [];
+  const realLoading = loading;
 
-  const realLoading = loading || agentDagsLoading;
-
-  const sortTaskList = [...clusterTasks, ...agentTasks].sort((a, b) =>
+  const sortTaskList = (data?.data?.contents || []).slice().sort((a, b) =>
     // 最近开始的任务排在前面
     sortByMoment(b, a, 'start_time')
   );
@@ -109,7 +89,6 @@ const Task: React.FC<TaskProps> = ({ mode = 'page', type, name }) => {
   useInterval(
     () => {
       refresh();
-      refreshAgentDags();
     },
     polling ? 1000 : undefined
   );
@@ -267,7 +246,6 @@ const Task: React.FC<TaskProps> = ({ mode = 'page', type, name }) => {
             })}
             onClick={() => {
               refresh();
-              refreshAgentDags();
             }}
           />
         ),

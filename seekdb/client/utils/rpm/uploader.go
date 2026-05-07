@@ -22,12 +22,12 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/http"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 	"github.com/oceanbase/obshell/seekdb/client/lib/stdio"
 )
 
 func CallUploadPkgAndPrint(pkgDir, fileName string) (err error) {
-	var ret oceanbase.UpgradePkgInfo
+	var ret sqlite.UpgradePkgInfo
 	filePath := filepath.Join(pkgDir, fileName)
 
 	stdio.StartLoadingf("Uploading package %s", fileName)

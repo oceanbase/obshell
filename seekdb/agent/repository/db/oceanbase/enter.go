@@ -36,7 +36,6 @@ var (
 	currentConfig *config.ObDataSourceConfig
 	isOcs         bool
 	initOnce      sync.Once
-	migrateOnce   sync.Once
 
 	lastInitError          error
 	hasAttemptedConnection bool

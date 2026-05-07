@@ -80,7 +80,7 @@ func (t *TenantService) LockUser(userName string) error {
 }
 
 func (t *TenantService) GetUserSessionStats(userName string) ([]oceanbase.SessionStats, error) {
-	oceanbaseDb, err := oceanbasedb.GetOcsInstance()
+	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/pkg"
-	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
 const (
@@ -49,7 +49,7 @@ type upgradeRpmPkgInfo struct {
 	distribution string
 }
 
-func UpgradePkgUpload(input multipart.File) (*oceanbase.UpgradePkgInfo, error) {
+func UpgradePkgUpload(input multipart.File) (*sqlite.UpgradePkgInfo, error) {
 	r := &upgradeRpmPkgInfo{
 		rpmFile: input,
 	}
