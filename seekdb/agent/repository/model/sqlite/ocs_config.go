@@ -19,7 +19,7 @@ package sqlite
 import "time"
 
 type OcsConfig struct {
-	Name      string    `gorm:"type:varchar(128);not null;unique"`
+	Name      string    `gorm:"primaryKey;type:varchar(128);not null"`
 	Value     string    `gorm:"type:varchar(65536);not null"`
 	GmtModify time.Time `gorm:"autoUpdateTime"`
 	Info      string
