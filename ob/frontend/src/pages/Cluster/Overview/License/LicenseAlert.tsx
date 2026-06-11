@@ -35,13 +35,13 @@ const LicenseAlert: React.FC<LicenseAlertProps> = ({ clusterData }) => {
           ? formatMessage({
               id: 'OBShell.Overview.License.LicenseAlert.OceanbaseTheStandAloneTrial',
               defaultMessage:
-                'OceanBase 单机版试用 License 已过期，请申请正式 License 并正确配置。',
+                'OceanBase 集中式试用 License 已过期，请申请正式 License 并正确配置。',
             })
           : formatMessage(
               {
                 id: 'OBShell.Overview.License.LicenseAlert.OceanbaseTheStandAloneTrial.1',
                 defaultMessage:
-                  'OceanBase 单机版试用 License 即将于 {expiredTime} 过期，请申请正式 License 并正确配置。',
+                  'OceanBase 集中式试用 License 即将于 {expiredTime} 过期，请申请正式 License 并正确配置。',
               },
               { expiredTime: expiredTime }
             )
