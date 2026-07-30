@@ -290,14 +290,14 @@ const Detail: React.FC = () => {
       (resourcePool.unitConfig?.cpuCore !==
         currentModifyTenantZone?.resourcePool?.unitConfig?.max_cpu ||
         resourcePool.unitConfig?.memorySize !== maxMemorySizeGB ||
-        resourcePool.unitConfig?.dataDiskSize !== maxDataDiskSizeGB)
+        (isSharedStorage && resourcePool.unitConfig?.dataDiskSize !== maxDataDiskSizeGB))
     ) {
       unitName = `tenant_unit_${Date.now()}_${uniqueId()}`;
       const res = await unitConfigCreateFn({
         name: unitName,
         max_cpu: Number(resourcePool.unitConfig?.cpuCore),
         memory_size: `${resourcePool.unitConfig?.memorySize}GB`,
-        data_disk_size: `${resourcePool.unitConfig?.dataDiskSize}GB`,
+        data_disk_size: isSharedStorage ? `${resourcePool.unitConfig?.dataDiskSize}GB` : undefined,
       });
       if (!res.successful) {
         return;
