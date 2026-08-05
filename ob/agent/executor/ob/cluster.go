@@ -19,6 +19,7 @@ package ob
 import (
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	log "github.com/sirupsen/logrus"
 
@@ -115,7 +116,9 @@ func GetObclusterSummary() (*bo.ClusterInfo, error) {
 	buildZonesIntoInfo(&info, zones, allAgentsBo, rootServers, serverResourceMap, taskIdMap, mainDagTaskInfo, fromLocal)
 
 	if !fromLocal {
-		_ = calculateTenantStats(&info)
+		if err := calculateTenantStats(&info); err != nil {
+			log.Warnf("Failed to calculate tenant stats: %v", err)
+		}
 		_ = buildLicenseInfo(&info)
 
 		if isSharedStorage {
@@ -533,8 +536,9 @@ func calculateClusterStats(info *bo.ClusterInfo) error {
 	return nil
 }
 
-// mergeTenantSysStats merges USER + META tenant stats for shared storage display
-func mergeTenantSysStats(m map[int]map[int64]modeloceanbase.SysStat, displayTenantId int, isSharedStorage bool) map[int64]modeloceanbase.SysStat {
+// mergeTenantSysStats merges USER + META tenant stats for display.
+// OB 4.4+ splits USER tenant resources into META (tenant_id - 1) and USER tenants.
+func mergeTenantSysStats(m map[int]map[int64]modeloceanbase.SysStat, displayTenantId int) map[int64]modeloceanbase.SysStat {
 	out := make(map[int64]modeloceanbase.SysStat)
 	add := func(tenantId int) {
 		for statId, s := range m[tenantId] {
@@ -543,10 +547,43 @@ func mergeTenantSysStats(m map[int]map[int64]modeloceanbase.SysStat, displayTena
 		}
 	}
 	add(displayTenantId)
-	if isSharedStorage && displayTenantId > 1 {
+	if displayTenantId > 1 {
 		add(displayTenantId - 1)
 	}
 	return out
+}
+
+// poolUnitCount returns the number of units in a resource pool.
+// Prefer actual unit placements from ServerList; fall back to UnitNum.
+func poolUnitCount(pool *bo.ResourcePoolWithUnit) int {
+	if pool.ServerList != "" {
+		count := 0
+		for _, server := range strings.Split(pool.ServerList, ",") {
+			if strings.TrimSpace(server) != "" {
+				count++
+			}
+		}
+		if count > 0 {
+			return count
+		}
+	}
+	if pool.UnitNum > 0 {
+		return pool.UnitNum
+	}
+	return 1
+}
+
+// tenantResourceTotalsFromPools aggregates CPU and memory totals from tenant pool unit configs.
+func tenantResourceTotalsFromPools(tenant bo.TenantInfo) (cpuTotal float64, memoryTotal int64) {
+	for _, pool := range tenant.Pools {
+		if pool == nil || pool.Unit == nil {
+			continue
+		}
+		unitCount := poolUnitCount(pool)
+		cpuTotal += pool.Unit.MaxCpu * float64(unitCount)
+		memoryTotal += pool.Unit.MemorySize * int64(unitCount)
+	}
+	return cpuTotal, memoryTotal
 }
 
 // calculateTenantStats calculates and sets the tenant resource statistics
@@ -569,15 +606,25 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 		}
 	}
 
+	if len(info.Tenants) == 0 {
+		return nil
+	}
+
+	cpuMap, memoryMap, err := obclusterService.GetSharedStorageTenantCpuMemoryStats()
+	useGvUnitTotals := err == nil
+	if err != nil {
+		log.Warnf("Failed to get tenant CPU/memory stats from GV$OB_UNITS, falling back to unit config from tenant info: %v", err)
+	}
+
 	// Optimization: Batch get all tenant sys stats in one query instead of multiple separate queries
-	if len(info.Tenants) > 0 {
+	{
 		tenantIds := make([]int, 0, len(info.Tenants)*2)
 		tenantIdSet := make(map[int]struct{})
 		for _, tenant := range info.Tenants {
 			tenantIds = append(tenantIds, tenant.Id)
 			tenantIdSet[tenant.Id] = struct{}{}
-			// Shared storage: USER tenant includes META (tenant_id - 1)
-			if info.IsSharedStorage && tenant.Id > 1 {
+			// USER tenant usage includes META (tenant_id - 1) on OB 4.4+
+			if tenant.Id > 1 {
 				metaId := tenant.Id - 1
 				if _, ok := tenantIdSet[metaId]; !ok {
 					tenantIds = append(tenantIds, metaId)
@@ -586,14 +633,19 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 			}
 		}
 
-		statIds := []int{SYS_STAT_CPU_USAGE_STAT_ID, SYS_STAT_MEMORY_USAGE_STAT_ID, SYS_STAT_MAX_CPU_STAT_ID, SYS_STAT_MEMORY_SIZE_STAT_ID}
+		statIds := []int{
+			SYS_STAT_CPU_USAGE_STAT_ID,
+			SYS_STAT_MEMORY_USAGE_STAT_ID,
+			SYS_STAT_MAX_CPU_STAT_ID,
+			SYS_STAT_MEMORY_SIZE_STAT_ID,
+		}
 		tenantStatsMap, err := obclusterService.GetTenantsMutilSysStatBatch(tenantIds, statIds)
 		if err != nil {
 			return err
 		}
 
 		for _, tenant := range info.Tenants {
-			tenantSysStatsMap := mergeTenantSysStats(tenantStatsMap, tenant.Id, info.IsSharedStorage)
+			tenantSysStatsMap := mergeTenantSysStats(tenantStatsMap, tenant.Id)
 
 			var tenantResourceStat bo.TenantResourceStat
 			tenantResourceStat.TenantId = tenant.Id
@@ -602,16 +654,31 @@ func calculateTenantStats(info *bo.ClusterInfo) error {
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_CPU_USAGE_STAT_ID]; ok {
 				cpuUsage = float64(sysStat.Value)
 			}
+			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MAX_CPU_STAT_ID]; ok {
+				maxCpu = float64(sysStat.Value)
+			}
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_USAGE_STAT_ID]; ok {
 				memoryUsage = float64(sysStat.Value)
 			}
-			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MAX_CPU_STAT_ID]; ok {
-				maxCpu = float64(sysStat.Value)
-				tenantResourceStat.CpuCoreTotal = maxCpu / 100
-			}
 			if sysStat, ok := tenantSysStatsMap[SYS_STAT_MEMORY_SIZE_STAT_ID]; ok {
 				memorySize = float64(sysStat.Value)
-				tenantResourceStat.MemoryInBytesTotal = sysStat.Value
+			}
+			if useGvUnitTotals {
+				if cpuTotal, ok := cpuMap[tenant.Id]; ok && cpuTotal > 0 {
+					tenantResourceStat.CpuCoreTotal = cpuTotal
+				}
+				if memoryTotal, ok := memoryMap[tenant.Id]; ok && memoryTotal > 0 {
+					tenantResourceStat.MemoryInBytesTotal = memoryTotal
+				}
+			}
+			if tenantResourceStat.CpuCoreTotal == 0 || tenantResourceStat.MemoryInBytesTotal == 0 {
+				poolCpuTotal, poolMemoryTotal := tenantResourceTotalsFromPools(tenant)
+				if tenantResourceStat.CpuCoreTotal == 0 && poolCpuTotal > 0 {
+					tenantResourceStat.CpuCoreTotal = poolCpuTotal
+				}
+				if tenantResourceStat.MemoryInBytesTotal == 0 && poolMemoryTotal > 0 {
+					tenantResourceStat.MemoryInBytesTotal = poolMemoryTotal
+				}
 			}
 			if maxCpu > 0 {
 				tenantResourceStat.CpuUsedPercent = cpuUsage / maxCpu * 100
