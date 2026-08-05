@@ -47,6 +47,10 @@ func GetTenantSessions(tenantName string, p *param.QueryTenantSessionParam) (*bo
 		p.SortOrder = "ASC"
 	}
 
+	total, err := tenantService.CountSessions(tenantName, p)
+	if err != nil {
+		return nil, err
+	}
 	sessions, err := tenantService.GetSessions(tenantName, p)
 	if err != nil {
 		return nil, err
@@ -60,8 +64,8 @@ func GetTenantSessions(tenantName string, p *param.QueryTenantSessionParam) (*bo
 		Page: bo.CustomPage{
 			Number:        p.Page,
 			Size:          p.Size,
-			TotalPages:    common.CalculateTotalPages(uint64(len(sessions)), p.Size),
-			TotalElements: uint64(len(sessions)),
+			TotalPages:    common.CalculateTotalPages(uint64(total), p.Size),
+			TotalElements: uint64(total),
 		},
 	}, nil
 }

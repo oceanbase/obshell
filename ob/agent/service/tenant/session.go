@@ -23,9 +23,10 @@ import (
 	oceanbasedb "github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/ob/param"
+	"gorm.io/gorm"
 )
 
-func (s *TenantService) GetSessions(tenantName string, p *param.QueryTenantSessionParam) (sessions []oceanbase.TenantSession, err error) {
+func (s *TenantService) buildSessionQuery(tenantName string, p *param.QueryTenantSessionParam) (*gorm.DB, error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
@@ -57,12 +58,29 @@ func (s *TenantService) GetSessions(tenantName string, p *param.QueryTenantSessi
 	if p.ActiveOnly {
 		query = query.Where("STATE = 'ACTIVE'")
 	}
+	return query, nil
+}
+
+func (s *TenantService) CountSessions(tenantName string, p *param.QueryTenantSessionParam) (int64, error) {
+	query, err := s.buildSessionQuery(tenantName, p)
+	if err != nil {
+		return 0, err
+	}
+	var count int64
+	err = query.Count(&count).Error
+	return count, err
+}
+
+func (s *TenantService) GetSessions(tenantName string, p *param.QueryTenantSessionParam) (sessions []oceanbase.TenantSession, err error) {
+	query, err := s.buildSessionQuery(tenantName, p)
+	if err != nil {
+		return nil, err
+	}
 	if p.SortBy != "" && p.SortOrder != "" {
 		query = query.Order(fmt.Sprintf("%s %s", p.SortBy, p.SortOrder))
 	}
 	offset := (p.Page - 1) * p.Size
-	query = query.Offset(int(offset)).Limit(int(p.Size))
-	err = query.Find(&sessions).Error
+	err = query.Offset(int(offset)).Limit(int(p.Size)).Find(&sessions).Error
 	if err != nil {
 		return nil, err
 	}
