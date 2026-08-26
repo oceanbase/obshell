@@ -34,6 +34,7 @@ func RegisterTasks() {
 	task.RegisterTaskType(SwitchoverSetLogRestoreSrcTask{})
 	task.RegisterTaskType(SwitchoverPrimaryToStandbyTask{})
 	task.RegisterTaskType(SwitchoverStandbyToPrimaryTask{})
+	task.RegisterTaskType(SwitchoverFinalizeOldPrimaryTask{})
 	task.RegisterTaskType(SwitchoverPostCheckTask{})
 	task.RegisterTaskType(ActivatePreCheckTask{})
 	task.RegisterTaskType(ActivateNodeTask{})

@@ -24,9 +24,9 @@ const (
 
 	DBA_OB_SYS_VARIABLES = "oceanbase.DBA_OB_SYS_VARIABLES"
 
-	GV_OB_PARAMETERS   = "oceanbase.GV$OB_PARAMETERS"
-	V_OB_SERVER_STAT   = "oceanbase.V$OB_SERVER_STAT"
-	GV_OB_SESSION      = "oceanbase.GV$OB_SESSION"
+	V_OB_PARAMETERS  = "oceanbase.V$OB_PARAMETERS"
+	V_OB_SERVER_STAT = "oceanbase.V$OB_SERVER_STAT"
+	V_OB_SESSION     = "oceanbase.V$OB_SESSION"
 
 	MYSQL_TIME_ZONE = "mysql.time_zone"
 	MYSQL_DB        = "mysql.db"

@@ -22,7 +22,7 @@ type ObclusterService struct{}
 const (
 	ob_parameters_view = "oceanbase.V$OB_PARAMETERS"
 
-	COLLATIONS         = "information_schema.collations"
-	V_OB_SERVER_STAT   = "oceanbase.V$OB_SERVER_STAT"
-	GV_OB_PARAMETERS   = "oceanbase.GV$OB_PARAMETERS"
+	COLLATIONS       = "information_schema.collations"
+	V_OB_SERVER_STAT = "oceanbase.V$OB_SERVER_STAT"
+	V_OB_PARAMETERS  = "oceanbase.V$OB_PARAMETERS"
 )

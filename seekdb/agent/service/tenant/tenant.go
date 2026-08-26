@@ -80,7 +80,7 @@ func (t *TenantService) GetParameters(filter string) (parameters []oceanbase.GvO
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(GV_OB_PARAMETERS).
+	err = db.Table(V_OB_PARAMETERS).
 		Select("DISTINCT NAME, VALUE, DATA_TYPE, INFO, EDIT_LEVEL").
 		Where("NAME LIKE ?", filter).
 		Scan(&parameters).Error
@@ -92,12 +92,14 @@ func (t *TenantService) GetParameter(parameterName string) (parameter *oceanbase
 	if err != nil {
 		return nil, err
 	}
-	err = db.Table(GV_OB_PARAMETERS).Select("DISTINCT NAME, VALUE, DATA_TYPE, INFO, EDIT_LEVEL").
+	err = db.Table(V_OB_PARAMETERS).Select("DISTINCT NAME, VALUE, DATA_TYPE, INFO, EDIT_LEVEL").
 		Where("NAME = ?", parameterName).
 		Scan(&parameter).Error
 	// retry for bad case for virtual table
 	if parameter == nil && err == nil {
-		err = db.Table(GV_OB_PARAMETERS).Where("NAME = ?", parameterName).Scan(&parameter).Error
+		err = db.Table(V_OB_PARAMETERS).Select("DISTINCT NAME, VALUE, DATA_TYPE, INFO, EDIT_LEVEL").
+			Where("NAME = ?", parameterName).
+			Scan(&parameter).Error
 	}
 	return
 }
@@ -140,12 +142,12 @@ func (t *TenantService) GetTenantVariable(variableName string) (variable *oceanb
 	return
 }
 
-func (s *TenantService) GetCompaction() (compaction *oceanbase.CdbObMajorCompaction, err error) {
+func (s *TenantService) GetCompaction() (compaction *oceanbase.DbaObMajorCompaction, err error) {
 	oceanbaseDb, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Model(oceanbase.CdbObMajorCompaction{}).Scan(&compaction).Error
+	err = oceanbaseDb.Model(oceanbase.DbaObMajorCompaction{}).Scan(&compaction).Error
 	return
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/engine/task"
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
+	"github.com/oceanbase/obshell/seekdb/agent/executor/observer"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 	"github.com/oceanbase/obshell/seekdb/param"
 )
@@ -50,6 +51,10 @@ func CheckSwitchoverPreConditions(peerHost string, peerObshellPort int, delayThr
 	if localStatus.Role != "PRIMARY" {
 		return errors.Occur(errors.ErrStandbySwitchoverLocalNotPrimary, localStatus.Role)
 	}
+	if localStatus.PendingRole != "INVALID" || localStatus.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("local role transition is not stable: role=%s pending_role=%s switchover_status=%s",
+			localStatus.Role, localStatus.PendingRole, localStatus.SwitchoverStatus)
+	}
 
 	var peerResp param.StandbyStatusResp
 	if err := callPeerRpcStandbyStatus(peerHost, peerObshellPort, &peerResp); err != nil {
@@ -57,6 +62,10 @@ func CheckSwitchoverPreConditions(peerHost string, peerObshellPort int, delayThr
 	}
 	if peerResp.Local.Role != "STANDBY" {
 		return errors.Occur(errors.ErrStandbySwitchoverPeerNotStandby, peerResp.Local.Role)
+	}
+	if peerResp.Local.PendingRole != "INVALID" || peerResp.Local.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("peer role transition is not stable: role=%s pending_role=%s switchover_status=%s",
+			peerResp.Local.Role, peerResp.Local.PendingRole, peerResp.Local.SwitchoverStatus)
 	}
 
 	if localStatus.SyncScn > peerResp.Local.SyncScn {
@@ -71,7 +80,8 @@ func CheckSwitchoverPreConditions(peerHost string, peerObshellPort int, delayThr
 }
 
 // CreateSwitchoverDag builds and enqueues a Switchover DAG.
-// Flow: PreCheck → SetLogRestoreSource → PrimaryToStandby → StandbyToPrimary → PostCheck
+// Flow: PreCheck → SetLogRestoreSource → PrepareOldPrimary → PromoteNewPrimary
+// → RestartOldPrimary → FinalizeOldPrimary → PostCheck
 func CreateSwitchoverDag(p param.SwitchoverParam) (*task.DagDetailDTO, error) {
 	_, err := standbyService.GetPeerByAddr(p.PeerHost, p.PeerObshellPort)
 	if err != nil {
@@ -83,20 +93,25 @@ func CreateSwitchoverDag(p param.SwitchoverParam) (*task.DagDetailDTO, error) {
 		delayThreshold = constant.DefaultSwitchoverDelayThresholdSeconds
 	}
 
-	builder := task.NewTemplateBuilder(constant.DAG_SWITCHOVER)
-	builder.
-		AddTask(newSwitchoverPreCheckTask(), false).
-		AddTask(newSwitchoverSetLogRestoreSrcTask(), false).
-		AddTask(newSwitchoverPrimaryToStandbyTask(), false).
-		AddTask(newSwitchoverStandbyToPrimaryTask(), false).
-		AddTask(newSwitchoverPostCheckTask(), false).
-		SetMaintenance(task.GlobalMaintenance())
-
 	ctx := task.NewTaskContext().
 		SetParam(constant.PARAM_STANDBY_PEER_HOST, p.PeerHost).
 		SetParam(constant.PARAM_STANDBY_PEER_OBSHELL_PORT, p.PeerObshellPort).
 		SetParam(constant.PARAM_SWITCHOVER_DELAY_THRESHOLD, delayThreshold).
 		SetParam(task.FAILURE_EXIT_MAINTENANCE, true)
+
+	builder := task.NewTemplateBuilder(constant.DAG_SWITCHOVER)
+	builder.
+		AddTask(newSwitchoverPreCheckTask(), false).
+		AddTask(newSwitchoverSetLogRestoreSrcTask(), false).
+		AddTask(newSwitchoverPrimaryToStandbyTask(), false).
+		AddTask(newSwitchoverStandbyToPrimaryTask(), false)
+	if err := observer.AppendRestartTasks(builder, ctx); err != nil {
+		return nil, err
+	}
+	builder.
+		AddTask(newSwitchoverFinalizeOldPrimaryTask(), false).
+		AddTask(newSwitchoverPostCheckTask(), false).
+		SetMaintenance(task.GlobalMaintenance())
 
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), ctx)
 	if err != nil {
@@ -179,8 +194,9 @@ func (t *SwitchoverSetLogRestoreSrcTask) Execute() error {
 	return standbyService.SetLogRestoreSource(peerHost, peer.PeerRpcPort)
 }
 
-// SwitchoverPrimaryToStandbyTask executes ALTER SYSTEM SWITCHOVER TO STANDBY on
-// the current primary and flips the peer direction metadata from DOWNSTREAM → UPSTREAM.
+// SwitchoverPrimaryToStandbyTask prepares the current primary for a restart as
+// STANDBY. New SeekDB keeps the active role PRIMARY, fences writes, and persists
+// pending_role=STANDBY until the process restarts.
 type SwitchoverPrimaryToStandbyTask struct {
 	task.Task
 }
@@ -208,9 +224,16 @@ func (t *SwitchoverPrimaryToStandbyTask) Execute() error {
 		return err
 	}
 
-	// Flip local peer record direction: DOWNSTREAM → UPSTREAM (we now replicate from the new primary).
-	t.ExecuteLogf("Flipping peer %s:%d direction to UPSTREAM", peerHost, peerObshellPort)
-	return standbyService.FlipDirection(peerHost, peerObshellPort, constant.STANDBY_DIRECTION_UPSTREAM)
+	status, err := standbyService.GetLocalStatus()
+	if err != nil {
+		return fmt.Errorf("failed to query prepared old primary: %w", err)
+	}
+	if status.Role != "PRIMARY" || status.PendingRole != "STANDBY" || status.SwitchoverStatus != "PREPARING" {
+		return fmt.Errorf("old primary was not prepared for restart: role=%s pending_role=%s switchover_status=%s",
+			status.Role, status.PendingRole, status.SwitchoverStatus)
+	}
+	t.ExecuteLog("Old primary is fenced with pending_role=STANDBY and ready for restart")
+	return nil
 }
 
 // SwitchoverStandbyToPrimaryTask calls the internal RPC on the peer standby to
@@ -286,26 +309,32 @@ func (t *SwitchoverPostCheckTask) Execute() error {
 	if localStatus.Role != "STANDBY" {
 		return fmt.Errorf("postcheck: local role is %s, expected STANDBY after switchover; OB-level switchover may have failed", localStatus.Role)
 	}
+	if localStatus.PendingRole != "INVALID" || localStatus.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("postcheck: local role transition is not stable: pending_role=%s switchover_status=%s",
+			localStatus.PendingRole, localStatus.SwitchoverStatus)
+	}
 
 	// Check peer role is now PRIMARY.
 	t.ExecuteLogf("Verifying peer %s:%d role is now PRIMARY", peerHost, peerObshellPort)
 	peerStatus, err := callPeerGetStatus(peerHost, peerObshellPort)
 	if err != nil {
-		t.ExecuteLogf("Warning: failed to query peer status: %v", err)
-		return nil
+		return fmt.Errorf("postcheck: failed to query peer status: %w", err)
 	}
 	if peerStatus.Local.Role != "PRIMARY" {
-		t.ExecuteLogf("Warning: peer role is %s, expected PRIMARY after switchover", peerStatus.Local.Role)
+		return fmt.Errorf("postcheck: peer role is %s, expected PRIMARY after switchover", peerStatus.Local.Role)
+	}
+	if peerStatus.Local.PendingRole != "INVALID" || peerStatus.Local.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("postcheck: peer role transition is not stable: pending_role=%s switchover_status=%s",
+			peerStatus.Local.PendingRole, peerStatus.Local.SwitchoverStatus)
 	}
 
 	// Check local peer direction has been flipped to UPSTREAM.
 	peer, err := standbyService.GetPeerByAddr(peerHost, peerObshellPort)
 	if err != nil {
-		t.ExecuteLogf("Warning: failed to query local peer record: %v", err)
-		return nil
+		return fmt.Errorf("postcheck: failed to query local peer record: %w", err)
 	}
 	if peer.Direction != constant.STANDBY_DIRECTION_UPSTREAM {
-		t.ExecuteLogf("Warning: local peer direction is %s, expected UPSTREAM after switchover", peer.Direction)
+		return fmt.Errorf("postcheck: local peer direction is %s, expected UPSTREAM after switchover", peer.Direction)
 	}
 
 	// Check peer's direction for our address has been flipped to DOWNSTREAM.
@@ -318,13 +347,13 @@ func (t *SwitchoverPostCheckTask) Execute() error {
 			if remotePeer.Direction == constant.STANDBY_DIRECTION_DOWNSTREAM {
 				peerDirectionOk = true
 			} else {
-				t.ExecuteLogf("Warning: peer's direction for us is %s, expected DOWNSTREAM after switchover", remotePeer.Direction)
+				return fmt.Errorf("postcheck: peer's direction for us is %s, expected DOWNSTREAM after switchover", remotePeer.Direction)
 			}
 			break
 		}
 	}
-	if !peerDirectionOk && len(peerStatus.Peers) > 0 {
-		t.ExecuteLog("Warning: peer has no DOWNSTREAM record pointing to us")
+	if !peerDirectionOk {
+		return fmt.Errorf("postcheck: peer has no DOWNSTREAM record pointing to us")
 	}
 
 	t.ExecuteLog(fmt.Sprintf("PostCheck passed: local=%s, peer=%s, localDirection=%s",
@@ -340,10 +369,56 @@ func ExecuteSwitchoverToPrimary(p param.RpcSwitchoverToPrimaryParam) error {
 	if err := standbyService.SwitchoverToPrimary(); err != nil {
 		return err
 	}
+	status, err := standbyService.GetLocalStatus()
+	if err != nil {
+		return fmt.Errorf("failed to query promoted standby: %w", err)
+	}
+	if status.Role != "PRIMARY" || status.PendingRole != "INVALID" || status.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("standby promotion did not reach a stable primary state: role=%s pending_role=%s switchover_status=%s",
+			status.Role, status.PendingRole, status.SwitchoverStatus)
+	}
 
 	// Flip the caller (original primary, now standby) to DOWNSTREAM.
 	return standbyService.FlipDirection(
 		p.CallerHost, p.CallerObshellPort,
 		constant.STANDBY_DIRECTION_DOWNSTREAM,
 	)
+}
+
+// SwitchoverFinalizeOldPrimaryTask runs after the seekdb-only restart. The
+// persisted pending role must have been consumed by SeekDB startup before the
+// local obshell metadata is changed to UPSTREAM.
+type SwitchoverFinalizeOldPrimaryTask struct {
+	task.Task
+}
+
+func newSwitchoverFinalizeOldPrimaryTask() *SwitchoverFinalizeOldPrimaryTask {
+	t := &SwitchoverFinalizeOldPrimaryTask{
+		Task: *task.NewSubTask(constant.TASK_SWITCHOVER_FINALIZE_OLD_PRIMARY),
+	}
+	t.SetCanRetry().SetCanContinue().SetCanPass().SetCanCancel()
+	return t
+}
+
+func (t *SwitchoverFinalizeOldPrimaryTask) Execute() error {
+	var peerHost string
+	var peerObshellPort int
+	if err := t.GetContext().GetParamWithValue(constant.PARAM_STANDBY_PEER_HOST, &peerHost); err != nil {
+		return err
+	}
+	if err := t.GetContext().GetParamWithValue(constant.PARAM_STANDBY_PEER_OBSHELL_PORT, &peerObshellPort); err != nil {
+		return err
+	}
+
+	status, err := standbyService.GetLocalStatus()
+	if err != nil {
+		return fmt.Errorf("failed to query restarted old primary: %w", err)
+	}
+	if status.Role != "STANDBY" || status.PendingRole != "INVALID" || status.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("old primary restart did not activate standby role: role=%s pending_role=%s switchover_status=%s",
+			status.Role, status.PendingRole, status.SwitchoverStatus)
+	}
+
+	t.ExecuteLogf("Flipping peer %s:%d direction to UPSTREAM", peerHost, peerObshellPort)
+	return standbyService.FlipDirection(peerHost, peerObshellPort, constant.STANDBY_DIRECTION_UPSTREAM)
 }

@@ -48,11 +48,11 @@ func NewState(state int32) *State {
 }
 
 func (s *State) SetState(state int32) {
-	s.state = state
+	atomic.StoreInt32(&s.state, state)
 }
 
 func (s *State) GetState() int32 {
-	return s.state
+	return atomic.LoadInt32(&s.state)
 }
 
 func (s *State) CasState(old, new int32) bool {
@@ -60,17 +60,17 @@ func (s *State) CasState(old, new int32) bool {
 }
 
 func (s *State) IsStarting() bool {
-	return s.state == constant.STATE_STARTING
+	return s.GetState() == constant.STATE_STARTING
 }
 
 func (s *State) IsRunning() bool {
-	return s.state == constant.STATE_RUNNING
+	return s.GetState() == constant.STATE_RUNNING
 }
 
 func (s *State) IsStopping() bool {
-	return s.state == constant.STATE_STOPPING
+	return s.GetState() == constant.STATE_STOPPING
 }
 
 func (s *State) IsStopped() bool {
-	return s.state == constant.STATE_STOPPED
+	return s.GetState() == constant.STATE_STOPPED
 }

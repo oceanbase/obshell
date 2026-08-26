@@ -18,6 +18,7 @@ package daemon
 
 import (
 	"fmt"
+	"sync"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -31,13 +32,14 @@ import (
 )
 
 type Server struct {
-	agent      meta.AgentInfo
-	upradeMode bool
-	oldPid     int32
-	conf       ServerConfig
-	proc       *process.Process
-	done       chan struct{}
-	state      *http.State
+	agent       meta.AgentInfo
+	upradeMode  bool
+	oldPid      int32
+	conf        ServerConfig
+	proc        *process.Process
+	done        chan struct{}
+	state       *http.State
+	lifecycleMu sync.Mutex
 }
 
 type ServerStatus struct {

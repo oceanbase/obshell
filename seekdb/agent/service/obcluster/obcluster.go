@@ -248,7 +248,9 @@ func (obclusterService *ObclusterService) GetObParametersForUpgrade(params []str
 	if err != nil {
 		return nil, err
 	}
-	err = oceanbaseDb.Raw("SELECT SVR_IP, SVR_PORT, ZONE, SCOPE, NAME, VALUE FROM oceanbase.GV$OB_PARAMETERS WHERE NAME IN ?", params).Find(&res).Error
+	err = oceanbaseDb.Table(V_OB_PARAMETERS).
+		Select("SCOPE, NAME, VALUE, DATA_TYPE, INFO, SECTION, EDIT_LEVEL, DEFAULT_VALUE, ISDEFAULT").
+		Where("NAME IN ?", params).Find(&res).Error
 	if err != nil {
 		return
 	}
@@ -262,7 +264,9 @@ func (*ObclusterService) GetAllUnhiddenParameters() ([]oceanbase.ObParameters, e
 	}
 
 	var unhiddenParams []oceanbase.ObParameters
-	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME NOT LIKE ?", `\_%`).Find(&unhiddenParams).Error
+	err = oceanbaseDb.Table(V_OB_PARAMETERS).
+		Select("SCOPE, NAME, VALUE, DATA_TYPE, INFO, SECTION, EDIT_LEVEL, DEFAULT_VALUE, ISDEFAULT").
+		Where("NAME NOT LIKE ?", `\_%`).Find(&unhiddenParams).Error
 
 	return unhiddenParams, err
 }
@@ -272,7 +276,9 @@ func (obclusterService *ObclusterService) GetParameterByName(name string) (param
 	if err != nil {
 		return
 	}
-	err = oceanbaseDb.Table(GV_OB_PARAMETERS).Where("NAME = ?", name).Scan(&param).Error
+	err = oceanbaseDb.Table(V_OB_PARAMETERS).
+		Select("SCOPE, NAME, VALUE, DATA_TYPE, INFO, SECTION, EDIT_LEVEL, DEFAULT_VALUE, ISDEFAULT").
+		Where("NAME = ?", name).Scan(&param).Error
 	return
 }
 

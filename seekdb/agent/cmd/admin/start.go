@@ -84,6 +84,7 @@ func (a *Admin) StartDaemon() (err error) {
 	}
 
 	var count int
+	deadline := time.Now().Add(time.Duration(WAIT_DAEMON_TIME_LIMIT) * time.Second)
 	for {
 		if !daemonProc.IsRunning() {
 			daemonProc.SwitchToLogMode()
@@ -97,6 +98,14 @@ func (a *Admin) StartDaemon() (err error) {
 			return nil
 		} else if err1 != nil && count%100 != 0 {
 			log.WithError(err1).Warn("failed to get daemon status")
+		}
+		if time.Now().After(deadline) {
+			log.Error("wait for daemon process ready timeout")
+			if err := daemonProc.Kill(); err != nil {
+				log.WithError(err).Warn("failed to kill daemon process after startup timeout")
+			}
+			daemonProc.WaitForExit(5 * time.Second)
+			return errors.Occur(errors.ErrCommonUnexpected, "wait for daemon process ready timeout")
 		}
 		count++
 		time.Sleep(10 * time.Millisecond)

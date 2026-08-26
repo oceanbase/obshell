@@ -45,22 +45,32 @@ func CreateRestartDag(p param.ObRestartParam) (*task.DagDetailDTO, error) {
 	if p.Terminate {
 		builder.AddTask(newMinorFreezeTask(), false)
 	}
-	if exist, err := process.CheckObserverProcess(); err != nil {
-		log.Warnf("Check seekdb process failed: %v", err)
-	} else if exist {
-		pid, err := process.GetObserverPid()
-		if err != nil {
-			return nil, err
-		}
-		ctx.SetParam(PARAM_OBSERVER_PID, pid)
-		// when seekdb process is exists, should stop it first
-		builder.AddTask(newStopObserverTask(), false)
+	if err := AppendRestartTasks(builder, ctx); err != nil {
+		return nil, err
 	}
-
-	builder.AddTask(newStartObServerTask(), false)
 	dag, err := localTaskService.CreateDagInstanceByTemplate(builder.Build(), ctx)
 	if err != nil {
 		return nil, err
 	}
 	return task.NewDagDetailDTO(dag), nil
+}
+
+// AppendRestartTasks adds a seekdb-only restart sequence to an existing DAG.
+// The obshell process is deliberately not restarted: it owns and persists the
+// parent DAG while seekdb is stopped and started. This is also used by the
+// SeekDB standby switchover flow after the target standby becomes PRIMARY.
+func AppendRestartTasks(builder *task.TemplateBuilder, ctx *task.TaskContext) error {
+	if exist, err := process.CheckObserverProcess(); err != nil {
+		log.Warnf("Check seekdb process failed: %v", err)
+	} else if exist {
+		pid, err := process.GetObserverPid()
+		if err != nil {
+			return err
+		}
+		ctx.SetParam(PARAM_OBSERVER_PID, pid)
+		builder.AddTask(newStopObserverTask(), false)
+	}
+
+	builder.AddTask(newStartObServerTask(), false)
+	return nil
 }

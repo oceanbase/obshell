@@ -18,9 +18,9 @@ package user
 
 var (
 	// mysql user table
-	DBA_OB_USERS  = "oceanbase.DBA_OB_USERS"
-	GV_OB_SESSION = "oceanbase.GV$OB_SESSION"
-	MYSQL_USER    = "mysql.user"
+	DBA_OB_USERS = "oceanbase.DBA_OB_USERS"
+	V_OB_SESSION = "oceanbase.V$OB_SESSION"
+	MYSQL_USER   = "mysql.user"
 
 	// mysql execute sql
 	SQL_MYSQL_ALTER_TENANT_ROOT_PASSWORD = "ALTER USER root@'%%' IDENTIFIED BY \"%s\""

@@ -358,12 +358,16 @@ declare namespace API {
   type LocalStandbyStatus = {
     instance_name?: string;
     log_restore_source?: string;
+    /** INVALID during a stable role; STANDBY while the old primary awaits restart */
+    pending_role?: string;
     readable_scn?: number;
     /** PRIMARY / STANDBY / unknown */
     role?: string;
     sync_scn?: number;
     /** NORMAL_SYNC / SYNC_DELAYED / SYNC_PAUSED / UNKNOWN; empty for PRIMARY */
     sync_status?: string;
+    /** NORMAL / PREPARING */
+    switchover_status?: string;
   };
 
   type lockUserParams = {

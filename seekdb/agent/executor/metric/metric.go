@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -35,21 +36,164 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-var metricExprConfig map[string]string
+var seekdbVersionPattern = regexp.MustCompile(`^(0|[1-9][0-9]*)(\.(0|[1-9][0-9]*)){1,3}$`)
+
+type MetricExprConfig struct {
+	Expr         string `yaml:"expr"`
+	MinObVersion string `yaml:"minObVersion"`
+	MaxObVersion string `yaml:"maxObVersion"`
+	configError  string
+}
+
+func (c *MetricExprConfig) UnmarshalYAML(unmarshal func(interface{}) error) error {
+	var expr string
+	if err := unmarshal(&expr); err == nil {
+		c.Expr = expr
+		return nil
+	}
+
+	type rawMetricExprConfig MetricExprConfig
+	var raw rawMetricExprConfig
+	if err := unmarshal(&raw); err != nil {
+		return err
+	}
+	*c = MetricExprConfig(raw)
+	if c.Expr == "" {
+		return fmt.Errorf("metric expression is empty")
+	}
+	return nil
+}
+
+var metricExprConfig map[string]MetricExprConfig
+var getPrometheusClient = external.GetPrometheusClientFromConfig
 
 func init() {
-	metricExprConfig = make(map[string]string)
+	metricExprConfig = make(map[string]MetricExprConfig)
 	metricExprConfigContent, err := bindata.Asset(metricconstant.METRIC_EXPR_CONFIG_FILE)
 	if err != nil {
 		log.WithError(err).Error("load metric expr config failed")
+		return
 	}
 	err = yaml.Unmarshal(metricExprConfigContent, &metricExprConfig)
 	if err != nil {
 		log.WithError(err).Error("parse metric expr config data failed")
+		return
+	}
+	validateMetricExprConfigs(metricExprConfig)
+}
+
+func validateMetricExprConfigs(configs map[string]MetricExprConfig) {
+	for name, config := range configs {
+		config.configError = ""
+		if err := config.validate(); err != nil {
+			config.configError = err.Error()
+			log.WithError(err).Errorf("disable metric %s because its version boundary is invalid", name)
+		}
+		configs[name] = config
 	}
 }
 
-func ListMetricClasses(scope, language string) ([]model.MetricClass, error) {
+type obVersion struct {
+	segments [4]uint64
+}
+
+func parseObVersion(raw string) (*obVersion, error) {
+	if !seekdbVersionPattern.MatchString(raw) {
+		return nil, fmt.Errorf("invalid seekdb product version %q", raw)
+	}
+	parsed := &obVersion{}
+	for i, segment := range strings.Split(raw, ".") {
+		value, err := strconv.ParseUint(segment, 10, 64)
+		if err != nil {
+			return nil, fmt.Errorf("invalid seekdb product version %q: %w", raw, err)
+		}
+		parsed.segments[i] = value
+	}
+	return parsed, nil
+}
+
+func (v *obVersion) lessThan(other *obVersion) bool {
+	for i := range v.segments {
+		if v.segments[i] < other.segments[i] {
+			return true
+		}
+		if v.segments[i] > other.segments[i] {
+			return false
+		}
+	}
+	return false
+}
+
+func IsValidProductVersion(raw string) bool {
+	_, err := parseObVersion(raw)
+	return err == nil
+}
+
+func (c MetricExprConfig) validate() error {
+	if c.Expr == "" {
+		return fmt.Errorf("metric expression is empty")
+	}
+	var minVersion, maxVersion *obVersion
+	var err error
+	if c.MinObVersion != "" {
+		minVersion, err = parseObVersion(c.MinObVersion)
+		if err != nil {
+			return fmt.Errorf("invalid minObVersion: %w", err)
+		}
+	}
+	if c.MaxObVersion != "" {
+		maxVersion, err = parseObVersion(c.MaxObVersion)
+		if err != nil {
+			return fmt.Errorf("invalid maxObVersion: %w", err)
+		}
+	}
+	if minVersion != nil && maxVersion != nil && !minVersion.lessThan(maxVersion) {
+		return fmt.Errorf("minObVersion %s must be less than maxObVersion %s", c.MinObVersion, c.MaxObVersion)
+	}
+	return nil
+}
+
+type metricAvailability int
+
+const (
+	metricAvailable metricAvailability = iota
+	metricNotFound
+	metricConfigInvalid
+	metricVersionUnknown
+	metricVersionUnsupported
+)
+
+func getMetricAvailability(name, obVersion string) (metricAvailability, string) {
+	config, found := metricExprConfig[name]
+	if !found {
+		return metricNotFound, fmt.Sprintf("metric expression for %s not found", name)
+	}
+	if config.configError != "" {
+		return metricConfigInvalid, fmt.Sprintf("metric %s is disabled: %s", name, config.configError)
+	}
+	if config.MinObVersion == "" && config.MaxObVersion == "" {
+		return metricAvailable, ""
+	}
+	currentVersion, err := parseObVersion(obVersion)
+	if err != nil {
+		return metricVersionUnknown, fmt.Sprintf("cannot determine seekdb product version for version-restricted metric %s: %v", name, err)
+	}
+	if config.MinObVersion != "" {
+		minVersion, _ := parseObVersion(config.MinObVersion)
+		if currentVersion.lessThan(minVersion) {
+			return metricVersionUnsupported, fmt.Sprintf("metric %s is not supported by seekdb %s", name, obVersion)
+		}
+	}
+	if config.MaxObVersion != "" {
+		maxVersion, _ := parseObVersion(config.MaxObVersion)
+		if !currentVersion.lessThan(maxVersion) {
+			return metricVersionUnsupported, fmt.Sprintf("metric %s is not supported by seekdb %s", name, obVersion)
+		}
+	}
+	return metricAvailable, ""
+}
+
+func ListMetricClasses(scope, language, obVersion string) ([]model.MetricClass, error) {
 	metricClasses := make([]model.MetricClass, 0)
 	configFile := metricconstant.METRIC_CONFIG_FILE_ENUS
 	switch language {
@@ -74,8 +218,34 @@ func ListMetricClasses(scope, language string) ([]model.MetricClass, error) {
 	metricClasses, found := metricConfigMap[scope]
 	if !found {
 		err = errors.Occur(errors.ErrMetricConfigNotFound, scope)
+		return metricClasses, err
 	}
-	return metricClasses, err
+	return filterMetricClasses(metricClasses, obVersion), nil
+}
+
+func filterMetricClasses(metricClasses []model.MetricClass, obVersion string) []model.MetricClass {
+	filteredClasses := make([]model.MetricClass, 0, len(metricClasses))
+	for _, class := range metricClasses {
+		filteredGroups := make([]model.MetricGroup, 0, len(class.MetricGroups))
+		for _, group := range class.MetricGroups {
+			filteredMetrics := make([]model.MetricMeta, 0, len(group.Metrics))
+			for _, metricMeta := range group.Metrics {
+				availability, _ := getMetricAvailability(metricMeta.Key, obVersion)
+				if availability == metricAvailable {
+					filteredMetrics = append(filteredMetrics, metricMeta)
+				}
+			}
+			if len(filteredMetrics) > 0 {
+				group.Metrics = filteredMetrics
+				filteredGroups = append(filteredGroups, group)
+			}
+		}
+		if len(filteredGroups) > 0 {
+			class.MetricGroups = filteredGroups
+			filteredClasses = append(filteredClasses, class)
+		}
+	}
+	return filteredClasses
 }
 
 func replaceQueryVariables(exprTemplate string, labels []common.KVPair, groupLabels []string, step int64) string {
@@ -157,21 +327,39 @@ func extractMetricData(name string, resp *model.PrometheusQueryRangeResponse) []
 	return metricDatas
 }
 
-func QueryMetricData(queryParam *model.MetricQuery) []model.MetricData {
+func validateMetricQuery(metrics []string, obVersion string) error {
+	for _, name := range metrics {
+		availability, reason := getMetricAvailability(name, obVersion)
+		switch availability {
+		case metricAvailable:
+			continue
+		case metricNotFound, metricVersionUnsupported:
+			return errors.Occur(errors.ErrCommonBadRequest, reason)
+		case metricConfigInvalid, metricVersionUnknown:
+			return errors.Occur(errors.ErrCommonUnexpected, reason)
+		}
+	}
+	return nil
+}
+
+func QueryMetricData(queryParam *model.MetricQuery, obVersion string) ([]model.MetricData, error) {
 	metricDatas := make([]model.MetricData, 0, len(queryParam.Metrics))
-	client, err := external.GetPrometheusClientFromConfig()
+	if err := validateMetricQuery(queryParam.Metrics, obVersion); err != nil {
+		return metricDatas, err
+	}
+	client, err := getPrometheusClient()
 	if err != nil {
-		return metricDatas
+		return metricDatas, errors.Occur(errors.ErrCommonUnexpected, err.Error())
 	}
 	wg := sync.WaitGroup{}
 	metricDataCh := make(chan []model.MetricData, len(queryParam.Metrics))
 	for _, m := range queryParam.Metrics {
-		exprTemplate, found := metricExprConfig[m]
+		exprConfig, found := metricExprConfig[m]
 		if found {
 			wg.Add(1)
 			go func(m string, ch chan []model.MetricData) {
 				defer wg.Done()
-				expr := replaceQueryVariables(exprTemplate, queryParam.Labels, queryParam.GroupLabels, queryParam.QueryRange.Step)
+				expr := replaceQueryVariables(exprConfig.Expr, queryParam.Labels, queryParam.GroupLabels, queryParam.QueryRange.Step)
 				log.Infof("Query with expr: %s, range: %v", expr, queryParam.QueryRange)
 				queryRangeResp := &model.PrometheusQueryRangeResponse{}
 				resp, err := client.R().SetQueryParams(map[string]string{
@@ -199,5 +387,5 @@ func QueryMetricData(queryParam *model.MetricQuery) []model.MetricData {
 	for metricDataArray := range metricDataCh {
 		metricDatas = append(metricDatas, metricDataArray...)
 	}
-	return metricDatas
+	return metricDatas, nil
 }

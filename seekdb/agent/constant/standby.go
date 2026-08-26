@@ -52,6 +52,7 @@ const (
 	TASK_SWITCHOVER_SET_LOG_RESTORE_SRC  = "SwitchoverSetLogRestoreSource"
 	TASK_SWITCHOVER_PRIMARY_TO_STANDBY   = "SwitchoverPrimaryToStandby"
 	TASK_SWITCHOVER_STANDBY_TO_PRIMARY   = "SwitchoverStandbyToPrimary"
+	TASK_SWITCHOVER_FINALIZE_OLD_PRIMARY = "SwitchoverFinalizeOldPrimary"
 	TASK_SWITCHOVER_POSTCHECK            = "SwitchoverPostCheck"
 	TASK_ACTIVATE_PRECHECK               = "ActivatePreCheck"
 	TASK_ACTIVATE_NODE                   = "Activate"

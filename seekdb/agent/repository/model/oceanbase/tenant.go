@@ -58,7 +58,7 @@ func (ObServerResource) TableName() string {
 	return "oceanbase.V$OB_SERVER_STAT"
 }
 
-type CdbObMajorCompaction struct {
+type DbaObMajorCompaction struct {
 	FrozenScn          int64     `gorm:"column:FROZEN_SCN"`
 	FrozenTime         time.Time `gorm:"column:FROZEN_TIME"`
 	GlobalBroadcastScn int64     `gorm:"column:GLOBAL_BROADCAST_SCN"`
@@ -71,11 +71,11 @@ type CdbObMajorCompaction struct {
 	Info               string    `gorm:"column:INFO"`
 }
 
-func (CdbObMajorCompaction) TableName() string {
-	return "oceanbase.CDB_OB_MAJOR_COMPACTION"
+func (DbaObMajorCompaction) TableName() string {
+	return "oceanbase.DBA_OB_MAJOR_COMPACTION"
 }
 
-func (c *CdbObMajorCompaction) ToBO() *bo.TenantCompaction {
+func (c *DbaObMajorCompaction) ToBO() *bo.TenantCompaction {
 	return &bo.TenantCompaction{
 		FrozenScn:          c.FrozenScn,
 		FrozenTime:         c.FrozenTime,

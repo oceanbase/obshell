@@ -68,7 +68,6 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 	if err != nil {
 		log.Warnf("Failed to get cluster name: %v", err)
 	}
-
 	info.DataDir, err = observerService.GetOBStringParatemerByName(constant.CONFIG_DATA_DIR)
 	if err != nil {
 		log.Warnf("Failed to get data dir: %v", err)
@@ -139,6 +138,7 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 		}
 		info.CreatedTime = &createTime
 	}
+	info.ClusterName = resolveClusterName(info.ClusterName, meta.OCS_AGENT.GetIp(), info.Port)
 	info.Status = getObserverStatus()
 	info.DatabaseCount, err = tenantService.GetDatabaseCount()
 	if err != nil {
@@ -173,6 +173,16 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 		}
 	}
 	return
+}
+
+func resolveClusterName(clusterName, ip string, port int) string {
+	if clusterName != "" {
+		return clusterName
+	}
+	if ip != "" && port > 0 {
+		return fmt.Sprintf("%s:%d", ip, port)
+	}
+	return ""
 }
 
 func getObserverStatus() (status string) {

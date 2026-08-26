@@ -51,7 +51,7 @@ func (o *OBLogger) Printf(format string, args ...interface{}) {
 			return
 		}
 	}
-	o.Logger.Printf(str)
+	o.Logger.Printf("%s", str)
 }
 
 func New(out io.Writer, prefix string, flag int) *OBLogger {

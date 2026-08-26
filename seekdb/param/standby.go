@@ -76,6 +76,8 @@ type PeerInfo struct {
 // LocalStandbyStatus describes the local seekdb node state.
 type LocalStandbyStatus struct {
 	Role             string `json:"role"` // PRIMARY / STANDBY / unknown
+	PendingRole      string `json:"pending_role"`
+	SwitchoverStatus string `json:"switchover_status"`
 	InstanceName     string `json:"instance_name,omitempty"`
 	LogRestoreSource string `json:"log_restore_source"`
 	SyncScn          uint64 `json:"sync_scn"`

@@ -19,9 +19,6 @@ package oceanbase
 import "time"
 
 type ObParameters struct {
-	SvrIp        string `gorm:"column:SVR_IP"`
-	SvrPort      int    `gorm:"column:SVR_PORT"`
-	Zone         string `gorm:"column:ZONE"`
 	Scope        string `gorm:"column:SCOPE"`
 	Name         string `gorm:"column:NAME"`
 	Value        string `gorm:"column:VALUE"`
@@ -30,10 +27,11 @@ type ObParameters struct {
 	Section      string `gorm:"column:SECTION"`
 	Info         string `gorm:"column:INFO"`
 	DataType     string `gorm:"column:DATA_TYPE"`
+	IsDefault    string `gorm:"column:ISDEFAULT"`
 }
 
 func (ObParameters) TableName() string {
-	return "oceanbase.GV$OB_PARAMETERS"
+	return "oceanbase.V$OB_PARAMETERS"
 }
 
 // OBServer maps to oceanbase.V$OB_SERVER_STAT (replaces DBA_OB_SERVERS / GV$OB_SERVERS).

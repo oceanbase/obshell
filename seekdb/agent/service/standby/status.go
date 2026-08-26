@@ -22,9 +22,12 @@ import (
 )
 
 // obStandbyStatus mirrors columns returned by
-// SELECT ROLE, LOG_RESTORE_SOURCE, SYNC_SCN FROM oceanbase.__all_virtual_server_stat
+// SELECT ROLE, PENDING_ROLE, SWITCHOVER_STATUS, LOG_RESTORE_SOURCE, SYNC_SCN
+// FROM oceanbase.__all_virtual_server_stat
 type obStandbyStatus struct {
 	Role             string `gorm:"column:ROLE"`
+	PendingRole      string `gorm:"column:PENDING_ROLE"`
+	SwitchoverStatus string `gorm:"column:SWITCHOVER_STATUS"`
 	LogRestoreSource string `gorm:"column:LOG_RESTORE_SOURCE"`
 	SyncScn          uint64 `gorm:"column:SYNC_SCN"`
 	ReadableScn      uint64 `gorm:"column:READABLE_SCN"`
@@ -42,7 +45,7 @@ func (s *StandbyService) GetLocalStatus() (param.LocalStandbyStatus, error) {
 
 	var row obStandbyStatus
 	err = db.Raw(
-		"SELECT ROLE, LOG_RESTORE_SOURCE, SYNC_SCN, READABLE_SCN FROM oceanbase.__all_virtual_server_stat",
+		"SELECT ROLE, PENDING_ROLE, SWITCHOVER_STATUS, LOG_RESTORE_SOURCE, SYNC_SCN, READABLE_SCN FROM oceanbase.__all_virtual_server_stat",
 	).Scan(&row).Error
 	if err != nil {
 		return param.LocalStandbyStatus{Role: "unknown"}, err
@@ -53,6 +56,8 @@ func (s *StandbyService) GetLocalStatus() (param.LocalStandbyStatus, error) {
 
 	return param.LocalStandbyStatus{
 		Role:             row.Role,
+		PendingRole:      row.PendingRole,
+		SwitchoverStatus: row.SwitchoverStatus,
 		InstanceName:     clusterName,
 		LogRestoreSource: row.LogRestoreSource,
 		SyncScn:          row.SyncScn,

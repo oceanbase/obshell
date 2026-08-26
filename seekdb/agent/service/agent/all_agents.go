@@ -28,6 +28,18 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 )
 
+const obSysParameterQuery = `
+	SELECT NAME, DATA_TYPE, VALUE, INFO, SECTION, EDIT_LEVEL, DEFAULT_VALUE,
+	       CASE WHEN ISDEFAULT = 'YES' THEN 1 ELSE 0 END AS IS_DEFAULT
+	FROM oceanbase.V$OB_PARAMETERS
+`
+
+func queryObSysParameters(db *gorm.DB) ([]sqlite.ObSysParameter, error) {
+	var parameters []sqlite.ObSysParameter
+	err := db.Raw(obSysParameterQuery).Find(&parameters).Error
+	return parameters, err
+}
+
 func (s *AgentService) TakeOver() (err error) {
 	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
@@ -127,12 +139,11 @@ func (s *AgentService) TakeOverOrRebuild(sqliteTx *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	var obSysParameter []sqlite.ObSysParameter
 	obConn, err := oceanbasedb.GetInstance()
 	if err != nil {
 		return err
 	}
-	err = obConn.Raw("select * from oceanbase.GV$OB_PARAMETERS").Find(&obSysParameter).Error
+	obSysParameter, err := queryObSysParameters(obConn)
 	if err != nil {
 		return err
 	}

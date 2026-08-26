@@ -49,7 +49,11 @@ func ListMetricMetas(c *gin.Context) {
 		common.SendResponse(c, nil, errors.Occur(errors.ErrCommonBadRequest, "invalid scope"))
 		return
 	}
-	metricClasses, err := metricexecutor.ListMetricClasses(scope, language)
+	obVersion, resolveErr := defaultMetricVersionResolver.resolve()
+	if resolveErr != nil {
+		log.WithError(resolveErr).Warn("Failed to resolve seekdb product version; only unversioned metrics will be listed")
+	}
+	metricClasses, err := metricexecutor.ListMetricClasses(scope, language, obVersion)
 	if err != nil {
 		common.SendResponse(c, nil, err)
 		return
@@ -79,7 +83,15 @@ func QueryMetrics(c *gin.Context) {
 		return
 	}
 	log.Infof("Query metric data with param: %+v", queryParam)
-	metricDatas := metricexecutor.QueryMetricData(queryParam)
+	obVersion, resolveErr := defaultMetricVersionResolver.resolve()
+	if resolveErr != nil {
+		log.WithError(resolveErr).Warn("Failed to resolve seekdb product version")
+	}
+	metricDatas, err := metricexecutor.QueryMetricData(queryParam, obVersion)
+	if err != nil {
+		common.SendResponse(c, nil, err)
+		return
+	}
 	log.Debugf("Query metric data: %+v", metricDatas)
 	common.SendResponse(c, metricDatas, nil)
 }

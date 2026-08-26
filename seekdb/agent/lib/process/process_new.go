@@ -148,7 +148,23 @@ func (p *Process) switchToRunningState() {
 
 // GetState will return the current process state.
 func (p *Process) GetState() ProcState {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.state
+}
+
+// WaitForExit waits until the process has been reaped or the timeout expires.
+func (p *Process) WaitForExit(timeout time.Duration) bool {
+	deadline := time.Now().Add(timeout)
+	for {
+		if !p.IsRunning() {
+			return true
+		}
+		if time.Now().After(deadline) {
+			return false
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 func (p *Process) Stop() error {
@@ -161,6 +177,8 @@ func (p *Process) Kill() error {
 }
 
 func (p *Process) signal(s os.Signal) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	if p.cmd == nil {
 		return errors.Occur(errors.ErrCommonUnexpected, "proc not exist")
 	}
@@ -186,5 +204,7 @@ func (p *Process) SwitchToLogMode() {
 }
 
 func (p *Process) IsRunning() bool {
+	p.mu.Lock()
+	defer p.mu.Unlock()
 	return p.running
 }

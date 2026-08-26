@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	oceanbasedb "github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/agent/repository/model/oceanbase"
 	"github.com/oceanbase/obshell/seekdb/param"
@@ -85,7 +84,7 @@ func (t *TenantService) GetUserSessionStats(userName string) ([]oceanbase.Sessio
 		return nil, err
 	}
 	sessionStats := make([]oceanbase.SessionStats, 0)
-	result := oceanbaseDb.Table(GV_OB_SESSION).Where("user=? and tenant=?", userName, constant.TENANT_SYS).Select("COUNT(*) as COUNT, STATE").Group("STATE").Scan(&sessionStats)
+	result := oceanbaseDb.Table(V_OB_SESSION).Where("user=?", userName).Select("COUNT(*) as COUNT, STATE").Group("STATE").Scan(&sessionStats)
 	return sessionStats, result.Error
 }
 

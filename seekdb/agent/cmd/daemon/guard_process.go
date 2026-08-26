@@ -71,10 +71,19 @@ func (s *Server) guard(wg *sync.WaitGroup, ch chan os.Signal) {
 		procState := s.proc.GetState()
 		// Process is exited, determine whether to exit guard or restart.
 		if procState.Exited {
+			s.lifecycleMu.Lock()
+			svcState = s.state.GetState()
+			if svcState == constant.STATE_STOPPING || svcState == constant.STATE_STOPPED {
+				s.lifecycleMu.Unlock()
+				log.Infof("obshell server stopped. state is %v. daemon no longer guard", svcState)
+				return
+			}
 			if err = s.handleProcExited(procState, &startTimes); err != nil {
+				s.lifecycleMu.Unlock()
 				log.WithError(err).Error("guarded process exit")
 				return
 			}
+			s.lifecycleMu.Unlock()
 			continue
 		}
 

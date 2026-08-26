@@ -32,7 +32,15 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/lib/system"
 )
 
+const (
+	waitObshellStopTimeout = 10 * time.Second
+	waitObshellKillTimeout = 5 * time.Second
+)
+
 func (s *Server) Stop() (err error) {
+	s.lifecycleMu.Lock()
+	defer s.lifecycleMu.Unlock()
+
 	if s.state.IsStopped() {
 		return nil
 	}
@@ -41,18 +49,22 @@ func (s *Server) Stop() (err error) {
 	log.Info("stopping obshell")
 
 	if err = s.proc.Stop(); err != nil {
-		err = errors.Wrap(err, "failed to stop obshell")
-		log.Error(err)
-		state := s.GetRealState()
-		if state == constant.STATE_STOPPING || state == constant.STATE_STOPPED {
-			s.setState(state)
-			return nil
-		} else {
-			log.Warn("obshell did not handle TERM signal properly, try KILL it")
-			err = s.proc.Kill()
+		log.WithError(err).Warn("failed to send TERM signal to obshell")
+	}
+
+	if !s.proc.WaitForExit(waitObshellStopTimeout) {
+		log.Warn("obshell did not exit after TERM signal, try KILL it")
+		if err = s.proc.Kill(); err != nil && s.proc.IsRunning() {
+			return errors.Wrap(err, "failed to kill obshell")
+		}
+		if !s.proc.WaitForExit(waitObshellKillTimeout) {
+			return errors.Occur(errors.ErrCommonUnexpected, "wait for obshell process exit timeout")
 		}
 	}
-	return
+
+	s.setState(constant.STATE_STOPPED)
+	s.cleanup()
+	return nil
 }
 
 func (s *Server) cleanup() {

@@ -171,7 +171,7 @@ func (t *UserService) GetUserSessionStats(userName string) ([]oceanbase.SessionS
 		return nil, err
 	}
 	sessionStats := make([]oceanbase.SessionStats, 0)
-	result := oceanbaseDb.Table(GV_OB_SESSION).Where("user=?", userName).Select("COUNT(*) as COUNT, STATE").Group("STATE").Scan(&sessionStats)
+	result := oceanbaseDb.Table(V_OB_SESSION).Where("user=?", userName).Select("COUNT(*) as COUNT, STATE").Group("STATE").Scan(&sessionStats)
 	return sessionStats, result.Error
 }
 

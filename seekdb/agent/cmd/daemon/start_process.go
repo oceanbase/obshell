@@ -31,6 +31,9 @@ import (
 )
 
 func (s *Server) Start() (err error) {
+	s.lifecycleMu.Lock()
+	defer s.lifecycleMu.Unlock()
+
 	if s.state.IsRunning() {
 		return nil
 	}

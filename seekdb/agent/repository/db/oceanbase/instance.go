@@ -48,8 +48,8 @@ func GetRestrictedInstance() (db *gorm.DB, err error) {
 }
 
 func checkObAvailable() (bool, error) {
-	var count int = 0
-	err := dbInstance.Raw("select count(*) from oceanbase.GV$OB_SERVER_SCHEMA_INFO where refreshed_schema_version = received_schema_version").Scan(&count).Error
+	var count int
+	err := dbInstance.Raw("SELECT COUNT(*) FROM oceanbase.__all_virtual_server_schema_info WHERE refreshed_schema_version = received_schema_version").Scan(&count).Error
 	if err != nil {
 		return false, err
 	}
