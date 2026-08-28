@@ -24,6 +24,7 @@ import (
 
 const (
 	ENV_OBSHELL_TELEMETRY_ENABLED = "OBSHELL_TELEMETRY_ENABLED"
+	ENV_OBSHELL_STANDALONE_MODE   = "OBSHELL_STANDALONE_MODE"
 )
 
 const (
@@ -58,6 +59,7 @@ const (
 	OCS_INFO_OS           = "os"
 	OCS_INFO_ARCHITECTURE = "architecture"
 	OCS_INFO_BIN_SYNCED   = "binary_synced"
+	OCS_INFO_STANDALONE   = "standalone"
 )
 
 const (

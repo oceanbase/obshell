@@ -28,6 +28,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/lib/path"
+	"github.com/oceanbase/obshell/ob/agent/meta"
 )
 
 const (
@@ -62,7 +63,7 @@ func IsOceanBaseSeekdb() bool {
 	return true
 }
 
-func LoadOBConfigFromConfigFile() (err error) {
+func LoadOBConfigFromConfigFile(standalone bool) (err error) {
 	// Load ob port from $homepath/etc/observer.config.bin.
 	log.Info("load ob config from config file")
 	filePath := path.ObConfigPath()
@@ -82,7 +83,12 @@ func LoadOBConfigFromConfigFile() (err error) {
 	if mysqlPort == 0 || rpcPort == 0 || zone == "" {
 		return errors.Occur(errors.ErrCommonUnexpected, "load observer configs from config file failed")
 	}
-	if err = agentService.UpdateAgentIP(ip); err != nil {
+	if meta.IsStandaloneLoopback(standalone, ip) {
+		err = agentService.UpdateStandaloneAgentIP(ip)
+	} else {
+		err = agentService.UpdateAgentIP(ip)
+	}
+	if err != nil {
 		return err
 	}
 	return agentService.UpdatePortAndZone(mysqlPort, rpcPort, zone)

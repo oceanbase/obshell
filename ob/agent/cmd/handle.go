@@ -34,6 +34,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/lib/process"
 	"github.com/oceanbase/obshell/ob/agent/lib/system"
 	ocsagentlog "github.com/oceanbase/obshell/ob/agent/log"
+	"github.com/oceanbase/obshell/ob/agent/meta"
 	"github.com/oceanbase/obshell/ob/agent/service/agent"
 )
 
@@ -94,6 +95,20 @@ func handleInfoIp() {
 		fmt.Println(ip)
 		os.Exit(0)
 	}()
+
+	standalone, standaloneErr := agentService.IsStandaloneMode()
+	if standaloneErr != nil {
+		log.WithError(standaloneErr).Error("get standalone mode from sqlite failed")
+	} else if standalone {
+		if obHasStarted, hasStartedErr := ob.HasStarted(); hasStartedErr != nil {
+			log.WithError(hasStartedErr).Error("check whether observer has started failed")
+		} else if obHasStarted {
+			if observerIP, _, _, _ := ob.GetConfFromObConfFile(); meta.IsStandaloneLoopback(true, observerIP) {
+				ip = observerIP
+				return
+			}
+		}
+	}
 
 	if ip, err = agentService.GetIP(); ip != "" {
 		return

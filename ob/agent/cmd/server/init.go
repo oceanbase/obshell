@@ -145,12 +145,24 @@ func (a *Agent) initAgent() (err error) {
 		return errors.Wrap(err, "init agent failed")
 	}
 	log.Infof("meta from sqlite is %s", meta.OCS_AGENT)
+	persistedStandalone, err := agentService.IsStandaloneMode()
+	if err != nil {
+		return errors.Wrap(err, "load standalone mode failed")
+	}
+	envStandalone, err := meta.StandaloneModeFromEnv()
+	if err != nil {
+		return errors.Wrap(err, "load standalone mode from environment failed")
+	}
+	a.standalone = envStandalone || persistedStandalone
 
 	if a.obHasStarted {
 		if !a.upgradeMode {
-			if err = ob.LoadOBConfigFromConfigFile(); err != nil {
+			if err = ob.LoadOBConfigFromConfigFile(a.standalone); err != nil {
 				log.WithError(err).Error("load ob config from config file failed")
 				process.ExitWithError(constant.EXIT_CODE_ERROR_IP_NOT_MATCH, errors.WrapRetain(errors.ErrAgentLoadOBConfigFailed, err))
+			}
+			if meta.IsStandaloneLoopback(a.standalone, meta.OCS_AGENT.GetIp()) {
+				a.AgentInfo.Ip = meta.OCS_AGENT.GetIp()
 			}
 		}
 	} else if meta.OCS_AGENT.IsUnidentified() {
@@ -171,7 +183,13 @@ func (a *Agent) initAgent() (err error) {
 	}
 
 	log.Info("update base info")
-	return agentService.UpdateBaseInfo()
+	if err = agentService.UpdateBaseInfo(); err != nil {
+		return err
+	}
+	if a.standalone {
+		return agentService.EnableStandaloneMode()
+	}
+	return nil
 }
 
 func (a *Agent) updateAgent() (err error) {

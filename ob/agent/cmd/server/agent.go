@@ -60,6 +60,7 @@ type Agent struct {
 
 	upgradeMode  bool
 	obHasStarted bool
+	standalone   bool
 }
 
 type Server struct {

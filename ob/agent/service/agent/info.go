@@ -19,6 +19,7 @@ package agent
 import (
 	"fmt"
 	"runtime"
+	"strconv"
 
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -110,6 +111,18 @@ func (s *AgentService) updateAgentInfo(db *gorm.DB, agentInfo meta.AgentInfoInte
 }
 
 func (s *AgentService) UpdateAgentIP(ip string) error {
+	return s.updateAgentIP(ip, false)
+}
+
+// UpdateStandaloneAgentIP updates the in-memory identity and persists it only
+// for an explicitly identified standalone deployment. Persisting the observer
+// loopback identity prevents a stale management IP from being reused by a
+// later `obshell cluster start`.
+func (s *AgentService) UpdateStandaloneAgentIP(ip string) error {
+	return s.updateAgentIP(ip, true)
+}
+
+func (s *AgentService) updateAgentIP(ip string, persist bool) error {
 	if ocsAgent == nil {
 		return errors.Occur(errors.ErrAgentNotInitialized)
 	}
@@ -120,7 +133,43 @@ func (s *AgentService) UpdateAgentIP(ip string) error {
 		}
 		ocsAgent.Ip = ip
 	}
+	if persist {
+		db, err := sqlitedb.GetSqliteInstance()
+		if err != nil {
+			return err
+		}
+		return s.updateInfo(db, &sqlite.OcsInfo{Name: constant.OCS_INFO_IP, Value: ip})
+	}
 	return nil
+}
+
+// EnableStandaloneMode records the deployment type locally so restart paths
+// that are not invoked directly by OBD can retain standalone-only behavior.
+func (s *AgentService) EnableStandaloneMode() error {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return err
+	}
+	return s.updateInfo(db, &sqlite.OcsInfo{
+		Name:  constant.OCS_INFO_STANDALONE,
+		Value: strconv.FormatBool(true),
+	})
+}
+
+func (s *AgentService) IsStandaloneMode() (bool, error) {
+	var value string
+	err := getOCSInfo(constant.OCS_INFO_STANDALONE, &value)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	standalone, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, errors.Wrap(err, "parse standalone mode failed")
+	}
+	return standalone, nil
 }
 
 func (s *AgentService) UpdateAgentInfo(agentInfo meta.AgentInfoInterface) error {
