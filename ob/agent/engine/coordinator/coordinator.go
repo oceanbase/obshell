@@ -155,9 +155,16 @@ func (c *Coordinator) watcherEffector() error {
 
 func (c *Coordinator) maintainerEffector() error {
 	log.Info("renewal maintainer")
+	c.lock.Lock()
 	c.Maintainer.MaintainerInfo.Counter++
-	if err := coordinatorService.RenewalMaintainer(c.Maintainer.MaintainerInfo); err == nil {
-		c.Maintainer.setLifeTime(0)
+	maintainerInfo := c.Maintainer.MaintainerInfo
+	c.lock.Unlock()
+	if err := coordinatorService.RenewalMaintainer(maintainerInfo); err == nil {
+		c.lock.Lock()
+		if c.Maintainer.MaintainerInfo == maintainerInfo {
+			c.Maintainer.setLifeTime(0)
+		}
+		c.lock.Unlock()
 		return nil
 	}
 	return c.init()
@@ -252,13 +259,22 @@ func (c *Coordinator) getMaintainerbyRpc(agentInfo meta.AgentInfoInterface) erro
 
 // GetMaintainer will get Coordinator Maintainer with LifeTime.
 func GetMaintainer() (Maintainer, error) {
-	if OCS_COORDINATOR == nil || OCS_COORDINATOR.IsFaulty() {
+	if OCS_COORDINATOR == nil {
 		return Maintainer{}, errors.Occur(errors.ErrAgentCoordinatorNotInitialized)
-	} else {
-		var maintainer = *OCS_COORDINATOR.Maintainer
-		maintainer.LifeTime = float64(time.Since(OCS_COORDINATOR.Maintainer.GetLastUpdateTime()).Seconds())
-		return maintainer, nil
 	}
+
+	OCS_COORDINATOR.lock.Lock()
+	defer OCS_COORDINATOR.lock.Unlock()
+	if OCS_COORDINATOR.identity == FAULTY {
+		return Maintainer{}, errors.Occur(errors.ErrAgentCoordinatorNotInitialized)
+	}
+	maintainer := Maintainer{
+		MaintainerInfo: OCS_COORDINATOR.Maintainer.MaintainerInfo,
+		LastUpdateTime: OCS_COORDINATOR.Maintainer.LastUpdateTime,
+		ExpirationTime: OCS_COORDINATOR.Maintainer.ExpirationTime,
+	}
+	maintainer.LifeTime = float64(time.Since(maintainer.GetLastUpdateTime()).Seconds())
+	return maintainer, nil
 }
 
 func (m *Maintainer) IsActive() bool {

@@ -23,6 +23,7 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/lib/http"
+	"github.com/oceanbase/obshell/ob/agent/lib/path"
 	"github.com/oceanbase/obshell/ob/client/command"
 	clientconst "github.com/oceanbase/obshell/ob/client/constant"
 	"github.com/oceanbase/obshell/ob/client/lib/stdio"
@@ -78,10 +79,7 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 	}
 	if cmd.Flags().Changed(FLAG_NEW_PASSWORD) {
 		stdio.StartLoadingf("set password of tenant %s", tenantName)
-		if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{
-			OldPwd: opts.oldPwd,
-			NewPwd: &opts.newPwd,
-		}, nil); err != nil {
+		if err := modifyTenantRootPassword(tenantName, opts.oldPwd, opts.newPwd); err != nil {
 			return err
 		}
 		stdio.LoadSuccessf("set password of tenant %s", tenantName)
@@ -106,10 +104,7 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 		}
 
 		stdio.StartLoadingf("set password of tenant %s", tenantName)
-		if err := api.CallApiWithMethod(http.PUT, constant.URI_TENANT_API_PREFIX+"/"+tenantName+constant.URI_ROOTPASSWORD, param.ModifyTenantRootPasswordParam{
-			OldPwd: old_password,
-			NewPwd: &new_password,
-		}, nil); err != nil {
+		if err := modifyTenantRootPassword(tenantName, old_password, new_password); err != nil {
 			return err
 		}
 		stdio.LoadSuccessf("set password of tenant %s", tenantName)
@@ -136,6 +131,18 @@ func tenantModify(cmd *cobra.Command, tenantName string, opts *tenantModifyFlags
 			return err
 		}
 		stdio.LoadSuccess("set whitelist")
+	}
+	return nil
+}
+
+func modifyTenantRootPassword(tenantName, oldPassword, newPassword string) error {
+	passwordURI := constant.URI_TENANT_API_PREFIX + "/" + tenantName + constant.URI_ROOTPASSWORD
+	// Bypass api.CallApiWithMethod because its verbose output includes the request body.
+	if err := http.SendPutRequestViaUnixSocket(path.ObshellSocketPath(), passwordURI, param.ModifyTenantRootPasswordParam{
+		OldPwd: oldPassword,
+		NewPwd: &newPassword,
+	}, nil); err != nil {
+		return err
 	}
 	return nil
 }
