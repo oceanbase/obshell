@@ -19,8 +19,8 @@ package system
 import (
 	"bufio"
 	"bytes"
-	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -79,8 +79,7 @@ type BackupSet struct {
 	MinRestoreSCN       SCN  `json:"min_restore_scn"`
 }
 
-func ExecCommand(command string) (string, error) {
-	cmd := exec.Command("bash", "-c", command)
+func executeCommand(cmd *exec.Cmd) (string, error) {
 	stdoutStderr, err := cmd.CombinedOutput()
 	if err != nil {
 		return "", err
@@ -246,15 +245,21 @@ func getOBAdminCtxByURI(uri string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "get storage interface failed")
 	}
-	cmd := newOBAdminCommand(storage)
-	return ExecCommand(cmd)
+	return executeOBAdminDumpBackup(storage.GenerateURIWhitoutParams(), storage.GenerateQueryParams())
 }
 
-func newOBAdminCommand(storage StorageInterface) string {
-	cmd := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s dump_backup -q -d '%s'", global.HomePath, path.OBAdmin(), storage.GenerateURIWhitoutParams())
-	if storage.GenerateQueryParams() != "" {
-		cmd += fmt.Sprintf(" -s '%s'", storage.GenerateQueryParams())
+func executeOBAdminDumpBackup(storageURI, storageParams string) (string, error) {
+	cmd := newOBAdminDumpBackupCommand(storageURI, storageParams)
+	return executeCommand(cmd)
+}
+
+func newOBAdminDumpBackupCommand(storageURI, storageParams string) *exec.Cmd {
+	args := []string{"dump_backup", "-q", "-d", storageURI}
+	if storageParams != "" {
+		args = append(args, "-s", storageParams)
 	}
+	cmd := exec.Command(path.OBAdmin(), args...)
+	cmd.Env = append(cmd.Environ(), "LD_LIBRARY_PATH="+filepath.Join(global.HomePath, "lib"))
 	return cmd
 }
 
@@ -301,12 +306,7 @@ func GetRestoreSourceTenantInfo(dataURI, logURI string) (*RestoreTenantInfo, err
 	if err != nil {
 		return nil, err
 	}
-	cmd := fmt.Sprintf("export LD_LIBRARY_PATH='%s/lib'; %s dump_backup -q -d '%s'", global.HomePath, path.OBAdmin(), storage.GenerateURI())
-	if storage.GenerateQueryParams() != "" {
-		cmd += fmt.Sprintf(" -s '%s'", storage.GenerateQueryParams())
-	}
-
-	res, err := ExecCommand(cmd)
+	res, err := executeOBAdminDumpBackup(storage.GenerateURI(), storage.GenerateQueryParams())
 	if err != nil {
 		return nil, errors.Wrap(err, "execute dump_backup command failed")
 	}
