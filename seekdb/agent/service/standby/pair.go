@@ -155,15 +155,56 @@ func (s *StandbyService) GetUpstreamPeer() (*sqlite.SeekdbStandbyPeer, error) {
 	return &peer, nil
 }
 
+// GetUpstreamPeerForCaller returns the single canonical UPSTREAM record for an
+// authenticated switchover caller. The host in the RPC body can be an address
+// alias, so the persisted peer address is authoritative; the obshell port is
+// still checked to prevent selecting an unrelated peer.
+func (s *StandbyService) GetUpstreamPeerForCaller(callerPort int) (*sqlite.SeekdbStandbyPeer, error) {
+	db, err := sqlitedb.GetSqliteInstance()
+	if err != nil {
+		return nil, err
+	}
+	var peers []sqlite.SeekdbStandbyPeer
+	if err := db.Where("direction = ?", constant.STANDBY_DIRECTION_UPSTREAM).Find(&peers).Error; err != nil {
+		return nil, err
+	}
+	if len(peers) == 0 {
+		return nil, errors.Occur(errors.ErrStandbyPeerNotFound, "UPSTREAM", callerPort)
+	}
+	if len(peers) > 1 {
+		return nil, fmt.Errorf("standby peer metadata is inconsistent: found %d UPSTREAM records", len(peers))
+	}
+	if peers[0].PeerObshellPort != callerPort {
+		return nil, fmt.Errorf("switchover caller port %d does not match UPSTREAM peer port %d",
+			callerPort, peers[0].PeerObshellPort)
+	}
+	return &peers[0], nil
+}
+
 // FlipDirection swaps a peer's direction to newDirection.
 func (s *StandbyService) FlipDirection(host string, port int, newDirection string) error {
 	db, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
 	}
-	return db.Model(&sqlite.SeekdbStandbyPeer{}).
+	result := db.Model(&sqlite.SeekdbStandbyPeer{}).
 		Where("peer_host = ? AND peer_obshell_port = ?", host, port).
-		Update("direction", newDirection).Error
+		Update("direction", newDirection)
+	if result.Error != nil {
+		return result.Error
+	}
+	return validatePeerDirectionUpdate(result.RowsAffected, host, port)
+}
+
+func validatePeerDirectionUpdate(rowsAffected int64, host string, port int) error {
+	if rowsAffected == 1 {
+		return nil
+	}
+	if rowsAffected == 0 {
+		return errors.Occur(errors.ErrStandbyPeerNotFound, host, port)
+	}
+	return fmt.Errorf("standby peer metadata is inconsistent: updated %d records for %s:%d",
+		rowsAffected, host, port)
 }
 
 // SetLogRestoreSource issues ALTER SYSTEM SET log_restore_source.

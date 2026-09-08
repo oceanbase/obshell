@@ -24,6 +24,7 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/errors"
 	"github.com/oceanbase/obshell/seekdb/agent/executor/observer"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
+	"github.com/oceanbase/obshell/seekdb/agent/repository/model/sqlite"
 	"github.com/oceanbase/obshell/seekdb/param"
 )
 
@@ -327,6 +328,10 @@ func (t *SwitchoverPostCheckTask) Execute() error {
 		return fmt.Errorf("postcheck: peer role transition is not stable: pending_role=%s switchover_status=%s",
 			peerStatus.Local.PendingRole, peerStatus.Local.SwitchoverStatus)
 	}
+	if peerStatus.Local.LogRestoreSource != "" {
+		return fmt.Errorf("postcheck: peer log restore source is %q, expected empty on the new primary",
+			peerStatus.Local.LogRestoreSource)
+	}
 
 	// Check local peer direction has been flipped to UPSTREAM.
 	peer, err := standbyService.GetPeerByAddr(peerHost, peerObshellPort)
@@ -338,12 +343,13 @@ func (t *SwitchoverPostCheckTask) Execute() error {
 	}
 
 	// Check peer's direction for our address has been flipped to DOWNSTREAM.
+	// The persisted host may be a valid alias of our advertised address, so use
+	// the authenticated caller's obshell port to locate the canonical record.
 	// The RPC status response includes the peer's local SQLite records.
 	peerDirectionOk := false
-	selfHost := meta.OCS_AGENT.GetIp()
 	selfPort := meta.OCS_AGENT.GetPort()
 	for _, remotePeer := range peerStatus.Peers {
-		if remotePeer.PeerHost == selfHost && remotePeer.PeerObshellPort == selfPort {
+		if remotePeer.PeerObshellPort == selfPort {
 			if remotePeer.Direction == constant.STANDBY_DIRECTION_DOWNSTREAM {
 				peerDirectionOk = true
 			} else {
@@ -363,26 +369,79 @@ func (t *SwitchoverPostCheckTask) Execute() error {
 
 // ExecuteSwitchoverToPrimary is the server-side handler for the internal
 // POST /rpc/v1/seekdb/standby/switchover-to-primary RPC.
-// It executes ALTER SYSTEM SWITCHOVER TO PRIMARY on the local standby and
-// flips the caller peer's direction record from UPSTREAM → DOWNSTREAM.
+// It executes ALTER SYSTEM SWITCHOVER TO PRIMARY on the local standby, clears
+// the obsolete upstream restore source, and flips the caller peer's direction
+// record from UPSTREAM → DOWNSTREAM.
 func ExecuteSwitchoverToPrimary(p param.RpcSwitchoverToPrimaryParam) error {
-	if err := standbyService.SwitchoverToPrimary(); err != nil {
-		return err
-	}
-	status, err := standbyService.GetLocalStatus()
+	return executeSwitchoverToPrimary(&standbyService, p)
+}
+
+type switchoverToPrimaryService interface {
+	GetLocalStatus() (param.LocalStandbyStatus, error)
+	SwitchoverToPrimary() error
+	ClearLogRestoreSource() error
+	GetUpstreamPeerForCaller(callerPort int) (*sqlite.SeekdbStandbyPeer, error)
+	FlipDirection(host string, port int, newDirection string) error
+}
+
+// executeSwitchoverToPrimary is state-driven so retrying after a partial
+// success does not issue SWITCHOVER TO PRIMARY against an already-primary
+// SeekDB. Cleanup and peer metadata updates are safe to retry independently.
+func executeSwitchoverToPrimary(service switchoverToPrimaryService, p param.RpcSwitchoverToPrimaryParam) error {
+	status, err := service.GetLocalStatus()
 	if err != nil {
-		return fmt.Errorf("failed to query promoted standby: %w", err)
+		return fmt.Errorf("failed to query standby before promotion: %w", err)
 	}
+
+	if status.Role == "STANDBY" && status.PendingRole == "INVALID" && status.SwitchoverStatus == "NORMAL" {
+		if err := service.SwitchoverToPrimary(); err != nil {
+			return err
+		}
+		status, err = service.GetLocalStatus()
+		if err != nil {
+			return fmt.Errorf("failed to query promoted standby: %w", err)
+		}
+	}
+
 	if status.Role != "PRIMARY" || status.PendingRole != "INVALID" || status.SwitchoverStatus != "NORMAL" {
 		return fmt.Errorf("standby promotion did not reach a stable primary state: role=%s pending_role=%s switchover_status=%s",
 			status.Role, status.PendingRole, status.SwitchoverStatus)
 	}
 
+	// A primary must not retain the upstream source it used while it was a
+	// standby. Do this before publishing the DOWNSTREAM peer direction so the
+	// metadata is only finalized after the database state is clean.
+	if err := service.ClearLogRestoreSource(); err != nil {
+		return fmt.Errorf("failed to clear log restore source on promoted primary: %w", err)
+	}
+	status, err = service.GetLocalStatus()
+	if err != nil {
+		return fmt.Errorf("failed to verify promoted primary after clearing log restore source: %w", err)
+	}
+	if status.Role != "PRIMARY" || status.PendingRole != "INVALID" || status.SwitchoverStatus != "NORMAL" {
+		return fmt.Errorf("promoted primary became unstable after clearing log restore source: role=%s pending_role=%s switchover_status=%s",
+			status.Role, status.PendingRole, status.SwitchoverStatus)
+	}
+	if status.LogRestoreSource != "" {
+		return fmt.Errorf("log restore source is %q after clearing it on the promoted primary", status.LogRestoreSource)
+	}
+
+	// Use the canonical peer address persisted during pairing. CallerHost may
+	// be a valid network alias; RPC authentication establishes peer identity,
+	// while the obshell port guards against selecting an unrelated record.
+	upstreamPeer, err := service.GetUpstreamPeerForCaller(p.CallerObshellPort)
+	if err != nil {
+		return fmt.Errorf("failed to resolve switchover caller peer: %w", err)
+	}
+
 	// Flip the caller (original primary, now standby) to DOWNSTREAM.
-	return standbyService.FlipDirection(
-		p.CallerHost, p.CallerObshellPort,
+	if err := service.FlipDirection(
+		upstreamPeer.PeerHost, upstreamPeer.PeerObshellPort,
 		constant.STANDBY_DIRECTION_DOWNSTREAM,
-	)
+	); err != nil {
+		return fmt.Errorf("failed to update promoted primary peer direction: %w", err)
+	}
+	return nil
 }
 
 // SwitchoverFinalizeOldPrimaryTask runs after the seekdb-only restart. The
