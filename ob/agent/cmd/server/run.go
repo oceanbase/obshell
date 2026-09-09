@@ -46,9 +46,9 @@ func (a *Agent) run() (err error) {
 		return errors.Wrap(err, "statr oceanbase connect module failed")
 	}
 
-	// Sync public key to OB in background so that when this agent is a remote task target,
-	// the maintainer can get our pk from OB and build the request header before sending continue RPC.
-	go a.syncPublicKeyToOBWhenReady()
+	// Sync startup metadata to OB independently of handleOBMeta. External upgrades enter upgrade mode and
+	// skip handleOBMeta, but still need the running cluster agent version recorded in ocs.all_agent.
+	go a.syncAgentMetadataToOBWhenReady()
 
 	a.handleOBMeta()
 	return nil
@@ -156,24 +156,69 @@ func (a *Agent) startConnenctModule() (err error) {
 	return nil
 }
 
-// syncPublicKeyToOBWhenReady retries UpdateAgentPublicKey until success or max retries, so that when this agent
-// is a remote task target (e.g. RestartAgentTask continue sent via RPC from maintainer), the maintainer can get
-// our pk from OB and build the request header. Otherwise the RPC would fail with "header not found" and this agent
-// would never receive the continued task to run UpdateAgentPublicKey.
-func (a *Agent) syncPublicKeyToOBWhenReady() {
-	const retries = 15
-	const interval = 2 * time.Second
-	for i := 0; i < retries; i++ {
-		if i > 0 {
-			time.Sleep(interval)
+const (
+	publicKeySyncMaxAttempts = 15
+	metadataSyncInterval     = 2 * time.Second
+)
+
+// syncAgentMetadataToOBWhenReady keeps the original bounded public-key synchronization for every identity.
+// Version self-healing is restricted to an upgraded cluster agent: normal cluster-agent startup is handled by
+// HandleOBMeta, while unidentified/takeover identities must preserve Rebuild's version-consistency check.
+// For an upgraded cluster agent the goroutine is owned by the obshell process and exits when the version is
+// synchronized; process termination is its other lifecycle boundary.
+func (a *Agent) syncAgentMetadataToOBWhenReady() {
+	syncAgentMetadataToOBWhenReady(
+		shouldSyncAgentVersionOnStartup(a.upgradeMode, meta.OCS_AGENT.GetIdentity()),
+		func() error { return agentService.UpdateAgentPublicKey(secure.Public()) },
+		agentService.UpdateAgentVersion,
+		time.Sleep,
+	)
+}
+
+func shouldSyncAgentVersionOnStartup(upgradeMode bool, identity meta.AgentIdentity) bool {
+	return upgradeMode && identity == meta.CLUSTER_AGENT
+}
+
+func syncAgentMetadataToOBWhenReady(
+	syncVersion bool,
+	updatePublicKey func() error,
+	updateVersion func() error,
+	wait func(time.Duration),
+) {
+	publicKeySynced := false
+	publicKeyAttempts := 0
+	versionSynced := !syncVersion
+	versionAttempts := 0
+
+	for {
+		if !publicKeySynced && publicKeyAttempts < publicKeySyncMaxAttempts {
+			publicKeyAttempts++
+			if err := updatePublicKey(); err != nil {
+				log.Debugf("sync agent public key to oceanbase retry [%d/%d]: %v", publicKeyAttempts, publicKeySyncMaxAttempts, err)
+			} else {
+				publicKeySynced = true
+				log.Info("sync agent public key to oceanbase success")
+			}
 		}
-		if err := agentService.UpdateAgentPublicKey(secure.Public()); err == nil {
-			log.Info("sync agent public key to oceanbase success")
+
+		if !versionSynced {
+			versionAttempts++
+			if err := updateVersion(); err != nil {
+				log.Debugf("sync agent version to oceanbase retry [%d]: %v", versionAttempts, err)
+			} else {
+				versionSynced = true
+				log.Info("sync agent version to oceanbase success")
+			}
+		}
+
+		if versionSynced && (publicKeySynced || publicKeyAttempts >= publicKeySyncMaxAttempts) {
+			if !publicKeySynced {
+				log.Warn("sync agent public key to oceanbase failed after retries")
+			}
 			return
 		}
-		log.Debugf("sync agent public key to oceanbase retry [%d/%d]", i+1, retries)
+		wait(metadataSyncInterval)
 	}
-	log.Warn("sync agent public key to oceanbase failed after retries")
 }
 
 func (a *Agent) handleOBMeta() {

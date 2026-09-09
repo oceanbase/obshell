@@ -475,7 +475,44 @@ func (s *AgentService) UpdateAgentVersion() (err error) {
 	if err != nil {
 		return err
 	}
-	return db.Model(&oceanbase.AllAgent{}).Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Update("version", meta.OCS_AGENT.GetVersion()).Error
+	return s.updateAgentVersion(db)
+}
+
+func (s *AgentService) updateAgentVersion(db *gorm.DB) error {
+	agentAddress := meta.OCS_AGENT.String()
+	targetVersion := meta.OCS_AGENT.GetVersion()
+	result := db.Model(&oceanbase.AllAgent{}).
+		Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).
+		Update("version", targetVersion)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 1 {
+		return nil
+	}
+	if result.RowsAffected > 1 {
+		return errors.Errorf("update version of agent %s affected %d rows", agentAddress, result.RowsAffected)
+	}
+
+	// MySQL-compatible databases report zero changed rows when another concurrent caller has already
+	// written the same version. Re-read the row so that this successful idempotent state is not confused
+	// with a missing agent.
+	return s.confirmAgentVersion(db, targetVersion, agentAddress)
+}
+
+func (s *AgentService) confirmAgentVersion(db *gorm.DB, targetVersion, agentAddress string) error {
+	var storedAgent oceanbase.AllAgent
+	result := db.Select("version").Where("ip=? and port=?", meta.OCS_AGENT.GetIp(), meta.OCS_AGENT.GetPort()).Take(&storedAgent)
+	if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+		return errors.Occur(errors.ErrAgentNotExist, agentAddress)
+	}
+	if result.Error != nil {
+		return result.Error
+	}
+	if storedAgent.Version != targetVersion {
+		return errors.Errorf("version of agent %s is %q after update, expected %q", agentAddress, storedAgent.Version, targetVersion)
+	}
+	return nil
 }
 
 func (s *AgentService) ConvertToOBAgentDO(agent sqlite.AllAgent) oceanbase.AllAgent {
