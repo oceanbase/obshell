@@ -159,24 +159,26 @@ func (a *Agent) startConnenctModule() (err error) {
 const (
 	publicKeySyncMaxAttempts = 15
 	metadataSyncInterval     = 2 * time.Second
+	metadataSyncMaxInterval  = time.Minute
 )
 
 // syncAgentMetadataToOBWhenReady keeps the original bounded public-key synchronization for every identity.
-// Version self-healing is restricted to an upgraded cluster agent: normal cluster-agent startup is handled by
-// HandleOBMeta, while unidentified/takeover identities must preserve Rebuild's version-consistency check.
-// For an upgraded cluster agent the goroutine is owned by the obshell process and exits when the version is
-// synchronized; process termination is its other lifecycle boundary.
+// Version self-healing is restricted to a cluster agent. It runs independently of HandleOBMeta so that a
+// temporary migration failure, for example while OceanBase is upgrading, cannot permanently skip the version
+// update. Unidentified/takeover identities must preserve Rebuild's version-consistency check. The goroutine is
+// owned by the obshell process and exits when the version is synchronized; process termination is its other
+// lifecycle boundary.
 func (a *Agent) syncAgentMetadataToOBWhenReady() {
 	syncAgentMetadataToOBWhenReady(
-		shouldSyncAgentVersionOnStartup(a.upgradeMode, meta.OCS_AGENT.GetIdentity()),
+		shouldSyncAgentVersionOnStartup(meta.OCS_AGENT.GetIdentity()),
 		func() error { return agentService.UpdateAgentPublicKey(secure.Public()) },
 		agentService.UpdateAgentVersion,
 		time.Sleep,
 	)
 }
 
-func shouldSyncAgentVersionOnStartup(upgradeMode bool, identity meta.AgentIdentity) bool {
-	return upgradeMode && identity == meta.CLUSTER_AGENT
+func shouldSyncAgentVersionOnStartup(identity meta.AgentIdentity) bool {
+	return identity == meta.CLUSTER_AGENT
 }
 
 func syncAgentMetadataToOBWhenReady(
@@ -189,6 +191,7 @@ func syncAgentMetadataToOBWhenReady(
 	publicKeyAttempts := 0
 	versionSynced := !syncVersion
 	versionAttempts := 0
+	waitInterval := metadataSyncInterval
 
 	for {
 		if !publicKeySynced && publicKeyAttempts < publicKeySyncMaxAttempts {
@@ -217,7 +220,15 @@ func syncAgentMetadataToOBWhenReady(
 			}
 			return
 		}
-		wait(metadataSyncInterval)
+		wait(waitInterval)
+		// Keep the public-key retry window at its original two-second cadence. Version backoff starts only
+		// after the public key is settled (success or attempt limit), because both operations share this loop.
+		if !versionSynced && (publicKeySynced || publicKeyAttempts >= publicKeySyncMaxAttempts) && waitInterval < metadataSyncMaxInterval {
+			waitInterval *= 2
+			if waitInterval > metadataSyncMaxInterval {
+				waitInterval = metadataSyncMaxInterval
+			}
+		}
 	}
 }
 
