@@ -18,6 +18,9 @@ package pkg
 
 import (
 	"bufio"
+	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
 	"io"
 	"mime/multipart"
 	"os"
@@ -31,7 +34,19 @@ import (
 	"github.com/cavaliergopher/cpio"
 	"github.com/cavaliergopher/rpm"
 	"github.com/oceanbase/obshell/ob/agent/errors"
+	rpmsignature "github.com/oceanbase/obshell/rpm/signature"
 )
+
+// RpmIdentity is the package identity selected by the upgrade task before the
+// RPM is copied into the path-accessible upgrade directory. OBShell self-upgrade
+// compares every field with the signed RPM header so another official OBShell
+// release cannot be substituted after package selection.
+type RpmIdentity struct {
+	Name         string
+	Version      string
+	Release      string
+	Architecture string
+}
 
 func ReadRpm(input multipart.File) (pkg *rpm.Package, err error) {
 	if _, err = input.Seek(0, 0); err != nil {
@@ -44,6 +59,22 @@ func ReadRpm(input multipart.File) (pkg *rpm.Package, err error) {
 		return
 	}
 	return rpm.Read(input)
+}
+
+// VerifyObshellRpmSignature verifies only packages identified as OBShell RPMs.
+// Keeping the package-name guard next to the cryptographic check makes it hard
+// for callers to accidentally expand verification to OceanBase or other RPMs.
+func VerifyObshellRpmSignature(input multipart.File, packageName string) error {
+	if packageName != "obshell" {
+		return nil
+	}
+
+	signer, err := rpmsignature.Verify(input)
+	if err != nil {
+		return errors.WrapOverride(errors.ErrObshellPackageSignatureInvalid, err)
+	}
+	log.Infof("Verified OBShell RPM signature from %s", signer)
+	return nil
 }
 
 func SplitRelease(release string) (buildNumber, distribution string, err error) {
@@ -66,13 +97,110 @@ func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
 
 	f, err := os.Open(path)
 	if err != nil {
-		return
+		return err
 	}
-	defer f.Close()
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "close RPM package")
+		}
+	}()
+	_, err = installRpmFileToTargetDir(f, installPath, nil)
+	return err
+}
 
+// InstallVerifiedObshellRpmInPlace is the dedicated standalone OBShell upgrade
+// path. Keeping verification out of InstallRpmPkg* preserves the behavior of
+// OceanBase, standalone, libs, and obdiag package extraction.
+func InstallVerifiedObshellRpmInPlace(path string, expectedIdentity RpmIdentity) (obshellBinarySHA256 string, err error) {
+	return installVerifiedObshellRpmToTargetDir(path, filepath.Dir(path), expectedIdentity)
+}
+
+func installVerifiedObshellRpmToTargetDir(path string, installPath string, expectedIdentity RpmIdentity) (obshellBinarySHA256 string, err error) {
+	if expectedIdentity.Name != "obshell" {
+		return "", errors.Occur(errors.ErrPackageNameMismatch, expectedIdentity.Name, "obshell")
+	}
+	log.Infof("Install verified OBShell RPM: %s", path)
+
+	f, err := openRpmForInstall(path, expectedIdentity.Name)
+	if err != nil {
+		return "", err
+	}
+	defer func() {
+		if closeErr := f.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "close OBShell RPM package")
+		}
+	}()
+	return installRpmFileToTargetDir(f, installPath, &expectedIdentity)
+}
+
+func openRpmForInstall(path string, expectedPackageName string) (*os.File, error) {
+	source, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	if expectedPackageName != "obshell" {
+		return source, nil
+	}
+
+	// OBShell self-upgrade uses an unlinked 0600 snapshot. Signature verification
+	// and extraction both read this private file, so neither path replacement nor
+	// an in-place write through another descriptor can change the verified bytes.
+	snapshot, err := os.CreateTemp(filepath.Dir(path), ".obshell-rpm-snapshot-*")
+	if err != nil {
+		if closeErr := source.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM after snapshot creation failure")
+		}
+		return nil, errors.Wrap(err, "create OBShell RPM snapshot")
+	}
+	if err := os.Remove(snapshot.Name()); err != nil {
+		if closeErr := snapshot.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM snapshot after unlink failure")
+		}
+		if closeErr := source.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM after snapshot unlink failure")
+		}
+		return nil, errors.Wrap(err, "unlink OBShell RPM snapshot")
+	}
+	if _, err := io.Copy(snapshot, source); err != nil {
+		if closeErr := snapshot.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close incomplete OBShell RPM snapshot")
+		}
+		if closeErr := source.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM after snapshot copy failure")
+		}
+		return nil, errors.Wrap(err, "copy OBShell RPM to private snapshot")
+	}
+	if err := source.Close(); err != nil {
+		if closeErr := snapshot.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM snapshot after source close failure")
+		}
+		return nil, errors.Wrap(err, "close OBShell RPM after snapshot")
+	}
+	if _, err := snapshot.Seek(0, io.SeekStart); err != nil {
+		if closeErr := snapshot.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell RPM snapshot after seek failure")
+		}
+		return nil, errors.Wrap(err, "rewind OBShell RPM snapshot")
+	}
+	return snapshot, nil
+}
+
+func installRpmFileToTargetDir(f *os.File, installPath string, expectedIdentity *RpmIdentity) (obshellBinarySHA256 string, err error) {
 	pkg, err := rpm.Read(f)
 	if err != nil {
 		return
+	}
+	verifiedObshellUpgrade := expectedIdentity != nil
+	if verifiedObshellUpgrade {
+		if pkg.Name() != expectedIdentity.Name {
+			return "", errors.Occur(errors.ErrPackageNameMismatch, pkg.Name(), expectedIdentity.Name)
+		}
+		if err = VerifyObshellRpmSignature(f, expectedIdentity.Name); err != nil {
+			return
+		}
+		if err = verifyObshellRpmIdentity(pkg, *expectedIdentity); err != nil {
+			return "", err
+		}
 	}
 	if err = CheckCompressAndFormat(pkg); err != nil {
 		return
@@ -83,7 +211,7 @@ func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
 	// Get current position as payload start
 	payloadStart, err := f.Seek(0, io.SeekCurrent)
 	if err != nil {
-		return errors.Wrapf(err, "get payload position")
+		return "", errors.Wrapf(err, "get payload position")
 	}
 
 	var bufferedReader *bufio.Reader
@@ -95,11 +223,11 @@ func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
 		// Fallback to pure Go xz implementation
 		// Reset file position since NewXzSystemReader may have changed it
 		if _, err := f.Seek(payloadStart, io.SeekStart); err != nil {
-			return errors.Wrapf(err, "seek to payload")
+			return "", errors.Wrapf(err, "seek to payload")
 		}
 		reader, err := xz.NewReader(f)
 		if err != nil {
-			return errors.Wrapf(err, "create xz reader")
+			return "", errors.Wrapf(err, "create xz reader")
 		}
 		bufferedReader = bufio.NewReaderSize(reader, 256*1024)
 	}
@@ -112,7 +240,7 @@ func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
 			break
 		}
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		m := hdr.Mode
@@ -120,44 +248,88 @@ func InstallRpmPkgToTargetDir(path string, installPath string) (err error) {
 			dest := filepath.Join(installPath, hdr.Name)
 			log.Infof("%s is a directory, creating %s", hdr.Name, dest)
 			if err := os.MkdirAll(dest, 0755); err != nil {
-				return errors.Wrapf(err, "mkdir failed %s", hdr.Name)
+				return "", errors.Wrapf(err, "mkdir failed %s", hdr.Name)
 			}
 
 		} else if m.IsRegular() {
-			if err := handleRegularFile(hdr, cpioReader, installPath); err != nil {
-				return err
+			var digest string
+			if digest, err = handleRegularFile(hdr, cpioReader, installPath, verifiedObshellUpgrade); err != nil {
+				return "", err
+			}
+			if digest != "" {
+				obshellBinarySHA256 = digest
 			}
 
 		} else if hdr.Linkname != "" {
 			if err := handleSymlink(hdr, installPath); err != nil {
-				return err
+				return "", err
 			}
 		} else {
 			log.Infof("Skipping unsupported file %s type: %v", hdr.Name, m)
 		}
 	}
 
+	if verifiedObshellUpgrade && obshellBinarySHA256 == "" {
+		return "", errors.Occur(errors.ErrObPackageMissingFile, expectedIdentity.Name, "/home/admin/oceanbase/bin/obshell")
+	}
+	return obshellBinarySHA256, nil
+}
+
+func verifyObshellRpmIdentity(rpmPkg *rpm.Package, expected RpmIdentity) error {
+	if expected.Name != "obshell" {
+		return nil
+	}
+
+	actual := RpmIdentity{
+		Name:         rpmPkg.Name(),
+		Version:      rpmPkg.Version(),
+		Release:      rpmPkg.Release(),
+		Architecture: rpmPkg.Architecture(),
+	}
+	if expected.Version == "" || expected.Release == "" || expected.Architecture == "" {
+		return errors.Occur(errors.ErrObPackageCorrupted, expected.Name, "missing expected signed RPM identity")
+	}
+	if actual != expected {
+		return errors.Occur(
+			errors.ErrObPackageCorrupted,
+			expected.Name,
+			fmt.Sprintf("signed RPM identity %s-%s-%s.%s does not match expected %s-%s-%s.%s",
+				actual.Name, actual.Version, actual.Release, actual.Architecture,
+				expected.Name, expected.Version, expected.Release, expected.Architecture),
+		)
+	}
 	return nil
 }
 
-func handleRegularFile(hdr *cpio.Header, cpioReader *cpio.Reader, installPath string) error {
+func handleRegularFile(hdr *cpio.Header, cpioReader *cpio.Reader, installPath string, recordObshellDigest bool) (string, error) {
 	dest := filepath.Join(installPath, hdr.Name)
 	if err := os.MkdirAll(filepath.Dir(dest), 0755); err != nil {
 		log.WithError(err).Error("mkdir failed")
-		return err
+		return "", err
 	}
 
 	outFile, err := os.Create(dest)
 	if err != nil {
-		return err
+		return "", err
 	}
-	defer outFile.Close()
+	defer func() {
+		if err := outFile.Close(); err != nil {
+			log.WithError(err).Warn("close extracted RPM file")
+		}
+	}()
 
 	log.Infof("Extracting %s", hdr.Name)
-	if _, err := io.Copy(outFile, cpioReader); err != nil {
-		return err
+	if recordObshellDigest && filepath.Clean(hdr.Name) == "home/admin/oceanbase/bin/obshell" {
+		digest := sha256.New()
+		if _, err := io.Copy(io.MultiWriter(outFile, digest), cpioReader); err != nil {
+			return "", err
+		}
+		return hex.EncodeToString(digest.Sum(nil)), nil
 	}
-	return nil
+	if _, err := io.Copy(outFile, cpioReader); err != nil {
+		return "", err
+	}
+	return "", nil
 }
 
 func handleSymlink(hdr *cpio.Header, installPath string) error {
@@ -193,28 +365,14 @@ func NewXzSystemReader(rpmFile multipart.File, payloadStart int64) (io.Reader, f
 		return nil, nil, errors.Occur(errors.ErrEmpty, "xzcat/unxz not available")
 	}
 
-	// Check if multipart.File is *os.File to get the file path
-	// If not, we cannot use system command and should return error to fallback
+	// Keep the decompressor bound to the already opened file descriptor. Reopening
+	// osFile.Name() here would allow the path to be replaced after signature
+	// verification but before extraction.
 	osFile, ok := rpmFile.(*os.File)
 	if !ok {
 		return nil, nil, errors.Occur(errors.ErrEmpty, "multipart.File is not *os.File, cannot use system command")
 	}
-
-	// Get the file path from *os.File
-	rpmPath := osFile.Name()
-
-	// Open a new file handle for the command (system commands need a file path)
-	// We need a separate file handle because the command reads from stdin
-	f, err := os.Open(rpmPath)
-	if err != nil {
-		return nil, nil, errors.Wrapf(err, "open rpm")
-	}
-
-	// Seek to payload start position
-	if _, err := f.Seek(payloadStart, io.SeekStart); err != nil {
-		f.Close()
-		return nil, nil, errors.Wrapf(err, "seek to payload")
-	}
+	payload := io.NewSectionReader(osFile, payloadStart, 1<<63-1-payloadStart)
 
 	if cmdName == "xzcat" {
 		cmd = exec.Command("xzcat")
@@ -222,22 +380,27 @@ func NewXzSystemReader(rpmFile multipart.File, payloadStart int64) (io.Reader, f
 		cmd = exec.Command("unxz", "-c")
 	}
 
-	cmd.Stdin = f
+	cmd.Stdin = payload
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		f.Close()
 		return nil, nil, errors.Wrapf(err, "create stdout pipe")
 	}
 
 	if err := cmd.Start(); err != nil {
-		f.Close()
-		stdout.Close()
+		if closeErr := stdout.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close xz stdout pipe after start failure")
+		}
 		return nil, nil, errors.Wrapf(err, "start %s", cmdName)
 	}
 	return bufio.NewReaderSize(stdout, 256*1024), func() {
-		stdout.Close()
-		cmd.Process.Kill()
-		cmd.Wait()
-		f.Close()
+		if err := stdout.Close(); err != nil {
+			log.WithError(err).Debug("close xz stdout pipe")
+		}
+		if err := cmd.Process.Kill(); err != nil {
+			log.WithError(err).Debug("stop xz process")
+		}
+		if err := cmd.Wait(); err != nil {
+			log.WithError(err).Debug("wait for xz process")
+		}
 	}, nil
 }

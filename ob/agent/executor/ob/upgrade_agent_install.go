@@ -17,9 +17,14 @@
 package ob
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
@@ -33,6 +38,7 @@ type InstallNewAgentTask struct {
 	task.Task
 	realExecAgent meta.AgentInfo
 	upgradeRoute  []RouteNode
+	rpmPkgInfoKey string
 	rpmPkgInfo    rpmPacakgeInstallInfo
 }
 
@@ -81,8 +87,16 @@ func (t *InstallNewAgentTask) getParams() (err error) {
 		return err
 	}
 	targetBuildVersion := t.upgradeRoute[len(t.upgradeRoute)-1].BuildVersion
+	t.rpmPkgInfoKey = targetBuildVersion
 	if err = t.GetContext().GetAgentDataByAgentKeyWithValue(t.realExecAgent.String(), targetBuildVersion, &t.rpmPkgInfo); err != nil {
 		return err
+	}
+	if t.rpmPkgInfo.RpmName == constant.PKG_OBSHELL && t.rpmPkgInfo.ObshellSHA256 == "" {
+		t.ExecuteLog("Re-verify the OBShell RPM to restore verification metadata from an older upgrade task")
+		if err = verifyAndExtractObshellRpm(t.GetContext(), &t.rpmPkgInfo); err != nil {
+			return err
+		}
+		t.GetContext().SetAgentDataByAgentKey(t.realExecAgent.String(), t.rpmPkgInfoKey, t.rpmPkgInfo)
 	}
 	return nil
 }
@@ -104,11 +118,75 @@ func (t *InstallNewAgentTask) Execute() (err error) {
 
 func (t *InstallNewAgentTask) installNewAgent() error {
 	t.ExecuteLogf("Install new obshell '%s'", t.rpmPkgInfo.RpmPkgHomepath)
+	src := filepath.Join(t.rpmPkgInfo.RpmPkgHomepath, constant.DIR_BIN, constant.PROC_OBSHELL)
+	if t.rpmPkgInfo.RpmName == constant.PKG_OBSHELL {
+		return installVerifiedObshellBinary(src, path.ObshellBinPath(), t.rpmPkgInfo.ObshellSHA256)
+	}
 	if err := os.RemoveAll(path.ObshellBinPath()); err != nil {
 		return err
 	}
-	src := filepath.Join(t.rpmPkgInfo.RpmPkgHomepath, constant.DIR_BIN, constant.PROC_OBSHELL)
 	return system.CopyFile(src, path.ObshellBinPath())
+}
+
+func installVerifiedObshellBinary(src, dest, expectedSHA256 string) (err error) {
+	if expectedSHA256 == "" {
+		return errors.Occur(errors.ErrObPackageCorrupted, constant.PKG_OBSHELL, "missing signed binary digest")
+	}
+
+	source, err := os.Open(src)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if closeErr := source.Close(); closeErr != nil && err == nil {
+			err = errors.Wrap(closeErr, "close staged OBShell binary")
+		}
+	}()
+
+	temp, err := os.CreateTemp(filepath.Dir(dest), ".obshell-upgrade-*")
+	if err != nil {
+		return errors.Wrap(err, "create verified OBShell binary")
+	}
+	tempPath := temp.Name()
+	defer func() {
+		if removeErr := os.Remove(tempPath); removeErr != nil && !os.IsNotExist(removeErr) {
+			log.WithError(removeErr).Warn("remove temporary OBShell binary")
+		}
+	}()
+
+	digest := sha256.New()
+	if _, err := io.Copy(io.MultiWriter(temp, digest), source); err != nil {
+		if closeErr := temp.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close incomplete OBShell binary")
+		}
+		return errors.Wrap(err, "copy staged OBShell binary")
+	}
+	actualSHA256 := hex.EncodeToString(digest.Sum(nil))
+	if actualSHA256 != expectedSHA256 {
+		if closeErr := temp.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close rejected OBShell binary")
+		}
+		return errors.Occur(errors.ErrObPackageCorrupted, constant.PKG_OBSHELL, "staged binary digest does not match signed RPM")
+	}
+	if err := temp.Chmod(0755); err != nil {
+		if closeErr := temp.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell binary after chmod failure")
+		}
+		return errors.Wrap(err, "chmod verified OBShell binary")
+	}
+	if err := temp.Sync(); err != nil {
+		if closeErr := temp.Close(); closeErr != nil {
+			log.WithError(closeErr).Warn("close OBShell binary after sync failure")
+		}
+		return errors.Wrap(err, "sync verified OBShell binary")
+	}
+	if err := temp.Close(); err != nil {
+		return errors.Wrap(err, "close verified OBShell binary")
+	}
+	if err := os.Rename(tempPath, dest); err != nil {
+		return errors.Wrap(err, "replace OBShell binary")
+	}
+	return nil
 }
 
 func (t *InstallNewAgentTask) Rollback() (err error) {

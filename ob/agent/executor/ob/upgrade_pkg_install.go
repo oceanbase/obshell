@@ -105,12 +105,25 @@ func (t *InstallAllRequiredPkgsTask) installAllRequiredPkgs() (err error) {
 			continue
 		}
 		t.ExecuteLogf("Unpack '%s'", rpmPkgInfo.RpmPkgPath)
-		if err = pkg.InstallRpmPkgInPlace(rpmPkgInfo.RpmPkgPath); err != nil {
+		if rpmPkgInfo.RpmName == constant.PKG_OBSHELL {
+			err = verifyAndExtractObshellRpm(t.GetContext(), &rpmPkgInfo)
+		} else {
+			err = pkg.InstallRpmPkgInPlace(rpmPkgInfo.RpmPkgPath)
+		}
+		if err != nil {
 			success = false
 			t.ExecuteErrorLog(err)
 			continue
 		}
+		t.SetLocalData(key, rpmPkgInfo)
 		t.ExecuteLogf("Successfully installed %s", rpmPkgInfo.RpmPkgPath)
+		if rpmPkgInfo.RpmName == constant.PKG_OBSHELL && rpmPkgInfo.RpmBuildVersion == t.targetBuildVersion {
+			// For a standalone OBShell RPM, the target version comes from the
+			// signed header identity checked above. Do not execute the staging
+			// binary before its digest is checked during the final install.
+			t.GetContext().SetParam(PARAM_TARGET_AGENT_BUILD_VERSION, rpmPkgInfo.RpmBuildVersion)
+			t.ExecuteLogf("target obshell version is %s", rpmPkgInfo.RpmBuildVersion)
+		}
 
 		// Only check the observer bin when the package is oceanbase-ce and not only for agent.
 		if (rpmPkgInfo.RpmName == constant.PKG_OCEANBASE_CE ||

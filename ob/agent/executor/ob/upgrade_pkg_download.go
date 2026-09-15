@@ -28,10 +28,13 @@ import (
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/global"
+	agentpath "github.com/oceanbase/obshell/ob/agent/lib/path"
 	"github.com/oceanbase/obshell/ob/agent/lib/system"
 	"github.com/oceanbase/obshell/ob/agent/repository/model/oceanbase"
 	modelob "github.com/oceanbase/obshell/ob/model/oceanbase"
 )
+
+const diskSpaceSafetyPercent uint64 = 10
 
 type GetAllRequiredPkgsTask struct {
 	task.Task
@@ -148,6 +151,9 @@ func (t *GetAllRequiredPkgsTask) getAllRequiredPkgs() (err error) {
 			if err != nil {
 				return err
 			}
+			if pkgInfo.Name != needPkgName {
+				return errors.Occur(errors.ErrPackageNameMismatch, pkgInfo.Name, needPkgName)
+			}
 			t.upgradePkgInfo = append(t.upgradePkgInfo, pkgInfo)
 		}
 	}
@@ -161,31 +167,164 @@ func (t *GetAllRequiredPkgsTask) getAllRequiredPkgs() (err error) {
 
 func (t *GetAllRequiredPkgsTask) CheckDiskFreeSpace() error {
 	t.ExecuteLog("Check the remaining disk space.")
-	t.ExecuteLogf("The directory being checked is %s", t.upgradeDir)
-	var expectedSize uint64
-	for _, info := range t.upgradePkgInfo {
-		expectedSize += (info.Size + info.PayloadSize)
+
+	if !containsObshellPackage(t.upgradePkgInfo) {
+		// Keep the existing OceanBase/standalone upgrade behavior unchanged.
+		// The additional snapshot and destination-file reservations below are
+		// required only by the verified standalone OBShell upgrade path.
+		expectedSize := calculateLegacyDiskSpaceRequirement(t.upgradePkgInfo)
+		t.ExecuteLogf("The directory being checked is %s", t.upgradeDir)
+		t.ExecuteLogf("The required disk size is %d", expectedSize)
+		diskInfo, err := system.GetDiskInfo(t.upgradeDir)
+		if err != nil {
+			return errors.Wrap(err, "failed to get disk info")
+		}
+		t.ExecuteLogf("The remaining disk size is %d", diskInfo.FreeSizeBytes)
+		if diskInfo.FreeSizeBytes < expectedSize {
+			return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, diskInfo.FreeSizeBytes, expectedSize)
+		}
+		return nil
 	}
-	expectedSize = (expectedSize) * uint64(confficient)
-	t.ExecuteLogf("The required disk size is %d", expectedSize)
+
+	_, upgradeFsID, err := system.GetFsId(t.upgradeDir)
+	if err != nil {
+		return errors.Wrap(err, "failed to get upgrade directory file system")
+	}
+	_, obshellBinFsID, err := system.GetFsId(agentpath.BinDir())
+	if err != nil {
+		return errors.Wrap(err, "failed to get OBShell bin directory file system")
+	}
+	obshellSharesUpgradeFileSystem := upgradeFsID == obshellBinFsID
+
+	expectedUpgradeSize, expectedObshellBinSize := calculateDiskSpaceRequirements(t.upgradePkgInfo, obshellSharesUpgradeFileSystem)
+	expectedUpgradeSize = addDiskSpaceSafetyMargin(expectedUpgradeSize)
+	expectedObshellBinSize = addDiskSpaceSafetyMargin(expectedObshellBinSize)
+
+	t.ExecuteLogf("The upgrade directory being checked is %s", t.upgradeDir)
+	t.ExecuteLogf("The required upgrade directory disk size is %d", expectedUpgradeSize)
 	diskInfo, err := system.GetDiskInfo(t.upgradeDir)
 	if err != nil {
 		return errors.Wrap(err, "failed to get disk info")
 	}
-	t.ExecuteLogf("The remaining disk size is %d", diskInfo.FreeSizeBytes)
-	if diskInfo.FreeSizeBytes < expectedSize {
-		return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, diskInfo.FreeSizeBytes, expectedSize)
+	t.ExecuteLogf("The remaining upgrade directory disk size is %d", diskInfo.FreeSizeBytes)
+	if diskInfo.FreeSizeBytes < expectedUpgradeSize {
+		return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, diskInfo.FreeSizeBytes, expectedUpgradeSize)
+	}
+
+	if expectedObshellBinSize == 0 {
+		return nil
+	}
+	t.ExecuteLogf("The OBShell bin directory being checked is %s", agentpath.BinDir())
+	t.ExecuteLogf("The required OBShell bin directory disk size is %d", expectedObshellBinSize)
+	obshellBinDiskInfo, err := system.GetDiskInfo(agentpath.BinDir())
+	if err != nil {
+		return errors.Wrap(err, "failed to get OBShell bin directory disk info")
+	}
+	t.ExecuteLogf("The remaining OBShell bin directory disk size is %d", obshellBinDiskInfo.FreeSizeBytes)
+	if obshellBinDiskInfo.FreeSizeBytes < expectedObshellBinSize {
+		return errors.Occur(errors.ErrEnvironmentDiskSpaceNotEnough, obshellBinDiskInfo.FreeSizeBytes, expectedObshellBinSize)
 	}
 	return nil
 }
 
+func calculateLegacyDiskSpaceRequirement(upgradePkgInfo []oceanbase.UpgradePkgInfo) (expectedSize uint64) {
+	for _, info := range upgradePkgInfo {
+		expectedSize += info.Size + info.PayloadSize
+	}
+	return expectedSize
+}
+
+func containsObshellPackage(upgradePkgInfo []oceanbase.UpgradePkgInfo) bool {
+	for _, info := range upgradePkgInfo {
+		if info.Name == constant.PKG_OBSHELL {
+			return true
+		}
+	}
+	return false
+}
+
+func calculateDiskSpaceRequirements(upgradePkgInfo []oceanbase.UpgradePkgInfo, obshellSharesUpgradeFileSystem bool) (upgradeDirSize, obshellBinDirSize uint64) {
+	var obshellSnapshotSize uint64
+	for _, info := range upgradePkgInfo {
+		rpmDownloadSize := rpmDownloadSizeUpperBound(info)
+		// All downloaded RPMs and their extracted files remain in upgradeDir.
+		upgradeDirSize = saturatingAdd(upgradeDirSize, saturatingAdd(rpmDownloadSize, info.Size))
+		if info.Name != constant.PKG_OBSHELL {
+			continue
+		}
+		// Only one private RPM snapshot and one final OBShell temp binary exist
+		// at a time. Size is the installed footprint, so it safely bounds the
+		// OBShell binary that is copied beside the current executable.
+		if rpmDownloadSize > obshellSnapshotSize {
+			obshellSnapshotSize = rpmDownloadSize
+		}
+		if info.Size > obshellBinDirSize {
+			obshellBinDirSize = info.Size
+		}
+	}
+
+	if obshellSharesUpgradeFileSystem {
+		// Snapshot creation and final binary replacement are different phases,
+		// so the shared file system needs the larger peak, not their sum.
+		if obshellBinDirSize > obshellSnapshotSize {
+			obshellSnapshotSize = obshellBinDirSize
+		}
+		upgradeDirSize = saturatingAdd(upgradeDirSize, obshellSnapshotSize)
+		return upgradeDirSize, 0
+	}
+
+	upgradeDirSize = saturatingAdd(upgradeDirSize, obshellSnapshotSize)
+	return upgradeDirSize, obshellBinDirSize
+}
+
+func rpmDownloadSizeUpperBound(info oceanbase.UpgradePkgInfo) uint64 {
+	if info.ChunkCount <= 0 {
+		return info.PayloadSize
+	}
+	chunkCount := uint64(info.ChunkCount)
+	maxUint64 := ^uint64(0)
+	if chunkCount > maxUint64/constant.CHUNK_SIZE {
+		return maxUint64
+	}
+	// DownloadUpgradePkgChunkInBatch writes at most ChunkCount chunks. This
+	// bounds the complete RPM, including its lead and signature header, unlike
+	// RPMSIGTAG_SIZE (PayloadSize), which covers only the bytes after them.
+	downloadSize := chunkCount * constant.CHUNK_SIZE
+	if downloadSize < info.PayloadSize {
+		return info.PayloadSize
+	}
+	return downloadSize
+}
+
+func addDiskSpaceSafetyMargin(size uint64) uint64 {
+	margin := size / 100 * diskSpaceSafetyPercent
+	if remainder := size % 100; remainder != 0 {
+		// Divide before multiplying to avoid overflow, then round the fractional
+		// safety margin upward instead of silently truncating it.
+		margin = saturatingAdd(margin, (remainder*diskSpaceSafetyPercent+99)/100)
+	}
+	return saturatingAdd(size, margin)
+}
+
+func saturatingAdd(left, right uint64) uint64 {
+	maxUint64 := ^uint64(0)
+	if left > maxUint64-right {
+		return maxUint64
+	}
+	return left + right
+}
+
 type rpmPacakgeInstallInfo struct {
 	RpmName           string
+	RpmVersion        string
+	RpmRelease        string
+	RpmArchitecture   string
 	RpmBuildVersion   string
 	RpmDir            string
 	RpmPkgPath        string
 	RpmPkgExtractPath string
 	RpmPkgHomepath    string
+	ObshellSHA256     string
 }
 
 func (t *GetAllRequiredPkgsTask) downloadAllRequiredPkgs() (err error) {
@@ -202,6 +341,9 @@ func (t *GetAllRequiredPkgsTask) downloadAllRequiredPkgs() (err error) {
 		version := getVersionInUpgradeRoute(buildVersion, t.upgradeRoute)
 		rpmPkgInfo := rpmPacakgeInstallInfo{
 			RpmName:           pkgInfo.Name,
+			RpmVersion:        pkgInfo.Version,
+			RpmRelease:        pkgInfo.ReleaseDistribution,
+			RpmArchitecture:   pkgInfo.Architecture,
 			RpmBuildVersion:   buildVersion,
 			RpmDir:            rpmDir,
 			RpmPkgPath:        rpmPkgPath,

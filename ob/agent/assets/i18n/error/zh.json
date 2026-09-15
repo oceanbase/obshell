@@ -237,6 +237,7 @@
   "err.package.release.invalid": "rpm 包 release 版本 %s 不符合格式要求",
   "err.package.compression.not.supported": "不支持的压缩格式 '%s'，支持的压缩格式为 'xz'",
   "err.package.format.invalid": "不支持的负载格式 '%s'，支持的负载格式为 'cpio'",
+  "err.obshell.package.signature.invalid": "OBShell RPM 包签名缺失、无效或不是由可信的 OceanBase 发布密钥签发",
   "err.package.release.format.invalid": "release 格式 %s 不合法",
   "err.request.body.decrypt.aes.content.length.invalid": "解密字符串长度不是块大小的倍数",
   "err.request.body.decrypt.aes.key.and.iv.invalid": "AES 密钥和 IV 大小错误",

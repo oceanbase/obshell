@@ -43,10 +43,7 @@ const (
 	MYSQL_CONNECTOR = "mysql.connector"
 )
 
-var (
-	confficient = 1.1
-	modules     = []string{MYSQL_CONNECTOR}
-)
+var modules = []string{MYSQL_CONNECTOR}
 
 func ObUpgradeCheck(param param.UpgradeCheckParam) (*task.DagDetailDTO, error) {
 	log.Info("ob upgrade check")

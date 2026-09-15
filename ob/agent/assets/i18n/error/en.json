@@ -253,6 +253,7 @@
   "err.package.release.invalid": "rpm package release %s not match format",
   "err.package.compression.not.supported": "Unsupported compression '%s', the supported compression is 'xz'",
   "err.package.format.invalid": "Unsupported payload format '%s', the supported payload format is 'cpio'",
+  "err.obshell.package.signature.invalid": "The OBShell RPM package signature is missing, invalid, or not issued by a trusted OceanBase release key",
   "err.package.release.format.invalid": "Release format %s is illegal",
   "err.request.body.decrypt.aes.content.length.invalid": "Decrypted string length is not a multiple of the block size",
   "err.request.body.decrypt.aes.key.and.iv.invalid": "AES key and IV size error",

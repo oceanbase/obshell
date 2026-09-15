@@ -231,6 +231,7 @@ var (
 	ErrPackageReleaseFormatInvalid    = NewErrorCode("Package.ReleaseFormat.Invalid", illegalArgument, "err.package.release.format.invalid")
 	ErrPackageCompressionNotSupported = NewErrorCode("Package.Compression.NotSupported", illegalArgument, "err.package.compression.not.supported")
 	ErrPackageFormatInvalid           = NewErrorCode("Package.Format.Invalid", illegalArgument, "err.package.format.invalid")
+	ErrObshellPackageSignatureInvalid = NewErrorCode("OBShell.Package.Signature.Invalid", illegalArgument, "err.obshell.package.signature.invalid")
 
 	ErrObUpgradeToLowerVersion            = NewErrorCode("OB.Upgrade.ToLowerVersion", illegalArgument, "err.ob.upgrade.to.lower.version")
 	ErrObUpgradeDepYamlMissing            = NewErrorCode("OB.Upgrade.DepYamlMissing", unexpected, "err.ob.upgrade.dep.yaml.missing")

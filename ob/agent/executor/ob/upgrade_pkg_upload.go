@@ -100,6 +100,9 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 	if r.rpmPkg, err = ReadRpm(r.rpmFile); err != nil {
 		return
 	}
+	if err = verifyObshellUpgradeRpm(r.rpmFile, r.rpmPkg.Name()); err != nil {
+		return
+	}
 	r.version = r.rpmPkg.Version()
 	switch r.rpmPkg.Name() {
 	case constant.PKG_OBSHELL:
@@ -142,6 +145,10 @@ func (r *upgradeRpmPkgInfo) CheckUpgradePkg(forUpload bool) (err error) {
 		return
 	}
 	return nil
+}
+
+func verifyObshellUpgradeRpm(input multipart.File, packageName string) error {
+	return pkg.VerifyObshellRpmSignature(input, packageName)
 }
 
 func (r *upgradeRpmPkgInfo) dirCheckForLibs() (err error) {

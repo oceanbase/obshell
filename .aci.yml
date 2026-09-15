@@ -68,6 +68,7 @@ jobs:
     inputs:
       script: |
         #!/bin/bash
+        set -euo pipefail
         if [[ `uname -m` == aarch64 ]]; then
           wget https://mirrors.aliyun.com/golang/go1.24.1.linux-arm64.tar.gz --no-check-certificate
           rm -rf /usr/local/go 
@@ -88,6 +89,40 @@ jobs:
         touch seekdb/frontend/dist/index.html
         touch ob/frontend/dist/index.html
         make pre-build build-with-swagger
+
+        # Run the complete affected test packages first. The real-RPM tests
+        # below are additive and may use an internal artifact URL injected by
+        # the CI environment instead of the public defaults.
+        go test -vet=off -count=1 ./rpm/... ./ob/agent/lib/pkg ./ob/agent/executor/ob
+        command -v xzcat >/dev/null || command -v unxz >/dev/null
+
+        download_and_verify_rpm() {
+          local url="$1"
+          local path="$2"
+          local sha256="$3"
+          if command -v curl >/dev/null; then
+            curl --fail --location --retry 3 --retry-delay 5 --connect-timeout 30 --output "$path" "$url"
+          else
+            wget --tries=3 --timeout=30 --waitretry=5 -O "$path" "$url"
+          fi
+          echo "${sha256}  ${path}" | sha256sum -c -
+        }
+
+        run_real_rpm_tests() {
+          export OBSHELL_SIGNED_RPM_TEST_PATH="$1"
+          go test -vet=off -count=1 -run '^(TestVerifyRealObshellReleaseRpm|TestInstallRealObshellReleaseRpm|TestInstallRejectsUnexpectedObshellVersion|TestInstallRealObshellSnapshotIgnoresSourceRewrite)$' ./ob/agent/lib/pkg
+          go test -vet=off -count=1 -run '^(TestVerifyRealObshellUpgradeRpm|TestInstallNewAgentGetParamsRestoresLegacyTask)$' ./ob/agent/executor/ob
+        }
+
+        EL7_RPM_PATH="${BASE_WORKSPACE}/obshell-4.5.0.0-12026050816.el7.x86_64.rpm"
+        EL7_RPM_URL="${OBSHELL_SIGNED_RPM_EL7_URL:-https://mirrors.aliyun.com/oceanbase/community/stable/el/7/x86_64/obshell-4.5.0.0-12026050816.el7.x86_64.rpm}"
+        download_and_verify_rpm "$EL7_RPM_URL" "$EL7_RPM_PATH" "474c6fdf35e83633cd6515ddf8ab75d812a895ec98dc16a2a318e2834964e948"
+        run_real_rpm_tests "$EL7_RPM_PATH"
+
+        EL8_RPM_PATH="${BASE_WORKSPACE}/obshell-4.5.0.0-12026050816.el8.aarch64.rpm"
+        EL8_RPM_URL="${OBSHELL_SIGNED_RPM_EL8_URL:-https://mirrors.aliyun.com/oceanbase/community/stable/el/8/aarch64/obshell-4.5.0.0-12026050816.el8.aarch64.rpm}"
+        download_and_verify_rpm "$EL8_RPM_URL" "$EL8_RPM_PATH" "b612e0e70f8fbea79c1c98def5580a410a58bde8897625f55b138ebc69350b71"
+        run_real_rpm_tests "$EL8_RPM_PATH"
   
   规范检查:
     stage: 代码检查
