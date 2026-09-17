@@ -20,13 +20,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/oceanbase/obshell/ob/agent/api/common"
 	"github.com/oceanbase/obshell/ob/agent/constant"
-	"github.com/oceanbase/obshell/ob/agent/engine/coordinator"
 	"github.com/oceanbase/obshell/ob/agent/engine/task"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/meta"
-	"github.com/oceanbase/obshell/ob/agent/repository/model/bo"
 	"github.com/oceanbase/obshell/ob/agent/secure"
-	"github.com/oceanbase/obshell/ob/agent/service/tenant"
 	"github.com/oceanbase/obshell/ob/agent/service/user"
 	"github.com/oceanbase/obshell/ob/param"
 )
@@ -56,53 +53,19 @@ func GetExecuteAgentForTenant(tenantName string) (meta.AgentInfoInterface, error
 }
 
 func PersistTenantRootPassword(c *gin.Context, tenantName, rootPassword string) error {
-	maintainer, err := coordinator.GetMaintainer()
-	if err != nil {
-		return errors.Wrap(err, "get maintainer failed")
+	allowForward := true
+	if c != nil {
+		if value, exists := c.Get(constant.OCS_HEADER); exists {
+			if header, ok := value.(secure.HttpHeader); ok {
+				allowForward = header.ForwardType == secure.NotForward
+			}
+		}
 	}
-	if maintainer.GetPort() == 0 || !maintainer.IsActive() {
-		return errors.Occur(errors.ErrAgentMaintainerNotActive)
-	}
-	return persistTenantRootPassword(c, tenantName, rootPassword, &maintainer)
-}
-
-func persistTenantRootPassword(c *gin.Context, tenantName, rootPassword string, maintainer meta.AgentInfoInterface) error {
-	// check password connectable by calling precheck api with password
-	body := &param.TenantRootPasswordParam{
-		RootPassword: &rootPassword,
-	}
-	uri := constant.URI_API_V1 + constant.URI_TENANT + "/" + tenantName + constant.URI_PRECHECK
-	result := &bo.ObTenantPreCheckResult{}
-	err := secure.SendGetRequest(maintainer, uri, body, result)
-	if err != nil {
-		return errors.Wrap(err, "Failed to check tenant connectable using password.")
-	}
-	if !result.IsConnectable {
-		return errors.Occur(errors.ErrObTenantRootPasswordIncorrect)
-	}
-	tenant.GetPasswordMap().Set(tenantName, rootPassword)
-	return nil
+	return newPasswordPersister().persist(passwordRequestContext(c), tenantName, rootPassword, allowForward)
 }
 
 func persistTenantRootPasswordOnMaintainer(c *gin.Context, tenantName, rootPassword string) error {
-	maintainer, err := coordinator.GetMaintainer()
-	if err != nil {
-		return errors.Wrap(err, "get maintainer failed")
-	}
-	if maintainer.GetPort() == 0 || !maintainer.IsActive() {
-		return errors.Occur(errors.ErrAgentMaintainerNotActive)
-	}
-	if meta.OCS_AGENT.Equal(&maintainer) {
-		return persistTenantRootPassword(c, tenantName, rootPassword, &maintainer)
-	}
-
-	uri := constant.URI_API_V1 + constant.URI_TENANT + "/" + tenantName + constant.URI_ROOTPASSWORD + constant.URI_PERSIST
-	if err := secure.SendPostRequest(&maintainer, uri, param.PersistTenantRootPasswordParam{
-		Password: rootPassword,
-	}, nil); err != nil {
-		return errors.Wrap(err, "persist tenant root password on maintainer failed")
-	}
-	return nil
+	return newPasswordPersister().persist(passwordRequestContext(c), tenantName, rootPassword, true)
 }
 
 func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.ModifyTenantRootPasswordParam) (error, bool) {
@@ -116,28 +79,22 @@ func ModifyTenantRootPassword(c *gin.Context, tenantName string, pwdParam param.
 
 	if meta.OCS_AGENT.Equal(executeAgent) {
 		db, err := GetConnectionWithPassword(tenantName, &pwdParam.OldPwd)
-		passwordAlreadyChanged := false
 		if err != nil {
-			oldPasswordErr := err
-			// The previous request may have changed the database password but failed
-			// while persisting it in OBShell. Accept the desired password on retry so
-			// the operation can finish instead of retrying forever with the old one.
-			db, err = GetConnectionWithPassword(tenantName, pwdParam.NewPwd)
-			if err != nil {
-				return oldPasswordErr, false
-			}
-			passwordAlreadyChanged = true
+			return err, false
 		}
 		defer CloseDbConnection(db)
 
-		if !passwordAlreadyChanged {
-			userService := user.GetUserService(db)
-			if err := userService.ModifyTenantRootPassword(*pwdParam.NewPwd); err != nil {
-				return err, false
-			}
+		// Reject known maintainer outages before changing database credentials.
+		if _, err := getPasswordMaintainer(passwordRequestContext(c)); err != nil {
+			return err, false
 		}
-		if err := persistTenantRootPasswordOnMaintainer(c, tenantName, *pwdParam.NewPwd); err != nil {
-			return errors.Wrap(err, "tenant root password was changed, but failed to save it in OBShell"), false
+		userService := user.GetUserService(db)
+		if err := userService.ModifyTenantRootPassword(*pwdParam.NewPwd); err != nil {
+			return err, false
+		}
+		if err := newPasswordPersister().persist(passwordCompletionContext(c), tenantName, *pwdParam.NewPwd, true); err != nil {
+			uri := constant.URI_TENANT_API_PREFIX + "/" + tenantName + constant.URI_ROOTPASSWORD + constant.URI_PERSIST
+			return errors.WrapOverride(errors.ErrObTenantPasswordCacheSyncFailed, err, uri), false
 		}
 	} else {
 		common.ForwardRequest(c, executeAgent, pwdParam)
@@ -170,7 +127,28 @@ func (t *SetRootPwdTask) Execute() error {
 	if err := t.GetContext().GetParamWithValue(PARAM_TENANT_NEW_PASSWORD, &t.newPassword); err != nil {
 		return err
 	}
+	return t.executePasswordChange(func() error {
+		return persistTenantRootPasswordOnMaintainer(nil, t.tenantName, t.newPassword)
+	}, t.modifyPassword)
+}
 
+// Per-call operations make task recovery testable without replacing shared
+// package functions. Only a repeated/continued task can use desired-password
+// recovery; a public PUT never calls this method.
+func (t *SetRootPwdTask) executePasswordChange(persist, modify func() error) error {
+	// Only this persisted create-tenant task may recover an interrupted change
+	// by checking its desired password. The public PUT API always checks old_password.
+	if t.GetExecuteTimes() > 1 || t.IsContinue() {
+		if err := persist(); err == nil {
+			return nil
+		} else if !isTenantPasswordIncorrect(err) {
+			return errors.Wrap(err, "resume tenant password cache synchronization failed")
+		}
+	}
+	return modify()
+}
+
+func (t *SetRootPwdTask) modifyPassword() error {
 	executeAgent, err := tenantService.GetTenantActiveAgent(t.tenantName)
 	if err != nil {
 		return err

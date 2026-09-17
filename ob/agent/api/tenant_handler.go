@@ -47,7 +47,7 @@ func InitTenantRoutes(v1 *gin.RouterGroup, isLocalRoute bool) {
 
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PRIMARYZONE, tenantStatusHandlerWrapper(tenantModifyPrimaryZoneHandler))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD, tenantStatusHandlerWrapper(tenantModifyPasswordHandler))
-	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST, tenantExistHandlerWrapper(common.AutoForwardToMaintainerWrapper(persistTenantRootPassword)))
+	tenant.POST(constant.URI_PATH_PARAM_NAME+constant.URI_ROOTPASSWORD+constant.URI_PERSIST, tenantExistHandlerWrapper(persistTenantRootPassword))
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_WHITELIST, tenantStatusHandlerWrapper(tenantModifyWhitelistHandler))
 
 	tenant.PUT(constant.URI_PATH_PARAM_NAME+constant.URI_PARAMETERS, tenantStatusHandlerWrapper(tenantSetParametersHandler))
@@ -405,7 +405,7 @@ func tenantModifyPasswordHandler(c *gin.Context) {
 // @Failure 500 object http.OcsAgentResponse
 // @Router /api/v1/tenant/{name}/password/persist [POST]
 func persistTenantRootPassword(c *gin.Context) {
-	//all checks are done in the wrapper, just save the password
+	// Password persistence resolves the current maintainer from OceanBase.
 	name := c.Param(constant.URI_PARAM_NAME)
 	var param param.PersistTenantRootPasswordParam
 	if err := c.BindJSON(&param); err != nil {

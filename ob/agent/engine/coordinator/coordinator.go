@@ -101,17 +101,26 @@ func (c *Coordinator) Start() error {
 }
 
 func (c *Coordinator) wait() {
+	duration := c.waitDuration()
+	log.Info("coordinator wait: ", duration)
+	time.Sleep(duration)
+	c.refreshLifeTime()
+}
+
+func (c *Coordinator) waitDuration() time.Duration {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	duration := constant.COORDINATOR_MIN_INTERVAL
 	switch c.identity {
 	case MAINTAINER:
 		log.Debug("maintainer wait")
-		delta := constant.MAINTAINER_UPDATE_INTERVAL - time.Duration(c.Maintainer.GetLifeTime())
+		delta := constant.MAINTAINER_UPDATE_INTERVAL - time.Duration(c.Maintainer.GetLifeTime()*float64(time.Second))
 		if delta > duration {
 			duration = delta
 		}
 	case WATCHER:
 		log.Debug("watcher wait")
-		delta := constant.MAINTAINER_MAX_ACTIVE_TIME - time.Duration(c.Maintainer.GetLifeTime())
+		delta := constant.MAINTAINER_MAX_ACTIVE_TIME - time.Duration(c.Maintainer.GetLifeTime()*float64(time.Second))
 		if delta > duration {
 			duration = delta
 		}
@@ -119,9 +128,7 @@ func (c *Coordinator) wait() {
 		// No maintainer, wait for constant.COORDINATOR_MIN_INTERVAL
 		log.Debug("coordinator identity is faulty")
 	}
-	log.Info("coordinator wait: ", duration)
-	time.Sleep(duration)
-	c.addLifeTime(duration.Seconds())
+	return duration
 }
 
 func (c *Coordinator) reconcile() error {
@@ -340,8 +347,14 @@ func (c *Coordinator) removeMaintainer() {
 	c.Maintainer = &Maintainer{}
 }
 
-func (c *Coordinator) addLifeTime(delta float64) {
-	c.Maintainer.LifeTime += delta
+func (c *Coordinator) refreshLifeTime() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+	// RPCs may refresh or replace the maintainer during sleep. Measure from
+	// the current snapshot instead of adding the old snapshot's wait time.
+	if !c.Maintainer.LastUpdateTime.IsZero() {
+		c.Maintainer.LifeTime = time.Since(c.Maintainer.LastUpdateTime).Seconds()
+	}
 }
 
 func (c *Coordinator) setIdendity(identity int) {

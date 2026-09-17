@@ -193,6 +193,7 @@
   "err.ob.tenant.replica.type.invalid": "Replica type '%s' is not supported",
   "err.ob.tenant.resource.not.enough": "Server %s %s resource not enough.",
   "err.ob.tenant.root.password.incorrect": "The provided password is unable to connect to the tenant",
+  "err.ob.tenant.password.cache.sync.failed": "The tenant root password was changed, but could not be saved in OBShell. Retry POST %s with the new password to synchronize the cache; do not repeat the password change with the old password",
   "err.ob.tenant.scenario.not.supported": "Tenant scenario '%s' is not supported, only '%s' is supported.",
   "err.ob.tenant.session.not.exist": "Tenant session '%s' does not exist.",
   "err.ob.tenant.set.scenario.not.supported": "Current observer does not support scenario",

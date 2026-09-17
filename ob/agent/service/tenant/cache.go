@@ -16,10 +16,47 @@
 
 package tenant
 
-import "sync"
+import (
+	"context"
+	"hash/fnv"
+	"sync"
+)
 
 type PasswordMap struct {
 	m sync.Map
+	// Fixed stripes bound memory usage while serializing validation and storage
+	// for the same tenant. A plain sync.Map only serializes individual stores.
+	updateLocks [64]passwordUpdateLock
+}
+
+type passwordUpdateLock struct {
+	once  sync.Once
+	token chan struct{}
+}
+
+func (pm *PasswordMap) SetValidated(ctx context.Context, key, value string, validate func() error) error {
+	hash := fnv.New32a()
+	if _, err := hash.Write([]byte(key)); err != nil {
+		return err
+	}
+	lock := &pm.updateLocks[hash.Sum32()%uint32(len(pm.updateLocks))]
+	// A one-token channel permits cancellation while waiting for the same
+	// tenant. sync.Once initializes it safely; no worker goroutine is needed.
+	lock.once.Do(func() { lock.token = make(chan struct{}, 1) })
+	select {
+	case lock.token <- struct{}{}:
+		defer func() { <-lock.token }()
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if err := validate(); err != nil {
+		return err
+	}
+	pm.Set(key, value)
+	return nil
 }
 
 func (pm *PasswordMap) Set(key, value string) {

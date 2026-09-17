@@ -17,6 +17,7 @@
 package tenant
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
@@ -562,6 +563,21 @@ func (t *TenantService) GetTenantActiveAgent(tenantName string) (agent *meta.Age
 		"WHERE u.tenant_id = (select tenant_id from oceanbase.DBA_OB_TENANTS where tenant_name = ?) AND s.status = 'ACTIVE' LIMIT 1"
 	err = db.Raw(sql, tenantName).Scan(&agent).Error
 	return
+}
+
+// The password cache workflow uses a request-bound lookup. Keep the existing
+// unbounded getter unchanged for other tenant operations.
+func (t *TenantService) GetTenantActiveAgentWithContext(ctx context.Context, tenantName string) (agent *meta.AgentInfo, err error) {
+	db, err := oceanbasedb.GetInstanceWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	sql := "SELECT a.ip AS ip, a.port AS port FROM oceanbase.DBA_OB_UNITS u " +
+		"JOIN oceanbase.DBA_OB_SERVERS s ON u.svr_ip = s.svr_ip AND u.svr_port = s.svr_port " +
+		"JOIN ocs.all_agent a ON s.svr_ip = a.ip AND s.svr_port = a.rpc_port " +
+		"WHERE u.tenant_id = (select tenant_id from oceanbase.DBA_OB_TENANTS where tenant_name = ?) AND s.status = 'ACTIVE' LIMIT 1"
+	err = db.Raw(sql, tenantName).Scan(&agent).Error
+	return agent, err
 }
 
 func (t *TenantService) GetTenantActiveServer(tenantName string) (server *oceanbase.OBServer, err error) {

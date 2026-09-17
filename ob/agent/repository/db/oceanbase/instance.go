@@ -17,6 +17,7 @@
 package oceanbase
 
 import (
+	"context"
 	"fmt"
 
 	"gorm.io/gorm"
@@ -59,6 +60,40 @@ func GetOcsInstanceQuickly() (db *gorm.DB, err error) {
 // If the connection cannot execute the SQL command 'SHOW DATABASES', it will return an error.
 func GetInstance() (db *gorm.DB, err error) {
 	return getSqlExecutableInstance(TEST_OCEANBASE_SQL)
+}
+
+// GetInstanceWithContext is for bounded request workflows. The existing
+// getters deliberately keep returning their original instance; changing those
+// to a cloned GORM session would break callers that compare its identity.
+func GetInstanceWithContext(ctx context.Context) (*gorm.DB, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if dbInstance == nil {
+		return nil, errors.Occur(errors.ErrAgentOceanbaseNotHold)
+	}
+	db := dbInstance.WithContext(ctx)
+	if err := db.Exec(TEST_OCEANBASE_SQL).Error; err == nil {
+		return db, nil
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if err := CheckObserverProcess(); err != nil {
+		return nil, err
+	}
+	return nil, errors.Occur(errors.ErrAgentOceanbaseUesless)
+}
+
+func GetOcsInstanceWithContext(ctx context.Context) (*gorm.DB, error) {
+	db, err := GetInstanceWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+	if !isOcs {
+		return nil, errors.Occur(errors.ErrAgentOceanbaseDBNotOcs)
+	}
+	return db, nil
 }
 
 func GetInstanceWithTimeout(obQueryTimeout string) (db *gorm.DB, err error) {

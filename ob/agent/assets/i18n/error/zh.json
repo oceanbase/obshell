@@ -177,6 +177,7 @@
   "err.ob.tenant.replica.type.invalid": "不支持的副本类型 '%s'",
   "err.ob.tenant.resource.not.enough": "observer %s %s 资源不足",
   "err.ob.tenant.root.password.incorrect": "租户 root 密码错误",
+  "err.ob.tenant.password.cache.sync.failed": "租户 root 密码已修改，但未能保存到 OBShell。请用新密码重试 POST %s 同步密码缓存，不要再使用旧密码重复修改",
   "err.ob.tenant.scenario.not.supported": "不支持的参数模版 '%s'，仅支持 '%s'",
   "err.ob.tenant.session.not.exist": "租户会话 '%s' 不存在",
   "err.ob.tenant.set.scenario.not.supported": "当前 observer 不支持设置参数模版",

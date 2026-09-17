@@ -17,6 +17,7 @@
 package coordinator
 
 import (
+	"context"
 	"time"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
@@ -43,6 +44,15 @@ func (s *CoordinatorService) GetMaintainerFromOb() (m MaintainerDO, err error) {
 	}
 	err = oceanbaseDb.Raw("select *, TimeStampDiff(Microsecond, active_time, now(6)) as gap,  TimeStampDiff(second, active_time, now(6)) < ? as is_active from task_maintainer where id = 1", constant.MAINTAINER_MAX_ACTIVE_TIME_SEC).Scan(&m).Error
 	return
+}
+
+func (s *CoordinatorService) GetMaintainerFromObWithContext(ctx context.Context) (m MaintainerDO, err error) {
+	db, err := oceanbasedb.GetOcsInstanceWithContext(ctx)
+	if err != nil {
+		return m, err
+	}
+	err = db.Raw("select *, TimeStampDiff(Microsecond, active_time, now(6)) as gap, TimeStampDiff(second, active_time, now(6)) < ? as is_active from task_maintainer where id = 1", constant.MAINTAINER_MAX_ACTIVE_TIME_SEC).Scan(&m).Error
+	return m, err
 }
 
 func (s *CoordinatorService) UpdateMaintainerToOb(maintainer oceanbase.TaskMaintainer) error {
