@@ -15,7 +15,7 @@ import React, { useEffect, useState } from 'react';
 import styles from './index.less';
 
 interface BasicLayoutProps extends OBUIBasicLayoutProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 
 const BasicLayout: React.FC<BasicLayoutProps> = props => {
@@ -313,7 +313,8 @@ const BasicLayout: React.FC<BasicLayoutProps> = props => {
         }}
         {...restProps}
       >
-        <Outlet />
+        {/* Tenant pages pass their route and password dialogs as children. */}
+        {children ?? <Outlet />}
       </OBUIBasicLayout>
     </div>
   );

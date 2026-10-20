@@ -18,6 +18,7 @@
     "pack": "max pack",
     "prettier": "prettier --write './src/**/*.{js,jsx,ts,tsx}'",
     "test": "max test",
+    "test:layout": "node --test test/layout/*.test.cjs",
     "version": "max -v"
   },
   "lint-staged": {
