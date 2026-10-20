@@ -17,7 +17,6 @@
 package tenant
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/oceanbase/obshell/ob/agent/constant"
@@ -111,7 +110,7 @@ func waitAlterPrimaryZoneSucceed(t task.Task, tenantId int, targetPrimaryZone st
 	if err != nil {
 		return errors.Wrap(err, "Get tenant name failed.")
 	}
-	jobId, err := tenantService.GetTargetTenantJob(constant.ALTER_TENANT_PRIMARY_ZONE, tenantId, fmt.Sprintf(tenantservice.SQL_ALTER_TENANT_PRIMARY_ZONE, tenantName, targetPrimaryZone))
+	jobId, err := tenantService.GetTargetTenantJobWithSQLTextPatterns(constant.ALTER_TENANT_PRIMARY_ZONE, tenantId, tenantJobSQLTextPatterns(targetPrimaryZone, '`')...)
 	if err != nil {
 		return errors.Wrap(err, "Get tenant job failed.")
 	}

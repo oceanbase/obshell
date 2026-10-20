@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 
+	"gorm.io/gorm"
+
 	"github.com/oceanbase/obshell/ob/agent/constant"
 	"github.com/oceanbase/obshell/ob/agent/errors"
 	"github.com/oceanbase/obshell/ob/agent/repository/db/oceanbase"
@@ -71,6 +73,37 @@ func (t *TenantService) GetTargetTenantJob(jobType string, tenantId int, sqlText
 		Limit(1).
 		Scan(&id).Error
 	return
+}
+
+// GetTargetTenantJobWithSQLTextPatterns selects the newest matching job across
+// SQL literal formats. Patterns use '!' as an explicit LIKE escape character.
+// The original single-pattern getter keeps its existing escaping semantics.
+func (t *TenantService) GetTargetTenantJobWithSQLTextPatterns(jobType string, tenantId int, sqlTexts ...string) (id int, err error) {
+	db, err := oceanbase.GetInstance()
+	if err != nil {
+		return 0, err
+	}
+	err = targetTenantJobQuery(db, jobType, tenantId, sqlTexts...).Scan(&id).Error
+	return
+}
+
+func targetTenantJobQuery(db *gorm.DB, jobType string, tenantId int, sqlTexts ...string) *gorm.DB {
+	query := db.Table(DBA_OB_TENANT_JOBS).
+		Select("JOB_ID").Where("JOB_TYPE = ? AND TENANT_ID = ?", jobType, tenantId).
+		Order("JOB_ID DESC").Limit(1)
+	if len(sqlTexts) == 0 {
+		if query.Error == nil {
+			query.Error = errors.Occur(errors.ErrCommonIllegalArgumentWithMessage, "sqlTextPatterns", "at least one tenant job SQL text pattern is required")
+		}
+		return query
+	}
+	conditions := make([]string, 0, len(sqlTexts))
+	values := make([]interface{}, 0, len(sqlTexts))
+	for _, sqlText := range sqlTexts {
+		conditions = append(conditions, "SQL_TEXT LIKE ? ESCAPE '!'")
+		values = append(values, sqlText)
+	}
+	return query.Where("("+strings.Join(conditions, " OR ")+")", values...)
 }
 
 func (t *TenantService) GetInProgressTenantJobBo(jobType string, tenantId int) (*bo.DbaObTenantJobBo, error) {

@@ -121,13 +121,36 @@ func (t *AlterLocalityTask) Execute() error {
 }
 
 func waitAlterTenantLocalitySucceed(t task.Task, tenantId int, locality string) error {
-	jobId, err := tenantService.GetTargetTenantJob(constant.ALTER_TENANT_LOCALITY, tenantId, transfer("%\""+locality+"\""))
+	jobId, err := tenantService.GetTargetTenantJobWithSQLTextPatterns(constant.ALTER_TENANT_LOCALITY, tenantId, tenantJobSQLTextPatterns(locality, '"')...)
 	if err != nil {
 		return errors.Wrap(err, "Get tenant job failed")
 	} else if jobId == 0 {
 		return errors.Occurf(errors.ErrObTenantJobNotExist, "altering tenant locality to %s", locality)
 	}
 	return waitTenantJobSucceed(t, jobId)
+}
+
+// Job SQL_TEXT retains the submitted SQL, so it can contain either the legacy
+// quoting or the safe single-quoted literal used by administrative SQL. Keep
+// the closing delimiter, and escape LIKE metacharacters rather than allowing
+// a zone name containing '_' or '%' to select a different target.
+func tenantJobSQLTextPatterns(value string, legacyQuote byte) []string {
+	legacyValue := value
+	if legacyQuote == '"' {
+		legacyValue = transfer(value)
+	}
+	singleQuoted := strings.ReplaceAll(value, "'", "''")
+	quotedValues := []string{
+		string(legacyQuote) + legacyValue + string(legacyQuote),
+		"'" + strings.ReplaceAll(singleQuoted, "\\", "\\\\") + "'",
+		"'" + singleQuoted + "'", // NO_BACKSLASH_ESCAPES.
+	}
+	patterns := make([]string, 0, len(quotedValues))
+	escape := strings.NewReplacer("!", "!!", "%", "!%", "_", "!_")
+	for _, quoted := range quotedValues {
+		patterns = append(patterns, "%"+escape.Replace(quoted))
+	}
+	return patterns
 }
 
 func waitTenantJobSucceed(t task.Task, jobId int) error {
