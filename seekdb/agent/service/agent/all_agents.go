@@ -41,6 +41,9 @@ func queryObSysParameters(db *gorm.DB) ([]sqlite.ObSysParameter, error) {
 }
 
 func (s *AgentService) TakeOver() (err error) {
+	if err = s.SyncMysqlPort(); err != nil {
+		return err
+	}
 	sqliteDb, err := sqlitedb.GetSqliteInstance()
 	if err != nil {
 		return err
@@ -51,7 +54,7 @@ func (s *AgentService) TakeOver() (err error) {
 		Os:           global.Os,
 		Architecture: global.Architecture,
 		HomePath:     global.HomePath,
-		MysqlPort:    meta.MYSQL_PORT,
+		MysqlPort:    meta.GetMysqlPort(),
 		Version:      meta.OCS_AGENT.GetVersion(),
 		Identity:     string(meta.CLUSTER_AGENT),
 	}

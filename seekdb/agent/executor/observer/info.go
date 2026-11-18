@@ -162,7 +162,7 @@ func GetObserverInfo() (info obmodel.ObserverInfo) {
 		}
 	}
 	info.Architecture = global.Architecture
-	info.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uroot -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT)
+	info.ConnectionString = fmt.Sprintf("obclient -h%s -P%d -uroot -p", meta.OCS_AGENT.GetIp(), meta.GetMysqlPort())
 	pid, err := process.GetObserverPidInt()
 	if err != nil {
 		log.Warnf("Failed to get seekdb pid: %v", err)

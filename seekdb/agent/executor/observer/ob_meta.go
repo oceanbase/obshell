@@ -17,6 +17,7 @@
 package observer
 
 import (
+	"context"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -24,13 +25,16 @@ import (
 	"github.com/oceanbase/obshell/seekdb/agent/repository/db/oceanbase"
 )
 
-func HandleOBMeta() (err error) {
+func HandleOBMeta(ctx context.Context) {
 	log.Info("start to handle ob meta")
 	var count int
 	for {
+		if ctx.Err() != nil {
+			return
+		}
 		if oceanbase.IsConnecting() {
 			// If the connection is being established, wait for it to complete
-		} else if _, err = oceanbase.GetInstance(); err == nil {
+		} else if _, err := oceanbase.GetInstance(); err == nil {
 			break
 		} else {
 			// Because initConnection() only returns when there's a password error or on success
@@ -40,8 +44,37 @@ func HandleOBMeta() (err error) {
 			}
 		}
 		count++
-		time.Sleep(10 * time.Millisecond)
+		timer := time.NewTimer(10 * time.Millisecond)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
 	}
 
-	return nil
+	if err := retryOBMeta(ctx, time.Second, agentService.SyncMysqlPort, log.NewEntry(log.StandardLogger())); err != nil {
+		log.WithError(err).Debug("stopped handling ob meta")
+	}
+}
+
+func retryOBMeta(ctx context.Context, interval time.Duration, syncMeta func() error, logger *log.Entry) error {
+	for {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if err := syncMeta(); err == nil {
+			return nil
+		} else {
+			logger.WithError(err).Error("sync seekdb MySQL port failed, retrying")
+		}
+
+		timer := time.NewTimer(interval)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return ctx.Err()
+		case <-timer.C:
+		}
+	}
 }

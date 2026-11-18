@@ -17,6 +17,7 @@
 package observer
 
 import (
+	"net/url"
 	"os"
 	"strconv"
 	"strings"
@@ -28,6 +29,7 @@ import (
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
 	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
+	"github.com/oceanbase/obshell/seekdb/agent/meta"
 )
 
 const (
@@ -37,9 +39,11 @@ const (
 	ETC_KEY_ALL_SERVER_LIST = "all_server_list"
 )
 
-// isFirstStart returns true when seekdb has not been started (no meta.db yet).
-// Seekdb stores config in ./store/sstable/meta.db table __all_sys_parameter, not in seekdb.config.bin.
+// The local store replaces meta.db in current seekdb versions.
 func isFirstStart() (bool, error) {
+	if localStore, err := path.HasLocalStore(); err != nil || localStore {
+		return !localStore, err
+	}
 	metaPath := path.MetaDbPath()
 	if _, err := os.Stat(metaPath); err == nil {
 		return false, nil
@@ -59,7 +63,14 @@ func HasStarted() (bool, error) {
 // Returns empty string and false if meta.db does not exist or the name is not found.
 func getParamFromMetaDb(name string) (string, bool) {
 	metaPath := path.MetaDbPath()
-	db, err := gorm.Open(sqlite.Open(metaPath), &gorm.Config{})
+	if localStore, err := path.HasLocalStore(); err != nil || localStore {
+		return "", false
+	}
+	if _, err := os.Stat(metaPath); err != nil {
+		return "", false
+	}
+	dsn := (&url.URL{Scheme: "file", Path: metaPath, RawQuery: "mode=ro"}).String()
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.WithError(err).Errorf("open meta.db failed: %s", metaPath)
 		return "", false
@@ -79,10 +90,17 @@ func getParamFromMetaDb(name string) (string, bool) {
 }
 
 func LoadOBConfigFromConfigFile() (err error) {
+	if localStore, err := path.HasLocalStore(); err != nil || localStore {
+		// The SQL socket does not require the TCP port. Retain any cached port until SQL is available.
+		return err
+	}
 	// Load ob config from ./store/sstable/meta.db table __all_sys_parameter (seekdb does not use seekdb.config.bin).
 	// Only the MySQL port is loaded here; the agent IP is set via --ip flag or auto-detection in handle.go.
 	log.Info("load ob config from meta.db __all_sys_parameter")
 	_, mysqlPort := GetConfFromObMeta()
+	if mysqlPort == 0 && meta.GetMysqlPort() != 0 {
+		return nil
+	}
 	if mysqlPort == 0 {
 		log.Info("load ob config without mysql port, use default mysql port")
 		mysqlPort = constant.DEFAULT_MYSQL_PORT

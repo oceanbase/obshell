@@ -95,7 +95,7 @@ func ListDatabases() ([]bo.Database, error) {
 	for _, database := range databases {
 		connectionUrl := bo.ObproxyAndConnectionString{
 			Type:             constant.OB_CONNECTION_TYPE_DIRECT,
-			ConnectionString: fmt.Sprintf("jdbc:mysql://%s:%d/%s", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, database.Name),
+			ConnectionString: fmt.Sprintf("jdbc:mysql://%s:%d/%s", meta.OCS_AGENT.GetIp(), meta.GetMysqlPort(), database.Name),
 		}
 		obdatabase := bo.Database{
 			DbName:         database.Name,

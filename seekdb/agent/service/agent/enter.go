@@ -80,15 +80,17 @@ func (s *AgentService) initOBPort() error {
 	if err != nil {
 		return err
 	}
-	return sqliteDb.Transaction(func(tx *gorm.DB) error {
-		defer func() {
-			if err != nil {
-				meta.MYSQL_PORT = 0
-			}
-		}()
+	mysqlPortMu.Lock()
+	defer mysqlPortMu.Unlock()
 
-		return s.getOBConifg(tx, constant.CONFIG_MYSQL_PORT, &meta.MYSQL_PORT)
+	var mysqlPort int
+	err = sqliteDb.Transaction(func(tx *gorm.DB) error {
+		return s.getOBConifg(tx, constant.CONFIG_MYSQL_PORT, &mysqlPort)
 	})
+	if err == nil {
+		meta.SetMysqlPort(mysqlPort)
+	}
+	return err
 }
 
 func (agentService *AgentService) InitializeAgentStatus() (err error) {

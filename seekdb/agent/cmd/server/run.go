@@ -17,6 +17,7 @@
 package server
 
 import (
+	"context"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -159,7 +160,9 @@ func (a *Agent) handleOBMeta() {
 		return
 	}
 
-	go observer.HandleOBMeta()
+	ctx, cancel := context.WithCancel(context.Background())
+	a.obMetaCancel = cancel
+	go observer.HandleOBMeta(ctx)
 }
 
 func (a *Agent) NeedStartOB() bool {

@@ -79,7 +79,7 @@ func (t *StartObserverTask) observerHealthCheck() error {
 		SetTryTimes(1).
 		SetDBName("").
 		SetTimeout(10).
-		SetPort(meta.MYSQL_PORT).
+		SetPort(meta.GetMysqlPort()).
 		SetPassword(meta.GetOceanbasePwd())
 
 	const (
@@ -105,6 +105,10 @@ func (t *StartObserverTask) observerHealthCheck() error {
 		// Attempt to connect to the OceanBase instance for testing
 		if err := oceanbase.LoadOceanbaseInstanceForTest(dsConfig); err != nil {
 			continue // Connection failed, retry
+		}
+		if err := agentService.SyncMysqlPort(); err != nil {
+			log.WithError(err).Warn("sync seekdb MySQL port failed, retry health check")
+			continue
 		}
 
 		// All checks passed, exit the loop

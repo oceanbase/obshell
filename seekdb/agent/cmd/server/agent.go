@@ -17,6 +17,7 @@
 package server
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/signal"
@@ -62,6 +63,7 @@ type Agent struct {
 
 	upgradeMode  bool
 	obHasStarted bool
+	obMetaCancel context.CancelFunc
 }
 
 type Server struct {
@@ -106,6 +108,9 @@ func (a *Agent) wait() {
 	select {
 	case sig := <-ch:
 		log.Infof("obshell server received '%s' signal. exiting...", sig.String())
+		if a.obMetaCancel != nil {
+			a.obMetaCancel()
+		}
 		a.server.Stop()
 		sqliteDb, _ := sqlite.GetSqliteInstance()
 		db, _ := sqliteDb.DB()

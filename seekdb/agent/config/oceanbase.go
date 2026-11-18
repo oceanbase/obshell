@@ -21,11 +21,12 @@ import (
 	"strings"
 
 	"github.com/oceanbase/obshell/seekdb/agent/constant"
+	"github.com/oceanbase/obshell/seekdb/agent/lib/path"
 	"github.com/oceanbase/obshell/seekdb/agent/meta"
 )
 
 func NewObMysqlDataSourceConfig() *ObDataSourceConfig {
-	return &ObDataSourceConfig{
+	dsConfig := &ObDataSourceConfig{
 		username:        constant.DB_USERNAME,
 		ip:              meta.OCS_AGENT.GetLocalIp(),
 		dBName:          constant.DB_OCEANBASE,
@@ -36,6 +37,11 @@ func NewObMysqlDataSourceConfig() *ObDataSourceConfig {
 		maxOpenConns:    constant.DB_DEFAULT_MAX_OPEN_CONNS,
 		connMaxLifetime: constant.DB_DEFAULT_CONN_MAX_LIFETIME,
 	}
+	// Select by the persistent store, since the socket may be absent while seekdb is stopped.
+	if localStore, _ := path.HasLocalStore(); localStore {
+		dsConfig.socket = path.ObserverSqlSocketPath()
+	}
+	return dsConfig
 }
 
 type ObDataSourceConfig struct {
@@ -44,6 +50,7 @@ type ObDataSourceConfig struct {
 	password          string
 	ip                string
 	port              int
+	socket            string
 	dBName            string
 	charset           string
 	parseTime         bool
@@ -155,6 +162,10 @@ func (config *ObDataSourceConfig) GetPort() int {
 	return config.port
 }
 
+func (config *ObDataSourceConfig) GetSocket() string {
+	return config.socket
+}
+
 func (config *ObDataSourceConfig) GetDBName() string {
 	return config.dBName
 }
@@ -183,7 +194,11 @@ func (config *ObDataSourceConfig) GetSkipPwdCheck() bool {
 }
 
 func (config *ObDataSourceConfig) GetDSN() string {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s)/", config.username, config.password, meta.NewAgentInfo(config.ip, config.port).String())
+	network, address := "tcp", meta.NewAgentInfo(config.ip, config.port).String()
+	if config.socket != "" {
+		network, address = "unix", config.socket
+	}
+	dsn := fmt.Sprintf("%s:%s@%s(%s)/", config.username, config.password, network, address)
 	if config.dBName != "" {
 		dsn += config.dBName
 	}

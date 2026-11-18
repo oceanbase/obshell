@@ -396,7 +396,7 @@ func attachMysqlUserInfo(obUser *bo.ObUser, globalPrivileges []string, dbPrivile
 func attachUserConnectInfo(obUser *bo.ObUser) {
 	connectionStr := bo.ObproxyAndConnectionString{
 		Type:             constant.OB_CONNECTION_TYPE_DIRECT,
-		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -u%s -p", meta.OCS_AGENT.GetIp(), meta.MYSQL_PORT, obUser.UserName),
+		ConnectionString: fmt.Sprintf("obclient -h%s -P%d -u%s -p", meta.OCS_AGENT.GetIp(), meta.GetMysqlPort(), obUser.UserName),
 	}
 
 	connectionStrs := make([]bo.ObproxyAndConnectionString, 0)

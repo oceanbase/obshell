@@ -52,7 +52,7 @@ func initConnection() {
 		connectionIniting = false
 	}()
 
-	if meta.MYSQL_PORT != 0 {
+	if meta.GetMysqlPort() != 0 || getDataSourceConfig().GetSocket() != "" {
 		loadOceanbaseInstanceWithoutDBNameUntilSucc()
 		loadOceanbaseUntilSucc()
 	} else {
@@ -69,7 +69,7 @@ func loadOceanbaseInstanceWithoutDBNameUntilSucc() {
 			return
 		}
 
-		dsConfig.SetPort(meta.MYSQL_PORT).SetPassword(meta.OCEANBASE_PWD)
+		dsConfig.SetPort(meta.GetMysqlPort()).SetPassword(meta.OCEANBASE_PWD)
 		err = loadGormOceanbase(dsConfig)
 		if err == nil {
 			log.Info("init oceanbase instance without db name success")
@@ -95,7 +95,7 @@ func loadOceanbaseUntilSucc() {
 			return
 		}
 
-		dsConfig.SetPort(meta.MYSQL_PORT).SetPassword(meta.OCEANBASE_PWD)
+		dsConfig.SetPort(meta.GetMysqlPort()).SetPassword(meta.OCEANBASE_PWD)
 		err = loadGormOceanbase(dsConfig)
 		if err == nil {
 			log.Info("init oceanbase instance success")
@@ -156,7 +156,7 @@ func showUpdateCurrentConfig(dsConfig *config.ObDataSourceConfig) bool {
 		log.Info("password changed, update db instance")
 		return true
 	}
-	if currentConfig.GetPort() != meta.MYSQL_PORT {
+	if currentConfig.GetPort() != meta.GetMysqlPort() {
 		log.Info("port changed, update db instance")
 		return true
 	}
@@ -214,14 +214,15 @@ func releaseDB(preDB *gorm.DB) {
 }
 
 func fillConfigPort(dsConfig *config.ObDataSourceConfig) error {
-	if dsConfig.GetPort() != 0 {
+	if dsConfig.GetSocket() != "" || dsConfig.GetPort() != 0 {
 		return nil
 	}
 	// Get mysql port.
-	if meta.MYSQL_PORT == 0 {
+	mysqlPort := meta.GetMysqlPort()
+	if mysqlPort == 0 {
 		return errors.Occur(errors.ErrObClusterMysqlPortNotInitialized)
 	}
-	dsConfig.SetPort(meta.MYSQL_PORT)
+	dsConfig.SetPort(mysqlPort)
 	return nil
 }
 

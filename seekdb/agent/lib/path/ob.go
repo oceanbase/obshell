@@ -30,6 +30,25 @@ func MetaDbPath() string {
 	return filepath.Join(SstableDir(), constant.OB_META_DB)
 }
 
+func LocalStoreDataPath() string {
+	return filepath.Join(AgentDir(), "store", "local", "data")
+}
+
+func HasLocalStore() (bool, error) {
+	info, err := os.Stat(LocalStoreDataPath())
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	return info.Mode().IsRegular() && info.Size() > 0, nil
+}
+
+func ObserverSqlSocketPath() string {
+	return filepath.Join(RunDir(), "sql.sock")
+}
+
 func IsEtcDirExist() bool {
 	_, err := os.Stat(EtcDir())
 	return err == nil

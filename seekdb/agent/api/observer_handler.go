@@ -93,7 +93,7 @@ func obStartHandler(c *gin.Context) {
 
 	hasStart, e := observer.HasStarted()
 	if e != nil {
-		common.SendResponse(c, nil, err)
+		common.SendResponse(c, nil, e)
 		return
 	}
 	if !hasStart {

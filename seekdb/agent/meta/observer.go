@@ -16,8 +16,16 @@
 
 package meta
 
-var (
-	MYSQL_PORT = 0
-)
+import "sync/atomic"
+
+var mysqlPort atomic.Int64
+
+func GetMysqlPort() int {
+	return int(mysqlPort.Load())
+}
+
+func SetMysqlPort(port int) {
+	mysqlPort.Store(int64(port))
+}
 
 type ObserverSvrInfo = AgentInfo

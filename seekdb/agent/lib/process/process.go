@@ -63,7 +63,7 @@ func getPid(pidPath string) (int32, error) {
 	if err != nil {
 		return 0, err
 	}
-	pid, err := strconv.Atoi(strings.TrimSpace(string(content)))
+	pid, err := strconv.ParseInt(strings.TrimSpace(string(content)), 10, 32)
 	return int32(pid), err
 }
 
@@ -72,14 +72,14 @@ func checkProcessDir(cwdPath string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	agentDir, err := filepath.EvalSymlinks(path.RunDir())
+	agentDir, err := filepath.EvalSymlinks(path.AgentDir())
 	if err != nil {
 		return false, err
 	}
 
 	absOB := filepath.Clean(workDir)
 	absAgent := filepath.Clean(agentDir)
-	return absOB != absAgent, nil
+	return absOB == absAgent, nil
 }
 
 type ProcessInfo struct {
@@ -106,6 +106,9 @@ func (p *ProcessInfo) exist() (bool, error) {
 	pidInt, err := strconv.Atoi(p.pid)
 	if err != nil {
 		return false, err
+	}
+	if pidInt <= 0 {
+		return false, nil
 	}
 	// On macOS and other non-Linux platforms, use Signal(0) to check if process exists
 	if runtime.GOOS != "linux" {
@@ -177,6 +180,9 @@ func CheckObserverProcess() (bool, error) {
 }
 
 func CheckProcessExist(pid int32) (bool, error) {
+	if pid <= 0 {
+		return false, nil
+	}
 	proc, err := os.FindProcess(int(pid))
 	if err != nil {
 		log.Infof("process %d not exist", pid)
